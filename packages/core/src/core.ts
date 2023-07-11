@@ -899,7 +899,7 @@ export class Meta2d {
     clearStore(this.store);
     this.hideInput();
     this.canvas.tooltip.hide();
-    this.canvas.clearCanvas();
+    // this.canvas.clearCanvas();
     sessionStorage.removeItem('page');
     this.store.clipboard = undefined;
 
