@@ -128,7 +128,13 @@ export interface Meta2dStore {
   bkImg: HTMLImageElement;
   // 测试使用
   fillWorldTextRect?: boolean; // 填充文本区域
+  patchFlagsLast?: boolean; // 清除上次图片画布层
   meta2dDatas?: Meta2dData[];
+  cacheDatas?: {
+    data: Meta2dData;
+    offscreen?: any[];
+    flag?: boolean[];
+  }[];
 }
 
 export interface Meta2dClipboard {
@@ -164,6 +170,7 @@ export const createStore = () => {
     bindDatas: {},
     binds: {},
     meta2dDatas: [],
+    cacheDatas: [],
   } as Meta2dStore;
 };
 
