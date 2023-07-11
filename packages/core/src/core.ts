@@ -666,6 +666,62 @@ export class Meta2d {
     }
   }
 
+  cacheData(id: string) {
+    if (id && this.store.options.cacheLength) {
+      let index = this.store.cacheDatas.findIndex(
+        (item) => item.data && item.data._id === id
+      );
+      if (index === -1) {
+        this.store.cacheDatas.push({
+          data: deepClone(this.store.data, true),
+          // offscreen: new Array(2),
+          // flag: new Array(2)
+        });
+        if (this.store.cacheDatas.length > this.store.options.cacheLength) {
+          this.store.cacheDatas.shift();
+        }
+      } else {
+        let cacheDatas = this.store.cacheDatas.splice(index, 1)[0];
+        this.store.cacheDatas.push(cacheDatas);
+      }
+    }
+  }
+
+  loadCacheData(id: string) {
+    let index = this.store.cacheDatas.findIndex(
+      (item) => item.data && item.data._id === id
+    );
+    if (index === -1) {
+      return;
+    }
+    // const ctx = this.canvas.canvas.getContext('2d');
+    // ctx.clearRect(0, 0, this.canvas.canvas.width, this.canvas.canvas.height);
+    // for (let offs of this.store.cacheDatas[index].offscreen) {
+    //   if (offs) {
+    //     ctx.drawImage(offs, 0, 0, this.canvas.width, this.canvas.height);
+    //   }
+    // }
+    // ctx.clearRect(0, 0, this.canvas.canvas.width, this.canvas.canvas.height);
+    this.store.data = this.store.cacheDatas[index].data;
+    this.setBackgroundImage(this.store.data.bkImage);
+    this.store.pens = {};
+    this.store.data.pens.forEach((pen) => {
+      pen.calculative.canvas = this.canvas;
+      this.store.pens[pen.id] = pen;
+      globalStore.path2dDraws[pen.name] &&
+        this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
+
+      pen.type &&
+        this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
+
+      if(pen.name === 'image'){
+          pen.calculative.imageDrawed = false;
+          this.canvas.loadImage(pen);
+        }
+    });
+    this.render();
+  }
+
   initBindDatas() {
     this.store.bindDatas = {};
     this.store.data.pens.forEach((pen) => {

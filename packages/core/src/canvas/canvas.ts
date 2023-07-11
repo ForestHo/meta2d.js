@@ -129,7 +129,7 @@ import { Title } from '../title';
 export const movingSuffix = '-moving' as const;
 export class Canvas {
   canvas = document.createElement('canvas');
-  offscreen = createOffscreen() as HTMLCanvasElement;
+  offscreen = createOffscreen() as HTMLCanvasElement | OffscreenCanvas;
 
   width: number;
   height: number;
@@ -3802,7 +3802,7 @@ export class Canvas {
     this.renderBorder();
     this.renderHoverPoint();
     offscreenCtx.restore();
-    this.magnifierCanvas.render();
+    //this.magnifierCanvas.render();
     const ctx = this.canvas.getContext('2d');
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.drawImage(this.offscreen, 0, 0, this.width, this.height);
