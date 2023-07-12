@@ -54,8 +54,10 @@ import {
 import {
   calcRotate,
   distance,
+  getDistance,
   hitPoint,
   Point,
+  PointType,
   PrevNextType,
   rotatePoint,
   samePoint,
@@ -1451,8 +1453,12 @@ export class Canvas {
       // 单击在锚点上，完成绘画
       if (this.store.hoverAnchor) {
         const to = getToAnchor(this.drawingLine);
-        to.x = this.store.hoverAnchor.x;
-        to.y = this.store.hoverAnchor.y;
+        if (this.store.hoverAnchor.type === PointType.Line) {
+          getDistance(to, this.store.hoverAnchor, this.store);
+        } else {
+          to.x = this.store.hoverAnchor.x;
+          to.y = this.store.hoverAnchor.y;
+        }
         connectLine(
           this.store.hover,
           this.store.hoverAnchor,
@@ -1906,8 +1912,10 @@ export class Canvas {
           this.hoverType === HoverType.NodeAnchor ||
           this.hoverType === HoverType.LineAnchor
         ) {
-          to.x = this.store.hoverAnchor.x;
-          to.y = this.store.hoverAnchor.y;
+          if (this.store.hoverAnchor.type !== PointType.Line) {
+            to.x = this.store.hoverAnchor.x;
+            to.y = this.store.hoverAnchor.y;
+          }
           to.connectTo = this.store.hoverAnchor.penId;
           if (this.drawingLineName === 'polyline') {
             to.isTemp = false;
@@ -1990,8 +1998,12 @@ export class Canvas {
       // 在锚点上，完成绘画
       if (this.store.hoverAnchor) {
         const to = getToAnchor(this.drawingLine);
-        to.x = this.store.hoverAnchor.x;
-        to.y = this.store.hoverAnchor.y;
+        if (this.store.hoverAnchor.type === PointType.Line) {
+          getDistance(to, this.store.hoverAnchor, this.store);
+        } else {
+          to.x = this.store.hoverAnchor.x;
+          to.y = this.store.hoverAnchor.y;
+        }
         connectLine(
           this.store.hover,
           this.store.hoverAnchor,
@@ -2075,9 +2087,19 @@ export class Canvas {
         } else {
           // 连接连线
           if (this.store.activeAnchor) {
-            this.store.activeAnchor.x = this.store.hoverAnchor.x;
-            this.store.activeAnchor.y = this.store.hoverAnchor.y;
-
+            /**
+             * 线的锚点需要存所连接锚点的位置
+             */
+            if (this.store.hoverAnchor.type === PointType.Line) {
+              getDistance(
+                this.store.activeAnchor,
+                this.store.hoverAnchor,
+                this.store
+              );
+            } else {
+              this.store.activeAnchor.x = this.store.hoverAnchor.x;
+              this.store.activeAnchor.y = this.store.hoverAnchor.y;
+            }
             connectLine(
               this.store.hover,
               this.store.hoverAnchor,
@@ -2687,7 +2709,14 @@ export class Canvas {
         // locked>0
         if (pen.calculative.worldAnchors) {
           for (const anchor of pen.calculative.worldAnchors) {
-            if (hitPoint(pt, anchor, this.pointSize)) {
+            if (
+              hitPoint(
+                pt,
+                anchor,
+                this.pointSize,
+                anchor.penId ? this.store.pens[anchor.penId] : undefined
+              )
+            ) {
               this.title.show(anchor);
               if (anchor.title) {
                 break outer;
@@ -2916,8 +2945,14 @@ export class Canvas {
         return HoverType.None;
       }
     }
-
-    if (hitPoint(pt, anchor, this.pointSize)) {
+    if (
+      hitPoint(
+        pt,
+        anchor,
+        this.pointSize,
+        anchor.penId ? this.store.pens[anchor.penId] : undefined
+      )
+    ) {
       if (anchor !== this.store.hoverAnchor) {
         this.patchFlags = true;
       }
@@ -3961,7 +3996,36 @@ export class Canvas {
               size = this.store.hover.calculative.lineWidth;
             }
           }
-          ctx.arc(anchor.x, anchor.y, size, 0, Math.PI * 2);
+          if (anchor.type === PointType.Line) {
+            //旋转的情况
+            let _rotate = this.store.pens[anchor.penId].rotate;
+            if (this.store.pens[anchor.penId].calculative.flipX) {
+              _rotate *= -1;
+            }
+            if (this.store.pens[anchor.penId].calculative.flipY) {
+              _rotate *= -1;
+            }
+            let rotate = anchor.rotate + _rotate;
+            if (this.store.pens[anchor.penId].calculative.flipX) {
+              rotate *= -1;
+            }
+            if (this.store.pens[anchor.penId].calculative.flipY) {
+              rotate *= -1;
+            }
+            ctx.save();
+            ctx.translate(anchor.x, anchor.y);
+            ctx.rotate((rotate * Math.PI) / 180);
+            ctx.translate(-anchor.x, -anchor.y);
+            ctx.rect(
+              anchor.x - (anchor.length * this.store.data.scale) / 2,
+              anchor.y - size,
+              anchor.length * this.store.data.scale,
+              size * 2
+            );
+            ctx.restore();
+          } else {
+            ctx.arc(anchor.x, anchor.y, size, 0, Math.PI * 2);
+          }
           if (this.store.hover.type && this.store.hoverAnchor === anchor) {
             ctx.save();
             ctx.strokeStyle =
@@ -4567,8 +4631,18 @@ export class Canvas {
         this.store.hoverAnchor &&
         this.store.hoverAnchor.penId !== this.store.activeAnchor.penId
       ) {
-        offsetX = this.store.hoverAnchor.x - this.store.activeAnchor.x;
-        offsetY = this.store.hoverAnchor.y - this.store.activeAnchor.y;
+        if (this.store.hoverAnchor.type === PointType.Line) {
+          offsetX = pt.x - this.store.activeAnchor.x;
+          offsetY = pt.y - this.store.activeAnchor.y;
+          getDistance(
+            this.store.activeAnchor,
+            this.store.hoverAnchor,
+            this.store
+          );
+        } else {
+          offsetX = this.store.hoverAnchor.x - this.store.activeAnchor.x;
+          offsetY = this.store.hoverAnchor.y - this.store.activeAnchor.y;
+        }
         translatePoint(this.store.activeAnchor, offsetX, offsetY);
 
         to.prev = undefined;
@@ -4654,7 +4728,11 @@ export class Canvas {
   }
 
   moveLineAnchorNext(e: { x: number; y: number }) {
-    if (!this.activeRect || this.store.data.locked) {
+    if (
+      !this.activeRect ||
+      this.store.data.locked ||
+      !this.store.activeAnchor
+    ) {
       return;
     }
     if (!this.initPens) {
@@ -5003,10 +5081,31 @@ export class Canvas {
       if (!penAnchor) {
         return;
       }
+      let rotate = pen.rotate;
+      if (pen.flipX) {
+        rotate *= -1;
+      }
+      if (pen.flipY) {
+        rotate *= -1;
+      }
+      let offsetX =
+        lineAnchor.distance *
+          this.store.data.scale *
+          Math.cos(((rotate + penAnchor.rotate) / 180) * Math.PI) || 0;
+      let offsetY =
+        lineAnchor.distance *
+          this.store.data.scale *
+          Math.sin(((rotate + penAnchor.rotate) / 180) * Math.PI) || 0;
+      if (pen.flipX) {
+        offsetX = -offsetX;
+      }
+      if (pen.flipY) {
+        offsetY = -offsetY;
+      }
       translatePoint(
         lineAnchor,
-        penAnchor.x - lineAnchor.x,
-        penAnchor.y - lineAnchor.y
+        penAnchor.x - lineAnchor.x + offsetX,
+        penAnchor.y - lineAnchor.y + offsetY
       );
       if (
         this.store.options.autoPolyline &&

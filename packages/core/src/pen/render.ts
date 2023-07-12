@@ -1732,7 +1732,9 @@ export function renderAnchor(
     return;
   }
 
-  const active = pen.calculative.activeAnchor === pt;
+  const active =
+    pen.calculative.canvas.store.activeAnchor ===
+      pen.calculative.activeAnchor && pen.calculative.activeAnchor === pt;
   let r = 3;
   if (pen.calculative.lineWidth > 3) {
     r = pen.calculative.lineWidth;
