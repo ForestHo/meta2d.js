@@ -650,7 +650,65 @@ export class Meta2d {
       this.canvas.scroll.init();
     }
   }
-
+  /**
+   * 仅清理数据结构，重置变量
+   * */
+  newClear(){
+    for (const pen of this.store.data.pens) {
+      pen.onDestroy?.(pen);
+    }
+    clearStore(this.store);
+    this.hideInput();
+    this.store.clipboard = undefined;
+    // 非必要，为的是 open 时重绘 背景与网格
+    this.store.patchFlagsBackground = true;
+    this.store.patchFlagsTop = true;
+    this.setBackgroundImage(undefined);
+  }
+  /**
+   * 类似于meta2d.open函数,view函数做了图纸的缓存，图纸数据必须配置唯一的_id，才能被正确缓存
+   * */
+  view(data?: Meta2dData, render:boolean = true){
+    let index = this.store.cacheDatas.findIndex(
+      (item) => item.data && item.data._id === data._id
+    );
+    this.newClear();
+    this.store.patchFlagsBackground = true;
+    this.store.patchFlagsTop = true;
+    this.store.patchFlagsLast = true;
+    if (index !== -1) {
+      this.loadCacheData(data._id);
+      this.startAnimate();
+    } else {
+      this.setBackgroundImage(data.bkImage);
+      Object.assign(this.store.data, data);
+      this.store.data.pens = [];
+      // 第一遍赋初值
+      for (const pen of data.pens) {
+        if (!pen.id) {
+          pen.id = s8();
+        }
+        !pen.calculative && (pen.calculative = { canvas: this.canvas });
+        this.store.pens[pen.id] = pen;
+      }
+      for (const pen of data.pens) {
+        this.canvas.makePen(pen);
+      }
+      for (const pen of data.pens) {
+        this.canvas.updateLines(pen);
+      }
+      if (!render) {
+        this.canvas.opening = true;
+      }
+      this.render();
+      this.startAnimate();
+      this.doInitJS();
+    }
+    setTimeout(() => {
+      //存入缓存
+      this.cacheData(data._id);
+    }, 30);
+  }
   extendedFn() {
     this.store.data.pens.forEach((pen) => {
       if (
@@ -913,7 +971,7 @@ export class Meta2d {
     clearStore(this.store);
     this.hideInput();
     this.canvas.tooltip.hide();
-    // this.canvas.clearCanvas();
+    this.canvas.clearCanvas();
     sessionStorage.removeItem('page');
     this.store.clipboard = undefined;
 
