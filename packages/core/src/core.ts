@@ -656,13 +656,13 @@ export class Meta2d {
     this.store.patchFlagsBackground = true;
     this.store.patchFlagsTop = true;
     this.store.patchFlagsLast = true;
+    if (!render) {
+      this.canvas.opening = true;
+    }
     if (index !== -1) {
-      this.loadCacheData(data._id);
-      this.startAnimate();
+      this.loadCacheData(data._id,render);
+      render && this.startAnimate();
     } else {
-      if (!render) {
-        this.canvas.opening = true;
-      }
       this.setBackgroundImage(data.bkImage);
       Object.assign(this.store.data, data);
       this.store.data.pens = [];
@@ -676,21 +676,36 @@ export class Meta2d {
       }
       for (const pen of data.pens) {
         this.canvas.makePen(pen);
+        if(render){
+          if((pen.externElement|| pen.name === 'gif')||(pen.externElement|| pen.name === 'echarts')){
+            globalStore.path2dDraws[pen.name] &&
+            this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
+          }
+        }
       }
       for (const pen of data.pens) {
         this.canvas.updateLines(pen);
       }
       // this.render();
       this.fitView(true,0);
-      this.startAnimate();
+      render && this.startAnimate();
       this.doInitJS();
     }
     if(isCache){
       setTimeout(() => {
         //存入缓存
         this.cacheData(data._id);
-      }, 30);
+      }, 300);
     }
+  }
+  recoverRender(){
+    for (const pen of this.store.data.pens) {
+      if((pen.externElement|| pen.name === 'gif')||(pen.externElement|| pen.name === 'echarts')){
+        globalStore.path2dDraws[pen.name] &&
+        this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
+      }
+    }
+    this.canvas.render(true,true);
   }
   extendedFn() {
     this.store.data.pens.forEach((pen) => {
@@ -725,7 +740,7 @@ export class Meta2d {
     }
   }
 
-  loadCacheData(id: string) {
+  loadCacheData(id: string,render?:boolean) {
     let index = this.store.cacheDatas.findIndex(
       (item) => item.data && item.data._id === id
     );
@@ -746,9 +761,15 @@ export class Meta2d {
     this.store.data.pens.forEach((pen) => {
       pen.calculative.canvas = this.canvas;
       this.store.pens[pen.id] = pen;
-      globalStore.path2dDraws[pen.name] &&
+      if(!render){
+        if(!pen.externElement&& pen.name !== 'gif'&& pen.name !== 'echarts'){
+          globalStore.path2dDraws[pen.name] &&
+          this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
+        }
+      }else{
+        globalStore.path2dDraws[pen.name] &&
         this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
-
+      }
       pen.type &&
         this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
 
@@ -757,6 +778,9 @@ export class Meta2d {
         this.canvas.loadImage(pen);
       }
     });
+    if(!render){
+      this.canvas.clearCanvas();
+    }
     this.render();
   }
 

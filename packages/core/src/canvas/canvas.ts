@@ -3767,8 +3767,11 @@ export class Canvas {
     calcIconRect(this.store.pens, pen);
     calcTextRect(pen);
     calcInView(pen);
-    globalStore.path2dDraws[pen.name] &&
-      this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
+    if(!pen.externElement&&pen.name !== 'gif' && pen.name !== 'echarts'){
+      pen.name === 'echarts'&&console.log("hello",pen.externElement,pen);
+      globalStore.path2dDraws[pen.name] &&
+        this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
+    }
     pen.calculative.patchFlags = true;
     this.patchFlags = true;
 
@@ -3797,8 +3800,8 @@ export class Canvas {
     }, 50);
   }
 
-  render = (patchFlags?: number | boolean) => {
-    if (patchFlags) {
+  render = (patchFlags?: number | boolean,isRender?:boolean) => {
+    if (isRender) {
       this.opening = false;
     }
     if (this.opening) {
