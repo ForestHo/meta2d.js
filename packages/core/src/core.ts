@@ -646,9 +646,9 @@ export class Meta2d {
     this.setBackgroundImage(undefined);
   }
   /**
-   * 类似于meta2d.open函数,view函数做了图纸的缓存，图纸数据必须配置唯一的_id，才能被正确缓存
+   * 类似于meta2d.open函数,newOpen函数做了图纸的缓存，图纸数据必须配置唯一的_id，才能被正确缓存
    * */
-  view(data?: Meta2dData, render:boolean = true){
+  newOpen(data?: Meta2dData, render:boolean = true,isCache:boolean = true){
     let index = this.store.cacheDatas.findIndex(
       (item) => item.data && item.data._id === data._id
     );
@@ -660,6 +660,9 @@ export class Meta2d {
       this.loadCacheData(data._id);
       this.startAnimate();
     } else {
+      if (!render) {
+        this.canvas.opening = true;
+      }
       this.setBackgroundImage(data.bkImage);
       Object.assign(this.store.data, data);
       this.store.data.pens = [];
@@ -677,17 +680,17 @@ export class Meta2d {
       for (const pen of data.pens) {
         this.canvas.updateLines(pen);
       }
-      if (!render) {
-        this.canvas.opening = true;
-      }
-      this.render();
+      // this.render();
+      this.fitView(true,0);
       this.startAnimate();
       this.doInitJS();
     }
-    setTimeout(() => {
-      //存入缓存
-      this.cacheData(data._id);
-    }, 30);
+    if(isCache){
+      setTimeout(() => {
+        //存入缓存
+        this.cacheData(data._id);
+      }, 30);
+    }
   }
   extendedFn() {
     this.store.data.pens.forEach((pen) => {
