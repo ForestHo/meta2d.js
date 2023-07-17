@@ -3834,17 +3834,15 @@ export class Canvas {
     offscreenCtx.clearRect(0, 0, this.offscreen.width, this.offscreen.height);
     offscreenCtx.save();
     offscreenCtx.translate(this.store.data.x, this.store.data.y);
-    globalThis.debugRender && console.time('renderPens');
     this.renderPens();
-    globalThis.debugRender && console.timeEnd('renderPens');
     this.renderBorder();
     this.renderHoverPoint();
     offscreenCtx.restore();
     //this.magnifierCanvas.render();
     const ctx = this.canvas.getContext('2d');
+    this.canvasImageBottom.render();
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.drawImage(this.offscreen, 0, 0, this.width, this.height);
-    this.canvasImageBottom.render();
     this.canvasImage.render();
     this.patchFlags = false;
   };

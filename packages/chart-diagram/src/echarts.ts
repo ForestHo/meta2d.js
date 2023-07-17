@@ -74,11 +74,11 @@ export function echarts(pen: ChartPen): Path2D {
     div.style.height = worldRect.height + 'px';
     document.body.appendChild(div);
     pen.calculative.singleton.div = div;
-    pen.calculative.singleton.echart = echarts.init(div, pen.echarts.theme);
 
     // 3. 生产预览图
     // 初始化时，等待父div先渲染完成，避免初始图表控件太大。
     setTimeout(() => {
+      pen.calculative.singleton.echart = echarts.init(div, pen.echarts.theme);
       pen.calculative.singleton.echart.setOption(pen.echarts.option, true);
       pen.calculative.singleton.echart.resize();
       setTimeout(() => {
