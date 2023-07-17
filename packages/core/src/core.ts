@@ -631,8 +631,11 @@ export class Meta2d {
     }
   }
   /**
-   * 仅清理数据结构，重置变量
-   * */
+   * @description  从clear函数改造而来，仅清理数据结构，重置变量，但是不会调用clearRect
+   * @author Joseph Ho
+   * @date 17/07/2023
+   * @memberof Meta2d
+   */
   clearOnlyData(){
     for (const pen of this.store.data.pens) {
       pen.onDestroy?.(pen);
@@ -646,8 +649,14 @@ export class Meta2d {
     this.setBackgroundImage(undefined);
   }
   /**
-   * 类似于meta2d.open函数,openWithCache函数做了图纸的缓存，图纸数据必须配置唯一的_id，才能被正确缓存
-   * */
+   * @description 类似于meta2d.open函数,openWithCache函数做了图纸的缓存，图纸数据必须配置唯一的_id，才能被正确缓存
+   * @author Joseph Ho
+   * @date 17/07/2023
+   * @param {Meta2dData} [data] 图纸数据
+   * @param {boolean} [render=true] 是否渲染，true-渲染，false-静默打开
+   * @param {boolean} [isCache=true] 是否缓存，true-缓存，false-不缓存
+   * @memberof Meta2d
+   */
   openWithCache(data?: Meta2dData, render:boolean = true,isCache:boolean = true){
     let index = this.store.cacheDatas.findIndex(
       (item) => item.data && item.data._id === data._id
@@ -660,6 +669,7 @@ export class Meta2d {
       this.canvas.opening = true;
     }
     if (index !== -1) {
+      // 从缓存中加载数据
       this.loadCacheData(data._id,render);
       render && this.startAnimate();
     } else {
@@ -687,6 +697,7 @@ export class Meta2d {
         this.canvas.updateLines(pen);
       }
       // this.render();
+      // 调用fitview，且padding=0
       this.fitView(true,0);
       render && this.startAnimate();
       this.doInitJS();
@@ -698,6 +709,13 @@ export class Meta2d {
       }, 300);
     }
   }
+  /**
+   * @description 从静默打开的图纸中恢复渲染到画布，配合openWithCache(data,false) 使用，
+   *              从静默打开然后恢复渲染的图纸，只针对当前图纸有效，不会对其他图纸有副作用
+   * @author Joseph Ho
+   * @date 17/07/2023
+   * @memberof Meta2d
+   */
   recoverRender(){
     for (const pen of this.store.data.pens) {
       if((pen.externElement|| pen.name === 'gif')||(pen.externElement|| pen.name === 'echarts')){
@@ -718,7 +736,6 @@ export class Meta2d {
       }
     });
   }
-
   cacheData(id: string) {
     if (id && this.store.options.cacheLength) {
       let index = this.store.cacheDatas.findIndex(
