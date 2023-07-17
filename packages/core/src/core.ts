@@ -633,7 +633,7 @@ export class Meta2d {
   /**
    * 仅清理数据结构，重置变量
    * */
-  newClear(){
+  clearOnlyData(){
     for (const pen of this.store.data.pens) {
       pen.onDestroy?.(pen);
     }
@@ -646,13 +646,13 @@ export class Meta2d {
     this.setBackgroundImage(undefined);
   }
   /**
-   * 类似于meta2d.open函数,newOpen函数做了图纸的缓存，图纸数据必须配置唯一的_id，才能被正确缓存
+   * 类似于meta2d.open函数,openWithCache函数做了图纸的缓存，图纸数据必须配置唯一的_id，才能被正确缓存
    * */
-  newOpen(data?: Meta2dData, render:boolean = true,isCache:boolean = true){
+  openWithCache(data?: Meta2dData, render:boolean = true,isCache:boolean = true){
     let index = this.store.cacheDatas.findIndex(
       (item) => item.data && item.data._id === data._id
     );
-    this.newClear();
+    this.clearOnlyData();
     this.store.patchFlagsBackground = true;
     this.store.patchFlagsTop = true;
     this.store.patchFlagsLast = true;
