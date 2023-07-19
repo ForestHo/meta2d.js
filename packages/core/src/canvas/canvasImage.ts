@@ -114,8 +114,14 @@ export class CanvasImage {
 
     return pen.calculative.hasImage;
   }
-
+  lastRender:number=0;
   render() {
+    let now =  performance.now();
+    // 高性能这里配置成80
+    if (now - this.lastRender < this.store.options.imageCanvasInterval) {
+      return;
+    }
+    this.lastRender = now;
     let patchFlags = false;
     let patchFlagsAnimate = false;
     for (const pen of this.store.data.pens) {
@@ -188,9 +194,9 @@ export class CanvasImage {
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       ctx.translate(this.store.data.x, this.store.data.y);
       for (const pen of this.store.data.pens) {
+        // pen.calculative.imageDrawed ||
         if (
           !pen.calculative.hasImage ||
-          pen.calculative.imageDrawed ||
           this.store.animates.has(pen) ||
           this.store.animates.has(getParent(pen, true))
         ) {

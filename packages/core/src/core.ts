@@ -1075,7 +1075,7 @@ export class Meta2d {
   }
 
   startAnimate(idOrTagOrPens?: string | Pen[], params?: number | string): void {
-    this.stopAnimate(idOrTagOrPens);
+    this.stopAnimate(idOrTagOrPens,false);
     let pens: Pen[];
     if (!idOrTagOrPens) {
       pens = this.store.data.pens.filter((pen) => {
@@ -1159,7 +1159,7 @@ export class Meta2d {
     });
   }
 
-  stopAnimate(idOrTagOrPens?: string | Pen[]) {
+  stopAnimate(idOrTagOrPens?: string | Pen[], needRender: boolean=true) {
     let pens: Pen[] = [];
     if (!idOrTagOrPens) {
       this.store.animates.forEach((pen) => {
@@ -1181,11 +1181,12 @@ export class Meta2d {
       this.canvas.updateLines(pen);
       this.store.animateMap.delete(pen);
     });
-    this.initImageCanvas(pens);
-    setTimeout(() => {
+
+    if(needRender){
+      this.initImageCanvas(pens);
       this.canvas.calcActiveRect();
       this.render();
-    }, 20);
+    }
   }
 
   startVideo(idOrTagOrPens?: string | Pen[]): void {
@@ -2448,7 +2449,38 @@ export class Meta2d {
     // 5. 居中
     this.centerView();
   }
+  /**
+   * @description 通过指定的width宽度和高度来fitView
+   * @author Joseph Ho
+   * @date 18/07/2023
+   * @param {boolean} [fit=true]
+   * @param {Padding} [viewPadding=10]
+   * @param {number} width
+   * @param {number} height
+   * @memberof Meta2d
+   */
+  fitViewBySet(fit: boolean = true, viewPadding: Padding = 10,width: number,height: number){
+    // 2. 获取设置的留白值
+    const padding = formatPadding(viewPadding);
 
+    // 3. 获取图形尺寸
+    const rect = this.getRect();
+    // 4. 计算缩放比例
+    const w = (width - padding[1] - padding[3]) / rect.width;
+    const h = (height - padding[0] - padding[2]) / rect.height;
+    let ratio = w;
+    if (fit) {
+      // 完整显示取小的
+      ratio = w > h ? h : w;
+    } else {
+      ratio = w > h ? w : h;
+    }
+    // 该方法直接更改画布的 scale 属性，所以比率应该乘以当前 scale
+    this.scale(ratio * this.store.data.scale);
+
+    // 5. 居中
+    this.centerView();
+  }
   fitSizeView(fit: boolean = true, viewPadding: Padding = 10) {
     // 默认垂直填充，两边留白
     // if (!this.hasView()) return;
