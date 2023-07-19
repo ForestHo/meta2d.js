@@ -746,6 +746,13 @@ export class Meta2d {
       }
     });
   }
+  /**
+   * @description 缓存画布数据
+   * @author Joseph Ho
+   * @date 19/07/2023
+   * @param {string} id
+   * @memberof Meta2d
+   */
   cacheData(id: string) {
     if (id && this.store.options.cacheLength) {
       let index = this.store.cacheDatas.findIndex(
@@ -767,6 +774,15 @@ export class Meta2d {
     }
   }
 
+  /**
+   * @description 从缓存中加载图纸数据，并渲染
+   * @author Joseph Ho
+   * @date 19/07/2023
+   * @param {string} id
+   * @param {boolean} [render]
+   * @returns {*}
+   * @memberof Meta2d
+   */
   loadCacheData(id: string,render?:boolean) {
     let index = this.store.cacheDatas.findIndex(
       (item) => item.data && item.data._id === id

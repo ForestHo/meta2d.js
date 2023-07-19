@@ -116,8 +116,9 @@ export class CanvasImage {
   }
   lastRender:number=0;
   render() {
+    // 通过限制绘制的频率来保证完整的绘制周期，从而不让绘制过程被中断，导致有不完整的绘制情况
     let now =  performance.now();
-    // 高性能这里配置成80
+    // 高性能计算机这里配置成imageCanvasInterval=80，低性能计算机imageCanvasInterval=100
     if (now - this.lastRender < this.store.options.imageCanvasInterval) {
       return;
     }
@@ -194,6 +195,7 @@ export class CanvasImage {
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       ctx.translate(this.store.data.x, this.store.data.y);
       for (const pen of this.store.data.pens) {
+        // imageDrawed只是用于判断是否要重新绘制当前图片画布层，并不是在render绘制过程中判断当前图片节点是否绘制过
         // pen.calculative.imageDrawed ||
         if (
           !pen.calculative.hasImage ||
