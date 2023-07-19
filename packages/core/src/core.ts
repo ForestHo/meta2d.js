@@ -702,6 +702,16 @@ export class Meta2d {
       render && this.startAnimate();
       this.doInitJS();
     }
+    // 非静默打开，渲染gif，echarts，执行canvas的render
+    if(render){
+      for (const pen of this.store.data.pens) {
+        if((pen.externElement|| pen.name === 'gif')||(pen.externElement|| pen.name === 'echarts')){
+          globalStore.path2dDraws[pen.name] &&
+          this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
+        }
+      }
+      this.canvas.render(true,true);
+    }
     if(isCache){
       setTimeout(() => {
         //存入缓存
@@ -797,8 +807,9 @@ export class Meta2d {
     });
     if(!render){
       this.canvas.clearCanvas();
+    }else{
+      this.render();
     }
-    this.render();
   }
 
   initBindDatas() {
