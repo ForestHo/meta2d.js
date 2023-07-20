@@ -713,9 +713,11 @@ export class Meta2d {
       this.canvas.render(true,true);
     }
     if(isCache){
+      // 在同步流程中深拷贝图纸的data数据
+      const tempData: Meta2dData = deepClone(this.store.data,true);
       setTimeout(() => {
         //存入缓存
-        this.cacheData(data._id);
+        this.cacheData(tempData,data._id);
       }, 300);
     }
   }
@@ -749,18 +751,20 @@ export class Meta2d {
   /**
    * @description 缓存画布数据
    * @author Joseph Ho
-   * @date 19/07/2023
-   * @param {string} id
+   * @date 20/07/2023
+   * @param {Meta2dData} data meta2d实例对象的store的data
+   * @param {string} id 图纸的id
    * @memberof Meta2d
    */
-  cacheData(id: string) {
+  cacheData(data: Meta2dData,id: string) {
     if (id && this.store.options.cacheLength) {
       let index = this.store.cacheDatas.findIndex(
         (item) => item.data && item.data._id === id
       );
       if (index === -1) {
         this.store.cacheDatas.push({
-          data: deepClone(this.store.data, true),
+          data,
+          // data: deepClone(data, true),
           // offscreen: new Array(2),
           // flag: new Array(2)
         });
