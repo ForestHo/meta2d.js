@@ -83,7 +83,7 @@ export function echarts(pen: ChartPen): Path2D {
       pen.calculative.singleton.echart.resize();
       setTimeout(() => {
         const img = new Image();
-        img.src = pen.calculative.singleton.echart.getDataURL({
+        img.src = pen.calculative.singleton?.echart?.getDataURL({
           pixelRatio: 2,
         });
         pen.calculative.img = img;
@@ -587,7 +587,7 @@ export function setEchartsOption(
 
 function onRenderPenRaw(pen: Pen) {
   const img = new Image();
-  img.src = pen.calculative.singleton?.echart.getDataURL({
+  img.src = pen.calculative.singleton?.echart?.getDataURL({
     pixelRatio: 2,
   });
   pen.calculative.img = img;
