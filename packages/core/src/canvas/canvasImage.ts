@@ -118,8 +118,8 @@ export class CanvasImage {
   render() {
     // 通过限制绘制的频率来保证完整的绘制周期，从而不让绘制过程被中断，导致有不完整的绘制情况
     let now =  performance.now();
-    // 高性能计算机这里配置成imageCanvasInterval=80，低性能计算机imageCanvasInterval=100
-    if (now - this.lastRender < this.store.options.imageCanvasInterval) {
+    // imageCanvas保持与主画布一致的render频率
+    if (now - this.lastRender < this.store.options.interval) {
       return;
     }
     this.lastRender = now;

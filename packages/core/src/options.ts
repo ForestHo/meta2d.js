@@ -56,7 +56,7 @@ export interface Options {
   autoPolyline?: boolean;
   interval?: number;
   animateInterval?: number;
-  imageCanvasInterval?:number; //image图片层render的最小间隔
+  // imageCanvasInterval?:number; //image图片层render的最小间隔
   dragAllIn?: boolean;
   scroll?: boolean;
   uploadFn?: (file: File) => Promise<string>; // uploadFn 优先级最高
@@ -112,7 +112,7 @@ export const defaultOptions: Options = {
   drawingLineName: 'curve',
   interval: 30,
   animateInterval: 30,
-  imageCanvasInterval: 80,// low performace计算机推荐设置100，high performace计算机推荐设置80
+  // imageCanvasInterval: 80,// low performace计算机推荐设置100，high performace计算机推荐设置80
   autoPolyline: true,
   autoAnchor: true,
   animateColor: '#ff4d4f',
