@@ -2146,12 +2146,18 @@ export class Meta2d {
         this.onSizeUpdate();
         break;
       case 'enter':
-        e && e.onMouseEnter && e.onMouseEnter(e, this.canvas.mousePos);
-        this.store.data.locked && this.doEvent(e, eventName);
+         // 只有编辑态才需要响应此事件
+         if(!this.store.options.isRunMode){
+            e && e.onMouseEnter && e.onMouseEnter(e, this.canvas.mousePos);
+            this.store.data.locked && this.doEvent(e, eventName);
+         }
         break;
       case 'leave':
-        e && e.onMouseLeave && e.onMouseLeave(e, this.canvas.mousePos);
-        this.store.data.locked && this.doEvent(e, eventName);
+         // 只有编辑态才需要响应此事件
+         if(!this.store.options.isRunMode){
+            e && e.onMouseLeave && e.onMouseLeave(e, this.canvas.mousePos);
+            this.store.data.locked && this.doEvent(e, eventName);
+         }
         break;
       case 'active':
       case 'inactive':
@@ -2167,16 +2173,22 @@ export class Meta2d {
         this.store.data.locked && e.pen && this.doEvent(e.pen, eventName);
         break;
       case 'mousedown':
-        e.pen &&
+        // 只有编辑态才需要响应此事件
+        if(!this.store.options.isRunMode){
+          e.pen &&
           e.pen.onMouseDown &&
           e.pen.onMouseDown(e.pen, this.canvas.mousePos);
-        this.store.data.locked && e.pen && this.doEvent(e.pen, eventName);
+          this.store.data.locked && e.pen && this.doEvent(e.pen, eventName);
+        }
         break;
       case 'mouseup':
-        e.pen &&
-          e.pen.onMouseUp &&
-          e.pen.onMouseUp(e.pen, this.canvas.mousePos);
-        this.store.data.locked && e.pen && this.doEvent(e.pen, eventName);
+        // 只有编辑态才需要响应此事件
+        if(!this.store.options.isRunMode){
+          e.pen &&
+            e.pen.onMouseUp &&
+            e.pen.onMouseUp(e.pen, this.canvas.mousePos);
+          this.store.data.locked && e.pen && this.doEvent(e.pen, eventName);
+        }
         break;
       case 'dblclick':
         this.store.data.locked && e.pen && this.doEvent(e.pen, eventName);

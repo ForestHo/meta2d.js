@@ -81,13 +81,16 @@ export function echarts(pen: ChartPen): Path2D {
       pen.calculative.singleton.echart = echarts.init(div, pen.echarts.theme);
       pen.calculative.singleton.echart.setOption(pen.echarts.option, true);
       pen.calculative.singleton.echart.resize();
-      setTimeout(() => {
-        const img = new Image();
-        img.src = pen.calculative.singleton?.echart?.getDataURL({
-          pixelRatio: 2,
-        });
-        pen.calculative.img = img;
-      }, 100);
+      // 只有编辑态才需要执行以下代码
+      if(!pen.calculative.canvas.parent.store.options.isRunMode){
+        setTimeout(() => {
+          const img = new Image();
+          img.src = pen.calculative.singleton?.echart?.getDataURL({
+            pixelRatio: 2,
+          });
+          pen.calculative.img = img;
+        }, 100);
+      }
     });
 
     // 4. 加载到div layer
@@ -586,6 +589,8 @@ export function setEchartsOption(
 }
 
 function onRenderPenRaw(pen: Pen) {
+  // 只有编辑态才需要执行以下代码
+  if(pen.calculative.canvas.parent.store.options.isRunMode) return;
   const img = new Image();
   img.src = pen.calculative.singleton?.echart?.getDataURL({
     pixelRatio: 2,

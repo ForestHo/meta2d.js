@@ -82,6 +82,7 @@ export interface Options {
   textFlip?: boolean; //文字镜像
   textRotate?: boolean; //文字旋转
   cacheLength?: number; //缓存数据长度
+  isRunMode:boolean; //是否是在运行态
 }
 
 export const defaultOptions: Options = {
@@ -146,4 +147,5 @@ export const defaultOptions: Options = {
   domShapes: [],
   textFlip: true,
   textRotate: true,
+  isRunMode: false,
 };

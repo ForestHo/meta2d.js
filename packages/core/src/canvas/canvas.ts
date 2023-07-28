@@ -3767,10 +3767,16 @@ export class Canvas {
     calcIconRect(this.store.pens, pen);
     calcTextRect(pen);
     calcInView(pen);
-    if(!pen.externElement&&pen.name !== 'gif' && pen.name !== 'echarts'){
-      pen.name === 'echarts'&&console.log("hello",pen.externElement,pen);
+    if(!this.store.options.isRunMode){
+      // 编辑态走之前的绘制逻辑
       globalStore.path2dDraws[pen.name] &&
-        this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
+      this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
+    }else{
+      // 运行态做特殊处理
+      if(!pen.externElement&&pen.name !== 'gif' && pen.name !== 'echarts'){
+        globalStore.path2dDraws[pen.name] &&
+          this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
+      }
     }
     pen.calculative.patchFlags = true;
     this.patchFlags = true;
