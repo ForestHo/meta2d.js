@@ -2315,7 +2315,7 @@ export class Canvas {
     // active 消息表示拖拽结束
     // this.store.emitter.emit('active', this.store.active);
     this.initImageCanvas(this.store.active);
-
+    if (!this.dock) return;
     const { xDock, yDock } = this.dock;
     let dockPen: Pen;
     if (xDock) {
