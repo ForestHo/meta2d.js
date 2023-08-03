@@ -2678,13 +2678,13 @@ export class Canvas {
           getParent(this.store.lastHover, true) || this.store.lastHover,
           false
         );
-        this.initTemplateCanvas([this.store.lastHover]);
+        // this.initTemplateCanvas([this.store.lastHover]);
         this.store.emitter.emit('leave', this.store.lastHover);
         this.tooltip.hide();
       }
       if (this.store.hover) {
         this.store.hover.calculative.hover = true;
-        this.initTemplateCanvas([this.store.hover]);
+        // this.initTemplateCanvas([this.store.hover]);
         setHover(getParent(this.store.hover, true) || this.store.hover);
         this.store.emitter.emit('enter', this.store.hover);
         this.tooltip.show(this.store.hover, pt);
