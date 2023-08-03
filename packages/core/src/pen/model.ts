@@ -321,6 +321,7 @@ export interface Pen extends Rect {
   imageRadius?: number; //图片圆角
   textFlip?: boolean; //文字是否镜像
   textRotate?: boolean; //文字是否旋转
+  template?: boolean; //是否作为模版图元
   // calculative 对象中的值是为了动画存在，表明了渐变过程中，画布上绘制的当前值
   calculative?: {
     x?: number;

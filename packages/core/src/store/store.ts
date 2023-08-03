@@ -57,6 +57,7 @@ export interface Meta2dData {
   iconUrls?: string[];
   mockData?: Function;
   name?: string;
+  template?: string; //模版id
 }
 
 export interface Network {
@@ -125,7 +126,7 @@ export interface Meta2dStore {
   emitter: Emitter;
   dpiRatio?: number;
   clipboard?: Meta2dClipboard;
-  patchFlagsBackground?: boolean; // 是否需要重绘背景，包含网格
+  // patchFlagsBackground?: boolean; // 是否需要重绘背景，包含网格
   patchFlagsTop?: boolean; // 是否需要重绘标尺
   bkImg: HTMLImageElement;
   // 测试使用
@@ -137,6 +138,9 @@ export interface Meta2dStore {
     offscreen?: any[];
     flag?: boolean[];
   }[];
+  templatePens?: { [key: string]: Pen };
+  sameTemplate?: boolean; //标记是否是同一模版
+  lastScale?: number; //记录上次模版的scale
 }
 
 export interface Meta2dClipboard {
@@ -173,6 +177,7 @@ export const createStore = () => {
     binds: {},
     meta2dDatas: [],
     cacheDatas: [],
+    templatePens: {},
   } as Meta2dStore;
 };
 
@@ -186,7 +191,16 @@ export const useStore = (id = 'default'): Meta2dStore => {
   return globalStore[id];
 };
 
-export const clearStore = (store: Meta2dStore) => {
+export const clearStore = (store: Meta2dStore, template?: string) => {
+  if (store.data.template === template) {
+    //模版一样
+    for (const pen of store.data.pens) {
+      if (pen.template) {
+        store.templatePens[pen.id] = pen;
+      }
+    }
+  }
+  store.lastScale = store.data.scale;
   store.data = {
     x: 0,
     y: 0,
@@ -194,8 +208,10 @@ export const clearStore = (store: Meta2dStore) => {
     pens: [],
     origin: { x: 0, y: 0 },
     center: { x: 0, y: 0 },
-    paths: {},
+    paths: {},template: store.data.template === template ? template : null,
   };
+  store.sameTemplate = store.data.template === template ? true : false;
+
   store.pens = {};
   store.histories = [];
   store.historyIndex = null;
