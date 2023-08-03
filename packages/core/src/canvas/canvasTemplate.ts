@@ -147,8 +147,6 @@ export class CanvasTemplate {
           continue;
         }
         if (pen.template && pen.calculative.inView) {
-          //非图片
-          renderPen(ctx, pen);
           //图片
           if (pen.image && pen.name !== 'gif' && pen.calculative.img) {
             ctx.save();
@@ -161,6 +159,8 @@ export class CanvasTemplate {
             drawImage(ctx, pen);
             ctx.restore();
           }
+           //非图片
+           renderPen(ctx, pen);
         }
       }
       ctx.restore();
