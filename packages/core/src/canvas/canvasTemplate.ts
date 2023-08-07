@@ -64,7 +64,6 @@ export class CanvasTemplate {
       .clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.patchFlags = true;
     this.bgPatchFlags = true;
-    console.log('init');
 
     // for (const pen of this.store.data.pens) {
     //   if (this.hasImage(pen)) {
@@ -96,7 +95,6 @@ export class CanvasTemplate {
       .clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.bgPatchFlags = true;
     this.patchFlags = true;
-    console.log('clear');
   }
 
   render() {
@@ -167,7 +165,6 @@ export class CanvasTemplate {
     }
 
     if (this.patchFlags || this.bgPatchFlags) {
-      console.log('模版绘制');
       const ctxCanvas = this.canvas.getContext('2d');
       ctxCanvas.clearRect(0, 0, this.canvas.width, this.canvas.height);
       ctxCanvas.drawImage(
