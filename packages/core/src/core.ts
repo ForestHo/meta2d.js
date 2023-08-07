@@ -2623,7 +2623,6 @@ export class Meta2d {
         }
       });
       this.centerView();
-      // console.log("fitTemplateView")
       // this.canvas.canvasTemplate.init();
       // this.canvas.canvasImage.init();
       // this.canvas.canvasImageBottom.init();
