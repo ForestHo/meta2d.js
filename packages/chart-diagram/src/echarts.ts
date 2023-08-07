@@ -435,7 +435,6 @@ function binds(pen: ChartPen, values: IValue[], formItem: FormItem): IValue {
           }
         }
       });
-      // console.log('单饼图 dataY', JSON.stringify(dataY));
       return {
         id: pen.id,
         dataY,
@@ -461,7 +460,6 @@ function binds(pen: ChartPen, values: IValue[], formItem: FormItem): IValue {
         }
       }
     });
-    // console.log('dataX', JSON.stringify(dataX), 'dataY', JSON.stringify(dataY));
     return {
       id: pen.id,
       dataY,
@@ -500,12 +498,6 @@ function binds(pen: ChartPen, values: IValue[], formItem: FormItem): IValue {
     } else {
       return;
     }
-    // console.log(
-    //   'series',
-    //   JSON.stringify(series.map((serie) => serie.name)),
-    //   'dataY',
-    //   JSON.stringify(dataY)
-    // );
     return {
       id: pen.id,
       dataY: dataY.length === 1 ? dataY[0] : dataY,

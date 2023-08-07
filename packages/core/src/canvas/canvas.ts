@@ -3318,13 +3318,11 @@ export class Canvas {
     if (!pen.id) {
       pen.id = s8();
     }
-    // console.log( pen.template,this.store.templatePens[pen.id])
     // if (
     //   this.store.sameTemplate &&
     //   this.store.templatePens[pen.id] &&
     //   pen.template
     // ) {
-    //   // console.log('enter makepen');
     //   pen = this.store.templatePens[pen.id];
     //   this.store.data.pens.push(pen);
     //   this.updatePenRect(pen);
