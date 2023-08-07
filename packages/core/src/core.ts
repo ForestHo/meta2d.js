@@ -647,18 +647,19 @@ export class Meta2d {
    * @date 17/07/2023
    * @memberof Meta2d
    */
-  clearOnlyData(){
+  clearOnlyData(template?: string){
     for (const pen of this.store.data.pens) {
       pen.onDestroy?.(pen);
     }
-    clearStore(this.store);
+    clearStore(this.store, template);
     this.hideInput();
     this.store.clipboard = undefined;
     // 非必要，为的是 open 时重绘 背景与网格
-    this.store.patchFlagsBackground = true;
+    // this.store.patchFlagsBackground = true;
     this.store.patchFlagsTop = true;
     this.setBackgroundImage(undefined);
   }
+  lastQuietRender:boolean|undefined = undefined;//记录上一次是否静默打开的标志位
   /**
    * @description 类似于meta2d.open函数,openWithCache函数做了图纸的缓存，图纸数据必须配置唯一的_id，才能被正确缓存
    * @author Joseph Ho
@@ -672,8 +673,13 @@ export class Meta2d {
     let index = this.store.cacheDatas.findIndex(
       (item) => item.data && item.data._id === data._id
     );
-    this.clearOnlyData();
-    this.store.patchFlagsBackground = true;
+    // 静默打开时，清理画布
+    if(!render){
+      this.canvas.clearCanvas();
+      this.canvas.canvasTemplate.clear();
+    }
+    this.clearOnlyData(data.template);
+    // this.store.patchFlagsBackground = true;
     this.store.patchFlagsTop = true;
     this.store.patchFlagsLast = true;
     if (!render) {
@@ -707,9 +713,20 @@ export class Meta2d {
       for (const pen of data.pens) {
         this.canvas.updateLines(pen);
       }
+      // 如果没有模板ID，生成一个
+      if (!this.store.data.template) {
+        this.store.data.template = s8();
+      }
       // this.render();
       // 调用fitview，且padding=0
-      this.fitView(true,0);
+      // this.fitView(true,0);
+      // this.canvas.canvasTemplate.init();
+      // 图纸有模板，使用fitTemplateView
+      if(data.template){
+        this.fitTemplateView(true,0);
+      }else{ //图纸么有模板，使用fitView
+        this.fitView(true,0);
+      }
       render && this.startAnimate();
       this.doInitJS();
     }
@@ -839,8 +856,14 @@ export class Meta2d {
     if(!render){
       this.canvas.clearCanvas();
     }else{
+      // lastQuietRender不是默认的undefined，并且lastQuietRender上一次是静默打开，当前是正常打开，记录变化的上升沿
+      if(this.lastQuietRender !== undefined && !this.lastQuietRender){
+        this.canvas.canvasTemplate.init();
+      }
       this.render();
     }
+    // 更新lastQuietRender的值
+    this.lastQuietRender = render;
   }
 
   initBindDatas() {
@@ -2473,14 +2496,33 @@ export class Meta2d {
     return getRect(pens);
   }
 
+  /**
+   * @description css样式上隐藏模板层
+   * @author Joseph Ho
+   * @date 07/08/2023
+   * @memberof Meta2d
+   */
   hiddenTemplate() {
     this.canvas.canvasTemplate.hidden();
   }
 
+  /**
+   * @description css样式上展示模板层
+   * @author Joseph Ho
+   * @date 07/08/2023
+   * @memberof Meta2d
+   */
   showTemplate() {
     this.canvas.canvasTemplate.show();
   }
 
+  /**
+   * @description 批量设置模版层上的图元锁定状态
+   * @author Joseph Ho
+   * @date 07/08/2023
+   * @param {LockState} lock -- 锁定值（LockState）
+   * @memberof Meta2d
+   */
   lockTemplate(lock: LockState) {
     //锁定
     this.store.data.pens.forEach((pen) => {
@@ -2531,10 +2573,15 @@ export class Meta2d {
     );
     this.delete(pens);
   }
-
   /**
-   * 放大到屏幕尺寸，并居中
-   * @param fit true，填满但完整展示；false，填满，但长边可能截取（即显示不完整）
+   * @description 放大到屏幕尺寸，并居中。画布充满整个屏幕大小，并将画布原点重置，替换原来的fitView方法。
+   *              主要是为了fitView导致上次的模版和当前图纸没对齐问题。
+   * @author Joseph Ho
+   * @date 07/08/2023
+   * @param {boolean} [fit=true] 同fitView，true，填满但完整展示；false，填满，但长边可能截取（即显示不完整）
+   * @param {Padding} [viewPadding=10] 同fitView
+   * @returns {*}
+   * @memberof Meta2d
    */
   fitTemplateView(fit: boolean = true, viewPadding: Padding = 10) {
     //  默认垂直填充，两边留白
@@ -2542,7 +2589,7 @@ export class Meta2d {
     // 1. 重置画布尺寸为容器尺寸
     const { canvas } = this.canvas;
     const { offsetWidth: width, offsetHeight: height } = canvas;
-    this.resize(width, height);
+    // this.resize(width, height);
     // 2. 获取设置的留白值
     const padding = formatPadding(viewPadding);
 
@@ -2567,7 +2614,7 @@ export class Meta2d {
     let pens = this.store.data.pens.filter((pen) => !pen.parentId);
     this.canvas.templateTranslatePens(pens, -_rect.x, -_rect.y);
     // 5. 居中
-    setTimeout(() => {
+    // setTimeout(() => {
       this.store.data.pens.forEach((pen) => {
         if (!pen.type) {
           this.canvas.updateLines(pen);
@@ -2576,13 +2623,14 @@ export class Meta2d {
         }
       });
       this.centerView();
-      this.canvas.canvasTemplate.init();
-      this.canvas.canvasImage.init();
-      this.canvas.canvasImageBottom.init();
-      this.render();
-    }, 100);
+      // console.log("fitTemplateView")
+      // this.canvas.canvasTemplate.init();
+      // this.canvas.canvasImage.init();
+      // this.canvas.canvasImageBottom.init();
+      // this.render();
+    // }, 100);
   }
-  
+
   /**
    * @description 通过指定的width宽度和高度来fitView
    * @author Joseph Ho

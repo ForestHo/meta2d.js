@@ -192,7 +192,9 @@ export const useStore = (id = 'default'): Meta2dStore => {
 };
 
 export const clearStore = (store: Meta2dStore, template?: string) => {
-  if (store.data.template === template) {
+  // 判断切换前的图纸和当前打开的图纸的模板是否相同
+  const isSameTpl = store.data.template === template;
+  if (isSameTpl) {
     //模版一样
     for (const pen of store.data.pens) {
       if (pen.template) {
@@ -208,9 +210,10 @@ export const clearStore = (store: Meta2dStore, template?: string) => {
     pens: [],
     origin: { x: 0, y: 0 },
     center: { x: 0, y: 0 },
-    paths: {},template: store.data.template === template ? template : null,
+    paths: {},
+    template: isSameTpl ? template : null,
   };
-  store.sameTemplate = store.data.template === template ? true : false;
+  store.sameTemplate = isSameTpl;
 
   store.pens = {};
   store.histories = [];
