@@ -3304,9 +3304,12 @@ export class Canvas {
         break;
     }
     if (action.type === EditType.Update) {
-      this.initImageCanvas([...action.pens, ...action.initPens]);
+      let pens = [...action.pens, ...action.initPens];
+      this.initImageCanvas(pens);
+      this.initTemplateCanvas(pens);
     } else {
       this.initImageCanvas(action.pens);
+      this.initTemplateCanvas(action.pens);
     }
     this.parent.onSizeUpdate();
     this.render();
