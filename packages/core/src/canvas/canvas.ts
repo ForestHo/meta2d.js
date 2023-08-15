@@ -3321,18 +3321,16 @@ export class Canvas {
     if (!pen.id) {
       pen.id = s8();
     }
-    if (
-      Math.abs(this.store.lastScale - this.store.data.scale) < 0.0001 &&
-      this.store.sameTemplate &&
-      this.store.templatePens[pen.id] &&
-      pen.template
-    ) {
-      console.log('enter makepen');
-      pen = this.store.templatePens[pen.id];
-      this.store.data.pens.push(pen);
-      this.updatePenRect(pen);
-      return;
-    }
+    // if (
+    //   this.store.sameTemplate &&
+    //   this.store.templatePens[pen.id] &&
+    //   pen.template
+    // ) {
+    //   pen = this.store.templatePens[pen.id];
+    //   this.store.data.pens.push(pen);
+    //   this.updatePenRect(pen);
+    //   return;
+    // }
 
     this.store.data.pens.push(pen);
     this.store.pens[pen.id] = pen;
@@ -4342,7 +4340,7 @@ export class Canvas {
           scalePen(pen, lineScale, lineCenter);
         }
       }
-      this.updatePenRect(pen, { worldRectIsReady: true });
+      // this.updatePenRect(pen, { worldRectIsReady: true });
       this.execPenResize(pen);
     });
     this.calcActiveRect();
