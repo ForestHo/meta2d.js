@@ -748,6 +748,7 @@ export class Meta2d {
         this.cacheData(tempData,data._id);
       }, 300);
     }
+    this.store.emitter.emit('opened');
   }
   /**
    * @description 从静默打开的图纸中恢复渲染到画布，配合openWithCache(data,false) 使用，
