@@ -2139,9 +2139,9 @@ export class Canvas {
             e.y = (this.dragRect.y + this.dragRect.ey) / 2;
           }
         }
-        this.dropPens(this.addCaches, e);
+        this.dropPens(deepClone(this.addCaches), e);
       }
-      this.addCaches = undefined;
+      // this.addCaches = undefined;
     }
 
     // Rotate
