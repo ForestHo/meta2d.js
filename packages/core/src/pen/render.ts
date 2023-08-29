@@ -907,6 +907,7 @@ function drawText(ctx: CanvasRenderingContext2D, pen: Pen) {
     } else if (textAlign === 'right') {
       x = width - textLineWidth;
     }
+    // 下划线
     ctx.fillText(text, drawRectX + x, drawRectY + (i + y) * oneRowHeight);
     const { textDecorationColor, textDecorationDash, textDecoration } = pen;
     if (textDecoration) {
@@ -918,6 +919,19 @@ function drawText(ctx: CanvasRenderingContext2D, pen: Pen) {
           width: textLineWidth,
         },
         { textDecorationColor, textDecorationDash, fontSize }
+      );
+    }
+    // 删除线
+    const { textStrickoutColor, textStrickoutDash, textStrickout } = pen;
+    if (textStrickout) {
+      drawStrickout(
+        ctx,
+        {
+          x: drawRectX + x,
+          y: drawRectY + (i + y) * oneRowHeight,
+          width: textLineWidth,
+        },
+        { textStrickoutColor, textStrickoutDash, fontSize }
       );
     }
   });
@@ -944,6 +958,31 @@ function drawUnderLine(
   ctx.lineWidth = 1;
   ctx.moveTo(x, y);
   ctx.setLineDash(textDecorationDash || []);
+  ctx.lineTo(x + width, y);
+  ctx.stroke();
+  ctx.restore();
+}
+function drawStrickout(
+  ctx: CanvasRenderingContext2D,
+  location: any,
+  config: any
+) {
+  const { textStrickoutColor, textStrickoutDash, fontSize } = config;
+  let { x, y, width } = location;
+  switch (ctx.textBaseline) {
+    case 'top':
+      y += fontSize / 2;
+      break;
+    case 'bottom':
+      y -= fontSize / 2;
+      break;
+  }
+  ctx.save();
+  ctx.beginPath();
+  ctx.strokeStyle = textStrickoutColor ? textStrickoutColor : ctx.fillStyle;
+  ctx.lineWidth = 1;
+  ctx.moveTo(x, y);
+  ctx.setLineDash(textStrickoutDash || []);
   ctx.lineTo(x + width, y);
   ctx.stroke();
   ctx.restore();
