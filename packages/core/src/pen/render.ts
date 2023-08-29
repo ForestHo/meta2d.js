@@ -943,7 +943,6 @@ function drawUnderLine(
   ctx.strokeStyle = textDecorationColor ? textDecorationColor : ctx.fillStyle;
   ctx.lineWidth = 1;
   ctx.moveTo(x, y);
-  console.log(textDecorationDash, 'te');
   ctx.setLineDash(textDecorationDash || []);
   ctx.lineTo(x + width, y);
   ctx.stroke();
@@ -1316,7 +1315,6 @@ export function renderPen(ctx: CanvasRenderingContext2D, pen: Pen) {
   drawText(ctx, pen);
   if (pen.type === PenType.Line && pen.fillTexts) {
     for (const text of pen.fillTexts) {
-      console.log(text, 111);
       drawFillText(ctx, pen, text);
     }
   }
