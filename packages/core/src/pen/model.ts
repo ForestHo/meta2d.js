@@ -507,7 +507,10 @@ export interface Pen extends Rect {
     imageRadius?: number;
     autoPolylineFlag?: boolean; //首次打开不自动计算
   };
-
+  // 下划线相关配置属性
+  textDecoration?:boolean;
+  textDecorationDash?:number[];
+  textDecorationColor?:string;
   // 前一个动画帧状态数据
   prevFrame?: Pen;
 
