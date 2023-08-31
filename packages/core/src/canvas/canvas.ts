@@ -1685,7 +1685,6 @@ export class Canvas {
       this.onMouseUp(e);
       return;
     }
-
     // 避免鼠标点击和移动一起触发，误抖动
     if (this.lastMouseTime) {
       const now = performance.now();
@@ -1875,7 +1874,6 @@ export class Canvas {
       const pt: Point = { ...e };
       pt.id = s8();
       pt.penId = this.drawingLine.id;
-
       // dock
       if (
         !this.store.options.disableDock &&
@@ -2129,7 +2127,7 @@ export class Canvas {
     // Add pen
     if (this.addCaches && this.addCaches.length) {
       if (!this.store.data.locked) {
-        if(this.dragRect){
+        if(this.dragRect && this.dragRect.width > 20 && this.dragRect.height > 20){
           // 只存在一个缓存图元
           if(this.addCaches.length === 1){
             const target = this.addCaches[0];
