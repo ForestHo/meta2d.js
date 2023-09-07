@@ -932,9 +932,10 @@ export class Meta2d {
     }
   }
 
-  drawLine(lineName?: string) {
+  drawLine(lineName?: string,type?:string) {
     lineName && lockedError(this.store);
-    this.canvas.drawingLineName = lineName;
+    this.canvas.drawingLineName = lineName == 'multipleLine'?'line':lineName;
+    this.canvas.lineType = type;
   }
 
   drawingPencil() {
@@ -3780,7 +3781,7 @@ export class Meta2d {
     const line: Pen = {
       height: absHeight,
       lineName: 'line',
-      lineWidth: 1,
+      lineWidth: 2,
       name: 'line',
       type: 1,
       width: absWidth,

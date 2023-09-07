@@ -21,7 +21,7 @@ import { circle } from './circle';
 import { svgPath } from './svgPath';
 import { diamond } from './diamond';
 import { triangle, triangleAnchors } from './triangle';
-import { pentagon, pentagonAnchors } from './pentagon';
+import { pentagon } from './pentagon';
 import { pentagram, pentagramAnchors } from './pentagram';
 import { hexagon } from './hexagon';
 import { leftArrow, rightArrow, twowayArrow } from './arrow';
@@ -67,7 +67,7 @@ export function commonPens() {
 export function commonAnchors() {
   return {
     triangle: triangleAnchors,
-    pentagon: pentagonAnchors,
+    // pentagon: pentagonAnchors,
     pentagram: pentagramAnchors,
     mindNode: mindNodeAnchors,
     mindLine: mindLineAnchors,

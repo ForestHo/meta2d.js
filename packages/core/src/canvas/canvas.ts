@@ -50,6 +50,8 @@ import {
   getGlobalColor,
   clearLifeCycle,
   rotatePen,
+  getGlobalLineWidth,
+  getFont
 } from '../pen';
 import {
   calcRotate,
@@ -1329,7 +1331,7 @@ export class Canvas {
   private getInitPencilLine(pt: Point): Pen {
     const { data, options } = this.store;
     const scale = data.scale;
-    const lineWidth = data.lineWidth || 1;
+    const lineWidth = data.lineWidth || 2;
     return {
       id: pt.penId,
       name: 'line',
@@ -1357,7 +1359,7 @@ export class Canvas {
     this.inactive();
     const { data, options } = this.store;
     const scale = data.scale;
-    const lineWidth = data.lineWidth || 1;
+    const lineWidth = data.lineWidth || 2;
     pt.penId = s8();
     return {
       id: pt.penId,
@@ -1455,6 +1457,9 @@ export class Canvas {
     if (this.drawingLine) {
       // 单击在锚点上，完成绘画
       if (this.store.hoverAnchor) {
+        if(this.lineType == 'irregularFigure') {
+          return;
+        }
         const to = getToAnchor(this.drawingLine);
         if (this.store.hoverAnchor.type === PointType.Line) {
           getDistance(to, this.store.hoverAnchor, this.store);
@@ -1490,7 +1495,15 @@ export class Canvas {
           return;
         }
       }
-
+      // 如果连线是直线，再次左键结束绘制，右键取消绘制
+      if(this.drawingLineName == 'line' && this.lineType == 'default') {
+        if(e.buttons === 1) {
+          this.finishDrawline(true);
+        } else if(e.buttons == 2) {
+          this.drawingLine = undefined;
+        }
+        return;
+      }
       // 右键，完成绘画
       if (
         e.buttons === 2 ||
@@ -1500,17 +1513,30 @@ export class Canvas {
           this.drawingLine?.calculative.worldAnchors.length >
             this.store.options.drawingLineLength)
       ) {
-        this.finishDrawline(true);
+        this.finishDrawline(true, true);
+        if(this.drawingLineName == 'line' && this.lineType == 'irregularFigure') {
+          this.store.active.forEach((pen) => {
+            if (pen.type) {
+              pen.close = !pen.close;
+              this.store.path2dMap.set(pen, globalStore.path2dDraws.line(pen));
+            }
+          });
+        }
         if (this.store.active[0]?.anchors[0].connectTo) {
           this.drawingLineName = '';
-        } else {
-          this.drawingLineName = this.store.options.drawingLineName;
         }
+        // else {
+          // this.drawingLineName = this.store.options.drawingLineName;
+        // }
         return;
       }
 
       // 自动锚点（单击节点），完成绘画
+      const specialLine = ['irregularFigure','eulerhabd']
       if (this.store.options.autoAnchor && this.hoverType === HoverType.Node) {
+        if(this.lineType == 'irregularFigure') {
+          return;
+        }
         const to = getToAnchor(this.drawingLine);
         const anchor = nearestAnchor(this.store.hover, e);
         to.x = anchor.x;
@@ -1519,7 +1545,6 @@ export class Canvas {
         connectLine(this.store.hover, anchor, this.drawingLine, to);
         this.drawline();
         this.finishDrawline(true);
-
         return;
       }
 
@@ -1577,7 +1602,7 @@ export class Canvas {
         );
 
         // this.drawline();
-      } else if (!this.drawingLine && this.drawingLineName !== 'curve') {
+      } else if (!this.drawingLine && this.drawingLineName !== 'curve' && e.buttons ==1) {
         this.inactive(true);
         const pt: Point = { id: s8(), x: e.x, y: e.y };
         this.drawingLine = this.createDrawingLine(pt);
@@ -1765,7 +1790,8 @@ export class Canvas {
         }
 
         // 框选
-        if (e.buttons === 1 && !this.hoverType && !this.hotkeyType) {
+        // if (e.buttons === 1 && !this.hoverType && !this.hotkeyType) {
+        if (e.buttons === 1 && !this.hoverType && (!this.hotkeyType || e.shiftKey)) {
           this.dragRect = {
             x: Math.min(this.mouseDown.x, e.x),
             y: Math.min(this.mouseDown.y, e.y),
@@ -1869,7 +1895,7 @@ export class Canvas {
         this.patchFlags = true;
       }
     }
-
+    // 正在画线
     if (this.drawingLine) {
       const pt: Point = { ...e };
       pt.id = s8();
@@ -1924,23 +1950,30 @@ export class Canvas {
         }
 
         if (this.drawingLineName === 'line') {
-          if (e.ctrlKey && !e.shiftKey) {
-            to.x =
-              this.drawingLine.calculative.worldAnchors[
-                this.drawingLine.calculative.worldAnchors.length - 2
-              ].x;
-          } else if (e.shiftKey && !e.ctrlKey) {
-            to.y =
-              this.drawingLine.calculative.worldAnchors[
-                this.drawingLine.calculative.worldAnchors.length - 2
-              ].y;
-          } else if (e.shiftKey && e.ctrlKey) {
+          if(e.shiftKey && !e.ctrlKey) { 
             let last =
               this.drawingLine.calculative.worldAnchors[
                 this.drawingLine.calculative.worldAnchors.length - 2
               ];
             this.getSpecialAngle(to, last);
           }
+          // if (e.ctrlKey && !e.shiftKey) {
+          //   to.x =
+          //     this.drawingLine.calculative.worldAnchors[
+          //       this.drawingLine.calculative.worldAnchors.length - 2
+          //     ].x;
+          // } else if (e.shiftKey && !e.ctrlKey) {
+          //   to.y =
+          //     this.drawingLine.calculative.worldAnchors[
+          //       this.drawingLine.calculative.worldAnchors.length - 2
+          //     ].y;
+          // } else if (e.shiftKey && e.ctrlKey) {
+          //   let last =
+          //     this.drawingLine.calculative.worldAnchors[
+          //       this.drawingLine.calculative.worldAnchors.length - 2
+          //     ];
+          //   this.getSpecialAngle(to, last);
+          // }
         }
 
         this.drawline();
@@ -1997,7 +2030,7 @@ export class Canvas {
 
     if (this.drawingLine) {
       // 在锚点上，完成绘画
-      if (this.store.hoverAnchor) {
+      if (this.store.hoverAnchor && this.lineType != 'irregularFigure') {
         const to = getToAnchor(this.drawingLine);
         if (this.store.hoverAnchor.type === PointType.Line) {
           getDistance(to, this.store.hoverAnchor, this.store);
@@ -2018,7 +2051,7 @@ export class Canvas {
       }
 
       // 自动锚点（单击节点），完成绘画
-      if (this.store.options.autoAnchor && this.hoverType === HoverType.Node) {
+      if (this.store.options.autoAnchor && this.hoverType === HoverType.Node && this.lineType != 'irregularFigure') {
         const to = getToAnchor(this.drawingLine);
         const anchor = nearestAnchor(this.store.hover, e);
         to.x = anchor.x;
@@ -2127,17 +2160,27 @@ export class Canvas {
     // Add pen
     if (this.addCaches && this.addCaches.length) {
       if (!this.store.data.locked) {
-        if(this.dragRect && this.dragRect.width > 20 && this.dragRect.height > 20){
+        if(this.addCaches?.length === 1&&this.addCaches[0].name == 'text'){
+          const pens:Pen[] = deepClone(this.addCaches);
+          this.dropPens(pens, e);
+          this.store.hover = pens[0];
+          setTimeout(() => {
+            this.showInput(pens[0]);
+          },100)
+        } else if(this.dragRect && (this.dragRect.width > 20 || this.dragRect.height > 20)){
           // 只存在一个缓存图元
           if(this.addCaches.length === 1){
             const target = this.addCaches[0];
             target.width = this.dragRect.width;
             target.height = this.dragRect.height;
+            if((e.shiftKey && target.name == 'circle') || target.name == 'pentagon') {
+              target.width = target.height = Math.max(target.height,target.width);
+            }
             e.x = (this.dragRect.x + this.dragRect.ex) / 2;
             e.y = (this.dragRect.y + this.dragRect.ey) / 2;
           }
+          this.dropPens(deepClone(this.addCaches), e);
         }
-        this.dropPens(deepClone(this.addCaches), e);
       }
       // this.addCaches = undefined;
     }
@@ -2516,7 +2559,8 @@ export class Canvas {
   getSpecialAngle(to: Point, last: Point) {
     //快捷定位到特殊角度
     let angle = 0;
-    let angleArr = [0, 30, 45, 60, 90, 120, 150, 135, 180];
+    // let angleArr = [0, 30, 45, 60, 90, 120, 150, 135, 180];
+    let angleArr = [0,  45, 90, 135, 180];
     //获取实际角度
     if (to.x - last.x !== 0) {
       angle = (Math.atan((last.y - to.y) / (to.x - last.x)) * 180) / Math.PI;
@@ -3353,7 +3397,7 @@ export class Canvas {
     // end
 
     if (pen.lineWidth == undefined) {
-      pen.lineWidth = 1;
+      pen.lineWidth = 2;
     }
     const { fontSize, lineHeight } = this.store.options;
     if (!pen.fontSize) {
@@ -3458,15 +3502,19 @@ export class Canvas {
     this.externalElements.style.cursor = 'default';
   }
 
-  async finishDrawline(end?: boolean) {
+  async finishDrawline(end?: boolean,isTemp?:boolean) {
     if (!this.drawingLine) {
       return;
     }
     const from = getFromAnchor(this.drawingLine);
     let to = getToAnchor(this.drawingLine);
-    if (to.isTemp) {
+    if (to.isTemp || isTemp) {
       this.drawingLine.calculative.worldAnchors.pop();
       to = getToAnchor(this.drawingLine);
+      if(this.drawingLine.calculative.worldAnchors.length < 3) {
+        this.drawingLine = undefined;
+        return;
+      } 
     }
     if (!end) {
       !to.connectTo && this.drawingLine.calculative.worldAnchors.pop();
@@ -3529,7 +3577,7 @@ export class Canvas {
       globalStore.path2dDraws[this.drawingLine.name](this.drawingLine)
     );
     this.drawingLine = undefined;
-    this.drawingLineName = undefined;
+    // this.drawingLineName = undefined;
     this.render();
   }
 
@@ -3919,7 +3967,7 @@ export class Canvas {
   renderPens = () => {
     const ctx = this.offscreen.getContext('2d') as CanvasRenderingContext2D;
     ctx.strokeStyle = getGlobalColor(this.store);
-
+    ctx.lineWidth = getGlobalLineWidth(this.store);
     for (const pen of this.store.data.pens) {
       if (!isFinite(pen.x)) {
         continue;
@@ -5932,7 +5980,7 @@ export class Canvas {
       !this.store.options.disableInput
     ) {
       if (this.store.hover.onShowInput) {
-        this.store.hover.onShowInput(this.store.hover, e as any);
+        this.store.hover.onShowInput(this.store.hover, e as any); 
       } else {
         this.showInput(this.store.hover);
       }
@@ -6001,7 +6049,6 @@ export class Canvas {
     this.inputDiv.dataset.penId = pen.id;
     this.inputDiv.contentEditable =
       pen.disableInput == undefined ? 'true' : pen.disableInput.toString();
-
     if (pen.dropdownList && this.dropdown.style.display !== 'block') {
       if (!this.store.data.locked) {
         this.inputRight.style.display = 'none';
@@ -6012,6 +6059,18 @@ export class Canvas {
     }
     this.inputDiv.contentEditable = 'true';
     this.inputDiv.focus();
+    if (pen.name === 'text') {
+      const ctx =this.offscreen.getContext('2d') as CanvasRenderingContext2D;
+      ctx.save();
+      const {fontSize,fontFamily} = pen.calculative;
+      ctx.font = getFont({fontSize,fontFamily})
+      this.inputDiv.oninput = () => {
+        const w = this.offscreen.getContext('2d').measureText(this.inputDiv.innerHTML).width;
+        pen.width = w;
+        this.updatePenRect(pen);
+        pen.calculative.canvas.calcActiveRect();
+      }
+    }
     const range = window.getSelection(); //创建range
     range.selectAllChildren(this.inputDiv); //range 选择obj下所有子内容
     range.collapseToEnd(); //光标移至最后
@@ -6200,6 +6259,7 @@ export class Canvas {
   }
 
   hideInput = () => {
+    this.inputDiv.oninput = null;
     if (this.inputParent.style.display === 'flex') {
       this.inputParent.style.display = 'none';
       const pen = this.store.pens[this.inputDiv.dataset.penId];

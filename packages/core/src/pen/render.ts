@@ -720,10 +720,10 @@ function getImagePosition(pen: Pen) {
   if (iconHeight) {
     h = iconHeight;
   }
-  if (imgNaturalWidth && imgNaturalHeight && pen.imageRatio) {
+  if (imgNaturalWidth && imgNaturalHeight && pen.imageRatio != 'stretch') {
     const scaleW = rect.width / imgNaturalWidth;
     const scaleH = rect.height / imgNaturalHeight;
-    const scaleMin = Math.min(scaleW, scaleH);
+    const scaleMin = pen.imageRatio == 'fill' ? Math.max(scaleW, scaleH):Math.min(scaleW, scaleH);
     const wDivideH = imgNaturalWidth / imgNaturalHeight;
     if (iconWidth) {
       h = iconWidth / wDivideH;
@@ -789,7 +789,7 @@ export function drawImage(
     ctx.rotate((iconRotate * Math.PI) / 180);
     ctx.translate(-centerX, -centerY);
   }
-  if (pen.imageRadius) {
+  if (pen.imageRadius || pen.imageRatio == 'fill') {
     ctx.save();
     let wr = pen.calculative.imageRadius || 0,
       hr = wr;
@@ -1212,7 +1212,7 @@ export function renderPen(ctx: CanvasRenderingContext2D, pen: Pen) {
     ctxRotate(ctx, pen);
   }
 
-  if (pen.calculative.lineWidth > 1) {
+  if (pen.calculative.lineWidth > 2) {
     ctx.lineWidth = pen.calculative.lineWidth;
   }
 
@@ -1246,6 +1246,7 @@ export function renderPen(ctx: CanvasRenderingContext2D, pen: Pen) {
       fill = true;
     } else {
       let stroke: string | CanvasGradient | CanvasPattern;
+      let lineWidth = 2;
       // TODO: 线只有线性渐变
       if (pen.calculative.strokeType) {
         if (pen.calculative.lineGradientColors) {
@@ -1264,8 +1265,10 @@ export function renderPen(ctx: CanvasRenderingContext2D, pen: Pen) {
         }
       } else {
         stroke = pen.calculative.color || getGlobalColor(store);
+        lineWidth = pen.calculative.lineWidth || getGlobalLineWidth(store);
       }
       ctx.strokeStyle = stroke;
+      ctx.lineWidth = lineWidth;
     }
   }
   if (setBack) {
@@ -1443,7 +1446,7 @@ export function renderPenRaw(
     ctxRotate(ctx, pen);
   }
 
-  if (pen.calculative.lineWidth > 1) {
+  if (pen.calculative.lineWidth > 2) {
     ctx.lineWidth = pen.calculative.lineWidth;
   }
   let fill: any;
@@ -1466,6 +1469,7 @@ export function renderPenRaw(
       }
     } else {
       ctx.strokeStyle = pen.calculative.color || getGlobalColor(store);
+      ctx.lineWidth = pen.calculative.lineWidth || getGlobalLineWidth(store);
     }
 
     if (pen.backgroundImage) {
@@ -1783,12 +1787,15 @@ export function getGlobalColor(store: Meta2dStore) {
   const { data, options } = store;
   return data.color || options.color;
 }
-
+export function getGlobalLineWidth(store:Meta2dStore) {
+  const { data, options } = store;
+  return data.lineWidth || options.lineWidth;
+}
 export function renderLineAnchors(ctx: CanvasRenderingContext2D, pen: Pen) {
   const store = pen.calculative.canvas.store;
 
   ctx.save();
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 2;
   ctx.fillStyle = pen.activeColor || store.options.activeColor;
   pen.calculative.worldAnchors.forEach((pt) => {
     !pt.hidden && !pt.isTemp && renderAnchor(ctx, pt, pen);
@@ -1804,7 +1811,6 @@ export function renderAnchor(
   if (!pt) {
     return;
   }
-
   const active =
     pen.calculative.canvas.store.activeAnchor ===
       pen.calculative.activeAnchor && pen.calculative.activeAnchor === pt;

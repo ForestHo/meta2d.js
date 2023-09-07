@@ -83,6 +83,7 @@ export interface Options {
   textRotate?: boolean; //文字旋转
   cacheLength?: number; //缓存数据长度
   isRunMode:boolean; //是否是在运行态
+  lineWidth?:number;
 }
 
 export const defaultOptions: Options = {

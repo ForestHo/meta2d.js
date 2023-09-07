@@ -141,6 +141,7 @@ export interface Meta2dStore {
   templatePens?: { [key: string]: Pen };
   sameTemplate?: boolean; //标记是否是同一模版
   lastScale?: number; //记录上次模版的scale
+  lineWidth?: number;
 }
 
 export interface Meta2dClipboard {
