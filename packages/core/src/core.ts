@@ -934,7 +934,6 @@ export class Meta2d {
 
   drawLine(lineName?: string,type?:string) {
     lineName && lockedError(this.store);
-    this.canvas.drawingLineName = lineName == 'multipleLine'?'line':lineName;
     this.canvas.lineType = type;
   }
 
