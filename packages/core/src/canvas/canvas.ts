@@ -1063,8 +1063,8 @@ export class Canvas {
     // }
     for (const pen of pens) {
       if (!pen.parentId) {
-        pen.width *= this.store.data.scale;
-        pen.height *= this.store.data.scale;
+        // pen.width *= this.store.data.scale;
+        // pen.height *= this.store.data.scale;
         pen.x = e.x - pen.width / 2;
         pen.y = e.y - pen.height / 2;
       }
@@ -3511,7 +3511,8 @@ export class Canvas {
     if (to.isTemp || isTemp) {
       this.drawingLine.calculative.worldAnchors.pop();
       to = getToAnchor(this.drawingLine);
-      if(this.drawingLine.calculative.worldAnchors.length < 3) {
+      const anchorsLength = this.drawingLine.calculative.worldAnchors.length;
+      if((this.lineType == 'irregularFigure' && anchorsLength < 3) || (this.lineType == 'eulerhabd' && anchorsLength < 2)) {
         this.drawingLine = undefined;
         return;
       } 

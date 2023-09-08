@@ -932,9 +932,9 @@ export class Meta2d {
     }
   }
 
-  drawLine(lineName?: string,type?:string) {
+  drawLine(lineName?: string) {
     lineName && lockedError(this.store);
-    this.canvas.lineType = type;
+    this.canvas.drawingLineName = lineName;
   }
 
   drawingPencil() {
