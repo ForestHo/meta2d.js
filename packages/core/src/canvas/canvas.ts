@@ -132,6 +132,8 @@ import { Title } from '../title';
 import { CanvasTemplate } from './canvasTemplate';
 
 export const movingSuffix = '-moving' as const;
+
+const borderSpecial = ['rectangle','square'];
 export class Canvas {
   canvas = document.createElement('canvas');
   offscreen = createOffscreen() as HTMLCanvasElement | OffscreenCanvas;
@@ -1950,7 +1952,7 @@ export class Canvas {
         }
 
         if (this.drawingLineName === 'line') {
-          if(e.shiftKey && !e.ctrlKey) { 
+          if(e.shiftKey && !e.ctrlKey) {
             let last =
               this.drawingLine.calculative.worldAnchors[
                 this.drawingLine.calculative.worldAnchors.length - 2
@@ -3515,7 +3517,7 @@ export class Canvas {
       if((this.lineType == 'irregularFigure' && anchorsLength < 3) || (this.lineType == 'eulerhabd' && anchorsLength < 2)) {
         this.drawingLine = undefined;
         return;
-      } 
+      }
     }
     if (!end) {
       !to.connectTo && this.drawingLine.calculative.worldAnchors.pop();
@@ -4019,9 +4021,12 @@ export class Canvas {
           ctx.rotate((this.activeRect.rotate * Math.PI) / 180);
           ctx.translate(-this.activeRect.center.x, -this.activeRect.center.y);
         }
-        ctx.strokeStyle = this.store.options.activeColor;
-
-        ctx.globalAlpha = 0.3;
+        if(borderSpecial.indexOf(this.store.active[0].name)  === -1){
+          ctx.strokeStyle = this.store.options.activeColor;
+          ctx.globalAlpha = 0.3;
+        }else{
+          ctx.strokeStyle = this.store.active[0].color;
+        }
         ctx.beginPath();
         ctx.strokeRect(
           this.activeRect.x,
@@ -5981,7 +5986,7 @@ export class Canvas {
       !this.store.options.disableInput
     ) {
       if (this.store.hover.onShowInput) {
-        this.store.hover.onShowInput(this.store.hover, e as any); 
+        this.store.hover.onShowInput(this.store.hover, e as any);
       } else {
         this.showInput(this.store.hover);
       }
