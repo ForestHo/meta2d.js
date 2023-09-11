@@ -68,6 +68,14 @@ import pkg from '../package.json';
 import { lockedError } from './utils/error';
 import { Scroll } from './scroll';
 
+enum State{
+  SELECT,
+  DRAW,
+  DRAWING,
+  MOVE,
+  DRAG
+}
+
 export class Meta2d {
   store: Meta2dStore;
   canvas: Canvas;
@@ -88,6 +96,7 @@ export class Meta2d {
   events: Record<number, (pen: Pen, e: Event) => void> = {};
   map: ViewMap;
   mapTimer: any;
+  private currentState: State;
   constructor(parent: string | HTMLElement, opts: Options = {}) {
     this.store = useStore(s8());
     this.setOptions(opts);
@@ -99,6 +108,7 @@ export class Meta2d {
     globalThis.meta2d = this;
     this.initEventFns();
     this.store.emitter.on('*', this.onEvent);
+    this.currentState = State.SELECT;
   }
 
   facePen = facePen;
