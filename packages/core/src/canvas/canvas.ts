@@ -2162,14 +2162,15 @@ export class Canvas {
     // Add pen
     if (this.addCaches && this.addCaches.length) {
       if (!this.store.data.locked) {
-        if(this.addCaches?.length === 1&&this.addCaches[0].name == 'text'){
-          const pens:Pen[] = deepClone(this.addCaches);
-          this.dropPens(pens, e);
-          this.store.hover = pens[0];
-          setTimeout(() => {
-            this.showInput(pens[0]);
-          },100)
-        } else if(this.dragRect && (this.dragRect.width > 20 || this.dragRect.height > 20)){
+        // if(this.addCaches?.length === 1&&this.addCaches[0].name == 'text'){
+        //   const pens:Pen[] = deepClone(this.addCaches);
+        //   this.dropPens(pens, e);
+        //   this.store.hover = pens[0];
+        //   setTimeout(() => {
+        //     this.showInput(pens[0]);
+        //   },100)
+        // } else
+        if(this.dragRect && (this.dragRect.width > 20 || this.dragRect.height > 20)){
           // 只存在一个缓存图元
           if(this.addCaches.length === 1){
             const target = this.addCaches[0];
