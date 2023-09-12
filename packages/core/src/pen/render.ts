@@ -1222,12 +1222,12 @@ export function renderPen(ctx: CanvasRenderingContext2D, pen: Pen) {
   let setBack = true;
   let lineGradientFlag = false;
   if (pen.calculative.hover) {
-    ctx.strokeStyle = pen.hoverColor || store.options.hoverColor;
+    ctx.strokeStyle = pen.color || pen.hoverColor || store.options.hoverColor;
     fill = pen.hoverBackground || store.options.hoverBackground;
     ctx.fillStyle = fill;
     fill && (setBack = false);
   } else if (pen.calculative.active) {
-    ctx.strokeStyle = pen.activeColor || store.options.activeColor;
+    ctx.strokeStyle = pen.color ||pen.activeColor || store.options.activeColor;
     fill = pen.activeBackground || store.options.activeBackground;
     ctx.fillStyle = fill;
     fill && (setBack = false);

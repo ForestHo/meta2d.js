@@ -3956,7 +3956,7 @@ export class Canvas {
     offscreenCtx.save();
     offscreenCtx.translate(this.store.data.x, this.store.data.y);
     this.renderPens();
-    this.renderBorder();
+    // this.renderBorder();
     this.renderHoverPoint();
     offscreenCtx.restore();
     //this.magnifierCanvas.render();
