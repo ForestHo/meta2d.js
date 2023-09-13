@@ -148,6 +148,10 @@ export class Meta2d {
 
   setOptions(opts: Options = {}) {
     this.store.options = Object.assign(this.store.options, opts);
+    // 如果设置画布的宽高，patch下背景canvas的标志位
+    if(opts.width ||opts.height){
+      this.canvas && (this.canvas.canvasTemplate.bgPatchFlags = true);
+    }
     if (this.canvas && opts.scroll !== undefined) {
       if (opts.scroll) {
         !this.canvas.scroll && (this.canvas.scroll = new Scroll(this.canvas));
