@@ -117,6 +117,11 @@ export class CanvasTemplate {
       if (background) {
         ctx.save();
         ctx.fillStyle = background;
+        ctx.shadowOffsetX = this.store.options.shadowOffsetX;
+        ctx.shadowOffsetY = this.store.options.shadowOffsetY;
+        ctx.shadowBlur = this.store.options.shadowBlur;
+        ctx.shadowColor = this.store.options.shadowColor;
+
         const width = this.store.data.width || this.store.options.width;
         const height = this.store.data.height || this.store.options.height;
         if (width && height) {

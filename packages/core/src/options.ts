@@ -45,6 +45,10 @@ export interface Options {
   maxScale?: number;
   keydown?: KeydownType;
   background?: string;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  shadowBlur?: number;
+  shadowColor?: string;
   grid?: boolean;
   gridColor?: string;
   gridSize?: number;
@@ -119,6 +123,10 @@ export const defaultOptions: Options = {
   autoAnchor: true,
   animateColor: '#ff4d4f',
   ruleLineColor: '#FF4101',
+  shadowOffsetX: 0,
+  shadowOffsetY: 13,
+  shadowBlur: 64,
+  shadowColor: "#00000014",
   defaultAnchors: [
     {
       x: 0.5,
