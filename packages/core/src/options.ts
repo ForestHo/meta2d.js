@@ -49,6 +49,7 @@ export interface Options {
   shadowOffsetY?: number;
   shadowBlur?: number;
   shadowColor?: string;
+  globalAlpha?: number;
   grid?: boolean;
   gridColor?: string;
   gridSize?: number;
@@ -127,6 +128,7 @@ export const defaultOptions: Options = {
   shadowOffsetY: 13,
   shadowBlur: 64,
   shadowColor: "#00000014",
+  globalAlpha: 1,
   defaultAnchors: [
     {
       x: 0.5,

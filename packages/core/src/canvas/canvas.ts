@@ -1070,7 +1070,8 @@ export class Canvas {
         obj = JSON.parse(json);
       }
     } catch (e) {}
-
+    obj.width = obj.width * this.store.data.scale;
+    obj.height = obj.height * this.store.data.scale;
     if (!obj) {
       const { files } = event.dataTransfer;
       if (files.length && files[0].type.match('image.*')) {
@@ -1089,14 +1090,14 @@ export class Canvas {
       obj = Array.isArray(obj) ? obj : [obj];
       const pt = { x: event.offsetX, y: event.offsetY };
       this.calibrateMouse(pt);
-      this.dropPens(obj, pt);
+      this.dropPens(obj, pt,false);
       this.addCaches = [];
     }
 
     this.store.emitter.emit('drop', obj || json);
   };
 
-  async dropPens(pens: Pen[], e: Point) {
+  async dropPens(pens: Pen[], e: Point,isChangeState = true) {
     for (const pen of pens) {
       // 只修改 树根处的 祖先节点, randomCombineId 会递归更改子节点
       !pen.parentId && this.randomCombineId(pen, pens);
@@ -1155,8 +1156,10 @@ export class Canvas {
     await this.addPens(pens, true);
     this.active(pens.filter((pen) => !pen.parentId));
     this.render();
-    this.setState('DRAW');
-    this.stateRecord = 'DRAW';
+    if(isChangeState) {
+      this.setState('DRAW');
+      this.stateRecord = 'DRAW';
+    }
     this.externalElements.focus(); // 聚焦
   }
 
@@ -2808,7 +2811,8 @@ export class Canvas {
     this.hoverType = hoverType;
     // 当鼠标在画布空白区域时状态切换为原本的状态
     if (hoverType === HoverType.None) {
-      if(this.currentState == State.MOVE) {
+      const isResize = this.externalElements.style.cursor.includes('resize');
+      if(this.currentState == State.MOVE || isResize) {
         this.setState(this.stateRecord);
       }
       this.store.hover = undefined;
