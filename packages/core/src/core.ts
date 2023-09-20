@@ -752,10 +752,11 @@ export class Meta2d {
     if(isCache){
       // 在同步流程中深拷贝图纸的data数据
       const tempData: Meta2dData = deepClone(this.store.data,true);
-      setTimeout(() => {
-        //存入缓存
-        this.cacheData(tempData,data._id);
-      }, 300);
+      this.cacheData(tempData,data._id);
+      // setTimeout(() => {
+      //   //存入缓存
+      //   this.cacheData(tempData,data._id);
+      // }, 300);
     }
     this.store.emitter.emit('opened');
   }
