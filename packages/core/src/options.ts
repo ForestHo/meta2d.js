@@ -89,6 +89,7 @@ export interface Options {
   cacheLength?: number; //缓存数据长度
   isRunMode:boolean; //是否是在运行态
   lineWidth?:number;
+  fitPadding?:number;
 }
 
 export const defaultOptions: Options = {
@@ -159,4 +160,5 @@ export const defaultOptions: Options = {
   textFlip: true,
   textRotate: true,
   isRunMode: false,
+  fitPadding: 0,
 };

@@ -729,12 +729,13 @@ export class Meta2d {
       // this.canvas.canvasTemplate.init();
       // 图纸有模板，使用fitTemplateView
       // TODO fitTemplateView 处理
-      if(data.template){
-        // this.fitTemplateView(true,0);
-        this.fitSizeView(true,32);
-      }else{ //图纸么有模板，使用fitView
-        this.fitView(true,0);
-      }
+      // if(data.template){
+      //   // this.fitTemplateView(true,0);
+      //   this.fitSizeView(true,32);
+      // }else{ //图纸么有模板，使用fitView
+      //   this.fitView(true,0);
+      // }
+      this.fitSizeView(true,this.store.options.fitPadding);
       render && this.startAnimate();
       this.doInitJS();
     }
