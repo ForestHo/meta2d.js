@@ -127,57 +127,60 @@ export function calcTextLines(pen: Pen, text = pen.calculative.text) {
   const calcRows = Math.floor(textHeight / oneRowHeight);
   // 最小值为 1
   const maxRows = calcRows > 1 ? calcRows : 1;
-  switch (pen.whiteSpace) {
-    case 'nowrap':
-      if (pen.ellipsis !== false) {
-        const allLines = wrapLines(text.split(''), pen);
-        if (allLines[0]) {
-          lines.push(allLines[0]);
-          if (allLines.length > 1) {
-            // 存在第二行，说明宽度超出
-            setEllipsisOnLastLine(lines);
-          }
-        }
-      } else {
-        lines.push(text);
-      }
-      break;
-    case 'pre-line':
-      lines = text.split(/[\n]/g);
-      if (pen.ellipsis !== false && lines.length > maxRows) {
-        lines = lines.slice(0, maxRows);
-        setEllipsisOnLastLine(lines);
-      }
-      break;
-    case 'break-all':
-    default:
-      const paragraphs = text.split(/[\n]/g);
-      let currentRow = 0;
-      outer: for (const paragraph of paragraphs) {
-        const words =
-          pen.whiteSpace === 'break-all'
-            ? paragraph.split('')
-            : getWords(paragraph);
-        let items = wrapLines(words, pen);
-        // 空行换行的情况
-        if (items.length === 0) items = [''];
-        if (pen.ellipsis != false) {
-          for (const l of items) {
-            currentRow++;
-            if (currentRow > maxRows) {
+  if(pen.name != 'newText') { // 新文本不需要进行计算
+    switch (pen.whiteSpace) {
+      case 'nowrap':
+        if (pen.ellipsis !== false) {
+          const allLines = wrapLines(text.split(''), pen);
+          if (allLines[0]) {
+            lines.push(allLines[0]);
+            if (allLines.length > 1) {
+              // 存在第二行，说明宽度超出
               setEllipsisOnLastLine(lines);
-              break outer;
-            } else {
-              lines.push(l);
             }
           }
         } else {
-          lines.push(...items);
+          lines.push(text);
         }
-      }
-      break;
+        break;
+      case 'pre-line':
+        lines = text.split(/[\n]/g);
+        if (pen.ellipsis !== false && lines.length > maxRows) {
+          lines = lines.slice(0, maxRows);
+          setEllipsisOnLastLine(lines);
+        }
+        break;
+      case 'break-all':
+      default:
+        const paragraphs = text.split(/[\n]/g);
+        let currentRow = 0;
+        outer: for (const paragraph of paragraphs) {
+          const words =
+            pen.whiteSpace === 'break-all'
+              ? paragraph.split('')
+              : getWords(paragraph);
+          let items = wrapLines(words, pen);
+          // 空行换行的情况
+          if (items.length === 0) items = [''];
+          if (pen.ellipsis != false) {
+            for (const l of items) {
+              currentRow++;
+              if (currentRow > maxRows) {
+                setEllipsisOnLastLine(lines);
+                break outer;
+              } else {
+                lines.push(l);
+              }
+            }
+          } else {
+            lines.push(...items);
+          }
+        }
+        break;
+    }
+  } else{
+    lines.push(text);
   }
-
   const keepDecimal = pen.calculative.keepDecimal;
   if (keepDecimal != undefined) {
     lines.forEach((text, i) => {
