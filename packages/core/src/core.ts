@@ -2992,7 +2992,9 @@ export class Meta2d {
   }
 
   alignNodes(align: string, pens: Pen[] = this.store.data.pens, rect?: Rect) {
-    !rect && (rect = this.getPenRect(this.getRect(pens)));
+    if(pens.length != 1) {
+      !rect && (rect = this.getPenRect(this.getRect(pens)));
+    }
     const initPens = deepClone(pens); // 原 pens ，深拷贝一下
     for (const item of pens) {
       this.alignPen(align, item, rect);
@@ -3056,24 +3058,29 @@ export class Meta2d {
    */
   private alignPen(align: string, pen: Pen, rect: Rect) {
     const penRect = this.getPenRect(pen);
+    console.log(rect,'rect')
     switch (align) {
       case 'left':
-        penRect.x = rect.x;
+        penRect.x = rect?.x || 0;
         break;
       case 'right':
-        penRect.x = rect.x + rect.width - penRect.width;
+        const right = rect ? rect?.x + rect?.width : this.store.options.width;
+        penRect.x = right - penRect.width;
         break;
       case 'top':
-        penRect.y = rect.y;
+        penRect.y = rect?.y || 0;
         break;
       case 'bottom':
-        penRect.y = rect.y + rect.height - penRect.height;
+        const bottom = rect ? rect.y + rect.height : this.store.options.height;
+        penRect.y = bottom - penRect.height;
         break;
       case 'center':
-        penRect.x = rect.x + rect.width / 2 - penRect.width / 2;
+        const width = rect ? rect.x + rect.width / 2 : this.store.options.width / 2;
+        penRect.x = width - penRect.width / 2;
         break;
       case 'middle':
-        penRect.y = rect.y + rect.height / 2 - penRect.height / 2;
+        const height = rect ? rect.y + rect.height / 2 : this.store.options.height / 2;
+        penRect.y = height - penRect.height / 2;
         break;
     }
     this.setValue(

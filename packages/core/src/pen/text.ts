@@ -179,7 +179,15 @@ export function calcTextLines(pen: Pen, text = pen.calculative.text) {
         break;
     }
   } else{
-    lines.push(text);
+    if(pen.properties.text?.direction == 'vertical') {
+        const words = getWords(pen.text);
+        let items = wrapLines(words, pen);
+        // 空行换行的情况
+        if (items.length === 0) items = [''];
+          lines.push(...items);
+    } else {
+      lines.push(text);
+    }
   }
   const keepDecimal = pen.calculative.keepDecimal;
   if (keepDecimal != undefined) {

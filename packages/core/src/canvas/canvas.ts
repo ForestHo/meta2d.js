@@ -245,7 +245,6 @@ export class Canvas {
     pens: Pen[],
     offset: Point
   ) => { xDock: Point; yDock: Point };
-
   inputParent = document.createElement('div');
   // input = document.createElement('textarea');
   inputDiv = document.createElement('div');
@@ -358,9 +357,23 @@ export class Canvas {
         this.externalElements.style.cursor = 'crosshair';
         break;
       case 'DRAWING':
-        this.externalElements.style.cursor = 'crosshair';
+        this.externalElements.style.cursor = this.stateRecord == 'SELECT' ? 'default' :'crosshair';
         break;
     }
+  }
+  drawLock(ctx,pen:Pen) {
+    let len = 10 * this.store.data.scale;
+    let r = 3 * this.store.data.scale;
+    let h = 2 * this.store.data.scale;
+    ctx.beginPath();
+    ctx.fillStyle = ctx.strokeStyle = '#D81A1A';
+    ctx.fillRect(pen.x + len, pen.y + len, len, len * 0.75);
+    ctx.moveTo(pen.x + len * 1.5 +  r, pen.y + len);
+    ctx.arc(pen.x + len * 1.5, pen.y + len - h, r, 0, Math.PI, true);
+    ctx.lineTo(pen.x + len * 1.5 - r, pen.y + len);
+    ctx.lineWidth = this.store.data.scale < 1 ? 1 : 2;
+    ctx.stroke();
+    ctx.closePath();
   }
   listen() {
     this.externalElements.addEventListener('gesturestart', this.onGesturestart);
@@ -696,7 +709,7 @@ export class Canvas {
       //   break;
       case 'Delete':
       case 'Backspace':
-        !this.store.data.locked && this.delete();
+        !this.store.data.locked && this.currentState == State.SELECT && this.delete();
         break;
       case 'ArrowLeft':
         if (this.movingAnchor) {
@@ -864,13 +877,11 @@ export class Canvas {
           this.drawingLineName = undefined;
           this.stopPencil();
           this.store.emitter.emit('changeState','SELECT');
-          this.setState('SELECT');
         } else if(this.currentState == State.MOVE && this.movingPens) {
           this.getAllByPens(this.movingPens).forEach((pen) => {
             this.store.pens[pen.id] = undefined;
           });
           this.movingPens = undefined;
-          this.setState('SELECT');
           this.mouseDown = undefined;
           this.clearDock();
           this.store.active?.forEach((pen) => {
@@ -879,11 +890,11 @@ export class Canvas {
           this.calcActiveRect();
           this.patchFlags = true;
         } else if (this.currentState == State.DRAG) {
-          this.setState('SELECT');
           this.store.emitter.emit('changeState','SELECT');
         }
         this.hotkeyType = HotkeyType.None;
         this.movingAnchor = undefined;
+        this.setState('SELECT');
         // 放大镜
         if (this.magnifierCanvas.magnifier) {
           this.magnifierCanvas.magnifier = false;
@@ -1119,14 +1130,8 @@ export class Canvas {
     for (const pen of pens) {
       if (!pen.parentId) {
         if(pen.name == 'newText') {
-          // pen.width *= this.store.data.scale;
-          // if( && this.store.data.scale > 1) {
-            if(pen.width < 50) {
-              pen.width = 50;
-            }
-            const temHeight = pen.height * this.store.data.scale;
-            pen.height = temHeight < 14 ? 14 : temHeight;
-          // }
+          pen.height = pen.height * this.store.data.scale;
+          pen.width = pen.width * this.store.data.scale;
         }
         pen.x = e.x - pen.width / 2;
         pen.y = e.y - pen.height / 2;
@@ -2320,14 +2325,11 @@ export class Canvas {
       this.addCaches.length == 1 && 
       this.addCaches[0].name == 'newText'
     ) {
-      // const target = this.addCaches[0];
       const pens:Pen[] = deepClone(this.addCaches);
       this.dropPens(pens, e);
-      // this.store.hover = pens[0];
       setTimeout(() => {
         this.showInput(pens[0]);
       })
-      // this.setState('DRAWING');
       return;
     }
     // Rotate
@@ -4150,6 +4152,11 @@ export class Canvas {
     const ctx = this.offscreen.getContext('2d') as CanvasRenderingContext2D;
     ctx.strokeStyle = getGlobalColor(this.store);
     ctx.lineWidth = getGlobalLineWidth(this.store);
+    this.store.active?.forEach(pen => {
+      if(pen.locked == 2) {
+        this.drawLock(ctx,pen);
+      }
+    })
     for (const pen of this.store.data.pens) {
       if (!isFinite(pen.x)) {
         continue;
@@ -4157,12 +4164,10 @@ export class Canvas {
       if (pen.template) {
         continue;
       }
-
       if (pen.calculative.inView) {
         renderPen(ctx, pen);
       }
     }
-
     if (this.drawingLine) {
       renderPen(ctx, this.drawingLine);
     }
@@ -4255,7 +4260,9 @@ export class Canvas {
     const ctx = this.offscreen.getContext('2d');
     ctx.save();
     ctx.translate(0.5, 0.5);
-
+    if(this.store.hover && this.store.hover.locked && (!this.store.active.length || this.store.active.some(pen =>pen.id != this.store.hover.id))) {
+      this.drawLock(ctx,this.store.hover)
+    }
     if (
       !this.store.options.disableAnchor &&
       this.store.hover &&
@@ -4265,9 +4272,7 @@ export class Canvas {
         this.store.active[0] !== this.store.hover)
     ) {
       let anchors = [];
-      if(this.stateRecord == 'DRAW' && this.lineType == 'connectLine') {
         anchors = [...this.store.hover.calculative.worldAnchors];
-      }
 
       if (this.store.pointAt && this.hotkeyType === HotkeyType.AddAnchor) {
         anchors.push(this.store.pointAt);
@@ -6181,6 +6186,7 @@ export class Canvas {
   };
 
   showInput = (pen: Pen, rect?: Rect, background = 'transparent') => {
+    this.setState('DRAWING');
     if (
       !window ||
       (pen.name != 'newText' && (!this.store.hover||
@@ -6250,25 +6256,35 @@ export class Canvas {
     }
     this.inputDiv.contentEditable = 'true';
     const {fontSize,fontFamily} = pen.calculative;
+    const isVertical = pen.properties.text.direction == 'vertical';
     if (pen.name === 'newText') { // 新文本样式
       this.inputParent.style.width = 'auto'; //(textRect.width < pen.width ? 0 : 10)
       this.inputParent.style.height = 'auto'; //(textRect.width < pen.width ? 0 : 10)
       this.inputParent.style.background = '#FFF';
       this.inputParent.style.verticalAlign = 'center';
       // pen.height = fontSize;zoom:${this.store.data.scale};
-      this.inputDiv.style = `
+      const zoom = (pen.fontSize / 12) * this.store.data.scale;
+      let style = `
         display:block;
         height:auto;
         outline:0;
-        width:auto;
         position:static;
-        zoom:1;
-        min-width:${pen.width}px;
-        height:${pen.height < 14?14:pen.height}px;
         box-sizing:border-box;
-        line-height:${pen.height < 14?14:pen.height}px;
-        font-size:${fontSize < 12?12:pen.height}px;
+        font-size:${ fontSize }px;
       `
+      if(isVertical) {
+        style +=`
+          line-height:${zoom > 1 ? fontSize * 1.5 : fontSize * 1.5 / zoom}px;
+        `
+      } else {
+        style +=`
+          width:auto;
+          min-width:${zoom > 1 ? pen.width : pen.width/zoom}px;
+          height:${zoom > 1 ? pen.height : pen.height / zoom}px;
+          line-height:${zoom > 1 ? pen.height : pen.height / zoom}px;
+        `
+      }
+      this.inputDiv.style = style;
       this.inputParent.style.display = 'inline-block';
       // pen.width = this.inputParent.offsetWidth;
       const ctx =this.offscreen.getContext('2d') as CanvasRenderingContext2D;
@@ -6277,7 +6293,11 @@ export class Canvas {
       this.updatePenRect(pen);
       pen.calculative.canvas.calcActiveRect();
       this.inputDiv.oninput = (e) => {
-        pen.width =  this.inputParent.offsetWidth;
+        if(isVertical) {
+          pen.height =  this.inputParent.offsetHeight;
+        } else {
+          pen.width =  this.inputParent.offsetWidth;
+        }
         this.updatePenRect(pen);
         pen.calculative.canvas.calcActiveRect();
         this.render();
@@ -6484,6 +6504,9 @@ export class Canvas {
   hideInput = () => {
     this.inputDiv.oninput = null;
     if (this.inputParent.style.display !== 'none') {
+      if(this.currentState == State.DRAWING) {
+        this.setState(this.stateRecord);
+      }
       this.inputParent.style.display = 'none';
       const pen = this.store.pens[this.inputDiv.dataset.penId];
       if (!pen){
@@ -6516,6 +6539,14 @@ export class Canvas {
       } else if (pen.text !== this.inputDiv.dataset.value) {
         const initPens = [deepClone(pen, true)];
         pen.text = this.inputDiv.dataset.value;
+        // if(pen.name == 'newText') {
+        //   const {fontSize} = pen.calculative;
+        //   const ctx = this.canvas.getContext('2d');
+        //   // ctx.font = fontSize;
+        //   pen.width = ctx.measureText(pen.text).width * this.store.data.scale;
+        //   this.updatePenRect(pen);
+        //   console.log(pen.width,'width',ctx.font)
+        // }
         pen.calculative.text = pen.text;
         this.inputDiv.dataset.penId = undefined;
         calcTextRect(pen);
@@ -6808,6 +6839,12 @@ export class Canvas {
     let containIsBottom = false; // 是否包含 isBottom 属性修改
     let oldRotate: number = undefined;
     let willRenderImage = false; // 是否需要重新渲染图片
+    // if(data.textWidth && data['properties.text.direction'] == 'vertical') {
+    //   console.log(1111)
+    //   const temp = pen.width;
+    //   pen.width = pen.height;
+    //   pen.height = temp;
+    // }
     for (const k in data) {
       if (k === 'rotate') {
         oldRotate = pen.calculative.rotate || 0;
