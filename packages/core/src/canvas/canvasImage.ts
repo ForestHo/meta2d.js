@@ -115,6 +115,7 @@ export class CanvasImage {
     return pen.calculative.hasImage;
   }
   lastRender:number=0;
+  patchFlags = false;
   render() {
     // 通过限制绘制的频率来保证完整的绘制周期，从而不让绘制过程被中断，导致有不完整的绘制情况
     let now =  performance.now();
@@ -123,14 +124,14 @@ export class CanvasImage {
       return;
     }
     this.lastRender = now;
-    let patchFlags = false;
+    // let patchFlags = false;
     let patchFlagsAnimate = false;
     for (const pen of this.store.data.pens) {
       if (this.hasImage(pen)) {
         if (this.store.animates.has(pen)) {
           patchFlagsAnimate = true;
         } else if (!pen.calculative.imageDrawed) {
-          patchFlags = true;
+          this.patchFlags = true;
         }
         if (pen.parentId && this.store.animates.has(getParent(pen, true))) {
           patchFlagsAnimate = true;
@@ -189,7 +190,7 @@ export class CanvasImage {
       const ctx = this.offscreen.getContext('2d');
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
-    if (patchFlags) {
+    if (this.patchFlags) {
       const ctx = this.offscreen.getContext('2d');
       ctx.save();
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -268,8 +269,9 @@ export class CanvasImage {
     }
 
     if (
-      patchFlags ||
+      this.patchFlags ||
       patchFlagsAnimate ||
+      this.isBottom ||
       // (patchFlagsBackground && this.isBottom) ||
       (patchFlagsTop && !this.isBottom)
     ) {
