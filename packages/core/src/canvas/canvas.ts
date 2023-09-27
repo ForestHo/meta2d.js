@@ -709,7 +709,7 @@ export class Canvas {
       //   break;
       case 'Delete':
       case 'Backspace':
-        !this.store.data.locked && this.currentState == State.SELECT && this.delete();
+        !this.store.data.locked && this.currentState != State.DRAWING && this.delete();
         break;
       case 'ArrowLeft':
         if (this.movingAnchor) {
