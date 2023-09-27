@@ -1129,7 +1129,7 @@ export class Canvas {
     // }
     for (const pen of pens) {
       if (!pen.parentId) {
-        if(pen.name == 'newText') {
+        if(pen.name == 'text') {
           pen.height = pen.height * this.store.data.scale;
           pen.width = pen.width * this.store.data.scale;
         }
@@ -2290,7 +2290,7 @@ export class Canvas {
       if (!this.store.data.locked) {
         e.x = (this.dragRect.x + this.dragRect.ex) / 2;
         e.y = (this.dragRect.y + this.dragRect.ey) / 2;
-        if(this.addCaches.length === 1 && this.addCaches[0].name == 'newText'){
+        if(this.addCaches.length === 1 && this.addCaches[0].name == 'text'){
           const target = this.addCaches[0];
           target.width = this.dragRect.width;
           // target.height = target.fontSize;
@@ -2323,7 +2323,7 @@ export class Canvas {
       this.currentState == State.DRAW &&
       this.addCaches && 
       this.addCaches.length == 1 && 
-      this.addCaches[0].name == 'newText'
+      this.addCaches[0].name == 'text'
     ) {
       const pens:Pen[] = deepClone(this.addCaches);
       this.dropPens(pens, e);
@@ -4260,7 +4260,7 @@ export class Canvas {
     const ctx = this.offscreen.getContext('2d');
     ctx.save();
     ctx.translate(0.5, 0.5);
-    if(this.store.hover && this.store.hover.locked && (!this.store.active.length || this.store.active.some(pen =>pen.id != this.store.hover.id))) {
+    if(this.store.hover && this.store.hover.locked == 2 && (!this.store.active.length || this.store.active.some(pen =>pen.id != this.store.hover.id))) {
       this.drawLock(ctx,this.store.hover)
     }
     if (
@@ -6189,7 +6189,7 @@ export class Canvas {
     this.setState('DRAWING');
     if (
       !window ||
-      (pen.name != 'newText' && (!this.store.hover||
+      (pen.name != 'text' && (!this.store.hover||
       this.store.hover.locked ||
       this.store.hover.externElement ||
       this.store.hover.disableInput))
@@ -6217,7 +6217,7 @@ export class Canvas {
 
     //value和innerText问题
     const preInputText = pen.calculative.tempText || pen.text + '' || '';
-    if(pen.name == 'newText') {
+    if(pen.name == 'text') {
       this.inputDiv.innerHTML = preInputText;
     } else {
       const textArr = preInputText.replace(/\x20/g, '&nbsp;').split(/[\s\n]/);
@@ -6257,7 +6257,7 @@ export class Canvas {
     this.inputDiv.contentEditable = 'true';
     const {fontSize,fontFamily} = pen.calculative;
     const isVertical = pen.properties.text.direction == 'vertical';
-    if (pen.name === 'newText') { // 新文本样式
+    if (pen.name === 'text') { // 新文本样式
       this.inputParent.style.width = 'auto'; //(textRect.width < pen.width ? 0 : 10)
       this.inputParent.style.height = 'auto'; //(textRect.width < pen.width ? 0 : 10)
       this.inputParent.style.background = '#FFF';
@@ -6512,11 +6512,11 @@ export class Canvas {
       if (!pen){
         return;
       }
-      if(pen.name == 'newText' && !this.inputDiv.innerHTML) {//若未输入则删除新文本
+      if(pen.name == 'text' && !this.inputDiv.innerHTML) {//若未输入则删除新文本
         this.delete([pen])
       }
       pen.calculative.text = pen.text;
-      if(pen.name == 'newText') {
+      if(pen.name == 'text') {
         this.inputDiv.dataset.value = this.inputDiv.innerHTML
         .replace(/\<div\>/g, '')
         .replace(/\<\/div\>/g, '')

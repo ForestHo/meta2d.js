@@ -127,7 +127,7 @@ export function calcTextLines(pen: Pen, text = pen.calculative.text) {
   const calcRows = Math.floor(textHeight / oneRowHeight);
   // 最小值为 1
   const maxRows = calcRows > 1 ? calcRows : 1;
-  if(pen.name != 'newText') { // 新文本不需要进行计算
+  if(pen.name != 'text') { // 新文本不需要进行计算
     switch (pen.whiteSpace) {
       case 'nowrap':
         if (pen.ellipsis !== false) {
