@@ -693,20 +693,21 @@ export class Canvas {
         }
         e.preventDefault();
         break;
-      // case 'a':
-      // case 'A':
-      //   if (e.ctrlKey || e.metaKey) {
-      //     // TODO: ctrl + A 会选中 visible == false 的元素
-      //     this.active(
-      //       this.store.data.pens.filter(
-      //         (pen) => !pen.parentId && pen.locked !== LockState.Disable
-      //       )
-      //     );
-      //     e.preventDefault();
-      //   } else {
-      //     this.toggleAnchorMode();
-      //   }
-      //   break;
+      case 'a':
+      case 'A':
+        if (e.ctrlKey || e.metaKey) {
+          // TODO: ctrl + A 会选中 visible == false 的元素
+          this.active(
+            this.store.data.pens.filter(
+              (pen) => !pen.parentId && pen.locked !== LockState.Disable
+            )
+          );
+          e.preventDefault();
+        } 
+        // else {
+        //   this.toggleAnchorMode();
+        // }
+        break;
       case 'Delete':
       case 'Backspace':
         !this.store.data.locked && this.currentState != State.DRAWING && this.delete();
@@ -828,7 +829,6 @@ export class Canvas {
         if ((e.ctrlKey || e.metaKey) && this.store.options.disableClipboard) {
           this.paste();
         }
-
         break;
       case 'b':
       case 'B':
