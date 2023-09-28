@@ -179,12 +179,12 @@ export function calcTextLines(pen: Pen, text = pen.calculative.text) {
         break;
     }
   } else{
-    if(pen.properties.text?.direction == 'vertical') {
-        const words = getWords(pen.text);
-        let items = wrapLines(words, pen);
-        // 空行换行的情况
-        if (items.length === 0) items = [''];
-          lines.push(...items);
+    if(pen.direction == 'vertical') {
+      const words = getWords(pen.text);
+      let items = wrapLines(words, pen);
+      // 空行换行的情况
+      if (items.length === 0) items = [''];
+        lines.push(...items);
     } else {
       lines.push(text);
     }
