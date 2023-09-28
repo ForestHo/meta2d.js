@@ -1630,14 +1630,6 @@ export class Canvas {
           x: to.x,
           y: to.y,
           penId: to.penId,
-          prev: {
-            x: to.x - 50,
-            y: to.y,
-          },
-          next: {
-            x: to.x + 50,
-            y: to.y,
-          }
         });
       }
       this.drawingLine.calculative.drawlineH = undefined;
