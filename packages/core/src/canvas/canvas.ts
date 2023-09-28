@@ -1839,7 +1839,6 @@ export class Canvas {
         // if (this.currentState == State.DRAW && !this.drawingLineName && !this.movingAnchor) {
         // // TODO 正在连线与状态关联
         //   // 在锚点上开始连线
-        //   this.setState('DRAWING');
         //   if (this.hoverType === HoverType.NodeAnchor) {
         //     this.drawingLineName = this.store.options.drawingLineName;
         //     const pt: Point = {
@@ -2135,7 +2134,7 @@ export class Canvas {
     this.mousePos.x = e.x;
     this.mousePos.y = e.y;
     this.pencil && this.finishPencil();
-    if (this.currentState == State.DRAWING && this.drawingLine) {
+    // if (this.currentState == State.DRAWING && this.drawingLine) {
       // // 在锚点上，完成绘画
       // if (this.store.hoverAnchor && this.lineType != 'irregularFigure') {
       //   const to = getToAnchor(this.drawingLine);
@@ -2192,8 +2191,16 @@ export class Canvas {
 
       //   return;
       // }
-    }
+    // }
     // 拖拽连线锚点
+    if (
+      this.hoverType === HoverType.LineAnchor &&
+      this.store.active[0] &&
+      this.store.active[0].name === 'line' &&
+      this.store.active[0] !== this.store.hover
+    ) {
+        this.store.emitter.emit('moveAchor',this.store.active[0]);
+      }
     if (
       this.hoverType === HoverType.LineAnchor &&
       this.store.hover &&
@@ -2415,7 +2422,7 @@ export class Canvas {
         this.store.pens[pen.id] = undefined;
       });
       //图元移动结束更改
-      this.store.emitter.emit('changeState','SELECT');
+      // this.store.emitter.emit('changeState','SELECT');
       this.setState('SELECT');
       this.movingPens = undefined;
     }
@@ -2861,8 +2868,6 @@ export class Canvas {
     }
     if (!hoverType && !activeLine && pointInRect(pt, this.activeRect)) {
       hoverType = HoverType.Node;
-      // this.externalElements.style.cursor = 'move';
-      // this.setState(State.MOVE);
     }
     this.hoverType = hoverType;
     // 当鼠标在画布空白区域时状态切换为原本的状态
@@ -2958,8 +2963,7 @@ export class Canvas {
         if (pos) {
           if(pen.lineType == 'connectLine') {
             this.setState(this.stateRecord);
-          } else 
-          if (this.currentState != State.DRAWING && !this.store.data.locked && !pen.locked && pen.lineType != 'connectLine') {
+          } else if (this.currentState != State.DRAWING && !this.store.data.locked && !pen.locked && pen.lineType != 'connectLine') {
             this.setState('MOVE');
             // if (this.hotkeyType === HotkeyType.AddAnchor) {
             //   this.externalElements.style.cursor = 'pointer';
@@ -6256,7 +6260,7 @@ export class Canvas {
     }
     this.inputDiv.contentEditable = 'true';
     const {fontSize,fontFamily} = pen.calculative;
-    const isVertical = pen.properties.text.direction == 'vertical';
+    const isVertical = pen.direction == 'vertical';
     if (pen.name === 'text') { // 新文本样式
       this.inputParent.style.width = 'auto'; //(textRect.width < pen.width ? 0 : 10)
       this.inputParent.style.height = 'auto'; //(textRect.width < pen.width ? 0 : 10)

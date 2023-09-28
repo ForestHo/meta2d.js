@@ -180,11 +180,12 @@ export function calcTextLines(pen: Pen, text = pen.calculative.text) {
     }
   } else{
     if(pen.direction == 'vertical') {
-      const words = getWords(pen.text);
-      let items = wrapLines(words, pen);
-      // 空行换行的情况
-      if (items.length === 0) items = [''];
-        lines.push(...items);
+      // const words = getWords(pen.text);
+      // let items = wrapLines(words, pen);
+      // // 空行换行的情况
+      // if (items.length === 0) items = [''];
+      //   lines.push(...items);
+      lines = pen.text.split('');
     } else {
       lines.push(text);
     }
