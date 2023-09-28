@@ -1824,7 +1824,7 @@ export function renderAnchor(
   if (pt.radius) {
     r = pt.radius;
   }
-  if (active) {
+  if (true) {
     if (pt.prev) {
       ctx.save();
       ctx.strokeStyle = '#4dffff';
@@ -2188,6 +2188,22 @@ export function nearestAnchor(pen: Pen, pt: Point) {
     const d = distance(pt, a);
     if (dis > d) {
       dis = d;
+      anchor = a;
+    }
+  });
+
+  return anchor;
+}
+
+export function nearestAnchorNextAndPrev(pen: Pen, pt: Point) {
+  let dis = Infinity;
+  let anchor: Point;
+  pen.calculative.worldAnchors.forEach((a: Point) => {
+    const d = distance(pt, a.next);
+    const p = distance(pt,a.prev);
+    let max = d > p?p:d;
+    if (dis > max) {
+      dis = max;
       anchor = a;
     }
   });

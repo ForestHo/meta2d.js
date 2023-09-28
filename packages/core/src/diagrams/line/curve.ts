@@ -11,10 +11,17 @@ export function curve(store: Meta2dStore, pen: Pen, mousedwon?: Point) {
 
   if (mousedwon) {
     if (pen.calculative.activeAnchor) {
-      pen.calculative.activeAnchor.next = {
+      // 核心部分 更改控制点位置
+      let position = {
+        x: (pen.calculative.worldAnchors[pen.calculative.worldAnchors.length - 2]?.x || 0) - ((pen.calculative.worldAnchors[pen.calculative.worldAnchors.length - 2]?.x || 0) - mousedwon.x) / 2,
+        y: undefined
+      };
+      let d = (pen.calculative.worldAnchors[pen.calculative.worldAnchors.length - 3]?.y - mousedwon.y) || 0;
+        position.y = (pen.calculative.worldAnchors[pen.calculative.worldAnchors.length - 2]?.y || 0 ) -  d / 10;
+        pen.calculative.activeAnchor.next = {
         penId: pen.id,
-        x: mousedwon.x,
-        y: mousedwon.y,
+        x: position.x,
+        y: position.y
       };
       if (
         distance(
