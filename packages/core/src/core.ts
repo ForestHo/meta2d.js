@@ -1148,6 +1148,9 @@ export class Meta2d {
   getPenRect(pen: Pen) {
     return this.canvas.getPenRect(pen);
   }
+  reversePenRect(pen: Pen, origin:Point, scale:number) {
+    return this.canvas.reversePenRect(pen,origin,scale);
+  }
 
   setPenRect(pen: Pen, rect: Rect, render = true) {
     this.canvas.setPenRect(pen, rect, render);
