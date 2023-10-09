@@ -1131,7 +1131,7 @@ export class Canvas {
       if (!pen.parentId) {
         if(pen.name == 'text') {
           pen.height = pen.height * this.store.data.scale;
-          pen.width = pen.width * this.store.data.scale;
+          // pen.width = pen.width * this.store.data.scale;
         }
         pen.x = e.x - pen.width / 2;
         pen.y = e.y - pen.height / 2;
@@ -2330,7 +2330,8 @@ export class Canvas {
       this.currentState == State.DRAW &&
       this.addCaches && 
       this.addCaches.length == 1 && 
-      this.addCaches[0].name == 'text'
+      this.addCaches[0].name == 'text' && 
+      e.button != 2
     ) {
       const pens:Pen[] = deepClone(this.addCaches);
       this.dropPens(pens, e);
@@ -2430,7 +2431,12 @@ export class Canvas {
     if (this.store.active && this.store.active[0]) {
       this.store.active[0].calculative.h = undefined;
     }
-
+    if(this.currentState == State.DRAW && e.button == 2) {
+      this.store.emitter.emit('changeState', 
+        'SELECT'
+      );
+      this.setState('SELECT');
+    }
     this.mouseDown = undefined;
     this.lastOffsetX = 0;
     this.lastOffsetY = 0;
@@ -6262,6 +6268,7 @@ export class Canvas {
     const {fontSize,fontFamily} = pen.calculative;
     const isVertical = pen.direction == 'vertical';
     if (pen.name === 'text') { // 新文本样式
+      this.inputParent.style.left = pen.x + this.store.data.x + 'px'; //+ 5
       this.inputParent.style.width = 'auto'; //(textRect.width < pen.width ? 0 : 10)
       this.inputParent.style.height = 'auto'; //(textRect.width < pen.width ? 0 : 10)
       this.inputParent.style.background = '#FFF';
@@ -6551,16 +6558,18 @@ export class Canvas {
           const {fontSize,fontFamily} = pen.calculative;
           ctx.font = `${fontSize}px ${fontFamily}`;
           const calculateW = ctx.measureText(pen.text).width;
-          if(pen.height < calculateH || pen.width < calculateW) {
-            if(pen.direction == 'vertical') {
+          // if( || ) {
+            if(pen.direction == 'vertical' && pen.height < calculateH) {
               pen.height = calculateH;
               pen.textWidth = pen.fontSize;
-            } else {
-              pen.width = calculateW;
+            } else if(pen.direction != 'vertical' ) {
+              if(pen.width < calculateW) {
+                pen.width = calculateW;
+              }
               // pen.textWidth = pen.fontSize * pen.text.length;
               pen.textWidth = undefined;
             }
-          }
+          // }
           this.updatePenRect(pen);
         }
         pen.calculative.text = pen.text;
