@@ -51,7 +51,8 @@ import {
   clearLifeCycle,
   rotatePen,
   getGlobalLineWidth,
-  getFont
+  getFont,
+  nearestAnchorNextAndPrev
 } from '../pen';
 import {
   calcRotate,
@@ -118,6 +119,7 @@ import {
   lineSegment,
   getLineR,
   lineInRect,
+  arcLine,
 } from '../diagrams';
 import { polyline, translatePolylineAnchor } from '../diagrams/line/polyline';
 import { Tooltip } from '../tooltip';
@@ -190,6 +192,7 @@ export class Canvas {
   drawLineFns: string[] = [...defaultDrawLineFns];
   drawingLine?: Pen;
 
+  arcLine?: Pen;
   pencil?: boolean;
   pencilLine?: Pen;
 
@@ -337,6 +340,7 @@ export class Canvas {
   polyline = polyline;
   mind = mind;
   line = lineSegment;
+  arcline = arcLine;
 
   setState(state:string,stateRecord?:string) {
     this.currentState = State[state];
@@ -1451,7 +1455,7 @@ export class Canvas {
     };
   }
 
-  onMouseDown = (e: {
+   onMouseDown = async (e: {
     x: number;
     y: number;
     clientX: number;
@@ -1469,7 +1473,7 @@ export class Canvas {
       this.setState('DRAW');
       return;
     }
-    if (e.buttons === MouseButton.RIGHT && !this.drawingLine) {
+    if (e.buttons === MouseButton.RIGHT && !this.drawingLine && !this.arcLine) {
       this.mouseRight = MouseRight.Down;
     }
     this.hideInput();
@@ -1634,6 +1638,49 @@ export class Canvas {
       this.drawingLine.calculative.drawlineH = undefined;
       this.drawingLineName !== 'polyline' && this.drawline();
     }
+    if(this.arcLine){
+      // if(this.currentState !== State.DRAWING || this.currentState !== State.DRAW){
+      //   this.arcLine = null;
+      //   return;
+      // }
+      if(e.buttons === MouseButton.RIGHT){
+        if(this.currentState == State.DRAWING){
+          this.finishArcLine(false);
+          this.setState('DRAW');
+        }else if(this.currentState = State.DRAW){
+          this.finishArcLine(true);
+          this.setState('SELECT');
+          this.store.emitter.emit('changeState','SELECT');
+          this.parent.setOptions({
+            disableScale: false
+          });
+        }
+        return;
+      }else if(e.buttons === MouseButton.LEFT){
+        this.setState('DRAWING');
+      };
+      this.arcLine.state || (this.arcLine.state = 0);
+      if(this.arcLine.state === 0){
+        // 设置圆弧中心
+        this.arcLine.center = {x:this.mousePos.x,y:this.mousePos.y};
+        // 状态设置为1
+        this.arcLine.state = 1;
+      }else if(this.arcLine.state === 1){
+        // 计算半径 和其实位置
+        this.arcLine.radius = Math.pow( (this.mousePos.x - this.arcLine.center.x)**2+(this.mousePos.y - this.arcLine.center.y)**2,1/2);
+        this.arcLine.startAngle = Math.atan2((this.mousePos.y - this.arcLine.center.y),(this.mousePos.x - this.arcLine.center.x));  // 角度制
+        this.arcLine.x = this.arcLine.circle.calculative.x;
+        this.arcLine.y = this.arcLine.circle.calculative.y;
+        this.arcLine.width = this.arcLine.circle.calculative.width;
+        this.arcLine.height = this.arcLine.circle.calculative.height;
+        this.arcLine.state = 2;
+      }else if(this.arcLine.state === 2){
+        await this.addPen(this.arcLine);
+        this.finishArcLine(false);
+        this.render();
+      }
+      return;
+    }
     // 单击在节点上，通过自动锚点连线
     if (this.drawingLineName && this.currentState != State.MOVE) {
       if ((this.hoverType === HoverType.Node && this.lineType == 'connectLine' && this.drawingLine) ) {
@@ -1665,7 +1712,7 @@ export class Canvas {
           this.drawingLine,
           pt
         );
-      } else if (this.currentState == State.DRAW && this.lineType != 'connectLine' && !this.drawingLine && this.drawingLineName !== 'curve' && e.buttons == MouseButton.LEFT) {//连线第一个点
+      } else if (this.currentState == State.DRAW && this.lineType != 'connectLine' && !this.drawingLine && e.buttons == MouseButton.LEFT) {//连线第一个点
         this.inactive(true);
         const pt: Point = { id: s8(), x: e.x, y: e.y };
         this.drawingLine = this.createDrawingLine(pt);
@@ -1749,7 +1796,35 @@ export class Canvas {
     //   this.setState('DRAWING');
     // }
   };
-
+  finishArcLine(end=false){
+    if(!this.arcLine)return;
+    if(end){
+      this.setState('DRAW');
+      this.arcLine = null;
+    }else {
+      this.arcLine = {
+        name:'arcLine',
+        // @ts-ignore
+        calculative: {
+          canvas: this,
+          inView: true
+        },
+        // @ts-ignore
+        circle:{
+          name:"circle",
+          x:0,
+          y:0,
+          concentric: true,
+          width:0,
+          height:0,
+          calculative:{
+            canvas:this
+          }
+        }
+      };
+    }
+    this.render();
+  }
   onMouseMove = (e: {
     x: number;
     y: number;
@@ -1839,6 +1914,7 @@ export class Canvas {
         // if (this.currentState == State.DRAW && !this.drawingLineName && !this.movingAnchor) {
         // // TODO 正在连线与状态关联
         //   // 在锚点上开始连线
+        //   this.setState('DRAWING');
         //   if (this.hoverType === HoverType.NodeAnchor) {
         //     this.drawingLineName = this.store.options.drawingLineName;
         //     const pt: Point = {
@@ -1872,7 +1948,7 @@ export class Canvas {
           e.buttons === MouseButton.LEFT &&
           ((this.currentState == State.SELECT && !this.hoverType)||
           ((this.currentState == State.DRAWING || this.currentState == State.DRAW) &&
-          !this.drawingLineName)) &&
+          !this.drawingLineName && !this.arcLine )) &&
           // !this.hoverType && // 解决在选中图元内部绘制
           (!this.hotkeyType || e.shiftKey)
         ) {
@@ -1926,12 +2002,20 @@ export class Canvas {
 
           // Move line anchor prev
           if (this.hoverType === HoverType.LineAnchorPrev && this.store.active[0]?.lineType != 'connectLine') {
+            if(!this.store.activeAnchor){
+              let pt = nearestAnchorNextAndPrev(this.store.active[0],e);
+              this.store.activeAnchor = pt;
+            }
             this.moveLineAnchorPrev(e);
             return;
           }
 
           // Move line anchor next
           if (this.hoverType === HoverType.LineAnchorNext && this.store.active[0]?.lineType != 'connectLine') {
+            if(!this.store.activeAnchor){
+            let pt = nearestAnchorNextAndPrev(this.store.active[0],e);
+            this.store.activeAnchor = pt;
+          }
             this.moveLineAnchorNext(e);
             return;
           }
@@ -1945,6 +2029,45 @@ export class Canvas {
 
         // Resize
         if (this.hoverType === HoverType.Resize) {
+          // 选中的为arcLine图元时
+          if(this.store.active.length === 1 && this.store.active[0].name === 'arcLine'){
+            let pen = this.store.active[0];
+            if(e.shiftKey){
+              // 保存状态
+              pen.originSize || (pen.originSize = {
+                x:pen.calculative.worldRect.ex - pen.calculative.worldRect.width,
+                y:pen.calculative.worldRect.ey - pen.calculative.worldRect.height,
+                width: pen.calculative.worldRect.width,
+                height: pen.calculative.worldRect.height,
+              });
+              // 获取当前最大宽度 作为直径
+              let max = Math.max(pen.calculative.worldRect.width,pen.calculative.worldRect.height);
+
+              // 设置pen的直径 用户与渲染pen
+              pen.calculative.worldRect.width = pen.calculative.worldRect.height = max;
+              switch (this.resizeIndex) {
+                case 0:
+                  pen.calculative.worldRect.x = pen.calculative.worldRect.ex - pen.calculative.worldRect.width;
+                  pen.calculative.worldRect.y = pen.calculative.worldRect.ey - pen.calculative.worldRect.height;
+                  break;
+                case 1:
+                  pen.calculative.worldRect.y = pen.calculative.worldRect.ey - pen.calculative.worldRect.height;
+                  break;
+                case 3:
+                  pen.calculative.worldRect.x = pen.calculative.worldRect.ex - pen.calculative.worldRect.width;
+                  break;
+              }
+            }else{
+              if(pen.originSize){
+                pen.calculative.worldRect.x = pen.originSize.x;
+                pen.calculative.worldRect.y = pen.originSize.y;
+                pen.calculative.worldRect.width = pen.originSize.width;
+                pen.calculative.worldRect.height = pen.originSize.height;
+                pen.originSize = null;
+              }
+            }
+            this.calcActiveRect();
+          }
           this.resizePens(e);
           return;
         }
@@ -2008,8 +2131,9 @@ export class Canvas {
         !this.drawingLine.calculative.worldAnchors[0].connectTo
       ) {
         this.drawline(pt);
-      } else {
+      } else{
         let to: Point;
+        this.drawline(pt);
         if (this.drawingLine.calculative.worldAnchors.length > 1) {
           to = getToAnchor(this.drawingLine);
         }
@@ -2066,10 +2190,70 @@ export class Canvas {
           //     ];
           //   this.getSpecialAngle(to, last);
           // }
-        }
 
         this.drawline();
+      }}
+    }
+    if (this.arcLine) {
+      // if(e.shiftKey && !e.ctrlKey) {
+      //   let last =
+      //     this.drawingLine.calculative.worldAnchors[
+      //     this.drawingLine.calculative.worldAnchors.length - 2
+      //       ];
+      //   this.getSpecialAngle(to, last);
+      // }
+      if(this.arcLine.state === 1){
+        this.arcLine.circle.width = Math.pow( (e.x - this.arcLine.center.x)**2+(e.y - this.arcLine.center.y)**2,1/2) * 2;
+        this.arcLine.circle.height = Math.pow( (e.x - this.arcLine.center.x)**2+(e.y - this.arcLine.center.y)**2,1/2) * 2;
+        [this.arcLine.circle.x, this.arcLine.circle.y] = [this.arcLine.center.x - this.arcLine.circle.width / 2, this.arcLine.center.y- this.arcLine.circle.height / 2];
+        this.arcLine.circle.calculative.worldRect || (this.arcLine.circle.calculative.worldRect = {});
+        this.arcLine.circle.calculative.worldRect.x = this.arcLine.circle.x;
+        this.arcLine.circle.calculative.worldRect.y = this.arcLine.circle.y;
+        this.arcLine.circle.calculative.worldRect.width = this.arcLine.circle.width;
+        this.arcLine.circle.calculative.worldRect.height = this.arcLine.circle.height;
+        this.arcLine.circle.calculative.x = this.arcLine.circle.x;
+        this.arcLine.circle.calculative.y = this.arcLine.circle.y;
+        this.arcLine.circle.calculative.width = this.arcLine.circle.width;
+        this.arcLine.circle.calculative.height = this.arcLine.circle.height;
+        this.arcLine.circle.dash = 1;
+        this.arcLine.circle.lineDash = [5,5];
+        this.arcLine.circle.calculative.lineDash = [5,5];
+        this.arcLine.circle.calculative.color = '#eee';
+        this.arcLine.circle.calculative.lineWidth = 2;
+        this.arcLine.circle.calculative.dash = 1;
+        this.arcLine.circle.calculative.name = 'circle';
+        globalStore.path2dDraws[this.arcLine.circle.name] &&
+        this.store.path2dMap.set(this.arcLine.circle, globalStore.path2dDraws[this.arcLine.circle.name](this.arcLine.circle));
+        this.parent.setOptions({
+          disableScale: true
+        })
+        this.render();
+      }else if(this.arcLine.state === 2){
+        // 终点角度
+        this.arcLine.calculative.worldRect = {
+          x:this.arcLine.center.x - this.arcLine.circle.width / 2,
+          y:this.arcLine.center.y - this.arcLine.circle.height / 2,
+          width: this.arcLine.circle.width,
+          height:this.arcLine.circle.height
+        };
+        this.arcLine.lineWidth = 2;
+        this.arcLine.color = '#000';
+        this.arcLine.calculative.lineWidth = 2;
+        this.arcLine.calculative.color = '#000';
+        // 这里应该是找与当前点离得最近的点的角度；
+
+        // 计算圆上离鼠标最近的点
+        // 计算两点连线的斜率
+
+        // 计算角度（以弧度为单位）
+        let radians = Math.atan2(this.mousePos.y - this.arcLine.center.y, this.mousePos.x - this.arcLine.center.x);
+        // 将弧度转换为度
+        this.arcLine.endAngle = radians;
+        globalStore.path2dDraws[this.arcLine.name] && this.store.path2dMap.set(this.arcLine, globalStore.path2dDraws[this.arcLine.name](this.arcLine));
+        this.render();
+
       }
+      return;
     }
 
     globalThis.debug && console.time('hover');
@@ -2134,7 +2318,7 @@ export class Canvas {
     this.mousePos.x = e.x;
     this.mousePos.y = e.y;
     this.pencil && this.finishPencil();
-    // if (this.currentState == State.DRAWING && this.drawingLine) {
+    if (this.currentState == State.DRAWING && this.drawingLine) {
       // // 在锚点上，完成绘画
       // if (this.store.hoverAnchor && this.lineType != 'irregularFigure') {
       //   const to = getToAnchor(this.drawingLine);
@@ -2191,16 +2375,12 @@ export class Canvas {
 
       //   return;
       // }
-    // }
+    }
+    // 鼠标抬起 arcline数据设为null
+    if(this.store.active.length === 1 && this.store.active[0].name === 'arcLine'){
+      this.store.active[0].originSize = null;
+    }
     // 拖拽连线锚点
-    if (
-      this.hoverType === HoverType.LineAnchor &&
-      this.store.active[0] &&
-      this.store.active[0].name === 'line' &&
-      this.store.active[0] !== this.store.hover
-    ) {
-        this.store.emitter.emit('moveAchor',this.store.active[0]);
-      }
     if (
       this.hoverType === HoverType.LineAnchor &&
       this.store.hover &&
@@ -2422,7 +2602,7 @@ export class Canvas {
         this.store.pens[pen.id] = undefined;
       });
       //图元移动结束更改
-      // this.store.emitter.emit('changeState','SELECT');
+      this.store.emitter.emit('changeState','SELECT');
       this.setState('SELECT');
       this.movingPens = undefined;
     }
@@ -2434,6 +2614,7 @@ export class Canvas {
     this.mouseDown = undefined;
     this.lastOffsetX = 0;
     this.lastOffsetY = 0;
+    this.store.activeAnchor = undefined;
     this.clearDock();
     this.dragRect = undefined;
     this.initActiveRect = undefined;
@@ -2868,6 +3049,8 @@ export class Canvas {
     }
     if (!hoverType && !activeLine && pointInRect(pt, this.activeRect)) {
       hoverType = HoverType.Node;
+      // this.externalElements.style.cursor = 'move';
+      // this.setState(State.MOVE);
     }
     this.hoverType = hoverType;
     // 当鼠标在画布空白区域时状态切换为原本的状态
@@ -2963,7 +3146,8 @@ export class Canvas {
         if (pos) {
           if(pen.lineType == 'connectLine') {
             this.setState(this.stateRecord);
-          } else if (this.currentState != State.DRAWING && !this.store.data.locked && !pen.locked && pen.lineType != 'connectLine') {
+          } else
+          if (this.currentState != State.DRAWING && !this.store.data.locked && !pen.locked && pen.lineType != 'connectLine') {
             this.setState('MOVE');
             // if (this.hotkeyType === HotkeyType.AddAnchor) {
             //   this.externalElements.style.cursor = 'pointer';
@@ -4177,6 +4361,16 @@ export class Canvas {
     }
     if (this.pencilLine) {
       renderPen(ctx, this.pencilLine);
+    }
+    if (this.arcLine) {
+      if(this.arcLine.state === 1){
+        renderPen(ctx, this.arcLine.circle);
+      }else if(this.arcLine.state === 2) {
+        renderPen(ctx, this.arcLine.circle);
+        renderPen(ctx,this.arcLine);
+      }else {
+        // renderPen(ctx.this.arcLine);
+      }
     }
     if (this.movingPens) {
       this.movingPens.forEach((pen) => {
@@ -6260,7 +6454,7 @@ export class Canvas {
     }
     this.inputDiv.contentEditable = 'true';
     const {fontSize,fontFamily} = pen.calculative;
-    const isVertical = pen.direction == 'vertical';
+    const isVertical = pen.properties.text.direction == 'vertical';
     if (pen.name === 'text') { // 新文本样式
       this.inputParent.style.width = 'auto'; //(textRect.width < pen.width ? 0 : 10)
       this.inputParent.style.height = 'auto'; //(textRect.width < pen.width ? 0 : 10)
