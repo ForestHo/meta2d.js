@@ -111,12 +111,15 @@ export interface Pen extends Rect {
   // Hidden only visible == false
   visible?: boolean;
   locked?: LockState;
+  radius?: number;
 
   // 连线是否闭合路径
   close?: boolean;
   // 连线长度
   length?: number;
 
+  // 设置圆是否为同心圆（圆心固定）
+  concentric?: boolean;
   title?: string;
   // 优先级高于 title
   titleFnJs?: string;

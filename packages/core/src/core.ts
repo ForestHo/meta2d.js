@@ -947,6 +947,32 @@ export class Meta2d {
     this.canvas.drawingLineName = lineName;
   }
 
+  drawArcLine(){
+    lockedError(this.store);
+    this.canvas.arcLine = {
+      name:'arcLine',
+      state: 0,
+      // @ts-ignore
+      calculative: {
+        canvas: this.canvas,
+        inView: true
+      },
+      // @ts-ignore
+      circle:{
+        name:"circle",
+        x:0,
+        y:0,
+        concentric: true,
+        width:0,
+        height:0,
+        calculative:{
+          canvas:this.canvas
+        }
+      }
+    };
+
+  }
+
   drawingPencil() {
     this.canvas.drawingPencil();
   }

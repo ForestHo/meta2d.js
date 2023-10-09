@@ -34,6 +34,7 @@ import { line } from './line';
 import { iframe } from './iframe';
 import { video } from './video';
 import { gif } from './gif';
+import {arcLine} from "@meta2d/core/src/diagrams/line/arcLine";
 import { mindNode, mindNodeAnchors } from './mindNode';
 import { mindLine, mindLineAnchors } from './mindLine';
 
@@ -61,6 +62,7 @@ export function commonPens() {
     gif,
     mindNode,
     mindLine,
+    arcLine
   };
 }
 
