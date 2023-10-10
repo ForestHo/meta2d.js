@@ -1135,7 +1135,7 @@ export class Canvas {
       if (!pen.parentId) {
         if(pen.name == 'text') {
           pen.height = pen.height * this.store.data.scale;
-          pen.width = pen.width * this.store.data.scale;
+          // pen.width = pen.width * this.store.data.scale;
         }
         pen.x = e.x - pen.width / 2;
         pen.y = e.y - pen.height / 2;
@@ -2510,7 +2510,8 @@ export class Canvas {
       this.currentState == State.DRAW &&
       this.addCaches &&
       this.addCaches.length == 1 &&
-      this.addCaches[0].name == 'text'
+      this.addCaches[0].name == 'text' && 
+      e.button != 2
     ) {
       const pens:Pen[] = deepClone(this.addCaches);
       this.dropPens(pens, e);
@@ -2610,7 +2611,12 @@ export class Canvas {
     if (this.store.active && this.store.active[0]) {
       this.store.active[0].calculative.h = undefined;
     }
-
+    if(this.currentState == State.DRAW && e.button == 2) {
+      this.store.emitter.emit('changeState', 
+        'SELECT'
+      );
+      this.setState('SELECT');
+    }
     this.mouseDown = undefined;
     this.lastOffsetX = 0;
     this.lastOffsetY = 0;
@@ -6456,6 +6462,7 @@ export class Canvas {
     const {fontSize,fontFamily} = pen.calculative;
     const isVertical = pen.properties.text.direction == 'vertical';
     if (pen.name === 'text') { // 新文本样式
+      this.inputParent.style.left = pen.x + this.store.data.x + 'px'; //+ 5
       this.inputParent.style.width = 'auto'; //(textRect.width < pen.width ? 0 : 10)
       this.inputParent.style.height = 'auto'; //(textRect.width < pen.width ? 0 : 10)
       this.inputParent.style.background = '#FFF';
@@ -6465,21 +6472,23 @@ export class Canvas {
       let style = `
         display:block;
         height:auto;
+        width:auto;
         outline:0;
         position:static;
         box-sizing:border-box;
         font-size:${ fontSize }px;
       `
+      const len = zoom > 1 ? fontSize * 1.5 : fontSize * 1.5 / zoom;
       if(isVertical) {
         style +=`
-          line-height:${zoom > 1 ? fontSize * 1.5 : fontSize * 1.5 / zoom}px;
+          line-height:${len}px;
+          width:${zoom > 1 ? fontSize: fontSize / zoom}px;
         `
       } else {
         style +=`
-          width:auto;
           min-width:${zoom > 1 ? pen.width : pen.width/zoom}px;
-          height:${zoom > 1 ? pen.height : pen.height / zoom}px;
-          line-height:${zoom > 1 ? pen.height : pen.height / zoom}px;
+          height:${len}px;
+          line-height:${len}px;
         `
       }
       this.inputDiv.style = style;
@@ -6737,14 +6746,24 @@ export class Canvas {
       } else if (pen.text !== this.inputDiv.dataset.value) {
         const initPens = [deepClone(pen, true)];
         pen.text = this.inputDiv.dataset.value;
-        // if(pen.name == 'newText') {
-        //   const {fontSize} = pen.calculative;
-        //   const ctx = this.canvas.getContext('2d');
-        //   // ctx.font = fontSize;
-        //   pen.width = ctx.measureText(pen.text).width * this.store.data.scale;
-        //   this.updatePenRect(pen);
-        //   console.log(pen.width,'width',ctx.font)
-        // }
+        if(pen.name == 'text') {//如果是文本图元且宽度或高度小于目标，重新计算赋值，避免出现文本换行的问题
+          const calculateH = pen.fontSize * 1.5 * pen.text.length * this.store.data.scale;
+          const ctx = this.canvas.getContext('2d');
+          const {fontSize,fontFamily} = pen.calculative;
+          ctx.font = `${fontSize}px ${fontFamily}`;
+          const calculateW = ctx.measureText(pen.text).width;
+          if(pen.height < calculateH || pen.width < calculateW) {
+            if(pen.direction == 'vertical') {
+              pen.height = calculateH;
+              pen.textWidth = pen.fontSize;
+            } else {
+              pen.width = calculateW;
+              // pen.textWidth = pen.fontSize * pen.text.length;
+              pen.textWidth = undefined;
+            }
+          }
+          this.updatePenRect(pen);
+        }
         pen.calculative.text = pen.text;
         this.inputDiv.dataset.penId = undefined;
         calcTextRect(pen);
