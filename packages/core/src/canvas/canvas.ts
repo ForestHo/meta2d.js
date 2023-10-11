@@ -2611,7 +2611,7 @@ export class Canvas {
     if (this.store.active && this.store.active[0]) {
       this.store.active[0].calculative.h = undefined;
     }
-    if(this.currentState == State.DRAW && e.button == 2) {
+    if(this.currentState == State.DRAW && e.button == 2 && this.addCaches?.[0].name === 'text') {
       this.store.emitter.emit('changeState',
         'SELECT'
       );
