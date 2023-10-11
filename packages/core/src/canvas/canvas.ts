@@ -1675,7 +1675,7 @@ export class Canvas {
         this.arcLine.height = this.arcLine.circle.calculative.height;
         this.arcLine.state = 2;
       }else if(this.arcLine.state === 2){
-        await this.addPen(this.arcLine);
+        await this.addPen(this.arcLine,true,true);
         this.finishArcLine(false);
         this.render();
       }
@@ -2510,7 +2510,7 @@ export class Canvas {
       this.currentState == State.DRAW &&
       this.addCaches &&
       this.addCaches.length == 1 &&
-      this.addCaches[0].name == 'text' && 
+      this.addCaches[0].name == 'text' &&
       e.button != 2
     ) {
       const pens:Pen[] = deepClone(this.addCaches);
@@ -2612,7 +2612,7 @@ export class Canvas {
       this.store.active[0].calculative.h = undefined;
     }
     if(this.currentState == State.DRAW && e.button == 2) {
-      this.store.emitter.emit('changeState', 
+      this.store.emitter.emit('changeState',
         'SELECT'
       );
       this.setState('SELECT');
