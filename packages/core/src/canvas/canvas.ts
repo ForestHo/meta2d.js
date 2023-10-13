@@ -6373,7 +6373,7 @@ export class Canvas {
     if (
       this.store.hover &&
       !this.store.data.locked &&
-      !this.store.options.disableInput
+      (!this.store.options.disableInput ||(this.store.active.length == 1 && this.store.active[0].name == 'text'))
     ) {
       if (this.store.hover.onShowInput) {
         this.store.hover.onShowInput(this.store.hover, e as any);
@@ -6477,6 +6477,7 @@ export class Canvas {
         position:static;
         box-sizing:border-box;
         font-size:${ fontSize }px;
+        color:#000;
       `
       const len = zoom > 1 ? fontSize * 1.5 : fontSize * 1.5 / zoom;
       if(isVertical) {
