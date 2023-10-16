@@ -2199,8 +2199,8 @@ export function nearestAnchorNextAndPrev(pen: Pen, pt: Point) {
   let dis = Infinity;
   let anchor: Point;
   pen.calculative.worldAnchors.forEach((a: Point) => {
-    const d = distance(pt, a.next);
-    const p = distance(pt,a.prev);
+    const d = a.next ? distance(pt, a.next) : Infinity;
+    const p = a.prev ? distance(pt,a.prev) : Infinity;
     let max = d > p?p:d;
     if (dis > max) {
       dis = max;

@@ -1975,7 +1975,7 @@ export class Canvas {
           this.render();
           return;
         } else if (this.currentState == State.SELECT &&  !this.store.active[0]?.locked) {
-          if(this.store.active[0]?.lineType == 'connectLine' && this.store.hoverAnchor?.connectTo) {//禁止连线移动首尾锚点
+          if(this.store.active[0]?.lineType == 'connectLine' && this.hoverType === HoverType.LineAnchor && this.store.hoverAnchor?.connectTo) {//禁止连线移动首尾锚点
             return;
           }
           const pt = { x: e.x, y: e.y };
@@ -2001,7 +2001,7 @@ export class Canvas {
           }
 
           // Move line anchor prev
-          if (this.hoverType === HoverType.LineAnchorPrev && this.store.active[0]?.lineType != 'connectLine') {
+          if (this.hoverType === HoverType.LineAnchorPrev ) {
             if(!this.store.activeAnchor){
               let pt = nearestAnchorNextAndPrev(this.store.active[0],e);
               this.store.activeAnchor = pt;
@@ -2011,7 +2011,7 @@ export class Canvas {
           }
 
           // Move line anchor next
-          if (this.hoverType === HoverType.LineAnchorNext && this.store.active[0]?.lineType != 'connectLine') {
+          if (this.hoverType === HoverType.LineAnchorNext ) {
             if(!this.store.activeAnchor){
             let pt = nearestAnchorNextAndPrev(this.store.active[0],e);
             this.store.activeAnchor = pt;
@@ -2478,15 +2478,17 @@ export class Canvas {
         e.x = (this.dragRect.x + this.dragRect.ex) / 2;
         e.y = (this.dragRect.y + this.dragRect.ey) / 2;
         if(this.addCaches.length === 1 && this.addCaches[0].name == 'text'){
-          const target = this.addCaches[0];
-          target.width = this.dragRect.width;
+          const target = deepClone(this.addCaches[0]);
+          if(this.dragRect.width > target.width) {
+            target.width =  this.dragRect.width;
+          }
           // target.height = target.fontSize;
-          const pens:Pen[] = deepClone(this.addCaches);
+          const pens:Pen[] = [target];
           this.dropPens(pens, e);
           this.store.hover = pens[0];
           setTimeout(() => {
             this.showInput(pens[0]);
-          },100)
+          })
           // this.setState('DRAWING');
         } else if(this.dragRect && (this.dragRect.width > 20 || this.dragRect.height > 20)){
           // 只存在一个缓存图元
@@ -2515,9 +2517,9 @@ export class Canvas {
     ) {
       const pens:Pen[] = deepClone(this.addCaches);
       this.dropPens(pens, e);
-      setTimeout(() => {
+      // setTimeout(() => {
         this.showInput(pens[0]);
-      })
+      // })
       return;
     }
     // Rotate
