@@ -4263,7 +4263,7 @@ export class Canvas {
       this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
     }else{
       // 运行态做特殊处理
-      if(!pen.externElement&&pen.name !== 'gif' && pen.name !== 'echarts'){
+      if(!pen.externElement&&pen.name !== 'gif' && pen.name !== 'echarts' && pen.name.indexOf('cetchart') === -1){
         globalStore.path2dDraws[pen.name] &&
           this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
       }
