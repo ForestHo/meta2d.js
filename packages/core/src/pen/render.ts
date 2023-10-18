@@ -867,11 +867,11 @@ function drawText(ctx: CanvasRenderingContext2D, pen: Pen) {
     ctx.shadowOffsetY = 0;
   }
   let fill: string = undefined;
-  if (pen.calculative.hover) {
-    fill = pen.hoverTextColor || pen.hoverColor || store.options.hoverColor;
-  } else if (pen.calculative.active) {
-    fill = pen.activeTextColor || pen.activeColor || store.options.activeColor;
-  }
+  // if (pen.calculative.hover) {
+  //   fill = pen.hoverTextColor || pen.hoverColor || store.options.hoverColor;
+  // } else if (pen.calculative.active) {
+  //   fill = pen.activeTextColor || pen.activeColor || store.options.activeColor;
+  // }
   ctx.fillStyle = fill || getTextColor(pen, store);
 
   ctx.font = getFont({
