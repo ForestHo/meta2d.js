@@ -4350,7 +4350,7 @@ export class Canvas {
     ctx.strokeStyle = getGlobalColor(this.store);
     ctx.lineWidth = getGlobalLineWidth(this.store);
     this.store.active?.forEach(pen => {
-      if(pen.locked == 2) {
+      if(pen.locked == 2 && !pen.parentId) {
         this.drawLock(ctx,pen);
       }
     })
@@ -4467,7 +4467,7 @@ export class Canvas {
     const ctx = this.offscreen.getContext('2d');
     ctx.save();
     ctx.translate(0.5, 0.5);
-    if(this.store.hover && this.store.hover.locked == 2 && (!this.store.active.length || this.store.active.some(pen =>pen.id != this.store.hover.id))) {
+    if(this.store.hover && this.store.hover.locked == 2 && !this.store.hover.parentId && (!this.store.active.length || this.store.active.some(pen =>pen.id != this.store.hover.id))) {
       this.drawLock(ctx,this.store.hover)
     }
     if (
