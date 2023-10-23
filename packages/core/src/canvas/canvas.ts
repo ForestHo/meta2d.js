@@ -6460,7 +6460,7 @@ export class Canvas {
     }
     this.inputDiv.contentEditable = 'true';
     const {fontSize,fontFamily} = pen.calculative;
-    const isVertical = pen.properties.text.direction == 'vertical';
+    const isVertical = pen.direction == 'vertical';
     if (pen.name === 'text') { // 新文本样式
       this.inputParent.style.left = pen.x + this.store.data.x + 'px'; //+ 5
       this.inputParent.style.width = 'auto'; //(textRect.width < pen.width ? 0 : 10)
@@ -7056,12 +7056,6 @@ export class Canvas {
     let containIsBottom = false; // 是否包含 isBottom 属性修改
     let oldRotate: number = undefined;
     let willRenderImage = false; // 是否需要重新渲染图片
-    // if(data.textWidth && data['properties.text.direction'] == 'vertical') {
-    //   console.log(1111)
-    //   const temp = pen.width;
-    //   pen.width = pen.height;
-    //   pen.height = temp;
-    // }
     for (const k in data) {
       if (k === 'rotate') {
         oldRotate = pen.calculative.rotate || 0;

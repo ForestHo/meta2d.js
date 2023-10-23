@@ -59,6 +59,7 @@ import {
 } from './rect';
 import { deepClone } from './utils/clone';
 import { Event, EventAction, EventName, TriggerCondition } from './event';
+import { Motion,MotionType,MotionAction, PointVal, LogicType } from './motion';
 import { ViewMap } from './map';
 // TODO: 这种引入方式，引入 connect， webpack 5 报错
 import { MqttClient } from 'mqtt';
@@ -88,6 +89,7 @@ export class Meta2d {
     }
   ) => boolean;
   events: Record<number, (pen: Pen, e: Event) => void> = {};
+  motions: Record<number, (pen: Pen, m: Motion) => void> = {};
   map: ViewMap;
   mapTimer: any;
   constructor(parent: string | HTMLElement, opts: Options = {}) {
@@ -100,6 +102,8 @@ export class Meta2d {
     this.registerAnchors(commonAnchors());
     globalThis.meta2d = this;
     this.initEventFns();
+    // 初始化动效的函数
+    this.initMotionFns();
     this.store.emitter.on('*', this.onEvent);
   }
 
@@ -210,7 +214,28 @@ export class Meta2d {
     this.resize();
     this.canvas.listen();
   }
-
+  initMotionFns(){
+    this.motions[MotionAction.COLOR] = (pen: Pen, m: Motion) => {
+      this.setValue(
+        { id: pen.id,
+          'borderColor': m.action.borderColor,
+          'backgroundColor': m.action.backgroundColor,
+        },
+        { render: false }
+      );
+    };
+    this.motions[MotionAction.TEXT] = (pen: Pen, m: Motion) => {
+      this.setValue(
+        { id: pen.id,
+          'text': m.action.content,
+        },
+        { render: false }
+      );
+    };
+    this.motions[MotionAction.VISION] = (pen: Pen, m: Motion) => {
+      this.setVisible(pen, m.action.visibility);
+    };
+  }
   initEventFns() {
     this.events[EventAction.Link] = (pen: Pen, e: Event) => {
       if (window && e.value && typeof e.value === 'string') {
@@ -876,7 +901,18 @@ export class Meta2d {
     // 更新lastQuietRender的值
     this.lastQuietRender = render;
   }
-
+  /**
+   * @description 动效判断
+   * @author Joseph Ho
+   * @date 20/10/2023
+   * @param {PointVal[]} data
+   * @memberof Meta2d
+   */
+  judgeMotion(data: PointVal[]){
+    for (let i = 0; i < data.length; i++) {
+      const item = data[i];
+    }
+  }
   initBindDatas() {
     this.store.bindDatas = {};
     this.store.data.pens.forEach((pen) => {
@@ -2292,7 +2328,42 @@ export class Meta2d {
         break;
     }
   };
-
+  /**
+   * @description 执行动效
+   * @author Joseph Ho
+   * @date 20/10/2023
+   * @private
+   * @param {Pen} pen
+   * @param {MotionType} motionType
+   * @memberof Meta2d
+   */
+  private doMotion = (pen: Pen, motionType: MotionType) => {
+    if(!pen){
+      return;
+    }
+    let val = 0;
+    for (let i = 0; i < pen.motions.length; i++) {
+      const mt = pen.motions[i];
+      if(this.motions[mt.type]){
+        let can = false;
+        if(mt.when.length === 1){
+          // 如果只有一个条件，只需要满足条件1
+          can = (val >= mt.when[0].min) && (val <= mt.when[0].max);
+        }else if(mt.when.length >= 2){
+          if(mt.when[1].relation === LogicType.AND){
+            // 如果有多个条件且第二个条件为"and与"的逻辑关系，那么条件1和条件2都为true
+            can = ((val >= mt.when[0].min) && (val <= mt.when[0].max) && (val >= mt.when[1].min) && (val <= mt.when[1].max));
+          }else if(mt.when[1].relation === LogicType.OR){
+            // 如果有多个条件且第二个条件为"or或"的逻辑关系，那么条件1为true则立即返回，要么条件1，条件2都为true
+            can = ((val >= mt.when[0].min) && (val <= mt.when[0].max))
+            || ((val >= mt.when[0].min) && (val <= mt.when[0].max) && (val >= mt.when[1].min) && (val <= mt.when[1].max));
+          }
+        }
+        // 当when中的每个条件都满足时，触发执行动作action
+        can && this.motions[mt.type](pen,mt);
+      }
+    }
+  }
   private doEvent = (pen: Pen, eventName: EventName) => {
     if (!pen) {
       return;
@@ -3087,7 +3158,6 @@ export class Meta2d {
    */
   private alignPen(align: string, pen: Pen, rect: Rect) {
     const penRect = this.getPenRect(pen);
-    console.log(rect,'rect')
     switch (align) {
       case 'left':
         penRect.x = rect?.x || 0;

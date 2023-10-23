@@ -1,6 +1,7 @@
 import { Point } from '../point';
 import { Rect } from '../rect';
 import { Event, RealTime } from '../event';
+import { Motion } from '../motion';
 import { Canvas } from '../canvas';
 
 export enum PenType {
@@ -318,6 +319,7 @@ export interface Pen extends Rect {
   gradientSmooth?: number; //渐进色平滑度
   scrolling?: string; //iframe scrolling属性
   animations?: any[]; //动画数组
+  motions: Motion[]; //动效数组
   currentAnimation?: number; //当前动画索引
   realTimes?: RealTime[];
   crossOrigin?: string;
