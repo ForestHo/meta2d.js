@@ -867,11 +867,11 @@ function drawText(ctx: CanvasRenderingContext2D, pen: Pen) {
     ctx.shadowOffsetY = 0;
   }
   let fill: string = undefined;
-  if (pen.calculative.hover) {
-    fill = pen.hoverTextColor || pen.hoverColor || store.options.hoverColor;
-  } else if (pen.calculative.active) {
-    fill = pen.activeTextColor || pen.activeColor || store.options.activeColor;
-  }
+  // if (pen.calculative.hover) {
+  //   fill = pen.hoverTextColor || pen.hoverColor || store.options.hoverColor;
+  // } else if (pen.calculative.active) {
+  //   fill = pen.activeTextColor || pen.activeColor || store.options.activeColor;
+  // }
   ctx.fillStyle = fill || getTextColor(pen, store);
 
   ctx.font = getFont({
@@ -2199,8 +2199,8 @@ export function nearestAnchorNextAndPrev(pen: Pen, pt: Point) {
   let dis = Infinity;
   let anchor: Point;
   pen.calculative.worldAnchors.forEach((a: Point) => {
-    const d = distance(pt, a.next);
-    const p = distance(pt,a.prev);
+    const d = a.next ? distance(pt, a.next) : Infinity;
+    const p = a.prev ? distance(pt,a.prev) : Infinity;
     let max = d > p?p:d;
     if (dis > max) {
       dis = max;

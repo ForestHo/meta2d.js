@@ -624,6 +624,7 @@ export class Meta2d {
 
   open(data?: Meta2dData, render: boolean = true) {
     this.clear(false, data.template);
+    this.canvas.autoPolylineFlag = true;
     if (data) {
       this.setBackgroundImage(data.bkImage);
       Object.assign(this.store.data, data);
@@ -666,6 +667,7 @@ export class Meta2d {
         });
       }
     }
+    this.canvas.autoPolylineFlag = false;
     this.store.emitter.emit('opened');
 
     if (this.canvas.scroll && this.canvas.scroll.isShow) {

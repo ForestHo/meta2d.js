@@ -265,7 +265,7 @@ export class Canvas {
   canvasImageBottom: CanvasImage;
   magnifierCanvas: MagnifierCanvas;
   dialog: Dialog;
-
+  autoPolylineFlag: boolean = false; //标记open不自动计算
   stopPropagation = (e: MouseEvent) => {
     e.stopPropagation();
   };
@@ -1975,7 +1975,7 @@ export class Canvas {
           this.render();
           return;
         } else if (this.currentState == State.SELECT &&  !this.store.active[0]?.locked) {
-          if(this.store.active[0]?.lineType == 'connectLine' && this.store.hoverAnchor?.connectTo) {//禁止连线移动首尾锚点
+          if(this.store.active[0]?.lineType == 'connectLine' && this.hoverType === HoverType.LineAnchor && this.store.hoverAnchor?.connectTo) {//禁止连线移动首尾锚点
             return;
           }
           const pt = { x: e.x, y: e.y };
@@ -2001,7 +2001,7 @@ export class Canvas {
           }
 
           // Move line anchor prev
-          if (this.hoverType === HoverType.LineAnchorPrev && this.store.active[0]?.lineType != 'connectLine') {
+          if (this.hoverType === HoverType.LineAnchorPrev ) {
             if(!this.store.activeAnchor){
               let pt = nearestAnchorNextAndPrev(this.store.active[0],e);
               this.store.activeAnchor = pt;
@@ -2011,7 +2011,7 @@ export class Canvas {
           }
 
           // Move line anchor next
-          if (this.hoverType === HoverType.LineAnchorNext && this.store.active[0]?.lineType != 'connectLine') {
+          if (this.hoverType === HoverType.LineAnchorNext ) {
             if(!this.store.activeAnchor){
             let pt = nearestAnchorNextAndPrev(this.store.active[0],e);
             this.store.activeAnchor = pt;
@@ -2194,6 +2194,7 @@ export class Canvas {
         this.drawline();
       }}
     }
+    // 圆弧图元绘制逻辑
     if (this.arcLine) {
       // if(e.shiftKey && !e.ctrlKey) {
       //   let last =
@@ -2478,15 +2479,17 @@ export class Canvas {
         e.x = (this.dragRect.x + this.dragRect.ex) / 2;
         e.y = (this.dragRect.y + this.dragRect.ey) / 2;
         if(this.addCaches.length === 1 && this.addCaches[0].name == 'text'){
-          const target = this.addCaches[0];
-          target.width = this.dragRect.width;
+          const target = deepClone(this.addCaches[0]);
+          if(this.dragRect.width > target.width) {
+            target.width =  this.dragRect.width;
+          }
           // target.height = target.fontSize;
-          const pens:Pen[] = deepClone(this.addCaches);
+          const pens:Pen[] = [target];
           this.dropPens(pens, e);
           this.store.hover = pens[0];
           setTimeout(() => {
             this.showInput(pens[0]);
-          },100)
+          })
           // this.setState('DRAWING');
         } else if(this.dragRect && (this.dragRect.width > 20 || this.dragRect.height > 20)){
           // 只存在一个缓存图元
@@ -2515,9 +2518,9 @@ export class Canvas {
     ) {
       const pens:Pen[] = deepClone(this.addCaches);
       this.dropPens(pens, e);
-      setTimeout(() => {
+      // setTimeout(() => {
         this.showInput(pens[0]);
-      })
+      // })
       return;
     }
     // Rotate
@@ -4261,7 +4264,7 @@ export class Canvas {
       this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
     }else{
       // 运行态做特殊处理
-      if(!pen.externElement&&pen.name !== 'gif' && pen.name !== 'echarts'){
+      if(!pen.externElement&&pen.name !== 'gif' && pen.name !== 'echarts' && pen.name.indexOf('cetchart') === -1){
         globalStore.path2dDraws[pen.name] &&
           this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
       }
@@ -4347,7 +4350,7 @@ export class Canvas {
     ctx.strokeStyle = getGlobalColor(this.store);
     ctx.lineWidth = getGlobalLineWidth(this.store);
     this.store.active?.forEach(pen => {
-      if(pen.locked == 2) {
+      if(pen.locked == 2 && !pen.parentId) {
         this.drawLock(ctx,pen);
       }
     })
@@ -4464,7 +4467,7 @@ export class Canvas {
     const ctx = this.offscreen.getContext('2d');
     ctx.save();
     ctx.translate(0.5, 0.5);
-    if(this.store.hover && this.store.hover.locked == 2 && (!this.store.active.length || this.store.active.some(pen =>pen.id != this.store.hover.id))) {
+    if(this.store.hover && this.store.hover.locked == 2 && !this.store.hover.parentId && (!this.store.active.length || this.store.active.some(pen =>pen.id != this.store.hover.id))) {
       this.drawLock(ctx,this.store.hover)
     }
     if (
@@ -5704,7 +5707,7 @@ export class Canvas {
       if (
         this.store.options.autoPolyline &&
         line.autoPolyline !== false &&
-        line.calculative.autoPolylineFlag === true &&
+        !this.autoPolylineFlag &&
         line.lineName === 'polyline'
       ) {
         let from = getFromAnchor(line);
@@ -6373,7 +6376,7 @@ export class Canvas {
     if (
       this.store.hover &&
       !this.store.data.locked &&
-      !this.store.options.disableInput
+      (!this.store.options.disableInput ||(this.store.active.length == 1 && this.store.active[0].name == 'text'))
     ) {
       if (this.store.hover.onShowInput) {
         this.store.hover.onShowInput(this.store.hover, e as any);
@@ -6477,6 +6480,7 @@ export class Canvas {
         position:static;
         box-sizing:border-box;
         font-size:${ fontSize }px;
+        color:#000;
       `
       const len = zoom > 1 ? fontSize * 1.5 : fontSize * 1.5 / zoom;
       if(isVertical) {
