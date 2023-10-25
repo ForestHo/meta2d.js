@@ -59,7 +59,7 @@ import {
 } from './rect';
 import { deepClone } from './utils/clone';
 import { Event, EventAction, EventName, TriggerCondition } from './event';
-import { Motion,MotionType,MotionAction, PointVal, LogicType } from './motion';
+import { Motion,MotionAction, PointVal, LogicType } from './motion';
 import { ViewMap } from './map';
 // TODO: 这种引入方式，引入 connect， webpack 5 报错
 import { MqttClient } from 'mqtt';
@@ -651,8 +651,8 @@ export class Meta2d {
       this.canvas.opening = true;
     }
     this.extendedFn();
-    this.initBindDatas();
-    this.initBinds();
+    // this.initBindDatas();
+    // this.initBinds();
     this.render();
     this.listenSocket();
     this.connectSocket();
@@ -903,18 +903,7 @@ export class Meta2d {
     // 更新lastQuietRender的值
     this.lastQuietRender = render;
   }
-  /**
-   * @description 动效判断
-   * @author Joseph Ho
-   * @date 20/10/2023
-   * @param {PointVal[]} data
-   * @memberof Meta2d
-   */
-  judgeMotion(data: PointVal[]){
-    for (let i = 0; i < data.length; i++) {
-      const item = data[i];
-    }
-  }
+
   initBindDatas() {
     this.store.bindDatas = {};
     this.store.data.pens.forEach((pen) => {
@@ -2036,7 +2025,7 @@ export class Meta2d {
       data = [data];
     }
     if (data[0].dataId) {
-      this.setDatas(data);
+      // this.setDatas(data);
     } else {
       data.forEach((_data: IValue) => {
         this.setValue(_data);
@@ -2177,12 +2166,12 @@ export class Meta2d {
       const pen = this.store.pens[data.id];
       pen && (pens = [pen]);
     } else if (data.dataId) {
-      pens = [];
-      this.setDatas([data] as any, {
-        render,
-        doEvent,
-        history,
-      });
+      // pens = [];
+      // this.setDatas([data] as any, {
+      //   render,
+      //   doEvent,
+      //   history,
+      // });
       return;
     } else if (data.tag) {
       pens = this.find(data.tag);
@@ -2331,35 +2320,72 @@ export class Meta2d {
     }
   };
   /**
-   * @description 执行动效
+   * @description 根据测点值，判断是否需要执行doMotion
    * @author Joseph Ho
-   * @date 20/10/2023
-   * @private
-   * @param {Pen} pen
-   * @param {MotionType} motionType
+   * @date 24/10/2023
+   * @param {PointVal[]} data
    * @memberof Meta2d
    */
-  private doMotion = (pen: Pen, motionType: MotionType) => {
+  doMotionByValues(data: PointVal[]){
+    for (let i = 0; i < data.length; i++) {
+      const item = data[i];
+      for (let j = 0; j < this.store.data.pens.length; j++) {
+        const pen = this.store.data.pens[j];
+        // 如果pen的motions绑定了传递过来的测点数据的测点，则执行动效判断
+        const index = pen.motions.findIndex(el=>el.when.findIndex(elem=>elem.dataId === item.dataId) !== -1);
+        if(index !== -1){
+          this.doMotion(pen,data);
+        }
+      }
+    }
+  }
+  /**
+   * @description 根据val判断是否执行motions动效
+   * @author Joseph Ho
+   * @date 24/10/2023
+   * @private
+   * @param {Pen} pen
+   * @param {PointVal[]} data
+   * @memberof Meta2d
+   */
+  private doMotion = (pen: Pen, data: PointVal[]) => {
     if(!pen){
       return;
     }
-    let val = 0;
     for (let i = 0; i < pen.motions.length; i++) {
       const mt = pen.motions[i];
       if(this.motions[mt.type]){
         let can = false;
-        if(mt.when.length === 1){
-          // 如果只有一个条件，只需要满足条件1
-          can = (val >= mt.when[0].min) && (val <= mt.when[0].max);
-        }else if(mt.when.length >= 2){
-          if(mt.when[1].relation === LogicType.AND){
-            // 如果有多个条件且第二个条件为"and与"的逻辑关系，那么条件1和条件2都为true
-            can = ((val >= mt.when[0].min) && (val <= mt.when[0].max) && (val >= mt.when[1].min) && (val <= mt.when[1].max));
-          }else if(mt.when[1].relation === LogicType.OR){
-            // 如果有多个条件且第二个条件为"or或"的逻辑关系，那么条件1为true则立即返回，要么条件1，条件2都为true
-            can = ((val >= mt.when[0].min) && (val <= mt.when[0].max))
-            || ((val >= mt.when[0].min) && (val <= mt.when[0].max) && (val >= mt.when[1].min) && (val <= mt.when[1].max));
+        // nca=false表示关闭无条件动效，需要判定when是否满足条件
+        if(!mt.nca){
+          if(mt.when.length === 1){
+            // 如果只有一个条件，只需要满足条件1
+            const elem = data.find(elem => elem.dataId === mt.when[0].dataId);
+            can = (elem.value >= mt.when[0].min) && (elem.value <= mt.when[0].max);
+          }else if(mt.when.length >= 2){
+            // 如果有多个条件，则以每个条件之间做逻辑运算
+            const whs = mt.when.map(el=>{
+              const item = data.find(elem => elem.dataId === el.dataId);
+              if(item){
+                return {relation: el.relation, cond:(item.value >= el.min) && (item.value <= el.max)};
+              }else{
+                return {relation:'',cond: false};
+              }
+            });
+            let rel = true;
+            for (let j = 0; j < whs.length; j++) {
+              const item = whs[j];
+              if(j === 0) continue;
+              if(item.relation === LogicType.AND){
+                rel = rel && item.cond;
+              }else if(item.relation === LogicType.OR){
+                rel = rel || item.cond;
+              }
+            }
           }
+        }else{
+          // nca=true表示启用无条件动效，when条件失效，直接执行动效；
+          can = true;
         }
         // 当when中的每个条件都满足时，触发执行动作action
         can && this.motions[mt.type](pen,mt);

@@ -22,6 +22,7 @@ interface TextAct{
 }
 export interface Motion {
   type: MotionType;
+  nca: Boolean;
   when: When[];
   action: any;
   // action: ColorAct | VisionAct | TextAct;
