@@ -218,10 +218,10 @@ export class Meta2d {
     this.motions[MotionAction.COLOR] = (pen: Pen, m: Motion) => {
       this.setValue(
         { id: pen.id,
-          'borderColor': m.action.borderColor,
-          'backgroundColor': m.action.backgroundColor,
+          'color': m.action.borderColor,
+          'background': m.action.backgroundColor,
         },
-        { render: false }
+        { render: true }
       );
     };
     this.motions[MotionAction.TEXT] = (pen: Pen, m: Motion) => {
@@ -229,11 +229,11 @@ export class Meta2d {
         { id: pen.id,
           'text': m.action.content,
         },
-        { render: false }
+        { render: true }
       );
     };
     this.motions[MotionAction.VISION] = (pen: Pen, m: Motion) => {
-      this.setVisible(pen, m.action.visibility);
+      this.setVisible(pen, m.action.visibility==='visible');
     };
   }
   initEventFns() {
@@ -2332,8 +2332,8 @@ export class Meta2d {
       for (let j = 0; j < this.store.data.pens.length; j++) {
         const pen = this.store.data.pens[j];
         // 如果pen的motions绑定了传递过来的测点数据的测点，则执行动效判断
-        const index = pen.motions.findIndex(el=>el.when.findIndex(elem=>elem.dataId === item.dataId) !== -1);
-        if(index !== -1){
+        const flag = (pen.motions.findIndex(el=>el.when.findIndex(elem=>elem.dataId === item.dataId) !== -1) !== -1) || pen.motions.some(el=>el.nca);
+        if(flag){
           this.doMotion(pen,data);
         }
       }
@@ -2382,6 +2382,7 @@ export class Meta2d {
                 rel = rel || item.cond;
               }
             }
+            can = rel;
           }
         }else{
           // nca=true表示启用无条件动效，when条件失效，直接执行动效；
