@@ -3767,11 +3767,11 @@ export class Canvas {
     }
     // end
 
-    if (pen.lineWidth == undefined) {
+    if (pen.name !== 'text' && pen.lineWidth == undefined) {
       pen.lineWidth = 2;
     }
     const { fontSize, lineHeight } = this.store.options;
-    if (!pen.fontSize) {
+    if (pen.name === 'text' && !pen.fontSize) {
       pen.fontSize = fontSize;
     }
     if (!pen.lineHeight) {
@@ -3840,7 +3840,7 @@ export class Canvas {
       Object.assign(pen, rect);
     }
     const { fontSize, lineHeight } = this.store.options;
-    if (!pen.fontSize) {
+    if (pen.name === 'text' && !pen.fontSize) {
       pen.fontSize = fontSize;
       pen.calculative.fontSize = pen.fontSize * this.store.data.scale;
     }
