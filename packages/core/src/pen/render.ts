@@ -1229,6 +1229,8 @@ export function renderPen(ctx: CanvasRenderingContext2D, pen: Pen) {
   } else if (pen.calculative.active) {
     if(store.active.length > 1 && pen == store.active[0]) {
       ctx.strokeStyle = 'green';
+    } else if(store.selectedPensId?.length > 0 && store.selectedPensId.includes(pen.id)) {
+      ctx.strokeStyle = 'red';
     } else {
       ctx.strokeStyle = pen.color ||pen.activeColor || store.options.activeColor;
     }
