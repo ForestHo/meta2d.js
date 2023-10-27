@@ -2375,7 +2375,7 @@ export class Meta2d {
     for (let i = 0; i < pen.motions.length; i++) {
       const mt = pen.motions[i];
       // 如果图元不支持创建多个动画场景，那么只遍历一次
-      if(i >= 1 && !MotionWhenMap[mt.type][MotionWhenType]) continue;
+      if(i >= 1 && !MotionWhenMap[mt.type][MotionWhenType.ISMUILT]) continue;
       // 这里校验下图元类型与动效是否有对应关系
       let name = pen.name;
       if(pen.name === 'line'){
