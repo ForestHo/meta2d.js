@@ -59,6 +59,7 @@ import {
 } from './rect';
 import { deepClone } from './utils/clone';
 import { Event, EventAction, EventName, TriggerCondition } from './event';
+import { Motion,MotionAction, PointVal, LogicType, getMotionsByName, MotionWhenMap, MotionWhenType } from './motion';
 import { ViewMap } from './map';
 // TODO: 这种引入方式，引入 connect， webpack 5 报错
 import { MqttClient } from 'mqtt';
@@ -88,6 +89,7 @@ export class Meta2d {
     }
   ) => boolean;
   events: Record<number, (pen: Pen, e: Event) => void> = {};
+  motions: Record<number, (pen: Pen, m: Motion) => void> = {};
   map: ViewMap;
   mapTimer: any;
   constructor(parent: string | HTMLElement, opts: Options = {}) {
@@ -100,6 +102,8 @@ export class Meta2d {
     this.registerAnchors(commonAnchors());
     globalThis.meta2d = this;
     this.initEventFns();
+    // 初始化动效的函数
+    this.initMotionFns();
     this.store.emitter.on('*', this.onEvent);
   }
 
@@ -210,7 +214,29 @@ export class Meta2d {
     this.resize();
     this.canvas.listen();
   }
-
+  initMotionFns(){
+    // 注册动效方法
+    this.motions[MotionAction.COLOR] = (pen: Pen, m: Motion) => {
+      this.setValue(
+        { id: pen.id,
+          'color': m.action.borderColor,
+          'background': m.action.backgroundColor,
+        },
+        { render: true }
+      );
+    };
+    this.motions[MotionAction.TEXT] = (pen: Pen, m: Motion) => {
+      this.setValue(
+        { id: pen.id,
+          'text': m.action.content,
+        },
+        { render: true }
+      );
+    };
+    this.motions[MotionAction.VISION] = (pen: Pen, m: Motion) => {
+      this.setVisible(pen, m.action.visibility==='visible');
+    };
+  }
   initEventFns() {
     this.events[EventAction.Link] = (pen: Pen, e: Event) => {
       if (window && e.value && typeof e.value === 'string') {
@@ -626,8 +652,8 @@ export class Meta2d {
       this.canvas.opening = true;
     }
     this.extendedFn();
-    this.initBindDatas();
-    this.initBinds();
+    // this.initBindDatas();
+    // this.initBinds();
     this.render();
     this.listenSocket();
     this.connectSocket();
@@ -760,6 +786,8 @@ export class Meta2d {
       //   this.cacheData(tempData,data._id);
       // }, 300);
     }
+    // 收集动效的pen的id
+    this.store.motionsIds = this.store.data.pens.filter(el=>el.motions && el.motions.length > 0).map(el=>el.id);
     this.store.emitter.emit('opened');
   }
   /**
@@ -2000,7 +2028,7 @@ export class Meta2d {
       data = [data];
     }
     if (data[0].dataId) {
-      this.setDatas(data);
+      // this.setDatas(data);
     } else {
       data.forEach((_data: IValue) => {
         this.setValue(_data);
@@ -2141,12 +2169,12 @@ export class Meta2d {
       const pen = this.store.pens[data.id];
       pen && (pens = [pen]);
     } else if (data.dataId) {
-      pens = [];
-      this.setDatas([data] as any, {
-        render,
-        doEvent,
-        history,
-      });
+      // pens = [];
+      // this.setDatas([data] as any, {
+      //   render,
+      //   doEvent,
+      //   history,
+      // });
       return;
     } else if (data.tag) {
       pens = this.find(data.tag);
@@ -2294,7 +2322,111 @@ export class Meta2d {
         break;
     }
   };
-
+  singleMFlag = false; //doMotionByValues函数的调用单例标志位
+  /**
+   * @description 根据测点值，判断是否需要执行doMotion
+   * @author Joseph Ho
+   * @date 24/10/2023
+   * @param {PointVal[]} data
+   * @memberof Meta2d
+   */
+  doMotionByValues(data: PointVal[]){
+    // 实现测点数据的缓存功能
+    if (!this.singleMFlag) {
+      // 首次备份外部参数列表,这里不能用JSON.parse(JSON.stringify())的形式深拷贝，因为states会有对象属性为函数的情况
+      this.store.pointData = deepClone(data);
+      this.singleMFlag = true;
+    } else {
+       // 合并后面的动态参数
+      for (let i = 0; i < data.length; i++) {
+        const elem = data[i];
+        const index = this.store.pointData.findIndex(
+          (el) => el.dataId === elem.dataId
+        );
+        // 没有就add
+        if (index === -1) {
+          this.store.pointData.push(elem);
+          continue;
+        }
+        // 有就update
+        this.store.pointData[index].value = elem.value;
+      }
+    }
+    // 遍历有动效的pen，根据测点去遍历pen的when
+    for (let i = 0; i < this.store.motionsIds.length; i++) {
+      const id = this.store.motionsIds[i];
+      const pen = this.findOne(id)
+      this.doMotion(pen,this.store.pointData);
+    }
+  }
+  /**
+   * @description 根据val判断是否执行motions动效
+   * @author Joseph Ho
+   * @date 24/10/2023
+   * @private
+   * @param {Pen} pen
+   * @param {PointVal[]} data
+   * @memberof Meta2d
+   */
+  private doMotion = (pen: Pen, data: PointVal[]) => {
+    if(!pen){
+      return;
+    }
+    for (let i = 0; i < pen.motions.length; i++) {
+      const mt = pen.motions[i];
+      // 如果图元不支持创建多个动画场景，那么只遍历一次
+      if(i >= 1 && !MotionWhenMap[mt.type][MotionWhenType.ISMUILT]) continue;
+      // 这里校验下图元类型与动效是否有对应关系
+      let name = pen.name;
+      if(pen.name === 'line'){
+        name = pen.name+'-'+pen.lineName+'-'+pen.lineType;
+      }
+      const ms = getMotionsByName(name);
+      // 如果图元支持这种动画类型，才会执行下面的逻辑
+      if(Array.isArray(ms) && ms.indexOf(mt.type) !== -1 && this.motions[mt.type]){
+        let can = false;
+        // nca=false表示关闭无条件动效，需要判定when是否满足条件
+        // && MotionWhenMap[mt.type][MotionWhenType.ISNCA]
+        if(!mt.nca){
+          if(mt.when.length === 1){
+            // 如果只有一个条件，只需要满足条件1
+            const elem = data.find(elem => elem.dataId === mt.when[0].dataId);
+            can = (elem.value >= mt.when[0].min) && (elem.value <= mt.when[0].max);
+          }else if(mt.when.length >= 2){
+            // 如果有多个条件，则以每个条件之间做逻辑运算
+            const whs = mt.when.map(el=>{
+              const item = data.find(elem => elem.dataId === el.dataId);
+              if(item){
+                return {relation: el.relation, cond:(item.value >= el.min) && (item.value <= el.max)};
+              }else{
+                return {relation:'',cond: false};
+              }
+            });
+            let rel = true;
+            for (let j = 0; j < whs.length; j++) {
+              const item = whs[j];
+              if(j === 0) continue;
+              if(item.relation === LogicType.AND){
+                rel = rel && item.cond;
+              }else if(item.relation === LogicType.OR){
+                rel = rel || item.cond;
+              }
+            }
+            can = rel;
+          }
+        }else{
+          // nca=true表示启用无条件动效，when条件失效，直接执行动效；
+          can = true;
+          // 如果不支持nca，那么这里即使nca=true即配置了无条件，也无法执行满足条件
+          if(!MotionWhenMap[mt.type][MotionWhenType.ISNCA]){
+            can = false;
+          }
+        }
+        // 当when中的每个条件都满足时，触发执行动作action
+        can && this.motions[mt.type](pen,mt);
+      }
+    }
+  }
   private doEvent = (pen: Pen, eventName: EventName) => {
     if (!pen) {
       return;
@@ -3089,7 +3221,6 @@ export class Meta2d {
    */
   private alignPen(align: string, pen: Pen, rect: Rect) {
     const penRect = this.getPenRect(pen);
-    console.log(rect,'rect')
     switch (align) {
       case 'left':
         penRect.x = rect?.x || 0;
