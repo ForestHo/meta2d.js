@@ -6,6 +6,7 @@ import { defaultOptions, Options } from '../options';
 import { Point } from '../point';
 import { globalStore } from './global';
 import { Rect } from '../rect';
+import { PointVal } from '../motion';
 
 export interface Meta2dData {
   pens: Pen[];
@@ -114,6 +115,8 @@ export interface Meta2dStore {
   animateMap: WeakMap<Pen, Pen>;
   bindDatas: { [key: string]: { id: string; formItem: FormItem }[] };
   binds: { [key: string]: { id: string; key: string }[] };
+  motionsIds: string[]; // 绑定了动效的pen的id数组
+  pointData: PointVal[]; // 测点数据
   active?: Pen[];
   hover?: Pen;
   lastHover?: Pen;
@@ -176,6 +179,8 @@ export const createStore = () => {
     emitter: mitt(),
     bindDatas: {},
     binds: {},
+    motionsIds: [],
+    pointData: [],
     meta2dDatas: [],
     cacheDatas: [],
     templatePens: {},
@@ -223,6 +228,8 @@ export const clearStore = (store: Meta2dStore, template?: string) => {
   store.animateMap = new WeakMap();
   store.bindDatas = {};
   store.binds = {};
+  store.motionsIds = [];
+  store.pointData = [];
   store.active = [];
   store.hover = undefined;
   store.lastHover = undefined;

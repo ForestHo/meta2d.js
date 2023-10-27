@@ -59,7 +59,7 @@ import {
 } from './rect';
 import { deepClone } from './utils/clone';
 import { Event, EventAction, EventName, TriggerCondition } from './event';
-import { Motion,MotionAction, PointVal, LogicType } from './motion';
+import { Motion,MotionAction, PointVal, LogicType, getMotionsByName, MotionWhenMap, MotionWhenType } from './motion';
 import { ViewMap } from './map';
 // TODO: 这种引入方式，引入 connect， webpack 5 报错
 import { MqttClient } from 'mqtt';
@@ -215,6 +215,7 @@ export class Meta2d {
     this.canvas.listen();
   }
   initMotionFns(){
+    // 注册动效方法
     this.motions[MotionAction.COLOR] = (pen: Pen, m: Motion) => {
       this.setValue(
         { id: pen.id,
@@ -785,6 +786,8 @@ export class Meta2d {
       //   this.cacheData(tempData,data._id);
       // }, 300);
     }
+    // 收集动效的pen的id
+    this.store.motionsIds = this.store.data.pens.filter(el=>el.motions && el.motions.length > 0).map(el=>el.id);
     this.store.emitter.emit('opened');
   }
   /**
@@ -2319,6 +2322,7 @@ export class Meta2d {
         break;
     }
   };
+  singleMFlag = false; //doMotionByValues函数的调用单例标志位
   /**
    * @description 根据测点值，判断是否需要执行doMotion
    * @author Joseph Ho
@@ -2327,16 +2331,32 @@ export class Meta2d {
    * @memberof Meta2d
    */
   doMotionByValues(data: PointVal[]){
-    for (let i = 0; i < data.length; i++) {
-      const item = data[i];
-      for (let j = 0; j < this.store.data.pens.length; j++) {
-        const pen = this.store.data.pens[j];
-        // 如果pen的motions绑定了传递过来的测点数据的测点，则执行动效判断
-        const flag = (pen.motions.findIndex(el=>el.when.findIndex(elem=>elem.dataId === item.dataId) !== -1) !== -1) || pen.motions.some(el=>el.nca);
-        if(flag){
-          this.doMotion(pen,data);
+    // 实现测点数据的缓存功能
+    if (!this.singleMFlag) {
+      // 首次备份外部参数列表,这里不能用JSON.parse(JSON.stringify())的形式深拷贝，因为states会有对象属性为函数的情况
+      this.store.pointData = deepClone(data);
+      this.singleMFlag = true;
+    } else {
+       // 合并后面的动态参数
+      for (let i = 0; i < data.length; i++) {
+        const elem = data[i];
+        const index = this.store.pointData.findIndex(
+          (el) => el.dataId === elem.dataId
+        );
+        // 没有就add
+        if (index === -1) {
+          this.store.pointData.push(elem);
+          continue;
         }
+        // 有就update
+        this.store.pointData[index].value = elem.value;
       }
+    }
+    // 遍历有动效的pen，根据测点去遍历pen的when
+    for (let i = 0; i < this.store.motionsIds.length; i++) {
+      const id = this.store.motionsIds[i];
+      const pen = this.findOne(id)
+      this.doMotion(pen,this.store.pointData);
     }
   }
   /**
@@ -2354,9 +2374,19 @@ export class Meta2d {
     }
     for (let i = 0; i < pen.motions.length; i++) {
       const mt = pen.motions[i];
-      if(this.motions[mt.type]){
+      // 如果图元不支持创建多个动画场景，那么只遍历一次
+      if(i >= 1 && !MotionWhenMap[mt.type][MotionWhenType]) continue;
+      // 这里校验下图元类型与动效是否有对应关系
+      let name = pen.name;
+      if(pen.name === 'line'){
+        name = pen.name+'-'+pen.lineName+'-'+pen.lineType;
+      }
+      const ms = getMotionsByName(name);
+      // 如果图元支持这种动画类型，才会执行下面的逻辑
+      if(Array.isArray(ms) && ms.indexOf(mt.type) !== -1 && this.motions[mt.type]){
         let can = false;
         // nca=false表示关闭无条件动效，需要判定when是否满足条件
+        // && MotionWhenMap[mt.type][MotionWhenType.ISNCA]
         if(!mt.nca){
           if(mt.when.length === 1){
             // 如果只有一个条件，只需要满足条件1
@@ -2387,6 +2417,10 @@ export class Meta2d {
         }else{
           // nca=true表示启用无条件动效，when条件失效，直接执行动效；
           can = true;
+          // 如果不支持nca，那么这里即使nca=true即配置了无条件，也无法执行满足条件
+          if(!MotionWhenMap[mt.type][MotionWhenType.ISNCA]){
+            can = false;
+          }
         }
         // 当when中的每个条件都满足时，触发执行动作action
         can && this.motions[mt.type](pen,mt);
