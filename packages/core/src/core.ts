@@ -687,6 +687,10 @@ export class Meta2d {
     clearStore(this.store, template);
     this.hideInput();
     this.store.clipboard = undefined;
+    // 非同一个模板时，置标志位，下次open时更新模板渲染
+    if(!this.store.sameTemplate){
+      this.canvas.canvasTemplate.patchFlags = true;
+    }
     // 非必要，为的是 open 时重绘 背景与网格
     // this.store.patchFlagsBackground = true;
     this.store.patchFlagsTop = true;
@@ -2332,9 +2336,11 @@ export class Meta2d {
       for (let j = 0; j < this.store.data.pens.length; j++) {
         const pen = this.store.data.pens[j];
         // 如果pen的motions绑定了传递过来的测点数据的测点，则执行动效判断
-        const flag = (pen.motions.findIndex(el=>el.when.findIndex(elem=>elem.dataId === item.dataId) !== -1) !== -1) || pen.motions.some(el=>el.nca);
-        if(flag){
-          this.doMotion(pen,data);
+        if (pen.motions) {
+          const flag = (pen.motions.findIndex(el=>el.when.findIndex(elem=>elem.dataId === item.dataId) !== -1) !== -1) || pen.motions.some(el=>el.nca);
+          if(flag){
+            this.doMotion(pen,data);
+          }
         }
       }
     }
@@ -2375,7 +2381,7 @@ export class Meta2d {
             let rel = true;
             for (let j = 0; j < whs.length; j++) {
               const item = whs[j];
-              if(j === 0) continue;
+              if(j === 0) {rel = item.cond;continue};
               if(item.relation === LogicType.AND){
                 rel = rel && item.cond;
               }else if(item.relation === LogicType.OR){
