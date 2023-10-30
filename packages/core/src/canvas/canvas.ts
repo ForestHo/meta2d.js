@@ -1613,6 +1613,7 @@ export class Canvas {
         const anchor = nearestAnchor(this.store.hover, e);
         to.x = anchor.x;
         to.y = anchor.y;
+        // 自动锚点
         this.drawingLine.autoTo = true;
         connectLine(this.store.hover, anchor, this.drawingLine, to);
         this.drawline();
@@ -1690,6 +1691,7 @@ export class Canvas {
           this.store.hoverAnchor = anchor;
           const pt: Point = { id: s8(), x: anchor.x, y: anchor.y };
           this.drawingLine = this.createDrawingLine(pt);
+          // 自动锚点
           this.drawingLine.autoFrom = true;
           connectLine(this.store.hover, anchor, this.drawingLine, pt);
         } else {
@@ -2543,8 +2545,9 @@ export class Canvas {
         if (
           pen.visible === false ||
           pen.locked === LockState.Disable ||
-          pen.parentId ||
-          pen.lineType == 'connectLine'
+          pen.parentId 
+          // ||
+          // pen.lineType == 'connectLine'
         ) {
           return false;
         }
@@ -2687,7 +2690,11 @@ export class Canvas {
     // const pens = deepClone(this.store.active, true);
 
     this.store.active.forEach((pen, i: number) => {
-      const { x, y } = this.movingPens[i];
+      const movePen = this.movingPens.find(item => item.id.includes(pen.id));
+      if(!movePen) {
+        return;
+      }
+      const { x, y } = movePen;
       Object.assign(pen, {
         x,
         y,
@@ -2767,7 +2774,7 @@ export class Canvas {
         }
       }
     }
-
+    this.calcActiveRect();
     // 此处是更新后的值
     this.pushHistory({
       type: EditType.Update,
@@ -4961,9 +4968,9 @@ export class Canvas {
       this.initActiveRect = deepClone(this.activeRect);
       return;
     }
-
+    // 这段代码的作用：当设置不能移动连线后禁止拖动连线
     if (
-      !this.store.options.moveConnectedLine &&
+      // !this.store.options.moveConnectedLine &&
       !this.canMoveLine &&
       this.store.active.length === 1 &&
       (this.store.active[0].anchors[0]?.connectTo ||
@@ -5055,21 +5062,25 @@ export class Canvas {
    * 半透明，去图片
    */
   initMovingPens() {
-    if (!this.store.options.moveConnectedLine && !this.canMoveLine) {
+    const arr = [];
+    // !this.store.options.moveConnectedLine && 
+    if (!this.canMoveLine) {
       for (let i = 0; i < this.store.active.length; i++) {
         const pen = this.store.active[i];
         if (
           pen.anchors[0]?.connectTo ||
           pen.anchors[pen.anchors.length - 1]?.connectTo
         ) {
-          this.store.active.splice(i, 1);
-          pen.calculative.active = undefined;
-          --i;
+          // this.store.active.splice(i, 1);
+          // pen.calculative.active = undefined;
+          // --i;
+          continue;
         }
+        arr.push(pen);
       }
     }
 
-    this.movingPens = deepClone(this.store.active, true);
+    this.movingPens = deepClone(arr, true);
     const containChildPens = this.getAllByPens(this.movingPens);
     const copyContainChildPens = deepClone(containChildPens, true);
     // 考虑父子关系，修改 id
@@ -5459,7 +5470,8 @@ export class Canvas {
       }
 
       if (pen.type === PenType.Line) {
-        if (!this.store.options.moveConnectedLine && !this.canMoveLine) {
+        // !this.store.options.moveConnectedLine && 
+        if (!this.canMoveLine) {
           return;
         }
         translateLine(pen, x, y);
@@ -5519,8 +5531,9 @@ export class Canvas {
     }
     const containChildPens = this.getAllByPens(pens);
     pens.forEach((pen) => {
+      // !this.store.options.moveConnectedLine && 
       if (pen.type === PenType.Line) {
-        if (!this.store.options.moveConnectedLine && !this.canMoveLine) {
+        if ( !this.canMoveLine) {
           return;
         }
         translateLine(pen, x, y);
@@ -5651,9 +5664,9 @@ export class Canvas {
     pen.connectedLines.forEach((item) => {
       const line = this.store.pens[item.lineId];
       // 活动层的线不需要更新，会在活动层处理
-      if (!line || line.calculative.active) {
-        return;
-      }
+      // if (!line || line.calculative.active) {
+      //   return;
+      // }
 
       const lineAnchor = getAnchor(line, item.lineAnchor);
       if (!lineAnchor) {

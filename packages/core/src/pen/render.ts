@@ -1227,7 +1227,11 @@ export function renderPen(ctx: CanvasRenderingContext2D, pen: Pen) {
     ctx.fillStyle = fill;
     fill && (setBack = false);
   } else if (pen.calculative.active) {
-    ctx.strokeStyle = pen.color ||pen.activeColor || store.options.activeColor;
+    if(store.active.length > 1 && pen == store.active[0]) {
+      ctx.strokeStyle = 'green';
+    } else {
+      ctx.strokeStyle = pen.color ||pen.activeColor || store.options.activeColor;
+    }
     fill = pen.activeBackground || store.options.activeBackground;
     ctx.fillStyle = fill;
     fill && (setBack = false);
