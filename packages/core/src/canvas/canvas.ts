@@ -1657,7 +1657,7 @@ export class Canvas {
           });
         }
         return;
-      }else if(e.buttons === MouseButton.LEFT){
+      }else if(e.buttons === MouseButton.LEFT && this.currentState == State.DRAW){
         this.setState('DRAWING');
       };
       this.arcLine.state || (this.arcLine.state = 0);
@@ -1678,7 +1678,8 @@ export class Canvas {
       }else if(this.arcLine.state === 2){
         await this.addPen(this.arcLine,true,true);
         this.finishArcLine(false);
-        this.render();
+        this.setState('DRAW');
+        // this.render();
       }
       return;
     }
@@ -1801,7 +1802,7 @@ export class Canvas {
   finishArcLine(end=false){
     if(!this.arcLine)return;
     if(end){
-      this.setState('DRAW');
+      // this.setState('DRAW');
       this.arcLine = null;
     }else {
       this.arcLine = {
