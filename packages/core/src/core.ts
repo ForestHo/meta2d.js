@@ -216,26 +216,63 @@ export class Meta2d {
   }
   initMotionFns(){
     // 注册动效方法
+    // 颜色动效
     this.motions[MotionAction.COLOR] = (pen: Pen, m: Motion) => {
       this.setValue(
         { id: pen.id,
           'color': m.action.borderColor,
           'background': m.action.backgroundColor,
         },
-        { render: true }
+        { render: false }
       );
     };
+    // 文本动效
     this.motions[MotionAction.TEXT] = (pen: Pen, m: Motion) => {
       this.setValue(
         { id: pen.id,
           'text': m.action.content,
         },
-        { render: true }
+        { render: false }
       );
     };
+    // 可视动效
     this.motions[MotionAction.VISION] = (pen: Pen, m: Motion) => {
-      this.setVisible(pen, m.action.visibility==='visible');
+      this.setVisible(pen, m.action.visibility==='visible',false);
     };
+    // 闪烁动效
+    this.motions[MotionAction.BLINK] = (pen: Pen, m: Motion) => {
+      pen.animateCycle = m.action.count !==0 ? m.action.count: Infinity;
+      if(m.action.blinkType === 'visibility'){
+        // 可见闪烁
+        pen.frames.push(...[
+          {duration: m.action.ts1,visible:true},
+          {duration: m.action.ts2,visible:false},
+        ])
+      }else if(m.action.blinkType === 'color'){
+        // 颜色闪烁
+        pen.frames.push(...[
+          {duration: m.action.ts1,visible:true,background:m.action.ts1_backgroundColor,color: m.action.ts1_borderColor},
+          {duration: m.action.ts2,visible:false,background:m.action.ts2_backgroundColor,color: m.action.ts2_borderColor},
+        ])
+      }
+    };
+    // 图像动效
+    this.motions[MotionAction.IMAGE] = (pen: Pen, m: Motion) => {
+      let frames = [];
+      for (let i = 0; i < m.action.paths.length; i++) {
+        const url = m.action.paths[i];
+        frames.push({
+          duration: m.action.interval,
+          visible: true,
+          image: url,
+        })
+      }
+      pen.frames.push(...frames);
+    };
+    // 旋转动效--线性
+    // 填充动效--线性
+
+    // 流动动效
   }
   initEventFns() {
     this.events[EventAction.Link] = (pen: Pen, e: Event) => {
@@ -2430,6 +2467,17 @@ export class Meta2d {
         can && this.motions[mt.type](pen,mt);
       }
     }
+  }
+  /**
+   * @description 清楚指定图元的动效
+   * @author Joseph Ho
+   * @date 30/10/2023
+   * @private
+   * @param {Pen[]} pens
+   * @memberof Meta2d
+   */
+  private clearMotions = (pens: Pen[])=>{
+
   }
   private doEvent = (pen: Pen, eventName: EventName) => {
     if (!pen) {
