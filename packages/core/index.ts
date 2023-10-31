@@ -3,6 +3,7 @@ export * from './src/options';
 export * from './src/data';
 export * from './src/utils';
 export * from './src/pen';
+export * from './src/motion';
 export * from './src/rect';
 export * from './src/point';
 export * from './src/event';
