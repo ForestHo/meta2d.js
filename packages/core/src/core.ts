@@ -242,23 +242,37 @@ export class Meta2d {
     // 闪烁动效
     this.motions[MotionAction.BLINK] = (pen: Pen, m: Motion) => {
       pen.animateCycle = m.action.count !==0 ? m.action.count: Infinity;
-      if(m.action.blinkType === 'visibility'){
+      if(m.action.blinkType === 'visual'){
         // 可见闪烁
-        pen.frames.push(...[
+        const frames = [
           {duration: m.action.ts1,visible:true},
           {duration: m.action.ts2,visible:false},
-        ])
+        ];
+        this.setValue(
+          { id: pen.id,
+            frames,
+          },
+          { render: false }
+        );
       }else if(m.action.blinkType === 'color'){
         // 颜色闪烁
-        pen.frames.push(...[
+        const frames = [
           {duration: m.action.ts1,visible:true,background:m.action.ts1_backgroundColor,color: m.action.ts1_borderColor},
-          {duration: m.action.ts2,visible:false,background:m.action.ts2_backgroundColor,color: m.action.ts2_borderColor},
-        ])
+          {duration: m.action.ts2,visible:true,background:m.action.ts2_backgroundColor,color: m.action.ts2_borderColor},
+        ];
+        this.setValue(
+          { id: pen.id,
+            frames,
+          },
+          { render: false }
+        );
       }
+      this.startAnimate(pen.id);
     };
     // 图像动效
     this.motions[MotionAction.IMAGE] = (pen: Pen, m: Motion) => {
-      let frames = [];
+      pen.imageRatio = m.action.fillStyle;
+      const frames = [];
       for (let i = 0; i < m.action.paths.length; i++) {
         const url = m.action.paths[i];
         frames.push({
@@ -267,7 +281,13 @@ export class Meta2d {
           image: url,
         })
       }
-      pen.frames.push(...frames);
+      this.setValue(
+        { id: pen.id,
+          frames,
+        },
+        { render: false }
+      );
+      this.startAnimate(pen.id);
     };
     // 旋转动效--线性
     // 填充动效--线性
@@ -2455,6 +2475,10 @@ export class Meta2d {
             }
             can = rel;
           }
+          // 边沿触发，触发后如果条件不满足依然执行动效
+          if(!can && mt.isEdgeTrigger){
+            can = true;
+          }
         }else{
           // nca=true表示启用无条件动效，when条件失效，直接执行动效；
           can = true;
@@ -2462,7 +2486,7 @@ export class Meta2d {
           if(!MotionWhenMap[mt.type][MotionWhenType.ISNCA]){
             can = false;
           }
-        }
+                  }
         // 当when中的每个条件都满足时，触发执行动作action
         can && this.motions[mt.type](pen,mt);
       }
