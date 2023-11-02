@@ -145,6 +145,7 @@ export interface Meta2dStore {
   sameTemplate?: boolean; //标记是否是同一模版
   lastScale?: number; //记录上次模版的scale
   lineWidth?: number;
+  selectedPenType?:string;//记录选择的图元类型
 }
 
 export interface Meta2dClipboard {

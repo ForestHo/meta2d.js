@@ -522,6 +522,7 @@ export interface Pen extends Rect {
   textStrickout?:boolean;
   // 前一个动画帧状态数据
   prevFrame?: Pen;
+  lineType?:string;
 
   onAdd?: (pen: Pen) => void;
   onValue?: (pen: Pen) => void;

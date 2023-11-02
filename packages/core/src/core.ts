@@ -1059,8 +1059,12 @@ export class Meta2d {
     this.canvas.drawingLineName = lineName;
   }
 
-  drawArcLine(){
+  drawArcLine(isDrawArcLine = false){
     lockedError(this.store);
+    if(!isDrawArcLine) {
+      this.canvas.arcLine = null;
+      return;
+    }
     this.canvas.arcLine = {
       name:'arcLine',
       state: 0,
