@@ -59,7 +59,7 @@ import {
 } from './rect';
 import { deepClone } from './utils/clone';
 import { Event, EventAction, EventName, TriggerCondition } from './event';
-import { Motion,MotionAction, PointVal, LogicType, getMotionsByName, MotionWhenMap, MotionWhenType } from './motion';
+import { Motion,MotionAction, PointVal, LogicType, getMotionsByName, MotionWhenMap, MotionWhenType, ClockWise, SpeedDuration } from './motion';
 import { ViewMap } from './map';
 // TODO: 这种引入方式，引入 connect， webpack 5 报错
 import { MqttClient } from 'mqtt';
@@ -290,9 +290,30 @@ export class Meta2d {
       this.startAnimate(pen.id);
     };
     // 旋转动效--线性
+    this.motions[MotionAction.ROTATE] = (pen: Pen, m: Motion) => {
+      const frames = [
+        {
+          duration: SpeedDuration[m.action.speed+''],
+          visible: true,
+          rotate: ClockWise[m.action.direction],
+        }
+      ];
+      this.setValue(
+        { id: pen.id,
+          frames,
+        },
+        { render: false }
+      );
+      this.startAnimate(pen.id);
+    }
     // 填充动效--线性
+    this.motions[MotionAction.FILL] = (pen: Pen, m: Motion) => {
 
+    }
     // 流动动效
+    this.motions[MotionAction.FLOW] = (pen: Pen, m: Motion) => {
+
+    }
   }
   initEventFns() {
     this.events[EventAction.Link] = (pen: Pen, e: Event) => {

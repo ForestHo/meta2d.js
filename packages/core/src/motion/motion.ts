@@ -93,7 +93,19 @@ export const MotionWhenMap = {
   move: [true, ,],
   flow: [true, true, true],
 }
-
+// 顺时针与逆时针与的旋转角度的对应关系
+export const ClockWise = {
+  "clockwise": 360,
+  "anti-clockwise": -360,
+}
+// 速度与时长的对应关系
+export const SpeedDuration ={
+  "1": 5000,
+  "2": 4000,
+  "3": 3000,
+  "4": 2000,
+  "5": 1000,
+}
 /**
  * @description 根据图元类型，获取所属图元分类的动画类型
  * @author Joseph Ho
