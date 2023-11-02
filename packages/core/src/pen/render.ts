@@ -872,7 +872,13 @@ function drawText(ctx: CanvasRenderingContext2D, pen: Pen) {
   // } else if (pen.calculative.active) {
   //   fill = pen.activeTextColor || pen.activeColor || store.options.activeColor;
   // }
-  ctx.fillStyle = fill || getTextColor(pen, store);
+  if(store.active.length > 1 && pen == store.active[0]) {
+    ctx.fillStyle = 'green';
+  } else if(store.selectedPenType === pen.name && pen.calculative.active) {// 区域选择把文本颜色变为红色
+    ctx.fillStyle = 'red';
+  } else {
+    ctx.fillStyle = fill || getTextColor(pen, store);
+  }
 
   ctx.font = getFont({
     fontStyle,
@@ -1196,6 +1202,14 @@ export function ctxRotate(
   ctx.translate(-x, -y);
 }
 
+function isSetected(store:Meta2dStore,pen:Pen) {
+  if(!store.selectedPenType) return false;
+  const keys = store.selectedPenType.split('-');
+  if(keys.length === 1) {
+    return store.selectedPenType === pen.name;
+  }
+  return keys[0] === pen.name && (keys[1] === pen.lineType || keys[1] === pen.lineName);
+}
 export function renderPen(ctx: CanvasRenderingContext2D, pen: Pen) {
   ctx.save();
   ctx.translate(0.5, 0.5);
@@ -1229,13 +1243,13 @@ export function renderPen(ctx: CanvasRenderingContext2D, pen: Pen) {
   } else if (pen.calculative.active) {
     if(store.active.length > 1 && pen == store.active[0]) {
       ctx.strokeStyle = 'green';
-    } else if(store.selectedPensId?.length > 0 && store.selectedPensId.includes(pen.id)) {
+    } else if(store.selectedPenType && isSetected(store,pen)) {
       ctx.strokeStyle = 'red';
     } else {
       ctx.strokeStyle = pen.color ||pen.activeColor || store.options.activeColor;
     }
-    fill = pen.activeBackground || store.options.activeBackground;
     ctx.fillStyle = fill;
+    fill = pen.activeBackground || store.options.activeBackground;
     fill && (setBack = false);
   } else if (pen.calculative.isDock) {
     if (pen.type === PenType.Line) {
