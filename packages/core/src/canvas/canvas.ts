@@ -1467,6 +1467,16 @@ export class Canvas {
     shiftKey?: boolean;
     altKey?: boolean;
   }) => {
+
+    if (this.store.options.isRunMode) {
+      this.store.emitter.emit('click', {
+        x: e.x,
+        y: e.y,
+        pen: this.store.hover,
+      });
+      return;
+    }
+
     // 拖放图元右键取消绘制
     if(e.buttons === MouseButton.LEFTRIGHT && this.currentState == State.DRAWING) {
       this.dragRect = undefined;
@@ -1838,6 +1848,7 @@ export class Canvas {
     shiftKey?: boolean;
     altKey?: boolean;
   }) => {
+
     if (this.store.data.locked === LockState.Disable) {
       this.hoverType = HoverType.None;
       return;
@@ -2284,6 +2295,11 @@ export class Canvas {
     altKey?: boolean;
     button?: number;
   }) => {
+
+    if (this.store.options.isRunMode) {
+      return;
+    }
+
     if (this.store.data.locked === LockState.Disable) {
       this.hoverType = HoverType.None;
       return;

@@ -2311,7 +2311,9 @@ export class Meta2d {
         }
         break;
       case 'dblclick':
-        this.store.data.locked && e.pen && this.doEvent(e.pen, eventName);
+        if(!this.store.options.isRunMode){
+          this.store.data.locked && e.pen && this.doEvent(e.pen, eventName);
+        }
         break;
       case 'valueUpdate':
         this.store.data.locked && this.doEvent(e, eventName);
