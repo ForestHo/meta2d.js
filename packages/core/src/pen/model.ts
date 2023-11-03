@@ -296,6 +296,7 @@ export interface Pen extends Rect {
   progress?: number;
   progressColor?: string;
   verticalProgress?: boolean;
+  reverseProgress?: boolean; //进度动画是否反向
   externElement?: boolean;
 
   autoPolyline?: boolean;
