@@ -5471,10 +5471,10 @@ export class Canvas {
       }
 
       if (pen.type === PenType.Line) {
-        // !this.store.options.moveConnectedLine && 
-        if (!this.canMoveLine) {
-          return;
-        }
+        // 
+        // if (!this.store.options.moveConnectedLine && !this.canMoveLine) {
+        //   return;
+        // }
         translateLine(pen, x, y);
         // this.checkDisconnect(pen, containChildPens);
         this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
