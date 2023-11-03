@@ -59,7 +59,7 @@ import {
 } from './rect';
 import { deepClone } from './utils/clone';
 import { Event, EventAction, EventName, TriggerCondition } from './event';
-import { Motion,MotionAction, PointVal, LogicType, getMotionsByName, MotionWhenMap, MotionWhenType, ClockWise, SpeedDuration } from './motion';
+import { Motion,MotionAction, PointVal, LogicType, getMotionsByName, MotionWhenMap, MotionWhenType, ClockWise, SpeedDuration, FillType } from './motion';
 import { ViewMap } from './map';
 // TODO: 这种引入方式，引入 connect， webpack 5 报错
 import { MqttClient } from 'mqtt';
@@ -308,11 +308,67 @@ export class Meta2d {
     }
     // 填充动效--线性
     this.motions[MotionAction.FILL] = (pen: Pen, m: Motion) => {
-
+      const item = this.store.pointData.find(elem => elem.dataId === m.when[0].dataId);
+      const progress = item.value/(m.when[0].max - m.when[0].min);
+      const frames = [
+        {
+          duration: 2000,
+          visible: true,
+          progress,
+        }
+      ];
+      const obj = { id: pen.id,frames};
+      let tObj = null;
+      if(m.action.fillType === FillType.DOWNUP){
+        tObj = { verticalProgress: true, reverseProgress:false };
+      }else if(m.action.fillType === FillType.UPDOWN){
+        tObj = { verticalProgress: true, reverseProgress:true };
+      }else if(m.action.fillType === FillType.LEFTRIGHT){
+        tObj = { verticalProgress: false, reverseProgress:false };
+      }else if(m.action.fillType === FillType.RIGHTLEFT){
+        tObj = { verticalProgress: false, reverseProgress:true };
+      }
+      Object.assign(obj,tObj);  
+      this.setValue(obj,{ render: false });
+      this.startAnimate(pen.id);
+    }
+    // 移动动效
+    this.motions[MotionAction.MOVE] = (pen: Pen, m: Motion) => {
+      const item = this.store.pointData.find(elem => elem.dataId === m.when[0].dataId);
+      const percent = item.value/(m.when[0].max - m.when[0].min);
+      const frames = [
+        {
+          duration: 2000,
+          visible: true,
+          x: m.action.x * percent,
+          y: m.action.y * percent,
+        }
+      ];
+      this.setValue(
+        { id: pen.id,
+          frames,
+        },
+        { render: false }
+      );
+      this.startAnimate(pen.id);
     }
     // 流动动效
     this.motions[MotionAction.FLOW] = (pen: Pen, m: Motion) => {
-
+      const obj = {
+        lineAnimateType: m.action.flowStyle,
+        animateDash: m.action.ballStyle,
+        animateLineWidth: m.action.width,
+        animateColor: m.action.color,
+        animateSpan: m.action.speed,
+        animateReverse: m.action.reverse,
+      }
+      this.setValue(
+        { id: pen.id,
+          ...obj,
+        },
+        { render: false }
+      );
+      this.startAnimate(pen.id);
     }
   }
   initEventFns() {
@@ -2474,11 +2530,12 @@ export class Meta2d {
         // nca=false表示关闭无条件动效，需要判定when是否满足条件
         // && MotionWhenMap[mt.type][MotionWhenType.ISNCA]
         if(!mt.nca){
-          if(mt.when.length === 1){
+          const limitWhen = MotionWhenMap[mt.type][MotionWhenType.LIMIT];
+          if(mt.when.length === 1 || limitWhen){
             // 如果只有一个条件，只需要满足条件1
             const elem = data.find(elem => elem.dataId === mt.when[0].dataId);
             can = (elem.value >= mt.when[0].min) && (elem.value <= mt.when[0].max);
-          }else if(mt.when.length >= 2){
+          }else if(mt.when.length >= 2 && !limitWhen){
             // 如果有多个条件，则以每个条件之间做逻辑运算
             const whs = mt.when.map(el=>{
               const item = data.find(elem => elem.dataId === el.dataId);
