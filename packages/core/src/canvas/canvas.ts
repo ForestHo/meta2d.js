@@ -1958,11 +1958,11 @@ export class Canvas {
         // if (e.buttons === 1 && !this.hoverType && !this.hotkeyType) {
         if (
           e.buttons === MouseButton.LEFT &&
-          ((this.currentState == State.SELECT && !this.hoverType)||
+          (((this.currentState == State.SELECT && (!this.hoverType || (this.hoverType && this.store.hover?.locked == LockState.DisableMove)))||
           ((this.currentState == State.DRAWING || this.currentState == State.DRAW) &&
-          !this.drawingLineName && !this.arcLine )) &&
+          !this.drawingLineName && !this.arcLine )||(this.currentState == State.MOVE && this.store.hover?.locked == LockState.DisableMove)) &&
           // !this.hoverType && // 解决在选中图元内部绘制
-          (!this.hotkeyType || e.shiftKey)
+          (!this.hotkeyType || e.shiftKey))
         ) {
           this.dragRect = {
             x: Math.min(this.mouseDown.x, e.x),
@@ -2320,8 +2320,8 @@ export class Canvas {
           'SELECT'
         );
         this.setState('SELECT');
-      } else if(this.currentState == State.MOVE){
-        if(!this.store.active.length) {
+      } else if(this.currentState == State.MOVE || this.currentState == State.SELECT){
+        if(this.currentState == State.MOVE && !this.store.active.length) {
           this.active([this.store.hover])
         }
         this.store.emitter.emit('contextmenu', {
@@ -2561,7 +2561,8 @@ export class Canvas {
           pen.visible === false ||
           pen.locked === LockState.Disable ||
           pen.parentId ||
-          pen.lineType == 'connectLine'
+          pen.lineType == 'connectLine' ||
+          pen.locked === LockState.DisableMove
         ) {
           return false;
         }
@@ -3229,6 +3230,8 @@ export class Canvas {
               }
               // this.externalElements.style.cursor = 'move';
             // }
+          } else if(pen.locked == LockState.DisableMove && this.currentState == State.MOVE){
+            this.setState('SELECT');
           }
           //  else {
           //   this.setState(this.stateRecord);
