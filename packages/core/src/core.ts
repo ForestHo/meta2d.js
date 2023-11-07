@@ -825,8 +825,14 @@ export class Meta2d {
    * @memberof Meta2d
    */
   clearOnlyData(template?: string){
+    // for (const pen of this.store.data.pens) {
+    //   pen.onDestroy?.(pen);
+    // }
+    const isSameTpl = this.store.data.template === template
     for (const pen of this.store.data.pens) {
-      pen.onDestroy?.(pen);
+      if (!isSameTpl || !pen.template) {
+        pen.onDestroy?.(pen);
+      }
     }
     clearStore(this.store, template);
     this.hideInput();
