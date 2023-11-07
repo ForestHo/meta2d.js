@@ -218,11 +218,20 @@ export class Meta2d {
     // 注册动效方法
     // 颜色动效
     this.motions[MotionAction.COLOR] = (pen: Pen, m: Motion) => {
-      this.setValue(
-        { id: pen.id,
+      const obj = { id: pen.id };
+      if(pen.name !== 'text'){
+        Object.assign(obj,{
           'color': m.action.borderColor,
           'background': m.action.backgroundColor,
-        },
+        })
+      }else{
+        Object.assign(obj,{
+          'textColor': m.action.borderColor,
+          'textBackground': m.action.backgroundColor,
+        })
+      }
+      this.setValue(
+        obj,
         { render: false }
       );
     };
