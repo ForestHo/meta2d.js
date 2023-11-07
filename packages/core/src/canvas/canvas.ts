@@ -2703,13 +2703,24 @@ export class Canvas {
     // 鼠标松手才更新，此处是更新前的值
     const initPens = deepClone(this.store.active, true);
     // const pens = deepClone(this.store.active, true);
-
+    const gridSize = this.store.options.gridSize;
+    const { origin, scale } = this.store.data;
     this.store.active.forEach((pen, i: number) => {
       const { x, y } = this.movingPens[i];
-      Object.assign(pen, {
-        x,
-        y,
-      });
+      const obj = {x,y};
+      // 根据是否开启了自动网格对齐，来修正坐标
+      if(this.store.options.autoAlignGrid){
+        const rect = this.getPenRect(this.movingPens[i]);
+        // 算出偏移了多少个网格
+        const m = parseInt((rect.x / gridSize).toFixed());
+        const n = parseInt((rect.y / gridSize).toFixed());
+        const x1 = m * gridSize;
+        const y1 = n * gridSize;
+        // 算出最终的偏移坐标
+        obj.x = origin.x + x1 * scale;
+        obj.y = origin.y + y1 * scale;
+      }
+      Object.assign(pen, obj);
       pen.onMove?.(pen);
       this.updatePenRect(pen);
       this.updateLines(pen);
@@ -2785,7 +2796,11 @@ export class Canvas {
         }
       }
     }
-
+    // 如果开启自动网格对齐，则需要重算activeRect和sizeCPs
+    if(this.store.options.autoAlignGrid){
+      this.calcActiveRect();
+      this.getSizeCPs();
+    }
     // 此处是更新后的值
     this.pushHistory({
       type: EditType.Update,
@@ -7081,34 +7096,33 @@ export class Canvas {
     let oldRotate: number = undefined;
     let willRenderImage = false; // 是否需要重新渲染图片
     for (const k in data) {
-      if (k === 'rotate') {
-        oldRotate = pen.calculative.rotate || 0;
-      }
-      if (typeof pen[k] !== 'object' || k === 'lineDash') {
-        pen.calculative[k] = data[k];
-      }
-      if (needCalcTextRectProps.includes(k)) {
-        willCalcTextRect = true;
-      }
-      if (['name', 'borderRadius'].includes(k)) {
-        willUpdatePath = true;
-      }
-      if (needSetPenProps.includes(k)) {
-        willSetPenRect = true;
-      }
-      if (needPatchFlagsPenRectProps.includes(k)) {
-        willPatchFlagsPenRect = true;
-      }
-      if (needCalcIconRectProps.includes(k)) {
-        willCalcIconRect = true;
-      }
-      if (k === 'isBottom') {
-        containIsBottom = true;
-      }
-      if (k === 'image') {
-        willRenderImage = true;
-      }
-      if (k.indexOf('.') !== -1) {
+      if (k.indexOf('.') === -1) {
+        if (k === 'rotate') {
+          oldRotate = pen.calculative.rotate || 0;
+        }else if (k === 'isBottom') {
+          containIsBottom = true;
+        }else if (k === 'image') {
+          willRenderImage = true;
+        }
+        if (typeof pen[k] !== 'object' || k === 'lineDash') {
+          pen.calculative[k] = data[k];
+        }
+        if (needCalcTextRectProps.includes(k)) {
+          willCalcTextRect = true;
+        }
+        if (['name', 'borderRadius'].includes(k)) {
+          willUpdatePath = true;
+        }
+        if (needSetPenProps.includes(k)) {
+          willSetPenRect = true;
+        }
+        if (needPatchFlagsPenRectProps.includes(k)) {
+          willPatchFlagsPenRect = true;
+        }
+        if (needCalcIconRectProps.includes(k)) {
+          willCalcIconRect = true;
+        }
+      }else{
         delete pen[k];
         setter(pen, k, data[k]);
       }
