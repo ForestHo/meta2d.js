@@ -895,12 +895,7 @@ function drawText(ctx: CanvasRenderingContext2D, pen: Pen) {
     ctx.fillRect(drawRectX, drawRectY, width, height);
     ctx.restore();
   }
-  if (pen.textBorderColor) {
-    ctx.save();
-    ctx.strokeStyle = pen.textBorderColor;
-    ctx.strokeRect(drawRectX, drawRectY, width, height);
-    ctx.restore();
-  }
+
   const y = 0.55;
   const textAlign = pen.textAlign || store.options.textAlign;
   const oneRowHeight = fontSize * lineHeight;

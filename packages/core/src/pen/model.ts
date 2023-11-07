@@ -196,7 +196,6 @@ export interface Pen extends Rect {
   textAlign?: TextAlign;
   textBaseline?: TextBaseline;
   textBackground?: string;
-  textBorderColor?: string;
   whiteSpace?: WhiteSpace;
   ellipsis?: boolean;
 
@@ -645,7 +644,6 @@ export const formatAttrs: Set<string> = new Set([
   'hoverTextColor',
   'activeTextColor',
   'textBackground',
-  'textBorderColor',
   'fontStyle',
   'fontWeight',
   'textAlign',
