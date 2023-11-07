@@ -197,16 +197,21 @@ export class CanvasTemplate {
   }
 
   renderGrid(
-    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
+    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   ) {
-    const { data, options } = this.store;
-    const { grid, gridRotate, gridColor, gridSize, scale } = data;
+    const { data, options, } = this.store;
+    const { grid, gridRotate, gridColor, gridSize, scale,origin } = data;
     if (!(grid ?? options.grid)) {
       // grid false 时不绘制, undefined 时看 options.grid
       return;
     }
     ctx.save();
-    const { width, height } = this.canvas;
+    const width = (data.width || options.width) * scale;
+    const height = (data.height || options.height) * scale;
+    const startX = (data.x || options.x) + origin.x;
+    const startY = (data.y || options.y) + origin.y;
+    const endX = width + startX;
+    const endY = height + startY;
     if (gridRotate) {
       ctx.translate(width / 2, height / 2);
       ctx.rotate((gridRotate * Math.PI) / 180);
@@ -216,17 +221,50 @@ export class CanvasTemplate {
     ctx.strokeStyle = gridColor || options.gridColor;
     ctx.beginPath();
     const size = (gridSize || options.gridSize) * scale;
-    const longSide = Math.max(width, height);
-    const count = Math.ceil(longSide / size);
-    for (let i = -size * count; i < longSide * 2; i += size) {
-      ctx.moveTo(i, -longSide);
-      ctx.lineTo(i, longSide * 2);
+    // const longSide = Math.max(width, height);
+    // const count = Math.ceil(longSide / size);
+    for (let i = startX; i <= endX; i += size) {
+      ctx.moveTo(i, startY);
+      ctx.lineTo(i, height + startY);
     }
-    for (let i = -size * count; i < longSide * 2; i += size) {
-      ctx.moveTo(-longSide, i);
-      ctx.lineTo(longSide * 2, i);
+    for (let i = startY; i <= endY; i += size) {
+      ctx.moveTo(startX, i);
+      ctx.lineTo(width + startX, i);
     }
     ctx.stroke();
     ctx.restore();
   }
+  // renderGrid(
+  //   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
+  // ) {
+  //   const { data, options } = this.store;
+  //   const { grid, gridRotate, gridColor, gridSize, scale } = data;
+  //   if (!(grid ?? options.grid)) {
+  //     // grid false 时不绘制, undefined 时看 options.grid
+  //     return;
+  //   }
+  //   ctx.save();
+  //   const { width, height } = this.canvas;
+  //   if (gridRotate) {
+  //     ctx.translate(width / 2, height / 2);
+  //     ctx.rotate((gridRotate * Math.PI) / 180);
+  //     ctx.translate(-width / 2, -height / 2);
+  //   }
+  //   ctx.lineWidth = 1;
+  //   ctx.strokeStyle = gridColor || options.gridColor;
+  //   ctx.beginPath();
+  //   const size = (gridSize || options.gridSize) * scale;
+  //   const longSide = Math.max(width, height);
+  //   const count = Math.ceil(longSide / size);
+  //   for (let i = -size * count; i < longSide * 2; i += size) {
+  //     ctx.moveTo(i, -longSide);
+  //     ctx.lineTo(i, longSide * 2);
+  //   }
+  //   for (let i = -size * count; i < longSide * 2; i += size) {
+  //     ctx.moveTo(-longSide, i);
+  //     ctx.lineTo(longSide * 2, i);
+  //   }
+  //   ctx.stroke();
+  //   ctx.restore();
+  // }
 }

@@ -3032,13 +3032,14 @@ function ctxDrawCanvas(ctx: CanvasRenderingContext2D, pen: Pen) {
 }
 
 export function setChildValue(pen: Pen, data: IValue) {
+  // 组合背景子图元背景会被父图元背景覆盖
   for (const k in data) {
     if (inheritanceProps.includes(k)) {
       pen[k] = data[k];
-      if (k === 'fontSize') {
+      if (k === 'fontSize' && data[k]) {
         pen.calculative[k] = data[k] * pen.calculative.canvas.store.data.scale;
         calcTextRect(pen);
-      } else {
+      } else if(data[k]){
         pen.calculative[k] = data[k];
       }
     }
