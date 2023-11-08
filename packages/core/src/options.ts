@@ -41,6 +41,7 @@ export interface Options {
   disableDock?: boolean; // 禁止所有停靠辅助线
   disableLineDock?: boolean; // 禁止移动连线时出现辅助线
   moveConnectedLine?: boolean; // 是否能移动被连接的连线
+  autoAlignGrid?: boolean; // 自动对齐网格
   minScale?: number;
   maxScale?: number;
   keydown?: KeydownType;
@@ -123,6 +124,7 @@ export const defaultOptions: Options = {
   // imageCanvasInterval: 80,// low performace计算机推荐设置100，high performace计算机推荐设置80
   autoPolyline: true,
   autoAnchor: true,
+  autoAlignGrid: false,
   animateColor: '#ff4d4f',
   ruleLineColor: '#FF4101',
   shadowOffsetX: 0,

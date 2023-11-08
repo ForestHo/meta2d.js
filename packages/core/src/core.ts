@@ -59,7 +59,7 @@ import {
 } from './rect';
 import { deepClone } from './utils/clone';
 import { Event, EventAction, EventName, TriggerCondition } from './event';
-import { Motion,MotionAction, PointVal, LogicType, getMotionsByName, MotionWhenMap, MotionWhenType } from './motion';
+import { Motion,MotionAction, PointVal, LogicType, getMotionsByName, MotionWhenMap, MotionWhenType, ClockWise, SpeedDuration, FillType } from './motion';
 import { ViewMap } from './map';
 // TODO: 这种引入方式，引入 connect， webpack 5 报错
 import { MqttClient } from 'mqtt';
@@ -216,26 +216,169 @@ export class Meta2d {
   }
   initMotionFns(){
     // 注册动效方法
+    // 颜色动效
     this.motions[MotionAction.COLOR] = (pen: Pen, m: Motion) => {
-      this.setValue(
-        { id: pen.id,
+      const obj = { id: pen.id };
+      if(pen.name !== 'text'){
+        Object.assign(obj,{
           'color': m.action.borderColor,
           'background': m.action.backgroundColor,
-        },
-        { render: true }
+        })
+      }else{
+        Object.assign(obj,{
+          'textColor': m.action.borderColor,
+          'textBackground': m.action.backgroundColor,
+        })
+      }
+      this.setValue(
+        obj,
+        { render: false }
       );
     };
+    // 文本动效
     this.motions[MotionAction.TEXT] = (pen: Pen, m: Motion) => {
       this.setValue(
         { id: pen.id,
           'text': m.action.content,
         },
-        { render: true }
+        { render: false }
       );
     };
+    // 可视动效
     this.motions[MotionAction.VISION] = (pen: Pen, m: Motion) => {
-      this.setVisible(pen, m.action.visibility==='visible');
+      this.setVisible(pen, m.action.visibility==='visible',false);
     };
+    // 闪烁动效
+    this.motions[MotionAction.BLINK] = (pen: Pen, m: Motion) => {
+      pen.animateCycle = m.action.count !==0 ? m.action.count: Infinity;
+      if(m.action.blinkType === 'visual'){
+        // 可见闪烁
+        const frames = [
+          {duration: m.action.ts1,visible:true},
+          {duration: m.action.ts2,visible:false},
+        ];
+        this.setValue(
+          { id: pen.id,
+            frames,
+          },
+          { render: false }
+        );
+      }else if(m.action.blinkType === 'color'){
+        // 颜色闪烁
+        const frames = [
+          {duration: m.action.ts1,visible:true,background:m.action.ts1_backgroundColor,color: m.action.ts1_borderColor},
+          {duration: m.action.ts2,visible:true,background:m.action.ts2_backgroundColor,color: m.action.ts2_borderColor},
+        ];
+        this.setValue(
+          { id: pen.id,
+            frames,
+          },
+          { render: false }
+        );
+      }
+      this.startAnimate(pen.id);
+    };
+    // 图像动效
+    this.motions[MotionAction.IMAGE] = (pen: Pen, m: Motion) => {
+      pen.imageRatio = m.action.fillStyle;
+      const frames = [];
+      for (let i = 0; i < m.action.paths.length; i++) {
+        const url = m.action.paths[i];
+        frames.push({
+          duration: m.action.interval,
+          visible: true,
+          image: url,
+        })
+      }
+      this.setValue(
+        { id: pen.id,
+          frames,
+        },
+        { render: false }
+      );
+      this.startAnimate(pen.id);
+    };
+    // 旋转动效--线性
+    this.motions[MotionAction.ROTATE] = (pen: Pen, m: Motion) => {
+      const frames = [
+        {
+          duration: SpeedDuration[m.action.speed+''],
+          visible: true,
+          rotate: ClockWise[m.action.direction],
+        }
+      ];
+      this.setValue(
+        { id: pen.id,
+          frames,
+        },
+        { render: false }
+      );
+      this.startAnimate(pen.id);
+    }
+    // 填充动效--线性
+    this.motions[MotionAction.FILL] = (pen: Pen, m: Motion) => {
+      const item = this.store.pointData.find(elem => elem.dataId === m.when[0].dataId);
+      const progress = item.value/(m.when[0].max - m.when[0].min);
+      const frames = [
+        {
+          duration: 2000,
+          visible: true,
+          progress,
+        }
+      ];
+      const obj = { id: pen.id,frames};
+      let tObj = null;
+      if(m.action.fillType === FillType.DOWNUP){
+        tObj = { verticalProgress: true, reverseProgress:false };
+      }else if(m.action.fillType === FillType.UPDOWN){
+        tObj = { verticalProgress: true, reverseProgress:true };
+      }else if(m.action.fillType === FillType.LEFTRIGHT){
+        tObj = { verticalProgress: false, reverseProgress:false };
+      }else if(m.action.fillType === FillType.RIGHTLEFT){
+        tObj = { verticalProgress: false, reverseProgress:true };
+      }
+      Object.assign(obj,tObj);  
+      this.setValue(obj,{ render: false });
+      this.startAnimate(pen.id);
+    }
+    // 移动动效
+    this.motions[MotionAction.MOVE] = (pen: Pen, m: Motion) => {
+      const item = this.store.pointData.find(elem => elem.dataId === m.when[0].dataId);
+      const percent = item.value/(m.when[0].max - m.when[0].min);
+      const frames = [
+        {
+          duration: 2000,
+          visible: true,
+          x: m.action.x * percent,
+          y: m.action.y * percent,
+        }
+      ];
+      this.setValue(
+        { id: pen.id,
+          frames,
+        },
+        { render: false }
+      );
+      this.startAnimate(pen.id);
+    }
+    // 流动动效
+    this.motions[MotionAction.FLOW] = (pen: Pen, m: Motion) => {
+      const obj = {
+        lineAnimateType: m.action.flowStyle,
+        animateDash: m.action.ballStyle,
+        animateLineWidth: m.action.width,
+        animateColor: m.action.color,
+        animateSpan: m.action.speed,
+        animateReverse: m.action.reverse,
+      }
+      this.setValue(
+        { id: pen.id,
+          ...obj,
+        },
+        { render: false }
+      );
+      this.startAnimate(pen.id);
+    }
   }
   initEventFns() {
     this.events[EventAction.Link] = (pen: Pen, e: Event) => {
@@ -682,8 +825,14 @@ export class Meta2d {
    * @memberof Meta2d
    */
   clearOnlyData(template?: string){
+    // for (const pen of this.store.data.pens) {
+    //   pen.onDestroy?.(pen);
+    // }
+    const isSameTpl = this.store.data.template === template
     for (const pen of this.store.data.pens) {
-      pen.onDestroy?.(pen);
+      if (!isSameTpl || !pen.template) {
+        pen.onDestroy?.(pen);
+      }
     }
     clearStore(this.store, template);
     this.hideInput();
@@ -2394,11 +2543,12 @@ export class Meta2d {
         // nca=false表示关闭无条件动效，需要判定when是否满足条件
         // && MotionWhenMap[mt.type][MotionWhenType.ISNCA]
         if(!mt.nca){
-          if(mt.when.length === 1){
+          const limitWhen = MotionWhenMap[mt.type][MotionWhenType.LIMIT];
+          if(mt.when.length === 1 || limitWhen){
             // 如果只有一个条件，只需要满足条件1
             const elem = data.find(elem => elem.dataId === mt.when[0].dataId);
             can = (elem.value >= mt.when[0].min) && (elem.value <= mt.when[0].max);
-          }else if(mt.when.length >= 2){
+          }else if(mt.when.length >= 2 && !limitWhen){
             // 如果有多个条件，则以每个条件之间做逻辑运算
             const whs = mt.when.map(el=>{
               const item = data.find(elem => elem.dataId === el.dataId);
@@ -2420,6 +2570,10 @@ export class Meta2d {
             }
             can = rel;
           }
+          // 边沿触发，触发后如果条件不满足依然执行动效
+          if(!can && mt.isEdgeTrigger){
+            can = true;
+          }
         }else{
           // nca=true表示启用无条件动效，when条件失效，直接执行动效；
           can = true;
@@ -2427,11 +2581,22 @@ export class Meta2d {
           if(!MotionWhenMap[mt.type][MotionWhenType.ISNCA]){
             can = false;
           }
-        }
+                  }
         // 当when中的每个条件都满足时，触发执行动作action
         can && this.motions[mt.type](pen,mt);
       }
     }
+  }
+  /**
+   * @description 清楚指定图元的动效
+   * @author Joseph Ho
+   * @date 30/10/2023
+   * @private
+   * @param {Pen[]} pens
+   * @memberof Meta2d
+   */
+  private clearMotions = (pens: Pen[])=>{
+
   }
   private doEvent = (pen: Pen, eventName: EventName) => {
     if (!pen) {
