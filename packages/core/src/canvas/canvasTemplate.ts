@@ -112,6 +112,10 @@ export class CanvasTemplate {
         );
         ctx.restore();
       }
+      const width = this.store.data.width || this.store.options.width;
+      const height = this.store.data.height || this.store.options.height;
+      const x = this.store.data.x || this.store.options.x;
+      const y = this.store.data.y || this.store.options.y;
       const background =
         this.store.data.background || this.store.options.background;
       if (background) {
@@ -127,11 +131,9 @@ export class CanvasTemplate {
         ctx.shadowBlur = this.store.options.shadowBlur;
         ctx.shadowColor = this.store.options.shadowColor;
 
-        const width = this.store.data.width || this.store.options.width;
-        const height = this.store.data.height || this.store.options.height;
+       
         if (width && height) {
-          const x = this.store.data.x || this.store.options.x;
-          const y = this.store.data.y || this.store.options.y;
+         
           ctx.fillRect(
             this.store.data.origin.x + x,
             this.store.data.origin.y + y,
@@ -141,6 +143,17 @@ export class CanvasTemplate {
         } else {
           ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         }
+        ctx.restore();
+      }
+      if (width && height && this.store.bkImg) {
+        ctx.save();
+        ctx.drawImage(
+          this.store.bkImg,
+          this.store.data.origin.x + x,
+          this.store.data.origin.y + y,
+          width * this.store.data.scale,
+          height * this.store.data.scale
+        );
         ctx.restore();
       }
       this.renderGrid(ctx);
