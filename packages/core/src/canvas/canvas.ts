@@ -651,13 +651,15 @@ export class Canvas {
     let y = 10;
     switch (e.key) {
       case ' ':
-        this.hotkeyType = HotkeyType.Translate;
+        if (this.currentState !== State.DRAWING && !this.hotkeyType) {
+          this.hotkeyType = HotkeyType.Translate;
+        } 
         break;
       case 'Control':
         if (this.drawingLine) {
           this.drawingLine.calculative.drawlineH =
             !this.drawingLine.calculative.drawlineH;
-        } else if (!this.hotkeyType) {
+        } else if (this.currentState !== State.DRAWING && !this.hotkeyType) {
           this.patchFlags = true;
           this.hotkeyType = HotkeyType.Select;
         }
@@ -671,7 +673,7 @@ export class Canvas {
           this.store.activeAnchor
         ) {
           this.toggleAnchorHand();
-        } else if (!this.hotkeyType) {
+        } else if (this.currentState !== State.DRAWING && !this.hotkeyType) {
           this.patchFlags = true;
           this.hotkeyType = HotkeyType.Resize;
         }
@@ -1889,15 +1891,16 @@ export class Canvas {
 
     if (this.mouseDown && !this.store.options.disableTranslate) {
       // 画布平移前提
-      if (this.mouseRight === MouseRight.Down) {
-        this.mouseRight = MouseRight.Translate;
-        if(this.currentState == State.SELECT) {
-          this.setState('DRAG','passive');
-          this.store.emitter.emit('changeState',
-            'DRAG'
-          );
-        }
-      } else if (this.currentState == State.SELECT && this.hotkeyType === HotkeyType.Translate) {
+      // if (this.currentState == State.SELECT && this.mouseRight === MouseRight.Down) {
+        // this.mouseRight = MouseRight.Translate;
+        // if(this.currentState == State.SELECT) {
+        //   this.setState('DRAG','passive');
+        //   this.store.emitter.emit('changeState',
+        //     'DRAG'
+        //   );
+        // }
+      // } else 
+      if (this.currentState == State.SELECT && this.hotkeyType === HotkeyType.Translate) {
         this.setState('DRAG','passive');
         this.store.emitter.emit('changeState',
           'DRAG'
