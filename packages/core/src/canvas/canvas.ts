@@ -2711,13 +2711,14 @@ export class Canvas {
     // 鼠标松手才更新，此处是更新前的值
     const initPens = deepClone(this.store.active, true);
     // const pens = deepClone(this.store.active, true);
-    const gridSize = this.store.options.gridSize;
+    const gridSize = this.store.data.gridSize || this.store.options.gridSize;
     const { origin, scale } = this.store.data;
+    const autoAlignGrid = this.store.options.autoAlignGrid && this.store.data.grid;
     this.store.active.forEach((pen, i: number) => {
       const { x, y } = this.movingPens[i];
       const obj = {x,y};
       // 根据是否开启了自动网格对齐，来修正坐标
-      if(this.store.options.autoAlignGrid){
+      if(autoAlignGrid){
         const rect = this.getPenRect(this.movingPens[i]);
         // 算出偏移了多少个网格
         const m = parseInt((rect.x / gridSize).toFixed());
