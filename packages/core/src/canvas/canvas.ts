@@ -1144,10 +1144,6 @@ export class Canvas {
     // }
     for (const pen of pens) {
       if (!pen.parentId) {
-        if(pen.name == 'text') {
-          pen.height = pen.height * this.store.data.scale;
-          // pen.width = pen.width * this.store.data.scale;
-        }
         pen.x = e.x - pen.width / 2;
         pen.y = e.y - pen.height / 2;
       }
@@ -2503,11 +2499,12 @@ export class Canvas {
       if (!this.store.data.locked) {
         e.x = (this.dragRect.x + this.dragRect.ex) / 2;
         e.y = (this.dragRect.y + this.dragRect.ey) / 2;
-        if(this.addCaches.length === 1 && this.addCaches[0].name == 'text'){
+        if(this.addCaches.length === 1 && this.addCaches[0].name == 'text' && this.dragRect.width && this.dragRect.height){
           const target = deepClone(this.addCaches[0]);
-          if(this.dragRect.width > target.width) {
-            target.width =  this.dragRect.width;
-          }
+          const scaleW = target.width * this.store.data.scale;
+          const scaleH = target.height * this.store.data.scale;
+          target.width = Math.max(this.dragRect.width,scaleW);
+          target.height = Math.max(this.dragRect.height,scaleH);
           // target.height = target.fontSize;
           const pens:Pen[] = [target];
           this.dropPens(pens, e);
@@ -2533,15 +2530,18 @@ export class Canvas {
       }
       // this.addCaches = undefined;
     }
-    // TODO // 添加新文本
+    // 点击添加文本
     if(
-      this.currentState == State.DRAW &&
+      (this.currentState == State.DRAW || this.currentState == State.DRAWING) &&
+      !this.dragRect?.width &&  !this.dragRect?.height &&
       this.addCaches &&
       this.addCaches.length == 1 &&
       this.addCaches[0].name == 'text' &&
       e.button != 2
     ) {
       const pens:Pen[] = deepClone(this.addCaches);
+      pens[0].height *= this.store.data.scale;
+      pens[0].width *= this.store.data.scale;
       this.dropPens(pens, e);
       // setTimeout(() => {
         this.showInput(pens[0]);
@@ -3200,7 +3200,7 @@ export class Canvas {
           if(pen.lineType == 'connectLine') {
             this.setState(this.stateRecord);
           } else
-          if (this.currentState != State.DRAWING && !this.store.data.locked && !pen.locked && pen.lineType != 'connectLine') {
+          if (this.currentState != State.DRAWING && !this.store.data.locked && !pen.locked && pen.lineType != 'connectLine' && this.stateRecord == 'SELECT') {
             this.setState('MOVE');
             // if (this.hotkeyType === HotkeyType.AddAnchor) {
             //   this.externalElements.style.cursor = 'pointer';
