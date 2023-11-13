@@ -842,6 +842,40 @@ export function getTextColor(pen: Pen, store: Meta2dStore) {
     options.color
   );
 }
+function MaxEnglish(text,start) {
+  let letters = '';
+  const pattern = new RegExp("[\u4E00-\u9FA5]+");
+  while(start < text.length && !pattern.test(text[start])) {
+    letters += text[start++];
+  }
+  return letters;
+}
+function drawTextVertical(ctx,config) {
+  let {text,x,y,fontSize} = config;
+  const pattern = new RegExp("[\u4E00-\u9FA5]+");
+  
+  // 开始逐字绘制
+  for(let i = 0; i < text.length;i++){
+    const letter = text[i];
+    if (pattern.test(letter)) {
+      ctx.textBaseline = 'hanging';
+      ctx.fillText(letter, x, y);
+      y += fontSize;
+    } else {
+      ctx.textBaseline = 'alphabetic';
+      const letters = MaxEnglish(text,i);
+      ctx.save();
+      ctx.translate(x, y);
+      // 英文字符，旋转90°
+      ctx.rotate(Math.PI * 0.5);
+      ctx.translate(-x, -y);
+      ctx.fillText(letters,x,y - 0.1 * fontSize);//由于输入框与canvas对齐方式的差异所以这里补上差值
+      ctx.restore();
+      y += ctx.measureText(letters).width;
+      i+=letters.length - 1;
+    }
+  };
+}
 
 function drawText(ctx: CanvasRenderingContext2D, pen: Pen) {
   const {
@@ -895,20 +929,35 @@ function drawText(ctx: CanvasRenderingContext2D, pen: Pen) {
     ctx.fillRect(drawRectX, drawRectY, width, height);
     ctx.restore();
   }
-
-  const y = 0.55;
   const textAlign = pen.textAlign || store.options.textAlign;
+  const textBaseline = pen.textBaseline || store.options.textBaseline;
   const oneRowHeight = fontSize * lineHeight;
   pen.calculative.textLines.forEach((text, i) => {
     const textLineWidth = pen.calculative.textLineWidths[i];
-    let x = 0;
-    if (textAlign === 'center') {
-      x = (width - textLineWidth) / 2;
-    } else if (textAlign === 'right') {
-      x = width - textLineWidth;
+    let x = 0, y = 0;
+    if(pen.direction == 'vertical') {// 纵向渲染文字需要计算y
+      x = 0.84;
+      if (textBaseline === 'middle') {
+        y = (height - textLineWidth) / 2
+      } else if (textBaseline === 'bottom') {
+        y = height - textLineWidth;
+      }
+      drawTextVertical(ctx,{
+        text,
+        x:drawRectX + width - (i + x) * oneRowHeight,
+        y:drawRectY + y ,//最终计算得到的y值存在偏差，最后补上偏差值
+        fontSize:pen.calculative.fontSize
+      })
+    } else {// 横向渲染文字
+      y = 0.55;
+      if (textAlign === 'center') {
+        x = (width - textLineWidth) / 2;
+      } else if (textAlign === 'right') {
+        x = width - textLineWidth;
+      }
+      ctx.fillText(text, drawRectX + x, drawRectY + (i + y) * oneRowHeight);
     }
     // 下划线
-    ctx.fillText(text, drawRectX + x, drawRectY + (i + y) * oneRowHeight);
     const { textDecorationColor, textDecorationDash, textDecoration } = pen;
     if (textDecoration) {
       drawUnderLine(
