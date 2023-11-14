@@ -651,8 +651,10 @@ export class Canvas {
     let y = 10;
     switch (e.key) {
       case ' ':
-        if (this.currentState !== State.DRAWING && !this.hotkeyType) {
+        if (this.currentState !== State.DRAWING && !this.hotkeyType && this.stateRecord === 'SELECT') {
           this.hotkeyType = HotkeyType.Translate;
+          this.store.emitter.emit('changeState','DRAG');
+          this.setState('DRAG','passive')
         } 
         break;
       case 'Control':
@@ -1029,6 +1031,12 @@ export class Canvas {
       case 'L':
         this.canMoveLine = false;
         break;
+      case ' ':
+        if(this.currentState === State.DRAG && this.stateRecord === 'passive') {
+          this.store.emitter.emit('changeState','SELECT');
+          this.setState('SELECT')
+        }
+        break;
       // case 'Alt':
       //   if (this.drawingLine) {
       //     this.store.options.autoAnchor = !this.store.options.autoAnchor;
@@ -1117,7 +1125,7 @@ export class Canvas {
       const pt = { x: event.offsetX, y: event.offsetY };
       this.calibrateMouse(pt);
       this.dropPens(obj, pt);
-      this.setState('DRAW');
+      // this.setState('DRAW');
       this.addCaches = [];
     }
 
@@ -1886,7 +1894,7 @@ export class Canvas {
     }
 
     if (this.mouseDown && !this.store.options.disableTranslate) {
-      // 画布平移前提
+      // 画布平移前提 逻辑更改这段代码没用
       // if (this.currentState == State.SELECT && this.mouseRight === MouseRight.Down) {
         // this.mouseRight = MouseRight.Translate;
         // if(this.currentState == State.SELECT) {
@@ -1896,12 +1904,12 @@ export class Canvas {
         //   );
         // }
       // } else 
-      if (this.currentState == State.SELECT && this.hotkeyType === HotkeyType.Translate) {
-        this.setState('DRAG','passive');
-        this.store.emitter.emit('changeState',
-          'DRAG'
-        );
-      }
+      // if (this.currentState == State.SELECT && this.hotkeyType === HotkeyType.Translate) {
+      //   this.setState('DRAG','passive');
+      //   this.store.emitter.emit('changeState',
+      //     'DRAG'
+      //   );
+      // }
       // Translate
       if (
         this.currentState == State.DRAG
@@ -2312,13 +2320,14 @@ export class Canvas {
     if (!this.mouseDown) {
       return;
     }
-    // 拖拽结束变为选择模式
-    if( this.currentState == State.DRAG && this.stateRecord == 'passive' && (this.mouseRight === MouseRight.Translate || this.hotkeyType == HotkeyType.Translate)) {
-      this.store.emitter.emit('changeState',
-        'SELECT'
-      );
-      this.setState('SELECT');
-    } else if (this.mouseRight === MouseRight.Down) {//绘制模式点击右键变为选择模式
+    // 拖拽结束变为选择模式 逻辑更改这段代码没用
+    // if( this.currentState == State.DRAG && this.stateRecord == 'passive' && (this.mouseRight === MouseRight.Translate || this.hotkeyType == HotkeyType.Translate)) {
+    //   this.store.emitter.emit('changeState',
+    //     'SELECT'
+    //   );
+    //   this.setState('SELECT');
+    // } else 
+    if (this.mouseRight === MouseRight.Down) {//绘制模式点击右键变为选择模式
       if(this.currentState == State.DRAW) {
         this.store.emitter.emit('changeState',
           'SELECT'
