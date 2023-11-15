@@ -1162,6 +1162,9 @@ export class Meta2d {
 
   }
 
+  alignPenToGrid(pen:Pen) {
+    this.canvas.alignPenToGrid(pen);
+  }
   drawingPencil() {
     this.canvas.drawingPencil();
   }
