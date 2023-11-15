@@ -6524,7 +6524,7 @@ export class Canvas {
     .replace(/\<div\>\<\/div\>/g, '<div><br></div>');
     this.inputDiv.innerHTML = finalText;
     // }
-    this.inputDiv.style.fontSize = pen.calculative.fontSize + 'px';
+    // this.inputDiv.style.fontSize = pen.calculative.fontSize + 'px';
     // this.inputDiv.style.color = getTextColor(pen, this.store);
     this.inputParent.style.left =
       textRect.x + this.store.data.x - (pen.textLeft || 0) + 'px'; //+ 5
@@ -6577,6 +6577,7 @@ export class Canvas {
         line-height:${len}px;
         min-width:${pen.width}px;
         min-height:${pen.height}px;
+        font-size:${fontSize}px;
       `
       if(isVertical) {
         style +=`
@@ -6590,15 +6591,20 @@ export class Canvas {
       this.updatePenRect(pen);
       pen.calculative.canvas.calcActiveRect();
       this.inputDiv.oninput = (e) => {
+        let hasChange = false;
         if(pen.height !== this.inputDiv.offsetHeight) {
           pen.height = this.inputDiv.offsetHeight;
+          hasChange = true;
         }
         if(pen.width !== this.inputDiv.offsetWidth) {
           pen.width = this.inputDiv.offsetWidth;
+          hasChange = true;
         }
-        this.updatePenRect(pen);
-        pen.calculative.canvas.calcActiveRect();
-        this.render();
+        if(hasChange) {
+          this.updatePenRect(pen);
+          pen.calculative.canvas.calcActiveRect();
+          this.render();
+        }
       }
     } else {// 旧文本样式
       this.inputParent.style.height = textRect.height + (pen.textTop || 0) + 'px';
