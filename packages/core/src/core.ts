@@ -232,7 +232,7 @@ export class Meta2d {
       }
       this.setValue(
         obj,
-        { render: false }
+        { render: true }
       );
     };
     // 文本动效
@@ -241,12 +241,12 @@ export class Meta2d {
         { id: pen.id,
           'text': m.action.content,
         },
-        { render: false }
+        { render: true }
       );
     };
     // 可视动效
     this.motions[MotionAction.VISION] = (pen: Pen, m: Motion) => {
-      this.setVisible(pen, m.action.visibility==='visible',false);
+      this.setVisible(pen, m.action.visibility==='visible',true);
     };
     // 闪烁动效
     this.motions[MotionAction.BLINK] = (pen: Pen, m: Motion) => {
@@ -2528,63 +2528,73 @@ export class Meta2d {
     if(!pen){
       return;
     }
-    for (let i = 0; i < pen.motions.length; i++) {
-      const mt = pen.motions[i];
-      // 如果图元不支持创建多个动画场景，那么只遍历一次
-      if(i >= 1 && !MotionWhenMap[mt.type][MotionWhenType.ISMUILT]) continue;
-      // 这里校验下图元类型与动效是否有对应关系
-      let name = pen.name;
-      if(pen.name === 'line'){
-        name = pen.name+'-'+pen.lineName+'-'+pen.lineType;
-      }
-      const ms = getMotionsByName(name);
-      // 如果图元支持这种动画类型，才会执行下面的逻辑
-      if(Array.isArray(ms) && ms.indexOf(mt.type) !== -1 && this.motions[mt.type]){
-        let can = false;
-        // nca=false表示关闭无条件动效，需要判定when是否满足条件
-        // && MotionWhenMap[mt.type][MotionWhenType.ISNCA]
-        if(!mt.nca){
-          const limitWhen = MotionWhenMap[mt.type][MotionWhenType.LIMIT];
-          if(mt.when.length === 1 || limitWhen){
-            // 如果只有一个条件，只需要满足条件1
-            const elem = data.find(elem => elem.dataId === mt.when[0].dataId);
-            can = (elem.value >= mt.when[0].min) && (elem.value <= mt.when[0].max);
-          }else if(mt.when.length >= 2 && !limitWhen){
-            // 如果有多个条件，则以每个条件之间做逻辑运算
-            const whs = mt.when.map(el=>{
-              const item = data.find(elem => elem.dataId === el.dataId);
-              if(item){
-                return {relation: el.relation, cond:(item.value >= el.min) && (item.value <= el.max)};
-              }else{
-                return {relation:'',cond: false};
+    // 相同动效的条件重叠的匹配逻辑：优先匹配第一个
+    // 动效分类
+    const mType =  Array.from(new Set(pen.motions.map(el=>el.type)));
+    for (let k = 0; k < mType.length; k++) {
+      const mts = pen.motions.filter(el=>el.type === mType[k]);
+      let onceFlag = false; //满足一次条件的标志位
+      for (let i = 0; i < mts.length; i++) {
+        // 一旦同类型动效有一个满足条件，则跳出
+        if(onceFlag) break;
+        const mt = mts[i];
+        // 如果图元不支持创建多个动画场景，那么只遍历一次
+        if(i >= 1 && !MotionWhenMap[mt.type][MotionWhenType.ISMUILT]) continue;
+        // 这里校验下图元类型与动效是否有对应关系
+        let name = pen.name;
+        if(pen.name === 'line'){
+          name = pen.name+'-'+pen.lineName+'-'+pen.lineType;
+        }
+        const ms = getMotionsByName(name);
+        // 如果图元支持这种动画类型，才会执行下面的逻辑
+        if(Array.isArray(ms) && ms.indexOf(mt.type) !== -1 && this.motions[mt.type]){
+          let can = false;
+          // nca=false表示关闭无条件动效，需要判定when是否满足条件
+          // && MotionWhenMap[mt.type][MotionWhenType.ISNCA]
+          if(!mt.nca){
+            const limitWhen = MotionWhenMap[mt.type][MotionWhenType.LIMIT];
+            if(mt.when.length === 1 || limitWhen){
+              // 如果只有一个条件，只需要满足条件1
+              const elem = data.find(elem => elem.dataId === mt.when[0].dataId);
+              can = (elem.value >= mt.when[0].min) && (elem.value <= mt.when[0].max);
+            }else if(mt.when.length >= 2 && !limitWhen){
+              // 如果有多个条件，则以每个条件之间做逻辑运算
+              const whs = mt.when.map(el=>{
+                const item = data.find(elem => elem.dataId === el.dataId);
+                if(item){
+                  return {relation: el.relation, cond:(item.value >= el.min) && (item.value <= el.max)};
+                }else{
+                  return {relation:'',cond: false};
+                }
+              });
+              let rel = true;
+              for (let j = 0; j < whs.length; j++) {
+                const item = whs[j];
+                if(j === 0) {rel = item.cond;continue};
+                if(item.relation === LogicType.AND){
+                  rel = rel && item.cond;
+                }else if(item.relation === LogicType.OR){
+                  rel = rel || item.cond;
+                }
               }
-            });
-            let rel = true;
-            for (let j = 0; j < whs.length; j++) {
-              const item = whs[j];
-              if(j === 0) {rel = item.cond;continue};
-              if(item.relation === LogicType.AND){
-                rel = rel && item.cond;
-              }else if(item.relation === LogicType.OR){
-                rel = rel || item.cond;
-              }
+              can = rel;
             }
-            can = rel;
-          }
-          // 边沿触发，触发后如果条件不满足依然执行动效
-          if(!can && mt.isEdgeTrigger){
+            // 边沿触发，触发后如果条件不满足依然执行动效
+            if(!can && mt.isEdgeTrigger){
+              can = true;
+            }
+          }else{
+            // nca=true表示启用无条件动效，when条件失效，直接执行动效；
             can = true;
+            // 如果不支持nca，那么这里即使nca=true即配置了无条件，也无法执行满足条件
+            if(!MotionWhenMap[mt.type][MotionWhenType.ISNCA]){
+              can = false;
+            }
           }
-        }else{
-          // nca=true表示启用无条件动效，when条件失效，直接执行动效；
-          can = true;
-          // 如果不支持nca，那么这里即使nca=true即配置了无条件，也无法执行满足条件
-          if(!MotionWhenMap[mt.type][MotionWhenType.ISNCA]){
-            can = false;
-          }
-                  }
-        // 当when中的每个条件都满足时，触发执行动作action
-        can && this.motions[mt.type](pen,mt);
+          // 当when中的每个条件都满足时，触发执行动作action
+          can && this.motions[mt.type](pen,mt);
+          onceFlag = can;
+        }
       }
     }
   }
