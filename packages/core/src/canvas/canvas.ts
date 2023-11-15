@@ -651,8 +651,10 @@ export class Canvas {
     let y = 10;
     switch (e.key) {
       case ' ':
-        if (this.currentState !== State.DRAWING && !this.hotkeyType) {
+        if (this.currentState !== State.DRAWING && !this.hotkeyType && this.stateRecord === 'SELECT') {
           this.hotkeyType = HotkeyType.Translate;
+          this.store.emitter.emit('changeState','DRAG');
+          this.setState('DRAG','passive')
         } 
         break;
       case 'Control':
@@ -1029,6 +1031,12 @@ export class Canvas {
       case 'L':
         this.canMoveLine = false;
         break;
+      case ' ':
+        if(this.currentState === State.DRAG && this.stateRecord === 'passive') {
+          this.store.emitter.emit('changeState','SELECT');
+          this.setState('SELECT')
+        }
+        break;
       // case 'Alt':
       //   if (this.drawingLine) {
       //     this.store.options.autoAnchor = !this.store.options.autoAnchor;
@@ -1117,7 +1125,7 @@ export class Canvas {
       const pt = { x: event.offsetX, y: event.offsetY };
       this.calibrateMouse(pt);
       this.dropPens(obj, pt);
-      this.setState('DRAW');
+      // this.setState('DRAW');
       this.addCaches = [];
     }
 
@@ -1886,7 +1894,7 @@ export class Canvas {
     }
 
     if (this.mouseDown && !this.store.options.disableTranslate) {
-      // 画布平移前提
+      // 画布平移前提 逻辑更改这段代码没用
       // if (this.currentState == State.SELECT && this.mouseRight === MouseRight.Down) {
         // this.mouseRight = MouseRight.Translate;
         // if(this.currentState == State.SELECT) {
@@ -1896,12 +1904,12 @@ export class Canvas {
         //   );
         // }
       // } else 
-      if (this.currentState == State.SELECT && this.hotkeyType === HotkeyType.Translate) {
-        this.setState('DRAG','passive');
-        this.store.emitter.emit('changeState',
-          'DRAG'
-        );
-      }
+      // if (this.currentState == State.SELECT && this.hotkeyType === HotkeyType.Translate) {
+      //   this.setState('DRAG','passive');
+      //   this.store.emitter.emit('changeState',
+      //     'DRAG'
+      //   );
+      // }
       // Translate
       if (
         this.currentState == State.DRAG
@@ -2317,13 +2325,14 @@ export class Canvas {
     if (!this.mouseDown) {
       return;
     }
-    // 拖拽结束变为选择模式
-    if( this.currentState == State.DRAG && this.stateRecord == 'passive' && (this.mouseRight === MouseRight.Translate || this.hotkeyType == HotkeyType.Translate)) {
-      this.store.emitter.emit('changeState',
-        'SELECT'
-      );
-      this.setState('SELECT');
-    } else if (this.mouseRight === MouseRight.Down) {//绘制模式点击右键变为选择模式
+    // 拖拽结束变为选择模式 逻辑更改这段代码没用
+    // if( this.currentState == State.DRAG && this.stateRecord == 'passive' && (this.mouseRight === MouseRight.Translate || this.hotkeyType == HotkeyType.Translate)) {
+    //   this.store.emitter.emit('changeState',
+    //     'SELECT'
+    //   );
+    //   this.setState('SELECT');
+    // } else 
+    if (this.mouseRight === MouseRight.Down) {//绘制模式点击右键变为选择模式
       if(this.currentState == State.DRAW) {
         this.store.emitter.emit('changeState',
           'SELECT'
@@ -6477,16 +6486,16 @@ export class Canvas {
 
     //value和innerText问题
     const preInputText = pen.calculative.tempText || pen.text + '' || '';
-    if(pen.name == 'text') {
-      this.inputDiv.innerHTML = preInputText;
-    } else {
-      const textArr = preInputText.replace(/\x20/g, '&nbsp;').split(/[\s\n]/);
-      const finalText = `${textArr.join('</div><div>')}</div>`
-      .replace('</div>', '')
-      .replace(/\<div\>\<\/div\>/g, '<div><br></div>');
-      this.inputDiv.innerHTML = finalText;
-    }
-    // this.inputDiv.style.fontSize = pen.calculative.fontSize + 'px';
+    // if(pen.name == 'text') {
+    //   this.inputDiv.innerHTML = preInputText;
+    // } else {
+    const textArr = preInputText.replace(/\x20/g, '&nbsp;').split(/[\s\n]/);
+    const finalText = `${textArr.join('</div><div>')}</div>`
+    .replace('</div>', '')
+    .replace(/\<div\>\<\/div\>/g, '<div><br></div>');
+    this.inputDiv.innerHTML = finalText;
+    // }
+    this.inputDiv.style.fontSize = pen.calculative.fontSize + 'px';
     // this.inputDiv.style.color = getTextColor(pen, this.store);
     this.inputParent.style.left =
       textRect.x + this.store.data.x - (pen.textLeft || 0) + 'px'; //+ 5
@@ -6494,9 +6503,10 @@ export class Canvas {
       textRect.y + this.store.data.y - (pen.textTop || 0) + 'px'; //+ 5
     let _width = textRect.width + (pen.textLeft || 0);
 
-    this.inputParent.style.height = textRect.height + (pen.textTop || 0) + 'px'; //   (textRect.height < pen.height ? 0 : 10)
+     //   (textRect.height < pen.height ? 0 : 10)
     this.inputParent.style.zIndex = '9999';
     this.inputParent.style.background = background;
+    this.inputParent.style.display = 'flex';
     if (pen.rotate % 360) {
       this.inputParent.style.transform = `rotate(${pen.rotate}deg)`;
     } else {
@@ -6518,64 +6528,52 @@ export class Canvas {
     const {fontSize,fontFamily} = pen.calculative;
     const isVertical = pen.direction == 'vertical';
     if (pen.name === 'text') { // 新文本样式
-      this.inputParent.style.left = pen.x + this.store.data.x + 'px'; //+ 5
+      // this.inputParent.style.left = pen.x + this.store.data.x + 'px'; //+ 5
       this.inputParent.style.width = 'auto'; //(textRect.width < pen.width ? 0 : 10)
       this.inputParent.style.height = 'auto'; //(textRect.width < pen.width ? 0 : 10)
-      this.inputParent.style.background = '#FFF';
-      this.inputParent.style.verticalAlign = 'center';
-      // pen.height = fontSize;zoom:${this.store.data.scale};
+      // this.inputParent.style.background = '#FFF';
+      // this.inputParent.style.verticalAlign = 'center';
+      // pen.height = fontSize;//zoom:${this.store.data.scale};
       const zoom = (pen.fontSize / 12) * this.store.data.scale;
+      const len = zoom > 1 ? fontSize * 1.5 : fontSize * 1.5 / zoom;
       let style = `
-        display:block;
         height:auto;
         width:auto;
         outline:0;
         position:static;
         box-sizing:border-box;
-        font-size:${ fontSize }px;
+        background:#FFF;
+        padding:0 2px;
         color:#000;
+        line-height:${len}px;
+        min-width:${pen.width}px;
+        min-height:${pen.height}px;
       `
-      const len = zoom > 1 ? fontSize * 1.5 : fontSize * 1.5 / zoom;
       if(isVertical) {
         style +=`
-          line-height:${len}px;
-          width:${zoom > 1 ? fontSize: fontSize / zoom}px;
-        `
-      } else {
-        style +=`
-          min-width:${zoom > 1 ? pen.width : pen.width/zoom}px;
-          height:${len}px;
-          line-height:${len}px;
+          writing-mode: vertical-rl;
         `
       }
       this.inputDiv.style = style;
-      this.inputParent.style.display = 'inline-block';
-      // pen.width = this.inputParent.offsetWidth;
       const ctx =this.offscreen.getContext('2d') as CanvasRenderingContext2D;
       ctx.save();
       ctx.font = getFont({fontSize,fontFamily})
       this.updatePenRect(pen);
       pen.calculative.canvas.calcActiveRect();
       this.inputDiv.oninput = (e) => {
-        if(isVertical) {
-          pen.height =  this.inputParent.offsetHeight;
-        } else {
-          pen.width =  this.inputParent.offsetWidth;
+        if(pen.height !== this.inputDiv.offsetHeight) {
+          pen.height = this.inputDiv.offsetHeight;
+        }
+        if(pen.width !== this.inputDiv.offsetWidth) {
+          pen.width = this.inputDiv.offsetWidth;
         }
         this.updatePenRect(pen);
         pen.calculative.canvas.calcActiveRect();
         this.render();
       }
-      this.inputDiv.onkeydown = (e) => {
-        if(e.key == 'Enter'){
-          this.inactive();
-          this.hideInput();
-          this.render();
-        }
-      }
     } else {// 旧文本样式
+      this.inputParent.style.height = textRect.height + (pen.textTop || 0) + 'px';
       this.inputParent.style.width = (_width < 0 ? 12 : _width) + 'px'; //(textRect.width < pen.width ? 0 : 10)
-      this.inputParent.style.display = 'flex';
     }
     setTimeout(() => {
       this.inputDiv.focus();
@@ -6607,34 +6605,50 @@ export class Canvas {
     if (pen.fontSize < 12) {
       font_scale = 12 / pen.fontSize;
     }
-    if (pen.textAlign) {
-      style += `text-align: ${pen.textAlign};`;
+    if(pen.direction == 'vertical') {
+      // 调整输入框垂直状态
+      if (pen.textBaseline) {
+        let baseLine = {
+          top: 'start',
+          middle: 'center',
+          bottom: 'end',
+        };
+        style += `align-items: ${baseLine[pen.textBaseline]};`;
+      } else {
+        style += 'align-items: center;';
+      }
+      // 调整输入框水平状态
+      if (pen.textAlign) {
+        let textAlign = {
+          left: 'end',
+          center: 'center',
+          right: 'start',
+        };
+        style += `justify-content: ${textAlign[pen.textAlign]};`;
+      } else {
+        style += 'justify-content: center;';
+      }
     } else {
-      style += 'text-align: center;';
-    }
-    if (pen.textAlign && pen.whiteSpace === 'pre-line') {
-      let textAlign = {
-        left: 'start',
-        center: 'center',
-        right: 'end',
-      };
-      style += `align-items: ${textAlign[pen.textAlign]};`;
-    }
-
-    if (pen.textBaseline) {
-      let baseLine = {
-        top: 'start',
-        middle: 'center',
-        bottom: 'end',
-      };
-      style += `justify-content: ${baseLine[pen.textBaseline]};`;
-    } else {
-      // if (pen.textWidth < pen.calculative.) {
-      //   style += 'justify-content: start;';
-      // } else {
-      //文字高度超出整个rect高度时
-      style += 'justify-content: center;';
-      // }
+      if (pen.textAlign) {
+        let textAlign = {
+          left: 'start',
+          center: 'center',
+          right: 'end',
+        };
+        style += `align-items: ${textAlign[pen.textAlign]};`;
+      } else {
+        style += 'align-items: center;';
+      }
+      if (pen.textBaseline) {
+        let baseLine = {
+          top: 'start',
+          middle: 'center',
+          bottom: 'end',
+        };
+        style += `justify-content: ${baseLine[pen.textBaseline]};`;
+      } else {
+        style += 'justify-content: center;';
+      }
     }
     if (pen.fontFamily) {
       style += `font-family: ${pen.fontFamily};`;
@@ -6744,9 +6758,9 @@ export class Canvas {
             scale /
             (pen.lineHeight * pen.fontSize)
         );
-      if (textWidth > contentWidth) {
-        style += 'justify-content: start;';
-      }
+      // if (textWidth > contentWidth) {
+      //   style += 'justify-content: start;';
+      // }
     }
     sheet.deleteRule(0);
     sheet.deleteRule(0);
@@ -6782,21 +6796,21 @@ export class Canvas {
         this.delete([pen])
       }
       pen.calculative.text = pen.text;
-      if(pen.name == 'text') {
-        this.inputDiv.dataset.value = this.inputDiv.innerHTML
-        .replace(/\<div\>/g, '')
-        .replace(/\<\/div\>/g, '')
-        .replace(/\<br\>/g, '')
-        .replace(/&nbsp;/g, ' ')
-        .replace(/(<([^>]+)>)/gi, '');
-      } else {
+      // if(pen.name == 'text') {
+      //   this.inputDiv.dataset.value = this.inputDiv.innerHTML
+      //   .replace(/\<div\>/g, '')
+      //   .replace(/\<\/div\>/g, '')
+      //   .replace(/\<br\>/g, '')
+      //   .replace(/&nbsp;/g, ' ')
+      //   .replace(/(<([^>]+)>)/gi, '');
+      // } else {
         this.inputDiv.dataset.value = this.inputDiv.innerHTML
         .replace(/\<div\>/g, '\n')
         .replace(/\<\/div\>/g, '')
         .replace(/\<br\>/g, '')
         .replace(/&nbsp;/g, ' ')
         .replace(/(<([^>]+)>)/gi, '');
-      }
+      // }
       this.inputDiv.dataset.value = this.convertSpecialCharacter(
         this.inputDiv.dataset.value
       );

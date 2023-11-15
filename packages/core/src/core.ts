@@ -1600,7 +1600,8 @@ export class Meta2d {
       pen.parentId = parent.id;
       const childRect = calcRelativeRect(pen.calculative.worldRect, rect);
       Object.assign(pen, childRect);
-      pen.locked = pen.lockedOnCombine ?? LockState.DisableMove;
+      //组合锁定子图元
+      // pen.locked = pen.lockedOnCombine ?? LockState.DisableMove;
     });
     //将组合后的父节点置底
     this.store.data.pens.splice(minIndex, 0, parent);
