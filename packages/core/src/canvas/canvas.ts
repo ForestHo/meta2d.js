@@ -2283,7 +2283,12 @@ export class Canvas {
     if (this.hotkeyType === HotkeyType.AddAnchor) {
       this.patchFlags = true;
     }
-    this.render(false);
+
+    // 运行态模式下，鼠标移动时，不做渲染
+    if (!this.store.options.isRunMode) {
+      this.render(false);
+    }
+    
   };
 
   onMouseUp = (e: {

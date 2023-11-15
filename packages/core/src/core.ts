@@ -837,7 +837,9 @@ export class Meta2d {
     const isSameTpl = this.store.data.template === template
     for (const pen of this.store.data.pens) {
       if (!isSameTpl || !pen.template) {
-        pen.onDestroy?.(pen);
+        if (pen.onDestroy != null) {
+          pen.onDestroy(pen);
+        }
       }
     }
     clearStore(this.store, template);
@@ -880,7 +882,8 @@ export class Meta2d {
     }
     if (index !== -1) {
       // 从缓存中加载数据
-      this.loadCacheData(data._id,render);
+      let cacheData = this.store.cacheDatas[index].data;
+      this.loadCacheData(cacheData, render);
       render && this.startAnimate();
     } else {
       this.setBackgroundImage(data.bkImage);
@@ -938,8 +941,11 @@ export class Meta2d {
     }
     if(isCache){
       // 在同步流程中深拷贝图纸的data数据
-      const tempData: Meta2dData = deepClone(this.store.data,true);
-      this.cacheData(tempData,data._id);
+      if (index === -1) {
+        const tempData: Meta2dData = deepClone(this.store.data,true);
+        this.cacheData(tempData,data._id);
+      }
+      
       // setTimeout(() => {
       //   //存入缓存
       //   this.cacheData(tempData,data._id);
@@ -1015,22 +1021,8 @@ export class Meta2d {
    * @returns {*}
    * @memberof Meta2d
    */
-  loadCacheData(id: string,render?:boolean) {
-    let index = this.store.cacheDatas.findIndex(
-      (item) => item.data && item.data._id === id
-    );
-    if (index === -1) {
-      return;
-    }
-    // const ctx = this.canvas.canvas.getContext('2d');
-    // ctx.clearRect(0, 0, this.canvas.canvas.width, this.canvas.canvas.height);
-    // for (let offs of this.store.cacheDatas[index].offscreen) {
-    //   if (offs) {
-    //     ctx.drawImage(offs, 0, 0, this.canvas.width, this.canvas.height);
-    //   }
-    // }
-    // ctx.clearRect(0, 0, this.canvas.canvas.width, this.canvas.canvas.height);
-    this.store.data = this.store.cacheDatas[index].data;
+  loadCacheData(cacheData: Meta2dData,render?:boolean) {
+    this.store.data = cacheData;
     this.setBackgroundImage(this.store.data.bkImage);
     this.store.pens = {};
     this.store.data.pens.forEach((pen) => {
@@ -1060,7 +1052,6 @@ export class Meta2d {
       if(this.lastQuietRender !== undefined && !this.lastQuietRender){
         this.canvas.canvasTemplate.init();
       }
-      this.render();
     }
     // 更新lastQuietRender的值
     this.lastQuietRender = render;
