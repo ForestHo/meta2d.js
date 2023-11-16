@@ -727,6 +727,8 @@ export class Meta2d {
       if (width && height) {
         if (this.canvas) {
           this.canvas.canvasTemplate.init();
+          this.canvas.canvasTemplate.bkImgW = img.naturalWidth;
+          this.canvas.canvasTemplate.bkImgH = img.naturalHeight;
           this.render();
         }
       }

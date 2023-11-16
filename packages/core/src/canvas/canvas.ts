@@ -6612,6 +6612,12 @@ export class Canvas {
     }
     setTimeout(() => {
       this.inputDiv.focus();
+      // 显示输入框全选内容
+			const range = document.createRange();
+			range.selectNodeContents(this.inputDiv);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
     })
     const range = window.getSelection(); //创建range
     range.selectAllChildren(this.inputDiv); //range 选择obj下所有子内容

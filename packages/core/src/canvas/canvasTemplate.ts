@@ -96,22 +96,53 @@ export class CanvasTemplate {
     this.bgPatchFlags = true;
     this.patchFlags = true;
   }
-
+  drawBkImage(
+    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    rect:any
+  ) {
+    let { x, y, width, height } = rect;
+    const {bkImgW,bkImgH} = this;
+    let w = width, h = height, _x = x, _y = y;
+    if (this.store.data.fill !== 'stretch') {
+      if(bkImgW && bkImgH) {
+        const scaleW = width / bkImgW;
+        const scaleH = height / bkImgH;
+        const scale = this.store.data.fill == 'fill' ? Math.max(scaleW, scaleH):Math.min(scaleW, scaleH);
+        w = scale * bkImgW;
+        h = scale * bkImgH;
+      }
+      if(this.store.data.fill == 'fill') {
+        _y += (height - h) / 2;
+      } else {
+        _x += (width - w) / 2;
+      }
+      ctx.save();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x+width,y);
+      ctx.lineTo(x+width,y+height);
+      ctx.lineTo(x,y+height);
+      ctx.clip();
+      ctx.drawImage(this.store.bkImg, _x , _y, w, h);
+      ctx.restore();
+    } else {
+      ctx.drawImage(this.store.bkImg, x, y, width, height);
+    }
+  }
   render() {
     if (this.bgPatchFlags) {
       const ctx = this.bgOffscreen.getContext('2d');
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      if (this.store.data.width && this.store.data.height && this.store.bkImg) {
-        ctx.save();
-        ctx.drawImage(
-          this.store.bkImg,
-          this.store.data.origin.x + this.store.data.x,
-          this.store.data.origin.y + this.store.data.y,
-          this.store.data.width * this.store.data.scale,
-          this.store.data.height * this.store.data.scale
-        );
-        ctx.restore();
-      }
+      // if (this.store.data.width && this.store.data.height && this.store.bkImg) {
+      //   ctx.save();
+      //   ctx.drawImage(
+      //     this.store.bkImg,
+      //     this.store.data.origin.x + this.store.data.x,
+      //     this.store.data.origin.y + this.store.data.y,
+      //     this.store.data.width * this.store.data.scale,
+      //     this.store.data.height * this.store.data.scale
+      //   );
+      //   ctx.restore();
+      // }
       const width = this.store.data.width || this.store.options.width;
       const height = this.store.data.height || this.store.options.height;
       const x = this.store.data.x || this.store.options.x;
@@ -140,13 +171,19 @@ export class CanvasTemplate {
       }
       if (width && height && this.store.bkImg) {
         ctx.save();
-        ctx.drawImage(
-          this.store.bkImg,
-          this.store.data.origin.x + x,
-          this.store.data.origin.y + y,
-          width * this.store.data.scale,
-          height * this.store.data.scale
-        );
+        // ctx.drawImage(
+        //   this.store.bkImg,
+        //   this.store.data.origin.x + x,
+        //   this.store.data.origin.y + y,
+        //   width * this.store.data.scale,
+        //   height * this.store.data.scale
+        // );
+        this.drawBkImage(ctx,{
+          x:this.store.data.origin.x + x,
+          y:this.store.data.origin.y + y,
+          width:width * this.store.data.scale,
+          height:height * this.store.data.scale
+        });
         ctx.restore();
       }
       this.renderGrid(ctx);
