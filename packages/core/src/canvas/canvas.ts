@@ -6920,7 +6920,9 @@ export class Canvas {
         this.store.emitter.emit('valueUpdate', pen);
       }
       this.initTemplateCanvas([pen]);
-      this.alignPenToGrid(pen)
+      if(this.store.options.autoAlignGrid) {// 若开启了自动网格对齐，则在输入框消失时调用对齐网格函数
+        this.alignPenToGrid(pen)
+      }
     }
     this.inputDiv.dataset.penId = undefined;
     this.dropdown.style.display = 'none';
