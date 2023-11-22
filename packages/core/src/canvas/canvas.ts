@@ -718,7 +718,7 @@ export class Canvas {
         break;
       case 'Delete':
       case 'Backspace':
-        !this.store.data.locked && this.currentState != State.DRAWING && this.inputDiv.style.display == 'none' && this.delete();
+        !this.store.data.locked && this.currentState != State.DRAWING && this.inputParent.style.display == 'none' && this.delete();
         break;
       case 'ArrowLeft':
         if(this.currentState !== State.DRAWING) {
