@@ -718,7 +718,7 @@ export class Canvas {
         break;
       case 'Delete':
       case 'Backspace':
-        !this.store.data.locked && this.currentState != State.DRAWING && this.delete();
+        !this.store.data.locked && this.currentState != State.DRAWING && this.inputDiv.style.display == 'none' && this.delete();
         break;
       case 'ArrowLeft':
         if(this.currentState !== State.DRAWING) {
@@ -2419,7 +2419,15 @@ export class Canvas {
     // 拖拽连线锚点
     if (
       this.hoverType === HoverType.LineAnchor &&
+      this.store.active[0] &&
+      this.store.active[0].name === 'line' &&
+      this.store.active[0] !== this.store.hover
+    ) {
+      this.store.emitter.emit('moveAchor',this.store.active[0]);
+      }
+    if (
       this.store.hover &&
+      this.hoverType === HoverType.LineAnchor &&
       this.store.active[0] &&
       this.store.active[0].name === 'line' &&
       this.store.active[0] !== this.store.hover
@@ -2510,10 +2518,10 @@ export class Canvas {
 
     // Add pen
     if (this.currentState == State.DRAWING && this.addCaches && this.addCaches.length) {
-      if (!this.store.data.locked) {
+      if (!this.store.data.locked && this.dragRect) {
         e.x = (this.dragRect.x + this.dragRect.ex) / 2;
         e.y = (this.dragRect.y + this.dragRect.ey) / 2;
-        if(this.addCaches.length === 1 && this.addCaches[0].name == 'text' && this.dragRect.width && this.dragRect.height){
+        if(this.addCaches.length === 1 && this.addCaches[0].name == 'text' && (this.dragRect.width || this.dragRect.height)){
           const target = deepClone(this.addCaches[0]);
           const scaleW = target.width * this.store.data.scale;
           const scaleH = target.height * this.store.data.scale;
@@ -6600,7 +6608,24 @@ export class Canvas {
           pen.width = this.inputDiv.offsetWidth;
           hasChange = true;
         }
-        if(hasChange) {
+        if(!e.target.innerText) {
+          if(pen.direction == 'vertical') {
+            if(pen.textAlign == 'center') {
+              this.inputDiv.style.paddingTop = (this.inputDiv.offsetWidth -len) / 2 + 'px';
+            } else if(pen.textAlign == 'right') {
+              this.inputDiv.style.paddingTop = this.inputDiv.offsetWidth -len + 'px';
+            }
+          } else {
+            if(pen.textBaseline == 'middle'){
+              this.inputDiv.style.paddingTop = (this.inputDiv.offsetHeight -len) / 2 + 'px';
+            } else if(pen.textBaseline == 'bottom') {
+              this.inputDiv.style.paddingTop = this.inputDiv.offsetHeight -len + 'px';
+            }
+          }
+        } else {
+          this.inputDiv.style.padding = '0 2px'
+        }
+        if(hasChange) {//输入框大小变化后才需要重新渲染
           this.updatePenRect(pen);
           pen.calculative.canvas.calcActiveRect();
           this.render();
@@ -6655,8 +6680,10 @@ export class Canvas {
           bottom: 'end',
         };
         style += `align-items: ${baseLine[pen.textBaseline]};`;
+        style += `text-align: ${baseLine[pen.textBaseline]};`
       } else {
         style += 'align-items: center;';
+        style += `text-align: center;`
       }
       // 调整输入框水平状态
       if (pen.textAlign) {
@@ -6677,8 +6704,10 @@ export class Canvas {
           right: 'end',
         };
         style += `align-items: ${textAlign[pen.textAlign]};`;
+        style += `text-align: ${pen.textAlign};`
       } else {
         style += 'align-items: center;';
+        style += `text-align: center;`
       }
       if (pen.textBaseline) {
         let baseLine = {
@@ -6835,6 +6864,7 @@ export class Canvas {
       }
       if(pen.name == 'text' && !this.inputDiv.innerHTML) {//若未输入则删除新文本
         this.delete([pen])
+        return;
       }
       pen.calculative.text = pen.text;
       // if(pen.name == 'text') {
@@ -6890,6 +6920,7 @@ export class Canvas {
         this.store.emitter.emit('valueUpdate', pen);
       }
       this.initTemplateCanvas([pen]);
+      this.alignPenToGrid(pen)
     }
     this.inputDiv.dataset.penId = undefined;
     this.dropdown.style.display = 'none';
