@@ -651,13 +651,17 @@ export class Canvas {
     let y = 10;
     switch (e.key) {
       case ' ':
-        this.hotkeyType = HotkeyType.Translate;
+        if (this.currentState !== State.DRAWING && !this.hotkeyType && this.stateRecord === 'SELECT') {
+          this.hotkeyType = HotkeyType.Translate;
+          this.store.emitter.emit('changeState','DRAG');
+          this.setState('DRAG','passive')
+        } 
         break;
       case 'Control':
         if (this.drawingLine) {
           this.drawingLine.calculative.drawlineH =
             !this.drawingLine.calculative.drawlineH;
-        } else if (!this.hotkeyType) {
+        } else if (this.currentState !== State.DRAWING && !this.hotkeyType) {
           this.patchFlags = true;
           this.hotkeyType = HotkeyType.Select;
         }
@@ -671,7 +675,7 @@ export class Canvas {
           this.store.activeAnchor
         ) {
           this.toggleAnchorHand();
-        } else if (!this.hotkeyType) {
+        } else if (this.currentState !== State.DRAWING && !this.hotkeyType) {
           this.patchFlags = true;
           this.hotkeyType = HotkeyType.Resize;
         }
@@ -699,7 +703,7 @@ export class Canvas {
         break;
       case 'a':
       case 'A':
-        if (e.ctrlKey || e.metaKey) {
+        if (this.currentState != State.DRAWING && (e.ctrlKey || e.metaKey)) {
           // TODO: ctrl + A 会选中 visible == false 的元素
           this.active(
             this.store.data.pens.filter(
@@ -714,61 +718,69 @@ export class Canvas {
         break;
       case 'Delete':
       case 'Backspace':
-        !this.store.data.locked && this.currentState != State.DRAWING && this.delete();
+        !this.store.data.locked && this.currentState != State.DRAWING && this.inputParent.style.display == 'none' && this.delete();
         break;
       case 'ArrowLeft':
-        if (this.movingAnchor) {
-          this.translateAnchor(-1, 0);
-          break;
+        if(this.currentState !== State.DRAWING) {
+          if (this.movingAnchor) {
+            this.translateAnchor(-1, 0);
+            break;
+          }
+          x = -10;
+          if (e.shiftKey) {
+            x = -5;
+          }
+          if (e.ctrlKey || e.metaKey) {
+            x = -1;
+          }
+          this.translatePens(this.store.active, x, 0);
         }
-        x = -10;
-        if (e.shiftKey) {
-          x = -5;
-        }
-        if (e.ctrlKey || e.metaKey) {
-          x = -1;
-        }
-        this.translatePens(this.store.active, x, 0);
         break;
       case 'ArrowUp':
-        if (this.movingAnchor) {
-          this.translateAnchor(0, -1);
-          break;
+        if(this.currentState !== State.DRAWING) {
+          if (this.movingAnchor) {
+            this.translateAnchor(0, -1);
+            break;
+          }
+          y = -10;
+          if (e.shiftKey) {
+            y = -5;
+          }
+          if (e.ctrlKey || e.metaKey) {
+            y = -1;
+          }
+          this.translatePens(this.store.active, 0, y);
         }
-        y = -10;
-        if (e.shiftKey) {
-          y = -5;
-        }
-        if (e.ctrlKey || e.metaKey) {
-          y = -1;
-        }
-        this.translatePens(this.store.active, 0, y);
         break;
       case 'ArrowRight':
-        if (this.movingAnchor) {
-          this.translateAnchor(1, 0);
-          break;
+        if(this.currentState !== State.DRAWING) {
+          if (this.movingAnchor) {
+            this.translateAnchor(1, 0);
+            break;
+          }
+          if (e.shiftKey) {
+            x = 5;
+          }
+          if (e.ctrlKey || e.metaKey) {
+            x = 1;
+          }
+          this.translatePens(this.store.active, x, 0);
         }
-        if (e.shiftKey) {
-          x = 5;
-        }
-        if (e.ctrlKey || e.metaKey) {
-          x = 1;
-        }
-        this.translatePens(this.store.active, x, 0);
         break;
       case 'ArrowDown':
-        if (this.movingAnchor) {
-          this.translateAnchor(0, 1);
-          break;
+        if(this.currentState !== State.DRAWING) {
+          if (this.movingAnchor) {
+            this.translateAnchor(0, 1);
+            break;
+          }
+          if (e.shiftKey) {
+            y = 5;
+          }
+          if (e.ctrlKey || e.metaKey) {
+            y = 1;
+          }
+          this.translatePens(this.store.active, 0, y);
         }
-        if (e.shiftKey) {
-          y = 5;
-        }
-        if (e.ctrlKey || e.metaKey) {
-          y = 1;
-        }
-        this.translatePens(this.store.active, 0, y);
         break;
       case 'd':
       case 'D':
@@ -1019,6 +1031,12 @@ export class Canvas {
       case 'L':
         this.canMoveLine = false;
         break;
+      case ' ':
+        if(this.currentState === State.DRAG && this.stateRecord === 'passive') {
+          this.store.emitter.emit('changeState','SELECT');
+          this.setState('SELECT')
+        }
+        break;
       // case 'Alt':
       //   if (this.drawingLine) {
       //     this.store.options.autoAnchor = !this.store.options.autoAnchor;
@@ -1106,14 +1124,15 @@ export class Canvas {
       obj = Array.isArray(obj) ? obj : [obj];
       const pt = { x: event.offsetX, y: event.offsetY };
       this.calibrateMouse(pt);
-      this.dropPens(obj, pt,false);
+      this.dropPens(obj, pt);
+      // this.setState('DRAW');
       this.addCaches = [];
     }
 
     this.store.emitter.emit('drop', obj || json);
   };
 
-  async dropPens(pens: Pen[], e: Point,isChangeState = true) {
+  async dropPens(pens: Pen[], e: Point) {
     for (const pen of pens) {
       // 只修改 树根处的 祖先节点, randomCombineId 会递归更改子节点
       !pen.parentId && this.randomCombineId(pen, pens);
@@ -1133,10 +1152,6 @@ export class Canvas {
     // }
     for (const pen of pens) {
       if (!pen.parentId) {
-        if(pen.name == 'text') {
-          pen.height = pen.height * this.store.data.scale;
-          // pen.width = pen.width * this.store.data.scale;
-        }
         pen.x = e.x - pen.width / 2;
         pen.y = e.y - pen.height / 2;
       }
@@ -1174,9 +1189,6 @@ export class Canvas {
     await this.addPens(pens, true);
     this.active(pens.filter((pen) => !pen.parentId));
     this.render();
-    if(isChangeState) {
-      this.setState('DRAW');
-    }
     this.externalElements.focus(); // 聚焦
   }
 
@@ -1467,6 +1479,16 @@ export class Canvas {
     shiftKey?: boolean;
     altKey?: boolean;
   }) => {
+
+    if (this.store.options.isRunMode) {
+      this.store.emitter.emit('click', {
+        x: e.x,
+        y: e.y,
+        pen: this.store.hover,
+      });
+      return;
+    }
+
     // 拖放图元右键取消绘制
     if(e.buttons === MouseButton.LEFTRIGHT && this.currentState == State.DRAWING) {
       this.dragRect = undefined;
@@ -1802,7 +1824,6 @@ export class Canvas {
   finishArcLine(end=false){
     if(!this.arcLine)return;
     if(end){
-      // this.setState('DRAW');
       this.arcLine = null;
     }else {
       this.arcLine = {
@@ -1840,6 +1861,7 @@ export class Canvas {
     shiftKey?: boolean;
     altKey?: boolean;
   }) => {
+
     if (this.store.data.locked === LockState.Disable) {
       this.hoverType = HoverType.None;
       return;
@@ -1874,21 +1896,22 @@ export class Canvas {
     }
 
     if (this.mouseDown && !this.store.options.disableTranslate) {
-      // 画布平移前提
-      if (this.mouseRight === MouseRight.Down) {
-        this.mouseRight = MouseRight.Translate;
-        if(this.currentState == State.SELECT) {
-          this.setState('DRAG','passive');
-          this.store.emitter.emit('changeState',
-            'DRAG'
-          );
-        }
-      } else if (this.currentState == State.SELECT && this.hotkeyType === HotkeyType.Translate) {
-        this.setState('DRAG','passive');
-        this.store.emitter.emit('changeState',
-          'DRAG'
-        );
-      }
+      // 画布平移前提 逻辑更改这段代码没用
+      // if (this.currentState == State.SELECT && this.mouseRight === MouseRight.Down) {
+        // this.mouseRight = MouseRight.Translate;
+        // if(this.currentState == State.SELECT) {
+        //   this.setState('DRAG','passive');
+        //   this.store.emitter.emit('changeState',
+        //     'DRAG'
+        //   );
+        // }
+      // } else 
+      // if (this.currentState == State.SELECT && this.hotkeyType === HotkeyType.Translate) {
+      //   this.setState('DRAG','passive');
+      //   this.store.emitter.emit('changeState',
+      //     'DRAG'
+      //   );
+      // }
       // Translate
       if (
         this.currentState == State.DRAG
@@ -1949,11 +1972,11 @@ export class Canvas {
         // if (e.buttons === 1 && !this.hoverType && !this.hotkeyType) {
         if (
           e.buttons === MouseButton.LEFT &&
-          ((this.currentState == State.SELECT && !this.hoverType)||
+          (((this.currentState == State.SELECT && (!this.hoverType || (this.hoverType && this.store.hover?.locked == LockState.DisableMove)))||
           ((this.currentState == State.DRAWING || this.currentState == State.DRAW) &&
-          !this.drawingLineName && !this.arcLine )) &&
+          !this.drawingLineName && !this.arcLine )||(this.currentState == State.MOVE && this.store.hover?.locked == LockState.DisableMove)) &&
           // !this.hoverType && // 解决在选中图元内部绘制
-          (!this.hotkeyType || e.shiftKey)
+          (!this.hotkeyType || e.shiftKey))
         ) {
           this.dragRect = {
             x: Math.min(this.mouseDown.x, e.x),
@@ -2270,7 +2293,12 @@ export class Canvas {
     if (this.hotkeyType === HotkeyType.AddAnchor) {
       this.patchFlags = true;
     }
-    this.render(false);
+
+    // 运行态模式下，鼠标移动时，不做渲染
+    if (!this.store.options.isRunMode) {
+      this.render(false);
+    }
+    
   };
 
   onMouseUp = (e: {
@@ -2286,6 +2314,11 @@ export class Canvas {
     altKey?: boolean;
     button?: number;
   }) => {
+
+    if (this.store.options.isRunMode) {
+      return;
+    }
+
     if (this.store.data.locked === LockState.Disable) {
       this.hoverType = HoverType.None;
       return;
@@ -2294,20 +2327,21 @@ export class Canvas {
     if (!this.mouseDown) {
       return;
     }
-    // 拖拽结束变为选择模式
-    if( this.currentState == State.DRAG && this.stateRecord == 'passive' && (this.mouseRight === MouseRight.Translate || this.hotkeyType == HotkeyType.Translate)) {
-      this.store.emitter.emit('changeState',
-        'SELECT'
-      );
-      this.setState('SELECT');
-    } else if (this.mouseRight === MouseRight.Down) {//绘制模式点击右键变为选择模式
+    // 拖拽结束变为选择模式 逻辑更改这段代码没用
+    // if( this.currentState == State.DRAG && this.stateRecord == 'passive' && (this.mouseRight === MouseRight.Translate || this.hotkeyType == HotkeyType.Translate)) {
+    //   this.store.emitter.emit('changeState',
+    //     'SELECT'
+    //   );
+    //   this.setState('SELECT');
+    // } else 
+    if (this.mouseRight === MouseRight.Down) {//绘制模式点击右键变为选择模式
       if(this.currentState == State.DRAW) {
         this.store.emitter.emit('changeState',
           'SELECT'
         );
         this.setState('SELECT');
-      } else if(this.currentState == State.MOVE){
-        if(!this.store.active.length) {
+      } else if(this.currentState == State.MOVE || this.currentState == State.SELECT){
+        if(this.currentState == State.MOVE && !this.store.active.length) {
           this.active([this.store.hover])
         }
         this.store.emitter.emit('contextmenu', {
@@ -2387,7 +2421,15 @@ export class Canvas {
     // 拖拽连线锚点
     if (
       this.hoverType === HoverType.LineAnchor &&
+      this.store.active[0] &&
+      this.store.active[0].name === 'line' &&
+      this.store.active[0] !== this.store.hover
+    ) {
+      this.store.emitter.emit('moveAchor',this.store.active[0]);
+      }
+    if (
       this.store.hover &&
+      this.hoverType === HoverType.LineAnchor &&
       this.store.active[0] &&
       this.store.active[0].name === 'line' &&
       this.store.active[0] !== this.store.hover
@@ -2478,14 +2520,15 @@ export class Canvas {
 
     // Add pen
     if (this.currentState == State.DRAWING && this.addCaches && this.addCaches.length) {
-      if (!this.store.data.locked) {
+      if (!this.store.data.locked && this.dragRect) {
         e.x = (this.dragRect.x + this.dragRect.ex) / 2;
         e.y = (this.dragRect.y + this.dragRect.ey) / 2;
-        if(this.addCaches.length === 1 && this.addCaches[0].name == 'text'){
+        if(this.addCaches.length === 1 && this.addCaches[0].name == 'text' && (this.dragRect.width || this.dragRect.height)){
           const target = deepClone(this.addCaches[0]);
-          if(this.dragRect.width > target.width) {
-            target.width =  this.dragRect.width;
-          }
+          const scaleW = target.width * this.store.data.scale;
+          const scaleH = target.height * this.store.data.scale;
+          target.width = Math.max(this.dragRect.width,scaleW);
+          target.height = Math.max(this.dragRect.height,scaleH);
           // target.height = target.fontSize;
           const pens:Pen[] = [target];
           this.dropPens(pens, e);
@@ -2511,15 +2554,18 @@ export class Canvas {
       }
       // this.addCaches = undefined;
     }
-    // TODO // 添加新文本
+    // 点击添加文本
     if(
-      this.currentState == State.DRAW &&
+      (this.currentState == State.DRAW || this.currentState == State.DRAWING) &&
+      !this.dragRect?.width &&  !this.dragRect?.height &&
       this.addCaches &&
       this.addCaches.length == 1 &&
       this.addCaches[0].name == 'text' &&
       e.button != 2
     ) {
       const pens:Pen[] = deepClone(this.addCaches);
+      pens[0].height *= this.store.data.scale;
+      pens[0].width *= this.store.data.scale;
       this.dropPens(pens, e);
       // setTimeout(() => {
         this.showInput(pens[0]);
@@ -2546,9 +2592,9 @@ export class Canvas {
         if (
           pen.visible === false ||
           pen.locked === LockState.Disable ||
-          pen.parentId 
-          // ||
-          // pen.lineType == 'connectLine'
+          pen.parentId ||
+          pen.lineType == 'connectLine' ||
+          pen.locked === LockState.DisableMove
         ) {
           return false;
         }
@@ -2681,6 +2727,35 @@ export class Canvas {
       ],
     });
   }
+  /**
+   * @description 调整pen的坐标，让pen按照网格自动对齐
+   * @author Joseph Ho
+   * @date 14/11/2023
+   * @memberof Canvas
+   */
+  alignPenToGrid(pen: Pen){
+    const autoAlignGrid = this.store.options.autoAlignGrid && this.store.data.grid;
+    if(autoAlignGrid){
+      const gridSize = this.store.data.gridSize || this.store.options.gridSize;
+      const { origin, scale } = this.store.data;
+      const {x,y}= pen;
+      const obj = {x,y};
+      const rect = this.getPenRect(pen);
+      // 算出偏移了多少个网格
+      const m = parseInt((rect.x / gridSize).toFixed());
+      const n = parseInt((rect.y / gridSize).toFixed());
+      const x1 = m * gridSize;
+      const y1 = n * gridSize;
+      // 算出最终的偏移坐标
+      obj.x = origin.x + x1 * scale;
+      obj.y = origin.y + y1 * scale;
+      Object.assign(pen, obj);
+      pen.onMove?.(pen);
+      this.updatePenRect(pen);
+      this.calcActiveRect();
+      this.getSizeCPs();
+    }
+  }
 
   /**
    * 拖拽结束，数据更新到 active.pens
@@ -2689,17 +2764,25 @@ export class Canvas {
     // 鼠标松手才更新，此处是更新前的值
     const initPens = deepClone(this.store.active, true);
     // const pens = deepClone(this.store.active, true);
-
+    const gridSize = this.store.data.gridSize || this.store.options.gridSize;
+    const { origin, scale } = this.store.data;
+    const autoAlignGrid = this.store.options.autoAlignGrid && this.store.data.grid;
     this.store.active.forEach((pen, i: number) => {
-      const movePen = this.movingPens.find(item => item.id.includes(pen.id));
-      if(!movePen) {
-        return;
-      }
-      const { x, y } = movePen;
-      Object.assign(pen, {
-        x,
-        y,
-      });
+      const { x, y } = this.movingPens[i];
+      const obj = {x,y};
+      // 根据是否开启了自动网格对齐，来修正坐标
+      if(autoAlignGrid){
+        const rect = this.getPenRect(this.movingPens[i]);
+        // 算出偏移了多少个网格
+        const m = parseInt((rect.x / gridSize).toFixed());
+        const n = parseInt((rect.y / gridSize).toFixed());
+        const x1 = m * gridSize;
+        const y1 = n * gridSize;
+        // 算出最终的偏移坐标
+        obj.x = origin.x + x1 * scale;
+        obj.y = origin.y + y1 * scale;
+              }
+      Object.assign(pen, obj);
       pen.onMove?.(pen);
       this.updatePenRect(pen);
       this.updateLines(pen);
@@ -2775,7 +2858,11 @@ export class Canvas {
         }
       }
     }
-    this.calcActiveRect();
+    // 如果开启自动网格对齐，则需要重算activeRect和sizeCPs
+    if(this.store.options.autoAlignGrid){
+      this.calcActiveRect();
+      this.getSizeCPs();
+    }
     // 此处是更新后的值
     this.pushHistory({
       type: EditType.Update,
@@ -3034,7 +3121,7 @@ export class Canvas {
       }
 
       // 大小控制点
-      if (!activePensLock && !activePensDisableResize) {
+      if ((this.currentState == State.SELECT || this.currentState == State.MOVE) && !activePensLock && !activePensDisableResize) {
         for (let i = 0; i < 8; i++) {
           const firstFour = i < 4;
           const hotKeyIsResize =
@@ -3074,7 +3161,10 @@ export class Canvas {
     if (hoverType === HoverType.None) {
       const isResize = this.externalElements.style.cursor.includes('resize');
       // const isRoate = this.externalElements.style.cursor.includes('auto');
-      if(this.currentState == State.MOVE || isResize) {
+      // 1. 当前状态为 MOVE 或 SELECT 时鼠标为大小控制需重置状态，更改鼠标样式
+      // 2. 当前鼠标在空白区域且状态不为 SELECT 但上一个状态为 SELECT 需更改状态
+      if(((this.currentState == State.SELECT || this.currentState == State.MOVE) && isResize) || 
+      (this.stateRecord == 'SELECT' && this.currentState != State.SELECT && this.currentState != State.DRAWING)) {
         this.setState(this.stateRecord);
       }
       this.store.hover = undefined;
@@ -3164,7 +3254,7 @@ export class Canvas {
           if(pen.lineType == 'connectLine') {
             this.setState(this.stateRecord);
           } else
-          if (this.currentState != State.DRAWING && !this.store.data.locked && !pen.locked && pen.lineType != 'connectLine') {
+          if (this.currentState != State.DRAWING && !this.store.data.locked && !pen.locked && pen.lineType != 'connectLine' && this.stateRecord == 'SELECT') {
             this.setState('MOVE');
             // if (this.hotkeyType === HotkeyType.AddAnchor) {
             //   this.externalElements.style.cursor = 'pointer';
@@ -3215,11 +3305,14 @@ export class Canvas {
               if(this.stateRecord == 'SELECT') {
                 this.setState('MOVE');
                 this.externalElements.style.cursor = 'default';
-              } else if(this.externalElements.style.cursor.includes('resize')) {
-                this.setState('DRAW');//当鼠标从大小控制点移到图元上改变鼠标
-              }
+              } 
+              // else if((this.currentState == State.SELECT || this.currentState == State.MOVE) && this.externalElements.style.cursor.includes('resize')) {
+              //   this.setState('DRAW');//当鼠标从大小控制点移到图元上改变鼠标
+              // }
               // this.externalElements.style.cursor = 'move';
             // }
+          } else if(pen.locked == LockState.DisableMove && this.currentState == State.MOVE){
+            this.setState('SELECT');
           }
           //  else {
           //   this.setState(this.stateRecord);
@@ -6438,15 +6531,15 @@ export class Canvas {
 
     //value和innerText问题
     const preInputText = pen.calculative.tempText || pen.text + '' || '';
-    if(pen.name == 'text') {
-      this.inputDiv.innerHTML = preInputText;
-    } else {
-      const textArr = preInputText.replace(/\x20/g, '&nbsp;').split(/[\s\n]/);
-      const finalText = `${textArr.join('</div><div>')}</div>`
-      .replace('</div>', '')
-      .replace(/\<div\>\<\/div\>/g, '<div><br></div>');
-      this.inputDiv.innerHTML = finalText;
-    }
+    // if(pen.name == 'text') {
+    //   this.inputDiv.innerHTML = preInputText;
+    // } else {
+    const textArr = preInputText.replace(/\x20/g, '&nbsp;').split(/[\s\n]/);
+    const finalText = `${textArr.join('</div><div>')}</div>`
+    .replace('</div>', '')
+    .replace(/\<div\>\<\/div\>/g, '<div><br></div>');
+    this.inputDiv.innerHTML = finalText;
+    // }
     // this.inputDiv.style.fontSize = pen.calculative.fontSize + 'px';
     // this.inputDiv.style.color = getTextColor(pen, this.store);
     this.inputParent.style.left =
@@ -6455,9 +6548,10 @@ export class Canvas {
       textRect.y + this.store.data.y - (pen.textTop || 0) + 'px'; //+ 5
     let _width = textRect.width + (pen.textLeft || 0);
 
-    this.inputParent.style.height = textRect.height + (pen.textTop || 0) + 'px'; //   (textRect.height < pen.height ? 0 : 10)
+     //   (textRect.height < pen.height ? 0 : 10)
     this.inputParent.style.zIndex = '9999';
     this.inputParent.style.background = background;
+    this.inputParent.style.display = 'flex';
     if (pen.rotate % 360) {
       this.inputParent.style.transform = `rotate(${pen.rotate}deg)`;
     } else {
@@ -6479,66 +6573,85 @@ export class Canvas {
     const {fontSize,fontFamily} = pen.calculative;
     const isVertical = pen.direction == 'vertical';
     if (pen.name === 'text') { // 新文本样式
-      this.inputParent.style.left = pen.x + this.store.data.x + 'px'; //+ 5
+      // this.inputParent.style.left = pen.x + this.store.data.x + 'px'; //+ 5
       this.inputParent.style.width = 'auto'; //(textRect.width < pen.width ? 0 : 10)
       this.inputParent.style.height = 'auto'; //(textRect.width < pen.width ? 0 : 10)
-      this.inputParent.style.background = '#FFF';
-      this.inputParent.style.verticalAlign = 'center';
-      // pen.height = fontSize;zoom:${this.store.data.scale};
+      // this.inputParent.style.background = '#FFF';
+      // this.inputParent.style.verticalAlign = 'center';
+      // pen.height = fontSize;//zoom:${this.store.data.scale};
       const zoom = (pen.fontSize / 12) * this.store.data.scale;
+      const len = zoom > 1 ? fontSize * 1.5 : fontSize * 1.5 / zoom;
       let style = `
-        display:block;
         height:auto;
         width:auto;
         outline:0;
         position:static;
         box-sizing:border-box;
-        font-size:${ fontSize }px;
+        background:#FFF;
+        padding:0 2px;
         color:#000;
+        line-height:${len}px;
+        min-width:${pen.width}px;
+        min-height:${pen.height}px;
+        font-size:${fontSize}px;
       `
-      const len = zoom > 1 ? fontSize * 1.5 : fontSize * 1.5 / zoom;
       if(isVertical) {
         style +=`
-          line-height:${len}px;
-          width:${zoom > 1 ? fontSize: fontSize / zoom}px;
-        `
-      } else {
-        style +=`
-          min-width:${zoom > 1 ? pen.width : pen.width/zoom}px;
-          height:${len}px;
-          line-height:${len}px;
+          writing-mode: vertical-rl;
         `
       }
       this.inputDiv.style = style;
-      this.inputParent.style.display = 'inline-block';
-      // pen.width = this.inputParent.offsetWidth;
       const ctx =this.offscreen.getContext('2d') as CanvasRenderingContext2D;
       ctx.save();
       ctx.font = getFont({fontSize,fontFamily})
       this.updatePenRect(pen);
       pen.calculative.canvas.calcActiveRect();
       this.inputDiv.oninput = (e) => {
-        if(isVertical) {
-          pen.height =  this.inputParent.offsetHeight;
-        } else {
-          pen.width =  this.inputParent.offsetWidth;
+        let hasChange = false;
+        if(pen.height !== this.inputDiv.offsetHeight) {
+          pen.height = this.inputDiv.offsetHeight;
+          hasChange = true;
         }
-        this.updatePenRect(pen);
-        pen.calculative.canvas.calcActiveRect();
-        this.render();
-      }
-      this.inputDiv.onkeydown = (e) => {
-        if(e.key == 'Enter'){
-          this.inactive();
-          this.hideInput();
+        if(pen.width !== this.inputDiv.offsetWidth) {
+          pen.width = this.inputDiv.offsetWidth;
+          hasChange = true;
+        }
+        if(!e.target.innerText) {
+          if(pen.direction == 'vertical') {
+            if(pen.textAlign == 'center') {
+              this.inputDiv.style.paddingTop = (this.inputDiv.offsetWidth -len) / 2 + 'px';
+            } else if(pen.textAlign == 'right') {
+              this.inputDiv.style.paddingTop = this.inputDiv.offsetWidth -len + 'px';
+            }
+          } else {
+            if(pen.textBaseline == 'middle'){
+              this.inputDiv.style.paddingTop = (this.inputDiv.offsetHeight -len) / 2 + 'px';
+            } else if(pen.textBaseline == 'bottom') {
+              this.inputDiv.style.paddingTop = this.inputDiv.offsetHeight -len + 'px';
+            }
+          }
+        } else {
+          this.inputDiv.style.padding = '0 2px'
+        }
+        if(hasChange) {//输入框大小变化后才需要重新渲染
+          this.updatePenRect(pen);
+          pen.calculative.canvas.calcActiveRect();
           this.render();
         }
       }
     } else {// 旧文本样式
+      this.inputParent.style.height = textRect.height + (pen.textTop || 0) + 'px';
       this.inputParent.style.width = (_width < 0 ? 12 : _width) + 'px'; //(textRect.width < pen.width ? 0 : 10)
-      this.inputParent.style.display = 'flex';
     }
-    this.inputDiv.focus();
+    setTimeout(() => {
+      this.inputDiv.focus();
+      // 显示输入框全选内容
+			const range = document.createRange();
+			range.selectNodeContents(this.inputDiv);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    })
     const range = window.getSelection(); //创建range
     range.selectAllChildren(this.inputDiv); //range 选择obj下所有子内容
     range.collapseToEnd(); //光标移至最后
@@ -6566,34 +6679,54 @@ export class Canvas {
     if (pen.fontSize < 12) {
       font_scale = 12 / pen.fontSize;
     }
-    if (pen.textAlign) {
-      style += `text-align: ${pen.textAlign};`;
+    if(pen.direction == 'vertical') {
+      // 调整输入框垂直状态
+      if (pen.textBaseline) {
+        let baseLine = {
+          top: 'start',
+          middle: 'center',
+          bottom: 'end',
+        };
+        style += `align-items: ${baseLine[pen.textBaseline]};`;
+        style += `text-align: ${baseLine[pen.textBaseline]};`
+      } else {
+        style += 'align-items: center;';
+        style += `text-align: center;`
+      }
+      // 调整输入框水平状态
+      if (pen.textAlign) {
+        let textAlign = {
+          left: 'end',
+          center: 'center',
+          right: 'start',
+        };
+        style += `justify-content: ${textAlign[pen.textAlign]};`;
+      } else {
+        style += 'justify-content: center;';
+      }
     } else {
-      style += 'text-align: center;';
-    }
-    if (pen.textAlign && pen.whiteSpace === 'pre-line') {
-      let textAlign = {
-        left: 'start',
-        center: 'center',
-        right: 'end',
-      };
-      style += `align-items: ${textAlign[pen.textAlign]};`;
-    }
-
-    if (pen.textBaseline) {
-      let baseLine = {
-        top: 'start',
-        middle: 'center',
-        bottom: 'end',
-      };
-      style += `justify-content: ${baseLine[pen.textBaseline]};`;
-    } else {
-      // if (pen.textWidth < pen.calculative.) {
-      //   style += 'justify-content: start;';
-      // } else {
-      //文字高度超出整个rect高度时
-      style += 'justify-content: center;';
-      // }
+      if (pen.textAlign) {
+        let textAlign = {
+          left: 'start',
+          center: 'center',
+          right: 'end',
+        };
+        style += `align-items: ${textAlign[pen.textAlign]};`;
+        style += `text-align: ${pen.textAlign};`
+      } else {
+        style += 'align-items: center;';
+        style += `text-align: center;`
+      }
+      if (pen.textBaseline) {
+        let baseLine = {
+          top: 'start',
+          middle: 'center',
+          bottom: 'end',
+        };
+        style += `justify-content: ${baseLine[pen.textBaseline]};`;
+      } else {
+        style += 'justify-content: center;';
+      }
     }
     if (pen.fontFamily) {
       style += `font-family: ${pen.fontFamily};`;
@@ -6703,9 +6836,9 @@ export class Canvas {
             scale /
             (pen.lineHeight * pen.fontSize)
         );
-      if (textWidth > contentWidth) {
-        style += 'justify-content: start;';
-      }
+      // if (textWidth > contentWidth) {
+      //   style += 'justify-content: start;';
+      // }
     }
     sheet.deleteRule(0);
     sheet.deleteRule(0);
@@ -6739,23 +6872,24 @@ export class Canvas {
       }
       if(pen.name == 'text' && !this.inputDiv.innerHTML) {//若未输入则删除新文本
         this.delete([pen])
+        return;
       }
       pen.calculative.text = pen.text;
-      if(pen.name == 'text') {
-        this.inputDiv.dataset.value = this.inputDiv.innerHTML
-        .replace(/\<div\>/g, '')
-        .replace(/\<\/div\>/g, '')
-        .replace(/\<br\>/g, '')
-        .replace(/&nbsp;/g, ' ')
-        .replace(/(<([^>]+)>)/gi, '');
-      } else {
+      // if(pen.name == 'text') {
+      //   this.inputDiv.dataset.value = this.inputDiv.innerHTML
+      //   .replace(/\<div\>/g, '')
+      //   .replace(/\<\/div\>/g, '')
+      //   .replace(/\<br\>/g, '')
+      //   .replace(/&nbsp;/g, ' ')
+      //   .replace(/(<([^>]+)>)/gi, '');
+      // } else {
         this.inputDiv.dataset.value = this.inputDiv.innerHTML
         .replace(/\<div\>/g, '\n')
         .replace(/\<\/div\>/g, '')
         .replace(/\<br\>/g, '')
         .replace(/&nbsp;/g, ' ')
         .replace(/(<([^>]+)>)/gi, '');
-      }
+      // }
       this.inputDiv.dataset.value = this.convertSpecialCharacter(
         this.inputDiv.dataset.value
       );
@@ -6764,24 +6898,24 @@ export class Canvas {
       } else if (pen.text !== this.inputDiv.dataset.value) {
         const initPens = [deepClone(pen, true)];
         pen.text = this.inputDiv.dataset.value;
-        if(pen.name == 'text') {//如果是文本图元且宽度或高度小于目标，重新计算赋值，避免出现文本换行的问题
-          const calculateH = pen.fontSize * 1.5 * pen.text.length * this.store.data.scale;
-          const ctx = this.canvas.getContext('2d');
-          const {fontSize,fontFamily} = pen.calculative;
-          ctx.font = `${fontSize}px ${fontFamily}`;
-          const calculateW = ctx.measureText(pen.text).width;
-          if(pen.height < calculateH || pen.width < calculateW) {
-            if(pen.direction == 'vertical') {
-              pen.height = calculateH;
-              pen.textWidth = pen.fontSize;
-            } else {
-              pen.width = calculateW;
-              // pen.textWidth = pen.fontSize * pen.text.length;
-              pen.textWidth = undefined;
-            }
-          }
-          this.updatePenRect(pen);
-        }
+        // if(pen.name == 'text') {//如果是文本图元且宽度或高度小于目标，重新计算赋值，避免出现文本换行的问题
+        //   const calculateH = pen.fontSize * 1.5 * pen.text.length * this.store.data.scale;
+        //   const ctx = this.canvas.getContext('2d');
+        //   const {fontSize,fontFamily} = pen.calculative;
+        //   ctx.font = `${fontSize}px ${fontFamily}`;
+        //   const calculateW = ctx.measureText(pen.text).width;
+        //   // if(pen.height < calculateH || pen.width < calculateW) {
+        //   //   if(pen.direction == 'vertical') {
+        //   //     pen.height = calculateH;
+        //   //     pen.textWidth = pen.fontSize;
+        //   //   } else {
+        //   //     pen.width = calculateW;
+        //   //     // pen.textWidth = pen.fontSize * pen.text.length;
+        //   //     pen.textWidth = undefined;
+        //   //   }
+        //   // }
+        //   this.updatePenRect(pen);
+        // }
         pen.calculative.text = pen.text;
         this.inputDiv.dataset.penId = undefined;
         calcTextRect(pen);
@@ -6794,6 +6928,9 @@ export class Canvas {
         this.store.emitter.emit('valueUpdate', pen);
       }
       this.initTemplateCanvas([pen]);
+      if(this.store.options.autoAlignGrid) {// 若开启了自动网格对齐，则在输入框消失时调用对齐网格函数
+        this.alignPenToGrid(pen)
+      }
     }
     this.inputDiv.dataset.penId = undefined;
     this.dropdown.style.display = 'none';
@@ -7075,34 +7212,33 @@ export class Canvas {
     let oldRotate: number = undefined;
     let willRenderImage = false; // 是否需要重新渲染图片
     for (const k in data) {
-      if (k === 'rotate') {
-        oldRotate = pen.calculative.rotate || 0;
-      }
-      if (typeof pen[k] !== 'object' || k === 'lineDash') {
-        pen.calculative[k] = data[k];
-      }
-      if (needCalcTextRectProps.includes(k)) {
-        willCalcTextRect = true;
-      }
-      if (['name', 'borderRadius'].includes(k)) {
-        willUpdatePath = true;
-      }
-      if (needSetPenProps.includes(k)) {
-        willSetPenRect = true;
-      }
-      if (needPatchFlagsPenRectProps.includes(k)) {
-        willPatchFlagsPenRect = true;
-      }
-      if (needCalcIconRectProps.includes(k)) {
-        willCalcIconRect = true;
-      }
-      if (k === 'isBottom') {
-        containIsBottom = true;
-      }
-      if (k === 'image') {
-        willRenderImage = true;
-      }
-      if (k.indexOf('.') !== -1) {
+      if (k.indexOf('.') === -1) {
+        if (k === 'rotate') {
+          oldRotate = pen.calculative.rotate || 0;
+        }else if (k === 'isBottom') {
+          containIsBottom = true;
+        }else if (k === 'image') {
+          willRenderImage = true;
+        }
+        if (typeof pen[k] !== 'object' || k === 'lineDash') {
+          pen.calculative[k] = data[k];
+        }
+        if (needCalcTextRectProps.includes(k)) {
+          willCalcTextRect = true;
+        }
+        if (['name', 'borderRadius'].includes(k)) {
+          willUpdatePath = true;
+        }
+        if (needSetPenProps.includes(k)) {
+          willSetPenRect = true;
+        }
+        if (needPatchFlagsPenRectProps.includes(k)) {
+          willPatchFlagsPenRect = true;
+        }
+        if (needCalcIconRectProps.includes(k)) {
+          willCalcIconRect = true;
+        }
+      }else{
         delete pen[k];
         setter(pen, k, data[k]);
       }

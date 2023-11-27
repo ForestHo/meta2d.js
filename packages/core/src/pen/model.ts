@@ -141,6 +141,7 @@ export interface Pen extends Rect {
   activeColor?: string;
   activeBackground?: string;
   bkType?: Gradient;
+  direction?:string;//文本纵向横向
   /**
    * @deprecated 改用 gradientColors
    */
