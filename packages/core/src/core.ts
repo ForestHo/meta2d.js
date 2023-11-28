@@ -59,7 +59,7 @@ import {
 } from './rect';
 import { deepClone } from './utils/clone';
 import { Event, EventAction, EventName, TriggerCondition } from './event';
-import { Motion,MotionAction, PointVal, LogicType, getMotionsByName, MotionWhenMap, MotionWhenType, ClockWise, SpeedDuration, FillType } from './motion';
+import { Motion,MotionAction, PointVal, LogicType, getMotionsByName, MotionWhenMap, MotionWhenType, ClockWise, SpeedDuration, FillType, SpecialMotionType } from './motion';
 import { ViewMap } from './map';
 // TODO: 这种引入方式，引入 connect， webpack 5 报错
 import { MqttClient } from 'mqtt';
@@ -253,10 +253,22 @@ export class Meta2d {
       pen.animateCycle = m.action.count !==0 ? m.action.count: Infinity;
       if(m.action.blinkType === 'visual'){
         // 可见闪烁
-        const frames = [
-          {duration: m.action.ts1,visible:true},
-          {duration: m.action.ts2,visible:false},
-        ];
+        let frames = [];
+        if(pen.frames?.length > 0){
+          const obj = Object.assign({},pen.frames[0],
+            {duration: m.action.ts1,visible:true}
+          );
+          frames.push(obj);          
+          const obj2 = Object.assign({},pen.frames[0],
+            {duration: m.action.ts2,visible:false}
+          );
+          frames.push(obj2);  
+        }else{
+          frames = [
+            {duration: m.action.ts1,visible:true},
+            {duration: m.action.ts2,visible:false},
+          ];
+        }
         this.setValue(
           { id: pen.id,
             frames,
@@ -265,10 +277,22 @@ export class Meta2d {
         );
       }else if(m.action.blinkType === 'color'){
         // 颜色闪烁
-        const frames = [
-          {duration: m.action.ts1,visible:true,background:m.action.ts1_backgroundColor,color: m.action.ts1_borderColor},
-          {duration: m.action.ts2,visible:true,background:m.action.ts2_backgroundColor,color: m.action.ts2_borderColor},
-        ];
+        let frames = [];
+        if(pen.frames?.length > 0){
+          const obj = Object.assign({},pen.frames[0],
+            {duration: m.action.ts1,visible:true,background:m.action.ts1_backgroundColor,color: m.action.ts1_borderColor}
+          );
+          frames.push(obj);          
+          const obj2 = Object.assign({},pen.frames[0],
+            {duration: m.action.ts2,visible:true,background:m.action.ts2_backgroundColor,color: m.action.ts2_borderColor}
+          );
+          frames.push(obj2);          
+        }else{
+          frames = [
+            {duration: m.action.ts1,visible:true,background:m.action.ts1_backgroundColor,color: m.action.ts1_borderColor},
+            {duration: m.action.ts2,visible:true,background:m.action.ts2_backgroundColor,color: m.action.ts2_borderColor},
+          ];
+        }
         this.setValue(
           { id: pen.id,
             frames,
@@ -300,13 +324,23 @@ export class Meta2d {
     };
     // 旋转动效--线性
     this.motions[MotionAction.ROTATE] = (pen: Pen, m: Motion) => {
-      const frames = [
-        {
+      let frames = [];
+      if(pen.frames?.length > 0){
+        const obj = Object.assign({},pen.frames[0],{
           duration: SpeedDuration[m.action.speed+''],
           visible: true,
           rotate: ClockWise[m.action.direction],
-        }
-      ];
+        })
+        frames.push(obj);
+      }else{
+        frames = [
+          {
+            duration: SpeedDuration[m.action.speed+''],
+            visible: true,
+            rotate: ClockWise[m.action.direction],
+          }
+        ];
+      }
       this.setValue(
         { id: pen.id,
           frames,
@@ -319,13 +353,23 @@ export class Meta2d {
     this.motions[MotionAction.FILL] = (pen: Pen, m: Motion) => {
       const item = this.store.pointData.find(elem => elem.dataId === m.when[0].dataId);
       const progress = item.value/(m.when[0].max - m.when[0].min);
-      const frames = [
-        {
+      let frames = [];
+      if(pen.frames?.length > 0){
+        const obj = Object.assign({},pen.frames[0],{
           duration: 2000,
           visible: true,
           progress,
-        }
-      ];
+        })
+        frames.push(obj);
+      }else{
+        frames = [
+          {
+            duration: 2000,
+            visible: true,
+            progress,
+          }
+        ];
+      }
       const obj = { id: pen.id,frames};
       let tObj = null;
       if(m.action.fillType === FillType.DOWNUP){
@@ -345,14 +389,25 @@ export class Meta2d {
     this.motions[MotionAction.MOVE] = (pen: Pen, m: Motion) => {
       const item = this.store.pointData.find(elem => elem.dataId === m.when[0].dataId);
       const percent = item.value/(m.when[0].max - m.when[0].min);
-      const frames = [
-        {
+      let frames = [];
+      if(pen.frames?.length > 0){
+        const obj = Object.assign({},pen.frames[0],{
           duration: 2000,
           visible: true,
           x: m.action.x * percent,
           y: m.action.y * percent,
-        }
-      ];
+        })
+        frames.push(obj);
+      }else{
+        frames = [
+          {
+            duration: 2000,
+            visible: true,
+            x: m.action.x * percent,
+            y: m.action.y * percent,
+          }
+        ];
+      }
       this.setValue(
         { id: pen.id,
           frames,
@@ -2596,6 +2651,10 @@ export class Meta2d {
             if(!MotionWhenMap[mt.type][MotionWhenType.ISNCA]){
               can = false;
             }
+          }
+          // 对特殊图形的type做处理，将线变成节点，以支持旋转，移动，填充动效
+          if(SpecialMotionType.indexOf(name) !== -1){
+            pen.type = PenType.Node;
           }
           // 当when中的每个条件都满足时，触发执行动作action
           can && this.motions[mt.type](pen,mt);

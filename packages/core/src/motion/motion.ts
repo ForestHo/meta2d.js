@@ -112,6 +112,8 @@ export const SpeedDuration = {
   "4": 2000,
   "5": 1000,
 }
+// 需要处理type=0的图元类型，直线，多折线，曲线，不规则图形
+export const SpecialMotionType = ['line-line-default', 'line-line-eulerhabd', 'line-curve-undefined','line-line-irregularFigure'];
 /**
  * @description 根据图元类型，获取所属图元分类的动画类型
  * @author Joseph Ho
