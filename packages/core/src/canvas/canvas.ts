@@ -2593,7 +2593,7 @@ export class Canvas {
           pen.visible === false ||
           pen.locked === LockState.Disable ||
           pen.parentId ||
-          pen.lineType == 'connectLine' ||
+          // pen.lineType == 'connectLine' ||
           pen.locked === LockState.DisableMove
         ) {
           return false;
@@ -2768,7 +2768,11 @@ export class Canvas {
     const { origin, scale } = this.store.data;
     const autoAlignGrid = this.store.options.autoAlignGrid && this.store.data.grid;
     this.store.active.forEach((pen, i: number) => {
-      const { x, y } = this.movingPens[i];
+      const movePen = this.movingPens.find(item => item.id.includes(pen.id));
+      if(!movePen) {
+        return;
+      }
+      const { x, y } = movePen;
       const obj = {x,y};
       // 根据是否开启了自动网格对齐，来修正坐标
       if(autoAlignGrid){
@@ -2781,7 +2785,7 @@ export class Canvas {
         // 算出最终的偏移坐标
         obj.x = origin.x + x1 * scale;
         obj.y = origin.y + y1 * scale;
-              }
+      }
       Object.assign(pen, obj);
       pen.onMove?.(pen);
       this.updatePenRect(pen);
