@@ -4156,7 +4156,19 @@ export class Canvas {
     request.send();
   }
 
-  loadImage(pen: Pen) {
+  // 图片路径转换函数：
+  // 1. 如果没有定义callback钩子函数，则继续保持原有路径，保证兼容性；
+  // 2. 如果定义了callback钩子函数，则使用新的转换接口
+  private async convertImagePath(srcImage: string): Promise<string> {
+    let destImage;
+    let callback = this.store.options.getResourceCallback;
+    destImage = callback ? await callback(srcImage, "resPath") : srcImage;
+    // console.log("callback, destImage", callback, destImage);
+    return destImage;
+    
+  }
+
+  async loadImage(pen: Pen) {
     if (pen.image !== pen.calculative.image || !pen.calculative.img) {
       pen.calculative.img = undefined;
       if (pen.image) {
@@ -4183,7 +4195,7 @@ export class Canvas {
               pen.crossOrigin === 'undefined'
                 ? undefined
                 : pen.crossOrigin || 'anonymous';
-            img.src = pen.image;
+            img.src = await this.convertImagePath(pen.image);
             if (
               this.store.options.cdn &&
               !(
@@ -4222,7 +4234,7 @@ export class Canvas {
         } else {
           const img = new Image();
           img.crossOrigin = 'anonymous';
-          img.src = pen.backgroundImage;
+          img.src = await this.convertImagePath(pen.backgroundImage);
           if (
             this.store.options.cdn &&
             !(
@@ -4255,7 +4267,7 @@ export class Canvas {
         } else {
           const img = new Image();
           img.crossOrigin = 'anonymous';
-          img.src = pen.strokeImage;
+          img.src = await this.convertImagePath(pen.strokeImage);
           if (
             this.store.options.cdn &&
             !(
