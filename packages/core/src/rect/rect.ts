@@ -13,6 +13,11 @@ export interface Rect {
   center?: Point;
 }
 
+export interface dragRect extends Rect {
+  // 框选模式 从左往右为true
+  mode?: boolean;
+}
+
 export function pointInRect(pt: Point, rect: Rect) {
   if (!rect) {
     return;

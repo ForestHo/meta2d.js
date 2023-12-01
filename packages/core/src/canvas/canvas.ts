@@ -77,6 +77,7 @@ import {
   pointInRect,
   pointInSimpleRect,
   Rect,
+  dragRect,
   rectInRect,
   rectToPoints,
   resizeRect,
@@ -167,7 +168,7 @@ export class Canvas {
 
   activeRect: Rect;
   initActiveRect: Rect;
-  dragRect: Rect;
+  dragRect: dragRect;
   lastRotate = 0;
   sizeCPs: Point[];
   activeInitPos: Point[];
@@ -655,7 +656,7 @@ export class Canvas {
           this.hotkeyType = HotkeyType.Translate;
           this.store.emitter.emit('changeState','DRAG');
           this.setState('DRAG','passive')
-        } 
+        }
         break;
       case 'Control':
         if (this.drawingLine) {
@@ -1905,7 +1906,7 @@ export class Canvas {
         //     'DRAG'
         //   );
         // }
-      // } else 
+      // } else
       // if (this.currentState == State.SELECT && this.hotkeyType === HotkeyType.Translate) {
       //   this.setState('DRAG','passive');
       //   this.store.emitter.emit('changeState',
@@ -1986,6 +1987,8 @@ export class Canvas {
             width: Math.abs(e.x - this.mouseDown.x),
             height: Math.abs(e.y - this.mouseDown.y),
           };
+            // 框选模式，从左往右为true
+            this.dragRect.mode = this.mouseDown.x < e.x;
           if(this.currentState == State.DRAW) {
             this.setState('DRAWING');
           }
@@ -2298,7 +2301,7 @@ export class Canvas {
     if (!this.store.options.isRunMode) {
       this.render(false);
     }
-    
+
   };
 
   onMouseUp = (e: {
@@ -2333,7 +2336,7 @@ export class Canvas {
     //     'SELECT'
     //   );
     //   this.setState('SELECT');
-    // } else 
+    // } else
     if (this.mouseRight === MouseRight.Down) {//绘制模式点击右键变为选择模式
       if(this.currentState == State.DRAW) {
         this.store.emitter.emit('changeState',
@@ -2599,10 +2602,12 @@ export class Canvas {
           return false;
         }
         if (
+          // TODO 在这里判断是否有交叉
           rectInRect(
             pen.calculative.worldRect,
             this.dragRect,
-            this.store.options.dragAllIn
+            this.dragRect.mode
+            // this.store.options.dragAllIn
           )
         ) {
           // 先判断在区域内，若不在区域内，则锚点肯定不在框选区域内，避免每条连线过度计算
@@ -3167,7 +3172,7 @@ export class Canvas {
       // const isRoate = this.externalElements.style.cursor.includes('auto');
       // 1. 当前状态为 MOVE 或 SELECT 时鼠标为大小控制需重置状态，更改鼠标样式
       // 2. 当前鼠标在空白区域且状态不为 SELECT 但上一个状态为 SELECT 需更改状态
-      if(((this.currentState == State.SELECT || this.currentState == State.MOVE) && isResize) || 
+      if(((this.currentState == State.SELECT || this.currentState == State.MOVE) && isResize) ||
       (this.stateRecord == 'SELECT' && this.currentState != State.SELECT && this.currentState != State.DRAWING)) {
         this.setState(this.stateRecord);
       }
@@ -3309,7 +3314,7 @@ export class Canvas {
               if(this.stateRecord == 'SELECT') {
                 this.setState('MOVE');
                 this.externalElements.style.cursor = 'default';
-              } 
+              }
               // else if((this.currentState == State.SELECT || this.currentState == State.MOVE) && this.externalElements.style.cursor.includes('resize')) {
               //   this.setState('DRAW');//当鼠标从大小控制点移到图元上改变鼠标
               // }
@@ -5161,7 +5166,7 @@ export class Canvas {
    */
   initMovingPens() {
     const arr = [];
-    // !this.store.options.moveConnectedLine && 
+    // !this.store.options.moveConnectedLine &&
     if (!this.canMoveLine) {
       for (let i = 0; i < this.store.active.length; i++) {
         const pen = this.store.active[i];
@@ -5568,7 +5573,7 @@ export class Canvas {
       }
 
       if (pen.type === PenType.Line) {
-        // 
+        //
         // if (!this.store.options.moveConnectedLine && !this.canMoveLine) {
         //   return;
         // }
@@ -5629,7 +5634,7 @@ export class Canvas {
     }
     const containChildPens = this.getAllByPens(pens);
     pens.forEach((pen) => {
-      // !this.store.options.moveConnectedLine && 
+      // !this.store.options.moveConnectedLine &&
       if (pen.type === PenType.Line) {
         if ( !this.canMoveLine) {
           return;
