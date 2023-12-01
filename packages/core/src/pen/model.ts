@@ -118,7 +118,7 @@ export interface Pen extends Rect {
   close?: boolean;
   // 连线长度
   length?: number;
-
+  circle?: Pen;
   // 设置圆是否为同心圆（圆心固定）
   concentric?: boolean;
   title?: string;
