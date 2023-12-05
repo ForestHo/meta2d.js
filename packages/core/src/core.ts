@@ -960,7 +960,7 @@ export class Meta2d {
       for (const pen of data.pens) {
         this.canvas.makePen(pen);
         if(render){
-          if((pen.externElement|| pen.name === 'gif')||(pen.externElement|| pen.name === 'echarts')){
+          if(pen.externElement || pen.name === 'gif'|| pen.name === 'echarts'){
             globalStore.path2dDraws[pen.name] &&
             this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
           }
@@ -992,7 +992,7 @@ export class Meta2d {
     // 非静默打开，渲染gif，echarts，执行canvas的render
     if(render){
       for (const pen of this.store.data.pens) {
-        if((pen.externElement|| pen.name === 'gif')||(pen.externElement|| pen.name === 'echarts')){
+        if(pen.externElement || pen.name === 'gif' || pen.name === 'echarts'){
           globalStore.path2dDraws[pen.name] &&
           this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
         }
@@ -1024,7 +1024,7 @@ export class Meta2d {
    */
   recoverRender(){
     for (const pen of this.store.data.pens) {
-      if((pen.externElement|| pen.name === 'gif')||(pen.externElement|| pen.name === 'echarts')){
+      if(pen.externElement || pen.name === 'gif' || pen.name === 'echarts'){
         globalStore.path2dDraws[pen.name] &&
         this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
       }
