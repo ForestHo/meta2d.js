@@ -73,11 +73,11 @@ const PenMotionType = {
 }
 // 图元分类与动效的对应
 const PenMotionMap = {
-  text: [MotionAction.COLOR, MotionAction.VISION, MotionAction.TEXT, MotionAction.BLINK, MotionAction.ROTATE, MotionAction.MOVE],
-  shape: [MotionAction.COLOR, MotionAction.VISION, MotionAction.BLINK, MotionAction.ROTATE, MotionAction.FILL, MotionAction.MOVE],
-  line: [MotionAction.COLOR, MotionAction.VISION, MotionAction.BLINK, MotionAction.ROTATE, MotionAction.MOVE],
+  text: [MotionAction.COLOR, MotionAction.VISION, MotionAction.TEXT, MotionAction.BLINK, MotionAction.ROTATE, MotionAction.MOVE, MotionAction.CUSTOMER],
+  shape: [MotionAction.COLOR, MotionAction.VISION, MotionAction.BLINK, MotionAction.ROTATE, MotionAction.FILL, MotionAction.MOVE, MotionAction.CUSTOMER],
+  line: [MotionAction.COLOR, MotionAction.VISION, MotionAction.BLINK, MotionAction.ROTATE, MotionAction.MOVE, MotionAction.CUSTOMER],
   connectline: [MotionAction.FLOW],
-  image: [MotionAction.VISION, MotionAction.BLINK, MotionAction.IMAGE, MotionAction.ROTATE, MotionAction.MOVE],
+  image: [MotionAction.VISION, MotionAction.BLINK, MotionAction.IMAGE, MotionAction.ROTATE, MotionAction.MOVE, MotionAction.CUSTOMER],
 }
 export enum MotionWhenType {
   ISWHEN = 0,
@@ -106,11 +106,11 @@ export const ClockWise = {
 }
 // 速度与时长的对应关系
 export const SpeedDuration = {
-  "1": 5000,
-  "2": 4000,
-  "3": 3000,
-  "4": 2000,
-  "5": 1000,
+  "1": 4000,
+  "2": 3000,
+  "3": 2000,
+  "4": 1000,
+  "5": 500,
 }
 // 需要处理type=0的图元类型，直线，多折线，曲线，不规则图形
 export const SpecialMotionType = ['line-line-default', 'line-line-eulerhabd', 'line-curve-undefined','line-line-irregularFigure'];

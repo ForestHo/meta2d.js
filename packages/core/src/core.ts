@@ -59,7 +59,7 @@ import {
 } from './rect';
 import { deepClone } from './utils/clone';
 import { Event, EventAction, EventName, TriggerCondition } from './event';
-import { Motion,MotionAction, PointVal, LogicType, getMotionsByName, MotionWhenMap, MotionWhenType, ClockWise, SpeedDuration, FillType, SpecialMotionType } from './motion';
+import { Motion,MotionAction, PointVal, LogicType, getMotionsByName, MotionWhenMap, MotionWhenType, ClockWise, SpeedDuration, FillType, SpecialMotionType, MotionType } from './motion';
 import { ViewMap } from './map';
 // TODO: 这种引入方式，引入 connect， webpack 5 报错
 import { MqttClient } from 'mqtt';
@@ -90,6 +90,7 @@ export class Meta2d {
   ) => boolean;
   events: Record<number, (pen: Pen, e: Event) => void> = {};
   motions: Record<number, (pen: Pen, m: Motion) => void> = {};
+  recordMotionMap: { [key: string]: any }; //记忆动效图元初态的map
   map: ViewMap;
   mapTimer: any;
   constructor(parent: string | HTMLElement, opts: Options = {}) {
@@ -215,19 +216,34 @@ export class Meta2d {
     this.canvas.listen();
   }
   initMotionFns(){
+    this.recordMotionMap = {};
     // 注册动效方法
     // 颜色动效
     this.motions[MotionAction.COLOR] = (pen: Pen, m: Motion) => {
       const obj = { id: pen.id };
       if(pen.name !== 'text'){
+        const COLOR = 'color',BACK = 'background';
+        if(this.recordMotionMap[pen.id][COLOR] === undefined){
+          this.recordMotionMap[pen.id][COLOR] = pen.color||'';
+        }
+        if(this.recordMotionMap[pen.id][BACK] === undefined){
+          this.recordMotionMap[pen.id][BACK] = pen.background||'';
+        }
         Object.assign(obj,{
-          'color': m.action.borderColor,
-          'background': m.action.backgroundColor,
+          [COLOR]: m.action.borderColor,
+          [BACK]: m.action.backgroundColor,
         })
       }else{
+        const COLOR = 'textColor',BACK = 'textBackground';
+        if(this.recordMotionMap[pen.id][COLOR] === undefined){
+          this.recordMotionMap[pen.id][COLOR] = pen.textColor||'';
+        }
+        if(this.recordMotionMap[pen.id][BACK] === undefined){
+          this.recordMotionMap[pen.id][BACK] = pen.textBackground||'';
+        }
         Object.assign(obj,{
-          'textColor': m.action.borderColor,
-          'textBackground': m.action.backgroundColor,
+          [COLOR]: m.action.borderColor,
+          [BACK]: m.action.backgroundColor,
         })
       }
       this.setValue(
@@ -237,6 +253,10 @@ export class Meta2d {
     };
     // 文本动效
     this.motions[MotionAction.TEXT] = (pen: Pen, m: Motion) => {
+      const TEXT = 'text';
+      if(this.recordMotionMap[pen.id][TEXT] === undefined){
+        this.recordMotionMap[pen.id][TEXT] = pen.text;
+      }
       this.setValue(
         { id: pen.id,
           'text': m.action.content,
@@ -246,12 +266,20 @@ export class Meta2d {
     };
     // 可视动效
     this.motions[MotionAction.VISION] = (pen: Pen, m: Motion) => {
-      this.setVisible(pen, m.action.visibility==='visible',true);
+      const VISIABLE = 'visible';
+      if(this.recordMotionMap[pen.id][VISIABLE] === undefined){
+        this.recordMotionMap[pen.id][VISIABLE] = pen.visible||true;
+      }
+      this.setVisible(pen, m.action.visibility=== VISIABLE,true);
     };
     // 闪烁动效
     this.motions[MotionAction.BLINK] = (pen: Pen, m: Motion) => {
       pen.animateCycle = m.action.count !==0 ? m.action.count: Infinity;
-      if(m.action.blinkType === 'visual'){
+      const BLINK = 'blink';
+      if(this.recordMotionMap[pen.id][BLINK] === undefined){
+        this.recordMotionMap[pen.id][BLINK] = true;
+      }
+      if(m.action.blinkType === 'visibility'){
         // 可见闪烁
         let frames = [];
         if(pen.frames?.length > 0){
@@ -314,6 +342,10 @@ export class Meta2d {
           image: url,
         })
       }
+      const IMG = 'image';
+      if(this.recordMotionMap[pen.id][IMG] === undefined){
+        this.recordMotionMap[pen.id][IMG] = pen.image||'';
+      }
       this.setValue(
         { id: pen.id,
           frames,
@@ -341,6 +373,10 @@ export class Meta2d {
           }
         ];
       }
+      const ROTATE = 'rotate'
+      if(this.recordMotionMap[pen.id][ROTATE] === undefined){
+        this.recordMotionMap[pen.id][ROTATE] = pen.rotate;
+      }
       this.setValue(
         { id: pen.id,
           frames,
@@ -353,24 +389,29 @@ export class Meta2d {
     this.motions[MotionAction.FILL] = (pen: Pen, m: Motion) => {
       const item = this.store.pointData.find(elem => elem.dataId === m.when[0].dataId);
       const progress = item.value/(m.when[0].max - m.when[0].min);
-      let frames = [];
-      if(pen.frames?.length > 0){
-        const obj = Object.assign({},pen.frames[0],{
-          duration: 2000,
-          visible: true,
-          progress,
-        })
-        frames.push(obj);
-      }else{
-        frames = [
-          {
-            duration: 2000,
-            visible: true,
-            progress,
-          }
-        ];
+      // let frames = [];
+      // if(pen.frames?.length > 0){
+      //   const obj = Object.assign({},pen.frames[0],{
+      //     duration: 2000,
+      //     visible: true,
+      //     progress,
+      //   })
+      //   frames.push(obj);
+      // }else{
+      //   frames = [
+      //     {
+      //       duration: 2000,
+      //       visible: true,
+      //       progress,
+      //     }
+      //   ];
+      // }
+      // const obj = { id: pen.id,frames};
+      const PROGRESS = 'progress';
+      if(this.recordMotionMap[pen.id][PROGRESS] === undefined){
+        this.recordMotionMap[pen.id][PROGRESS] = pen.progress?pen.progress:0;
       }
-      const obj = { id: pen.id,frames};
+      const obj = { id: pen.id, progress };
       let tObj = null;
       if(m.action.fillType === FillType.DOWNUP){
         tObj = { verticalProgress: true, reverseProgress:false };
@@ -382,39 +423,57 @@ export class Meta2d {
         tObj = { verticalProgress: false, reverseProgress:true };
       }
       Object.assign(obj,tObj);  
-      this.setValue(obj,{ render: false });
-      this.startAnimate(pen.id);
+      this.setValue(obj,{ render: true });
+      // this.startAnimate(pen.id);
     }
     // 移动动效
     this.motions[MotionAction.MOVE] = (pen: Pen, m: Motion) => {
       const item = this.store.pointData.find(elem => elem.dataId === m.when[0].dataId);
       const percent = item.value/(m.when[0].max - m.when[0].min);
-      let frames = [];
-      if(pen.frames?.length > 0){
-        const obj = Object.assign({},pen.frames[0],{
-          duration: 2000,
-          visible: true,
-          x: m.action.x * percent,
-          y: m.action.y * percent,
-        })
-        frames.push(obj);
+      // let frames = [];
+      // if(pen.frames?.length > 0){
+      //   const obj = Object.assign({},pen.frames[0],{
+      //     duration: 2000,
+      //     visible: true,
+      //     x: m.action.x * percent,
+      //     y: m.action.y * percent,
+      //   })
+      //   frames.push(obj);
+      // }else{
+      //   frames = [
+      //     {
+      //       duration: 2000,
+      //       visible: true,
+      //       x: m.action.x * percent,
+      //       y: m.action.y * percent,
+      //     }
+      //   ];
+      // }
+      const penRect = this.getPenRect(pen);
+      let x = penRect.x, y = penRect.y;
+      const X = 'x',Y = 'y';
+      if(this.recordMotionMap[pen.id][X] === undefined){
+        // 缓存第一次的坐标值
+        this.recordMotionMap[pen.id][X] = penRect.x;
       }else{
-        frames = [
-          {
-            duration: 2000,
-            visible: true,
-            x: m.action.x * percent,
-            y: m.action.y * percent,
-          }
-        ];
+        // 避免下一次动效生效，坐标在上一次动效的基础上叠加
+        x = this.recordMotionMap[pen.id][X];
+      }
+      if(this.recordMotionMap[pen.id][Y] === undefined){
+        // 缓存第一次的坐标值
+        this.recordMotionMap[pen.id][Y] = penRect.y;
+      }else{
+        // 避免下一次动效生效，坐标在上一次动效的基础上叠加
+        y = this.recordMotionMap[pen.id][Y];
       }
       this.setValue(
         { id: pen.id,
-          frames,
+          x: x + m.action.x * percent,
+          y: y + m.action.y * percent,
         },
-        { render: false }
+        { render: true }
       );
-      this.startAnimate(pen.id);
+      // this.startAnimate(pen.id);
     }
     // 流动动效
     this.motions[MotionAction.FLOW] = (pen: Pen, m: Motion) => {
@@ -425,6 +484,10 @@ export class Meta2d {
         animateColor: m.action.color,
         animateSpan: m.action.speed,
         animateReverse: m.action.reverse,
+      }
+      const SPEED = 'speed';
+      if(this.recordMotionMap[pen.id][SPEED] === undefined){
+        this.recordMotionMap[pen.id][SPEED] = m.action.speed;
       }
       this.setValue(
         { id: pen.id,
@@ -2656,11 +2719,112 @@ export class Meta2d {
           if(SpecialMotionType.indexOf(name) !== -1){
             pen.type = PenType.Node;
           }
-          // 当when中的每个条件都满足时，触发执行动作action
-          can && this.motions[mt.type](pen,mt);
+          if(!this.recordMotionMap[pen.id]){
+            this.recordMotionMap[pen.id] = {};
+          }
+          if(can){
+            // 当when中的每个条件都满足时，触发执行动作action
+            this.motions[mt.type](pen,mt);
+          }else{
+            this.recoverMotions(pen,mt.type);
+          }
           onceFlag = can;
         }
       }
+    }
+  }
+  /**
+   * @description 从动效状态还原为初始状态
+   * @author Joseph Ho
+   * @date 06/12/2023
+   * @param {Pen} pen
+   * @memberof Meta2d
+   */
+  recoverMotions(pen: Pen,type: MotionType){
+    switch (type) {
+      case MotionAction.MOVE:
+        {
+          const key1 = 'x', key2='y';
+          this.recordMotionMap[pen.id].hasOwnProperty(key1) && this.setValue(
+            { id: pen.id,
+              [key1]: this.recordMotionMap[pen.id][key1],
+              [key2]: this.recordMotionMap[pen.id][key2],
+            },
+            { render: true }
+          );
+        }
+        break;
+      case MotionAction.FILL:
+        {
+          const key = 'progress';
+          this.recordMotionMap[pen.id].hasOwnProperty(key) && this.setValue(
+            { id: pen.id,
+              [key]: this.recordMotionMap[pen.id][key],
+            },
+            { render: true }
+          );
+        }
+        break;
+      case MotionAction.ROTATE:
+        this.recordMotionMap[pen.id].hasOwnProperty('rotate') && this.stopAnimate(pen.id);
+        break;
+      case MotionAction.FLOW:
+        this.recordMotionMap[pen.id].hasOwnProperty('speed') && this.stopAnimate(pen.id);
+        break;
+      case MotionAction.TEXT:
+        {
+          const key = 'text';
+          this.recordMotionMap[pen.id].hasOwnProperty(key) && this.setValue(
+            { id: pen.id,
+              [key]: this.recordMotionMap[pen.id][key],
+            },
+            { render: true }
+          );
+        }
+        break;
+      case MotionAction.COLOR:
+        {
+          const isNotText = pen.name !== 'text';
+          if(isNotText){
+            const key1 = 'color',key2 = 'background';
+            this.recordMotionMap[pen.id].hasOwnProperty(key1) && this.setValue(
+              { id: pen.id,
+                [key1]: this.recordMotionMap[pen.id][key1],
+                [key2]: this.recordMotionMap[pen.id][key2],
+              },
+              { render: true }
+            );
+          }else{
+            const key1 = 'textColor',key2 = 'textBackground';
+            this.recordMotionMap[pen.id].hasOwnProperty(key1) && this.setValue(
+              { id: pen.id,
+                [key1]: this.recordMotionMap[pen.id][key1],
+                [key2]: this.recordMotionMap[pen.id][key2],
+              },
+              { render: true }
+            );
+          }
+        }
+        break;
+      case MotionAction.VISION:
+        {
+          const key = 'visible';
+          this.recordMotionMap[pen.id].hasOwnProperty(key) && this.setValue(
+            { id: pen.id,
+              [key]: this.recordMotionMap[pen.id][key],
+            },
+            { render: true }
+          );
+        }
+        break;
+      case MotionAction.IMAGE:
+        this.recordMotionMap[pen.id].hasOwnProperty('image') && this.stopAnimate(pen.id);
+        break;
+      case MotionAction.BLINK:
+        this.recordMotionMap[pen.id].hasOwnProperty('blink') && this.stopAnimate(pen.id);
+        break;
+      default:
+        break;
     }
   }
   /**
