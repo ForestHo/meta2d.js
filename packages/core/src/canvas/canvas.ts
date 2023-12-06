@@ -348,11 +348,19 @@ export class Canvas {
     this.currentState = State[state];
     switch(state) {
       case 'SELECT':
-        this.externalElements.style.cursor = 'default';
         this.stateRecord = 'SELECT';
+        if(this.isActiveView) {
+          this.externalElements.style.cursor = 'zoom-in';
+        } else {
+          this.externalElements.style.cursor = 'default';
+        }
         break;
       case 'MOVE':
-        // this.externalElements.style.cursor = 'move';
+        if(this.isActiveView) {
+          this.externalElements.style.cursor = 'zoom-in';
+        } else {
+          this.externalElements.style.cursor = 'default';
+        }
         break;
       case 'DRAG':
         this.externalElements.style.cursor = 'pointer';
@@ -363,7 +371,7 @@ export class Canvas {
         this.externalElements.style.cursor = 'crosshair';
         break;
       case 'DRAWING':
-        this.externalElements.style.cursor = this.stateRecord == 'SELECT' ? 'default' :'crosshair';
+        this.externalElements.style.cursor = 'crosshair';
         break;
     }
   }
@@ -3350,7 +3358,7 @@ export class Canvas {
             // } else {
               if(this.stateRecord == 'SELECT') {
                 this.setState('MOVE');
-                this.externalElements.style.cursor = 'default';
+                // this.externalElements.style.cursor = 'default';
               }
               // else if((this.currentState == State.SELECT || this.currentState == State.MOVE) && this.externalElements.style.cursor.includes('resize')) {
               //   this.setState('DRAW');//当鼠标从大小控制点移到图元上改变鼠标
