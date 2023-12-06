@@ -215,6 +215,9 @@ export class Meta2d {
     this.resize();
     this.canvas.listen();
   }
+  areaSelection() {
+    return this.canvas.areaSelection();
+  }
   initMotionFns(){
     this.recordMotionMap = {};
     // 注册动效方法
@@ -3126,6 +3129,26 @@ export class Meta2d {
     });
   }
 
+  activeView() {
+    // 默认垂直填充，两边留白
+    if (!this.store.active.length) return;
+    // 1. 重置画布尺寸为容器尺寸
+    const { canvas } = this.canvas;
+    const { offsetWidth: width, offsetHeight: height } = canvas;
+    this.resize(width, height);
+    // 2. 获取设置的留白值
+    // const padding = formatPadding(viewPadding);
+    // 3. 获取图形尺寸
+    const rect = this.getRect(this.store.active);
+    // 4. 计算缩放比例
+    const w = (width -10) / rect.width;
+    const h = (height - 10) / rect.height;
+    let ratio =  w > h ? h : w;
+    // 该方法直接更改画布的 scale 属性，所以比率应该乘以当前 scale
+    this.scale(ratio * this.store.data.scale);
+    // 5. 居中
+    this.centerView(true);
+  }
   /**
    * 放大到屏幕尺寸，并居中
    * @param fit true，填满但完整展示；false，填满，但长边可能截取（即显示不完整）
@@ -3141,8 +3164,7 @@ export class Meta2d {
     const padding = formatPadding(viewPadding);
 
     // 3. 获取图形尺寸
-    const rect = this.getRect();
-
+    const rect = this.getRect(this.store.active);
     // 4. 计算缩放比例
     const w = (width - padding[1] - padding[3]) / rect.width;
     const h = (height - padding[0] - padding[2]) / rect.height;
@@ -3374,9 +3396,14 @@ export class Meta2d {
     canvas.scrollTo(x, y);
   }
 
-  centerView() {
+  centerView(isActiveView=false) {
     if (!this.hasView()) return;
-    const rect = this.getRect();
+    let rect;
+    if(isActiveView) {
+      rect = this.getRect(this.store.active);
+    } else {
+      rect = this.getRect();
+    }
     const viewCenter = this.getViewCenter();
     const pensRect: Rect = this.getPenRect(rect);
     calcCenter(pensRect);
