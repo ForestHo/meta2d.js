@@ -500,6 +500,20 @@ export class Meta2d {
       );
       this.startAnimate(pen.id);
     }
+    // 自定义动效
+    this.motions[MotionAction.CUSTOMER] = (pen: Pen, m: Motion) => {
+      const CUSTOMER = 'customer';
+      if(this.recordMotionMap[pen.id][CUSTOMER] === undefined){
+        this.recordMotionMap[pen.id][CUSTOMER] = true;
+      }
+      this.setValue(
+        { id: pen.id,
+          frames: m.action.frames,
+        },
+        { render: false }
+      );
+      this.startAnimate(pen.id);
+    }
   }
   initEventFns() {
     this.events[EventAction.Link] = (pen: Pen, e: Event) => {
@@ -2826,20 +2840,12 @@ export class Meta2d {
       case MotionAction.BLINK:
         this.recordMotionMap[pen.id].hasOwnProperty('blink') && this.stopAnimate(pen.id);
         break;
+      case MotionAction.CUSTOMER:
+        this.recordMotionMap[pen.id].hasOwnProperty('customer') && this.stopAnimate(pen.id);
+        break;
       default:
         break;
     }
-  }
-  /**
-   * @description 清楚指定图元的动效
-   * @author Joseph Ho
-   * @date 30/10/2023
-   * @private
-   * @param {Pen[]} pens
-   * @memberof Meta2d
-   */
-  private clearMotions = (pens: Pen[])=>{
-
   }
   private doEvent = (pen: Pen, eventName: EventName) => {
     if (!pen) {

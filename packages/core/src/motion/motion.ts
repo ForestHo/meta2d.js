@@ -98,6 +98,7 @@ export const MotionWhenMap = {
   fill: [true, , , true],
   move: [true, , , true],
   flow: [true, true, true,],
+  customer: [true, true, true,],
 }
 // 顺时针与逆时针与的旋转角度的对应关系
 export const ClockWise = {
