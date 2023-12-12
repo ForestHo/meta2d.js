@@ -1021,7 +1021,7 @@ export class Meta2d {
       // 从缓存中加载数据
       let cacheData = this.store.cacheDatas[index].data;
       this.loadCacheData(cacheData, render);
-      render && this.startAnimate();
+      // render && this.startAnimate();
     } else {
       this.setBackgroundImage(data.bkImage);
       Object.assign(this.store.data, data);
@@ -1063,7 +1063,7 @@ export class Meta2d {
       //   this.fitView(true,0);
       // }
       this.fitSizeView(true,this.store.options.fitPadding);
-      render && this.startAnimate();
+      // render && this.startAnimate();
       this.doInitJS();
     }
     // 非静默打开，渲染gif，echarts，执行canvas的render
