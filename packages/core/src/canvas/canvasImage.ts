@@ -5,6 +5,7 @@ import {
   Pen,
   setGlobalAlpha,
   getParent,
+  imgList,
 } from '../pen';
 import { Meta2dStore } from '../store';
 import { rgba } from '../utils';
@@ -109,7 +110,7 @@ export class CanvasImage {
       pen.calculative.inView &&
       !pen.isBottom == !this.isBottom && // undefined == false 结果 false
       pen.image &&
-      pen.calculative.img &&
+      imgList[pen.id] &&
       pen.name !== 'gif';
 
     return pen.calculative.hasImage;

@@ -52,7 +52,10 @@ import {
   rotatePen,
   getGlobalLineWidth,
   getFont,
-  nearestAnchorNextAndPrev
+  nearestAnchorNextAndPrev,
+  imgList,
+  backImgList,
+  strokeImgList
 } from '../pen';
 import {
   calcRotate,
@@ -4192,7 +4195,7 @@ export class Canvas {
 
       // do your canvas work
       img.onload = () => {
-        pen.calculative.img = img;
+        imgList[pen.id] = img;
         pen.calculative.imgNaturalWidth = img.naturalWidth || pen.iconWidth;
         pen.calculative.imgNaturalHeight = img.naturalHeight || pen.iconHeight;
         globalStore.htmlElements[pen.image] = img;
@@ -4219,12 +4222,14 @@ export class Canvas {
   }
 
   async loadImage(pen: Pen) {
-    if (pen.image !== pen.calculative.image || !pen.calculative.img) {
-      pen.calculative.img = undefined;
+    if (pen.image !== pen.calculative.image || !imgList[pen.id]) {
+      imgList[pen.id] = undefined;
       if (pen.image) {
         if (globalStore.htmlElements[pen.image]) {
           const img = globalStore.htmlElements[pen.image];
-          pen.calculative.img = img;
+          // 由于image的load是异步操作，且cacheData无法deepClone深拷贝img这个dom对象，
+          // 所以将img放在imgList内存中，
+          imgList[pen.id] = img;
           pen.calculative.imgNaturalWidth = img.naturalWidth || pen.iconWidth;
           pen.calculative.imgNaturalHeight =
             img.naturalHeight || pen.iconHeight;
@@ -4246,19 +4251,19 @@ export class Canvas {
                 ? undefined
                 : pen.crossOrigin || 'anonymous';
             img.src = await this.convertImagePath(pen.image);
-            if (
-              this.store.options.cdn &&
-              !(
-                pen.image.startsWith('http') ||
-                pen.image.startsWith('//') ||
-                pen.image.startsWith('data:image')
-              )
-            ) {
-              img.src = this.store.options.cdn + pen.image;
-            }
+            // if (
+            //   this.store.options.cdn &&
+            //   !(
+            //     pen.image.startsWith('http') ||
+            //     pen.image.startsWith('//') ||
+            //     pen.image.startsWith('data:image')
+            //   )
+            // ) {
+            //   img.src = this.store.options.cdn + pen.image;
+            // }
             img.onload = () => {
               // TODO: 连续的加载两张图片，若后开始加载 的图片先加载完成，可能会导致展示的是 先开始加载的图片
-              pen.calculative.img = img;
+              imgList[pen.id] = img;
               pen.calculative.imgNaturalWidth =
                 img.naturalWidth || pen.iconWidth;
               pen.calculative.imgNaturalHeight =
@@ -4276,27 +4281,27 @@ export class Canvas {
     }
 
     if (pen.backgroundImage !== pen.calculative.backgroundImage) {
-      pen.calculative.backgroundImg = undefined;
+      backImgList[pen.id] = undefined;
       if (pen.backgroundImage) {
         if (globalStore.htmlElements[pen.backgroundImage]) {
           const img = globalStore.htmlElements[pen.backgroundImage];
-          pen.calculative.backgroundImg = img;
+          backImgList[pen.id] = img;
         } else {
           const img = new Image();
           img.crossOrigin = 'anonymous';
           img.src = await this.convertImagePath(pen.backgroundImage);
-          if (
-            this.store.options.cdn &&
-            !(
-              pen.backgroundImage.startsWith('http') ||
-              pen.backgroundImage.startsWith('//') ||
-              pen.backgroundImage.startsWith('data:image')
-            )
-          ) {
-            img.src = this.store.options.cdn + pen.backgroundImage;
-          }
+          // if (
+          //   this.store.options.cdn &&
+          //   !(
+          //     pen.backgroundImage.startsWith('http') ||
+          //     pen.backgroundImage.startsWith('//') ||
+          //     pen.backgroundImage.startsWith('data:image')
+          //   )
+          // ) {
+          //   img.src = this.store.options.cdn + pen.backgroundImage;
+          // }
           img.onload = () => {
-            pen.calculative.backgroundImg = img;
+            backImgList[pen.id] = img;
             globalStore.htmlElements[pen.backgroundImage] = img;
             this.imageLoaded();
             if (pen.template) {
@@ -4309,27 +4314,27 @@ export class Canvas {
     }
 
     if (pen.strokeImage !== pen.calculative.strokeImage) {
-      pen.calculative.strokeImg = undefined;
+      strokeImgList[pen.id] = undefined;
       if (pen.strokeImage) {
         if (globalStore.htmlElements[pen.strokeImage]) {
           const img = globalStore.htmlElements[pen.strokeImage];
-          pen.calculative.strokeImg = img;
+          strokeImgList[pen.id] = img;
         } else {
           const img = new Image();
           img.crossOrigin = 'anonymous';
           img.src = await this.convertImagePath(pen.strokeImage);
-          if (
-            this.store.options.cdn &&
-            !(
-              pen.strokeImage.startsWith('http') ||
-              pen.strokeImage.startsWith('//') ||
-              pen.strokeImage.startsWith('data:image')
-            )
-          ) {
-            img.src = this.store.options.cdn + pen.strokeImage;
-          }
+          // if (
+          //   this.store.options.cdn &&
+          //   !(
+          //     pen.strokeImage.startsWith('http') ||
+          //     pen.strokeImage.startsWith('//') ||
+          //     pen.strokeImage.startsWith('data:image')
+          //   )
+          // ) {
+          //   img.src = this.store.options.cdn + pen.strokeImage;
+          // }
           img.onload = () => {
-            pen.calculative.strokeImg = img;
+            strokeImgList[pen.id] = img;
             globalStore.htmlElements[pen.strokeImage] = img;
             this.imageLoaded();
             if (pen.template && pen.name !== 'gif') {
@@ -7592,7 +7597,7 @@ export class Canvas {
       // TODO: hover 待考虑，若出现再补上
       const { active } = pen.calculative;
       pen.calculative.active = false;
-      if (pen.calculative.img) {
+      if (imgList[pen.id]) {
         renderPenRaw(ctx, pen);
       } else {
         renderPen(ctx, pen);

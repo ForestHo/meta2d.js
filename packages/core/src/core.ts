@@ -27,6 +27,7 @@ import {
   FormItem,
   BindId,
   isAncestor,
+  imgList,
 } from './pen';
 import { Point, rotatePoint } from './point';
 import {
@@ -828,16 +829,16 @@ export class Meta2d {
       return new Promise<HTMLImageElement>((resolve) => {
         const img = new Image();
         img.src = url;
-        if (
-          that.store.options.cdn &&
-          !(
-            url.startsWith('http') ||
-            url.startsWith('//') ||
-            url.startsWith('data:image')
-          )
-        ) {
-          img.src = that.store.options.cdn + url;
-        }
+        // if (
+        //   that.store.options.cdn &&
+        //   !(
+        //     url.startsWith('http') ||
+        //     url.startsWith('//') ||
+        //     url.startsWith('data:image')
+        //   )
+        // ) {
+        //   img.src = that.store.options.cdn + url;
+        // }
         img.crossOrigin = 'anonymous';
         img.onload = () => {
           resolve(img);
@@ -3077,7 +3078,7 @@ export class Meta2d {
    */
   downloadPng(name?: string, padding?: Padding) {
     for (const pen of this.store.data.pens) {
-      if (pen.calculative.img) {
+      if (imgList[pen.id]) {
         //重新生成绘制图片
         pen.onRenderPenRaw?.(pen);
       }
