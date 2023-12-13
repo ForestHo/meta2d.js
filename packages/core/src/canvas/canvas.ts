@@ -4212,16 +4212,17 @@ export class Canvas {
   // 图片路径转换函数：
   // 1. 如果没有定义callback钩子函数，则继续保持原有路径，保证兼容性；
   // 2. 如果定义了callback钩子函数，则使用新的转换接口
-  private async convertImagePath(srcImage: string): Promise<string> {
+  private convertImagePath(srcImage: string): string {
     let destImage;
-    let callback = this.store.options.getResourceCallback;
-    destImage = callback ? await callback(srcImage, "resPath") : srcImage;
+    let callback = this.store.options.convertRequestUrlCallback;
+    destImage = callback ? callback(srcImage) : srcImage;
     // console.log("callback, destImage", callback, destImage);
     return destImage;
     
   }
 
-  async loadImage(pen: Pen) {
+  loadImage(pen: Pen) {
+    // pen.calculative.image未初始化时，或者 img dom对象没有挂载时，会执行loadImage
     if (pen.image !== pen.calculative.image || !imgList[pen.id]) {
       imgList[pen.id] = undefined;
       if (pen.image) {
@@ -4250,7 +4251,7 @@ export class Canvas {
               pen.crossOrigin === 'undefined'
                 ? undefined
                 : pen.crossOrigin || 'anonymous';
-            img.src = await this.convertImagePath(pen.image);
+            img.src = this.convertImagePath(pen.image);
             // if (
             //   this.store.options.cdn &&
             //   !(
@@ -4289,7 +4290,7 @@ export class Canvas {
         } else {
           const img = new Image();
           img.crossOrigin = 'anonymous';
-          img.src = await this.convertImagePath(pen.backgroundImage);
+          img.src = this.convertImagePath(pen.backgroundImage);
           // if (
           //   this.store.options.cdn &&
           //   !(
@@ -4322,7 +4323,7 @@ export class Canvas {
         } else {
           const img = new Image();
           img.crossOrigin = 'anonymous';
-          img.src = await this.convertImagePath(pen.strokeImage);
+          img.src = this.convertImagePath(pen.strokeImage);
           // if (
           //   this.store.options.cdn &&
           //   !(
