@@ -1603,7 +1603,23 @@ export class Meta2d {
   calcAnimateDuration(pen: Pen) {
     return pen.frames.reduce((prev, frame) => prev + frame.duration, 0);
   }
-
+  // 重新计算组合图元的大小
+  freshCombine(parenId) {
+    const parent = this.store.pens[parenId];
+    const children = parent.children;
+    const childs = [];
+    children.forEach((id) => {
+      childs.push(this.store.pens[id]);
+    })
+    const rect = getRect(childs);
+    childs.forEach((pen) => {
+      const childRect = calcRelativeRect(pen.calculative.worldRect, rect);
+      Object.assign(pen, childRect);
+    });
+    Object.assign(parent, rect);
+    this.canvas.updatePenRect(parent);
+    this.render();
+  }
   /**
    * 组合
    * @param pens 组合的画笔们
