@@ -1,4 +1,4 @@
-import { ColorStop, IValue, LineAnimateType, LockState, Pen } from './model';
+import { ColorStop, IValue, LineAnimateType, LockState, Pen, backImgList, imgList, strokeImgList } from './model';
 import { getLineRect, getSplitAnchor, line } from '../diagrams';
 import { Direction, inheritanceProps } from '../data';
 import {
@@ -781,7 +781,7 @@ export function drawImage(
   pen: Pen
 ) {
   const { x, y, width, height } = getImagePosition(pen);
-  const { worldIconRect, iconRotate, img } = pen.calculative;
+  const { worldIconRect, iconRotate } = pen.calculative;
 
   if (iconRotate) {
     const { x: centerX, y: centerY } = worldIconRect.center;
@@ -820,10 +820,10 @@ export function drawImage(
     ctx.arcTo(_x, ey, _x, _y, r);
     ctx.arcTo(_x, _y, ex, _y, r);
     ctx.clip();
-    ctx.drawImage(img, x, y, width, height);
+    ctx.drawImage(imgList[pen.id], x, y, width, height);
     ctx.restore();
   } else {
-    ctx.drawImage(img, x, y, width, height);
+    ctx.drawImage(imgList[pen.id], x, y, width, height);
   }
 }
 
@@ -1313,7 +1313,7 @@ export function renderPen(ctx: CanvasRenderingContext2D, pen: Pen) {
       fill && (setBack = false);
     }
   } else {
-    const strokeImg = pen.calculative.strokeImg;
+    const strokeImg = strokeImgList[pen.id];
     if (pen.calculative.strokeImage && strokeImg) {
       ctx.strokeStyle = ctx.createPattern(strokeImg, 'repeat');
       fill = true;
@@ -1345,7 +1345,7 @@ export function renderPen(ctx: CanvasRenderingContext2D, pen: Pen) {
     }
   }
   if (setBack) {
-    const backgroundImg = pen.calculative.backgroundImg;
+    const backgroundImg = backImgList[pen.id];
     if (pen.calculative.backgroundImage && backgroundImg) {
       ctx.fillStyle = ctx.createPattern(backgroundImg, 'repeat');
       fill = true;
@@ -1411,7 +1411,7 @@ export function renderPen(ctx: CanvasRenderingContext2D, pen: Pen) {
 
     ctxDrawCanvas(ctx, pen);
   }
-  if (!(pen.image && pen.calculative.img) && pen.calculative.icon) {
+  if (!(pen.image && imgList[pen.id]) && pen.calculative.icon) {
     drawIcon(ctx, pen);
   }
 
@@ -1547,9 +1547,9 @@ export function renderPenRaw(
     fill = pen.activeBackground || store.options.activeBackground;
   } else {
     if (pen.strokeImage) {
-      if (pen.calculative.strokeImg) {
+      if (strokeImgList[pen.id]) {
         ctx.strokeStyle = ctx.createPattern(
-          pen.calculative.strokeImg,
+          strokeImgList[pen.id],
           'repeat'
         );
         fill = true;
@@ -1560,9 +1560,9 @@ export function renderPenRaw(
     }
 
     if (pen.backgroundImage) {
-      if (pen.calculative.backgroundImg) {
+      if (backImgList[pen.id]) {
         ctx.fillStyle = ctx.createPattern(
-          pen.calculative.backgroundImg,
+          backImgList[pen.id],
           'repeat'
         );
         fill = true;
@@ -1597,7 +1597,7 @@ export function renderPenRaw(
   ctxDrawCanvas(ctx, pen);
 
   // renderPenRaw 用在 downloadPng svg , echarts 等图形需要
-  if (pen.calculative.img) {
+  if (imgList[pen.id]) {
     ctx.save();
     ctx.shadowColor = '';
     ctx.shadowBlur = 0;

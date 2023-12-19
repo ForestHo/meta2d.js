@@ -6,6 +6,7 @@ import {
   setGlobalAlpha,
   getParent,
   renderPen,
+  imgList,
 } from '../pen';
 import { Meta2dStore } from '../store';
 import { rgba } from '../utils';
@@ -199,7 +200,7 @@ export class CanvasTemplate {
         }
         if (pen.template && pen.calculative.inView) {
           //图片
-          if (pen.image && pen.name !== 'gif' && pen.calculative.img) {
+          if (pen.image && pen.name !== 'gif' && imgList[pen.id]) {
             ctx.save();
             ctxFlip(ctx, pen);
             if (pen.calculative.rotate) {

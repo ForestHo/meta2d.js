@@ -701,3 +701,13 @@ export function clearLifeCycle(pen: Pen) {
   pen.onRenderPenRaw = undefined;
   pen.onKeyDown = undefined;
 }
+// 由于img dom对象无法被深拷贝，将pen.calculative.img缓存到内存中
+export const imgList: {
+  [key: string]: HTMLImageElement;
+} = {};
+export const backImgList: {
+  [key: string]: HTMLImageElement;
+} = {};
+export const strokeImgList: {
+  [key: string]: HTMLImageElement;
+} = {};

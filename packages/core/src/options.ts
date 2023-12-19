@@ -91,7 +91,7 @@ export interface Options {
   isRunMode:boolean; //是否是在运行态
   lineWidth?:number;
   fitPadding?:number;
-  getResourceCallback?: (resUrl: string, resType?: string) => any;// 获取资源方式的回调接口
+  convertRequestUrlCallback?: (resUrl: string, resType?: string) => string;// 获取资源路径转换的回调接口
 }
 
 export const defaultOptions: Options = {
