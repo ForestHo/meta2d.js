@@ -1051,21 +1051,10 @@ export class Meta2d {
       if (!this.store.data.template) {
         this.store.data.template = s8();
       }
-      // this.render();
-      // 调用fitview，且padding=0
-      // this.fitView(true,0);
-      // this.canvas.canvasTemplate.init();
-      // 图纸有模板，使用fitTemplateView
-      // TODO fitTemplateView 处理
-      // if(data.template){
-      //   // this.fitTemplateView(true,0);
-      //   this.fitSizeView(true,32);
-      // }else{ //图纸么有模板，使用fitView
-      //   this.fitView(true,0);
-      // }
-      this.fitSizeView(true,this.store.options.fitPadding);
+      
+      this.fitSizeView(true, this.store.options.fitPadding);
       // render && this.startAnimate();
-      this.doInitJS();
+      // this.doInitJS();
     }
     // 非静默打开，渲染gif，echarts，执行canvas的render
     if(render){
@@ -3301,13 +3290,14 @@ export class Meta2d {
     // 5. 居中
     this.centerView();
   }
+  
   fitSizeView(fit: boolean = true, viewPadding: Padding = 10) {
     // 默认垂直填充，两边留白
     // if (!this.hasView()) return;
     // 1. 重置画布尺寸为容器尺寸
     const { canvas } = this.canvas;
     const { offsetWidth: width, offsetHeight: height } = canvas;
-    this.resize(width, height);
+
     // 2. 获取设置的留白值
     const padding = formatPadding(viewPadding);
 
@@ -3327,6 +3317,14 @@ export class Meta2d {
     } else {
       ratio = w > h ? w : h;
     }
+
+    // 缩放比例为1(允许轻微的抖动)，不做缩放处理
+    if ((ratio - 1 < 0.0000001) && (ratio - 1 > -0.0000001)) {
+      return
+    }
+
+    this.resize(width, height);
+
     // 该方法直接更改画布的 scale 属性，所以比率应该乘以当前 scale
     this.scale(ratio * this.store.data.scale);
 
