@@ -2119,6 +2119,10 @@ export class Canvas {
             this.calcActiveRect();
           }
           this.resizePens(e);
+          // 改变组合图元子图元的大小时重新计算组合图元的大小
+          if(this.store.active?.length > 0 && this.store.active[0]?.parentId) {
+            this.parent.freshCombine(this.store.active[0].parentId);
+          }
           return;
         }
 
