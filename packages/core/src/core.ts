@@ -92,6 +92,7 @@ export class Meta2d {
   events: Record<number, (pen: Pen, e: Event) => void> = {};
   motions: Record<number, (pen: Pen, m: Motion) => void> = {};
   recordMotionMap: { [key: string]: any }; //记忆动效图元初态的map
+  recordETriggerMap: { [key: string]: any }; //记忆包含边沿触发的动效图元的map
   map: ViewMap;
   mapTimer: any;
   constructor(parent: string | HTMLElement, opts: Options = {}) {
@@ -221,6 +222,7 @@ export class Meta2d {
   }
   initMotionFns(){
     this.recordMotionMap = {};
+    this.recordETriggerMap = {};
     // 注册动效方法
     // 颜色动效
     this.motions[MotionAction.COLOR] = (pen: Pen, m: Motion) => {
@@ -2658,7 +2660,13 @@ export class Meta2d {
     // 遍历有动效的pen，根据测点去遍历pen的when
     for (let i = 0; i < this.store.motionsIds.length; i++) {
       const id = this.store.motionsIds[i];
-      const pen = this.findOne(id)
+      const pen = this.findOne(id);
+      if(!this.recordMotionMap[pen.id]){
+        this.recordMotionMap[pen.id] = {};
+      }
+      if(!this.recordETriggerMap[pen.id]){
+        this.recordETriggerMap[pen.id] = {};
+      }
       this.doMotion(pen,this.store.pointData);
     }
   }
@@ -2726,9 +2734,20 @@ export class Meta2d {
               }
               can = rel;
             }
-            // 边沿触发，触发后如果条件不满足依然执行动效
-            if(!can && mt.isEdgeTrigger){
-              can = true;
+            // 边沿触发，触发一次后如果后续的条件不满足依然执行动效
+            // if(!can && mt.isEdgeTrigger){
+            //   can = true;
+            // }
+            if(can){
+              // 如果满足一次条件，并且是边沿触发，那么记录下来
+              if(mt.isEdgeTrigger){
+                this.recordETriggerMap[pen.id][mt.type] = true;
+              }
+            }else{
+              // 如果不满足条件，并且是边沿触发，那么检查是否已经触发过，如果触发过，那么执行动效
+              if(this.recordETriggerMap[pen.id][mt.type]){
+                can = true;
+              }
             }
           }else{
             // nca=true表示启用无条件动效，when条件失效，直接执行动效；
@@ -2742,9 +2761,7 @@ export class Meta2d {
           if(SpecialMotionType.indexOf(name) !== -1){
             pen.type = PenType.Node;
           }
-          if(!this.recordMotionMap[pen.id]){
-            this.recordMotionMap[pen.id] = {};
-          }
+     
           if(can){
             // 当when中的每个条件都满足时，触发执行动作action
             this.motions[mt.type](pen,mt);
