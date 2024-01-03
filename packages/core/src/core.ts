@@ -956,6 +956,10 @@ export class Meta2d {
       }
     }
     this.canvas.autoPolylineFlag = false;
+    // open图纸的时候，需要触发pen的onAdd钩子
+    for (const pen of data.pens) {
+      pen.onAdd?.(pen);
+    }
     this.store.emitter.emit('opened');
 
     if (this.canvas.scroll && this.canvas.scroll.isShow) {
@@ -1088,6 +1092,10 @@ export class Meta2d {
       //   //存入缓存
       //   this.cacheData(tempData,data._id);
       // }, 300);
+    }
+    // open图纸的时候，需要触发pen的onAdd钩子
+    for (const pen of data.pens) {
+      pen.onAdd?.(pen);
     }
     // 收集动效的pen的id
     this.store.motionsIds = this.store.data.pens.filter(el=>el.motions && el.motions.length > 0).map(el=>el.id);
