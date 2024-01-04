@@ -818,7 +818,7 @@ export class Canvas {
         break;
       case 'm':
       case 'M':
-        this.toggleMagnifier();
+        // this.toggleMagnifier();
         break;
       case 'g':
       case 'G':
