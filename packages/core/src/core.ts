@@ -1059,7 +1059,7 @@ export class Meta2d {
       // this.doInitJS();
     }
     // 非静默打开，渲染gif，echarts，执行canvas的render
-    if(render){
+    if(render) {
       for (const pen of this.store.data.pens) {
         if(pen.externElement || pen.name === 'gif' || pen.name === 'echarts'){
           globalStore.path2dDraws[pen.name] &&
@@ -3314,6 +3314,7 @@ export class Meta2d {
     // 1. 重置画布尺寸为容器尺寸
     const { canvas } = this.canvas;
     const { offsetWidth: width, offsetHeight: height } = canvas;
+    this.resize(width, height);
 
     // 2. 获取设置的留白值
     const padding = formatPadding(viewPadding);
@@ -3334,14 +3335,7 @@ export class Meta2d {
     } else {
       ratio = w > h ? w : h;
     }
-
-    // 缩放比例为1(允许轻微的抖动)，不做缩放处理
-    if ((ratio - 1 < 0.0000001) && (ratio - 1 > -0.0000001)) {
-      return
-    }
-
-    this.resize(width, height);
-
+ 
     // 该方法直接更改画布的 scale 属性，所以比率应该乘以当前 scale
     this.scale(ratio * this.store.data.scale);
 
