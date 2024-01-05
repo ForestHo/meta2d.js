@@ -67,7 +67,7 @@ export enum LogicType {
 const PenMotionType = {
   text: ['text', 'newText'],
   shape: ['circle', 'rectangle', 'square', 'pentagon', 'line-line-irregularFigure'],
-  line: ['line-line-default', 'line-line-eulerhabd', 'line-curve-undefined', 'arcLine'],
+  line: ['line-line-default', 'line-line-eulerhabd', 'line-curve-undefined', 'arcLine','line-line-undefined'],
   connectline: ['line-line-connectLine', 'line-polyline-connectLine', 'line-curve-connectLine'],
   image: ['image'],
 }
@@ -114,7 +114,13 @@ export const SpeedDuration = {
   "5": 500,
 }
 // 需要处理type=0的图元类型，直线，多折线，曲线，不规则图形
-export const SpecialMotionType = ['line-line-default', 'line-line-eulerhabd', 'line-curve-undefined','line-line-irregularFigure'];
+export const SpecialMotionType = [
+  'line-line-default', 
+  'line-line-eulerhabd',
+  'line-curve-undefined',
+  'line-line-irregularFigure',
+  'line-line-undefined'
+];
 /**
  * @description 根据图元类型，获取所属图元分类的动画类型
  * @author Joseph Ho
@@ -124,14 +130,14 @@ export const SpecialMotionType = ['line-line-default', 'line-line-eulerhabd', 'l
  * @returns {*}  
  */
 export function getMotionsByName(name: string) {
-  const key = findKeyByValue(PenMotionType, name);
+    const key = findKeyByValue(PenMotionType, name);
   if (key) {
     return PenMotionMap[key];
   }
 }
 function findKeyByValue(obj, value) {
-  for (let key in obj) {
-    if (obj[key].indexOf(value) !== -1) {
+    for (let key in obj) {
+        if (obj[key].indexOf(value) !== -1) {
       return key;
     }
   }
