@@ -931,7 +931,7 @@ export class Meta2d {
         this.canvas.makePen(pen);
       }
       for (const pen of data.pens) {
-        this.canvas.updateLines(pen);
+        this.canvas.updateLines(pen,undefined,false);
       }
     }
     if (!this.store.data.template) {
@@ -1047,7 +1047,7 @@ export class Meta2d {
         }
       }
       for (const pen of data.pens) {
-        this.canvas.updateLines(pen);
+        this.canvas.updateLines(pen,undefined,false);
       }
       // 如果没有模板ID，生成一个
       if (!this.store.data.template) {

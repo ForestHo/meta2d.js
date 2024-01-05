@@ -5835,7 +5835,7 @@ export class Canvas {
       this.calcAutoAnchor(line, to, pen, item);
     }
   }
-  updateLines(pen: Pen, change?: boolean) {
+  updateLines(pen: Pen, change?: boolean,isCalculate=true) {
     pen.children?.forEach((child: string) => {
       const childPen = this.store.pens[child];
       if (childPen) {
@@ -5857,7 +5857,7 @@ export class Canvas {
       if (!lineAnchor) {
         return;
       }
-      if (this.store.options.autoAnchor) {
+      if (this.store.options.autoAnchor && isCalculate) {
         if(line.notTranslatePoint) {
           // 自动锚点
           setTimeout(() => {
