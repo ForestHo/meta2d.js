@@ -971,11 +971,9 @@ export class Meta2d {
    * @memberof Meta2d
    */
   clearOnlyData(template?: string){
-    // for (const pen of this.store.data.pens) {
-    //   pen.onDestroy?.(pen);
-    // }
     const isSameTpl = this.store.data.template === template
     for (const pen of this.store.data.pens) {
+      // @wangyahua: 如果是不同的模板，应该将pen全部清除；如果是相同模板，则只清除非模板图元
       if (!isSameTpl || !pen.template) {
         if (pen.onDestroy != null) {
           pen.onDestroy(pen);
@@ -988,11 +986,16 @@ export class Meta2d {
     // 非同一个模板时，置标志位，下次open时更新模板渲染
     if(!this.store.sameTemplate){
       this.canvas.canvasTemplate.patchFlags = true;
+      this.canvas.canvasTemplate.bgPatchFlags = true;
     }
     // 非必要，为的是 open 时重绘 背景与网格
     // this.store.patchFlagsBackground = true;
     this.store.patchFlagsTop = true;
     this.setBackgroundImage(undefined);
+
+    // 清理图片层数据
+    this.canvas.canvasImage.clear();
+    this.canvas.canvasImageBottom.clear();
   }
   lastQuietRender:boolean|undefined = undefined;//记录上一次是否静默打开的标志位
   /**
