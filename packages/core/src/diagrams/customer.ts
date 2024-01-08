@@ -69,11 +69,14 @@ function updatePen(pen: Pen){
       const bis = child[0].propBindings[j];
       const ks = Object.keys(bis);
       const vs = Object.values(bis);
-      const id = vs[0].func.split('@')[1];
-      const exs = pen.properties.extend.find(el=>el.attr === id);
-      if(exs){
-        const obj = { id: child[0].id, [ks[0]]: exs.value };
-        meta2d.setValue(obj, { render: false, doEvent: false });
+      for (let n = 0; n < ks.length; n++) {
+        const k = ks[n];
+        const id = vs[n].func.split('@')[1];
+        const exs = pen.properties.extend.find(el=>el.attr === id);
+        if(exs){
+          const obj = { id: child[0].id, [k]: exs.value };
+          meta2d.setValue(obj, { render: false, doEvent: false });
+        }
       }
     }
   }
