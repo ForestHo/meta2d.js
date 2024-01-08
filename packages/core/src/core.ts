@@ -1257,11 +1257,11 @@ export class Meta2d {
   }
 
   drawArcLine(isDrawArcLine = false){
-    lockedError(this.store);
     if(!isDrawArcLine) {
       this.canvas.arcLine = null;
       return;
     }
+    lockedError(this.store);
     this.canvas.arcLine = {
       name:'arcLine',
       state: 0,

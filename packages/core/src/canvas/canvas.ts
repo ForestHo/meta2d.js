@@ -716,7 +716,7 @@ export class Canvas {
         break;
       case 'a':
       case 'A':
-        if (this.currentState != State.DRAWING && (e.ctrlKey || e.metaKey)) {
+        if (this.currentState != State.DRAWING && this.currentState != State.DRAG && (e.ctrlKey || e.metaKey)) {
           // TODO: ctrl + A 会选中 visible == false 的元素
           this.active(
             this.store.data.pens.filter(
@@ -1786,17 +1786,17 @@ export class Canvas {
             if (e.ctrlKey && !e.shiftKey) {
               if (pen.calculative.active) {
                 this.willInactivePen = pen;
-              } else {
+              } else if(this.currentState != State.DRAG){
                 pen.calculative.active = true;
                 setChildrenActive(pen); // 子节点也设置为active
                 this.store.active.push(pen);
                 this.store.emitter.emit('active', this.store.active);
               }
               this.patchFlags = true;
-            } else if (e.ctrlKey && e.shiftKey && this.store.hover.parentId) {
+            } else if (e.ctrlKey && e.shiftKey && this.store.hover.parentId && this.currentState != State.DRAG) {
               this.active([this.store.hover]);
             } else {
-              if (!pen.calculative.active) {
+              if (!pen.calculative.active  && this.currentState != State.DRAG) {
                 this.active([pen]);
               }
             }
