@@ -338,6 +338,9 @@ export class Meta2d {
     };
     // 图像动效
     this.motions[MotionAction.IMAGE] = (pen: Pen, m: Motion) => {
+      if(pen.isAnimate){
+        return;
+      }
       pen.imageRatio = m.action.fillStyle;
       const frames = [];
       for (let i = 0; i < m.action.paths.length; i++) {
@@ -354,6 +357,7 @@ export class Meta2d {
       }
       this.setValue(
         { id: pen.id,
+          isAnimate: true,
           frames,
         },
         { render: false }
@@ -2862,6 +2866,12 @@ export class Meta2d {
         break;
       case MotionAction.IMAGE:
         this.recordMotionMap[pen.id].hasOwnProperty('image') && this.stopAnimate(pen.id);
+        this.setValue(
+          { id: pen.id,
+            isAnimate: false,
+          },
+          { render: false }
+        );
         break;
       case MotionAction.BLINK:
         this.recordMotionMap[pen.id].hasOwnProperty('blink') && this.stopAnimate(pen.id);
