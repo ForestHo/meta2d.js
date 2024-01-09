@@ -314,17 +314,17 @@ export class Meta2d {
         let frames = [];
         if(pen.frames?.length > 0){
           const obj = Object.assign({},pen.frames[0],
-            {duration: m.action.ts1,visible:true,background:m.action.ts1_backgroundColor,color: m.action.ts1_borderColor}
+            {duration: m.action.ts1,visible:pen.visible,background:m.action.ts1_backgroundColor,color: m.action.ts1_borderColor}
           );
           frames.push(obj);          
           const obj2 = Object.assign({},pen.frames[0],
-            {duration: m.action.ts2,visible:true,background:m.action.ts2_backgroundColor,color: m.action.ts2_borderColor}
+            {duration: m.action.ts2,visible:pen.visible,background:m.action.ts2_backgroundColor,color: m.action.ts2_borderColor}
           );
           frames.push(obj2);          
         }else{
           frames = [
-            {duration: m.action.ts1,visible:true,background:m.action.ts1_backgroundColor,color: m.action.ts1_borderColor},
-            {duration: m.action.ts2,visible:true,background:m.action.ts2_backgroundColor,color: m.action.ts2_borderColor},
+            {duration: m.action.ts1,visible:pen.visible,background:m.action.ts1_backgroundColor,color: m.action.ts1_borderColor},
+            {duration: m.action.ts2,visible:pen.visible,background:m.action.ts2_backgroundColor,color: m.action.ts2_borderColor},
           ];
         }
         this.setValue(
@@ -370,7 +370,7 @@ export class Meta2d {
       if(pen.frames?.length > 0){
         const obj = Object.assign({},pen.frames[0],{
           duration: SpeedDuration[m.action.speed+''],
-          visible: true,
+          visible: pen.visible,
           rotate: ClockWise[m.action.direction],
         })
         frames.push(obj);
@@ -378,7 +378,7 @@ export class Meta2d {
         frames = [
           {
             duration: SpeedDuration[m.action.speed+''],
-            visible: true,
+            visible: pen.visible,
             rotate: ClockWise[m.action.direction],
           }
         ];
