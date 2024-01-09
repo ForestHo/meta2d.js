@@ -347,7 +347,7 @@ export class Meta2d {
         const url = m.action.paths[i];
         frames.push({
           duration: m.action.interval,
-          visible: true,
+          visible: pen.visible,
           image: url,
         })
       }
