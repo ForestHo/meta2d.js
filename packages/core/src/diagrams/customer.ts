@@ -31,11 +31,23 @@ function onAdd(pen: Pen) {
         } else {
           elem.parentId = parentId;
           elem.id = s8();
+          for (const key in elem.properties) {
+            if (Object.prototype.hasOwnProperty.call(elem.properties, key)) {
+              const value = elem.properties[key];
+              for (const k in value) {
+                if (Object.prototype.hasOwnProperty.call(value, k)) {
+                  const v = value[k];
+                  elem[k] = v;
+                }
+              }
+            }
+          }
           child.push(elem.id);
         }
         pen.calculative.canvas.makePen(elem);
         pen.calculative.canvas.parent.pushChildren(pen, [elem]);
       }
+      const meta2d = pen.calculative.canvas.parent;
       pen.width = res.width;
       pen.height = res.height;
       for (let i = 0; i < res.properties.length; i++) {
