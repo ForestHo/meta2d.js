@@ -32,7 +32,7 @@ function onAdd(pen: Pen) {
           elem.parentId = parentId;
           elem.id = s8();
           for (const key in elem.properties) {
-            if (Object.prototype.hasOwnProperty.call(elem.properties, key)) {
+            if (Object.prototype.hasOwnProperty.call(elem.properties, key) && key !== 'extend') {
               const value = elem.properties[key];
               for (const k in value) {
                 if (Object.prototype.hasOwnProperty.call(value, k)) {
@@ -57,6 +57,7 @@ function onAdd(pen: Pen) {
         extend: res.properties
       };
       pen.children = child;
+      pen.calculative.canvas.updatePenRect(pen);
     }).catch(err => {
       console.log(err);
     })
@@ -70,11 +71,9 @@ function onValue(pen: any) {
 }
 function updatePen(pen: Pen){
   const meta2d = pen.calculative.canvas.parent;
-  // console.log(meta2d,'meta2d');
   for (let i = 0; i < pen.children.length; i++) {
     const cId = pen.children[i];
     const child = meta2d.find(cId);
-    // console.log('child', child,cId,meta2d.store.data.pens.length);
     if(!child[0]) continue;
     for (let j = 0; j < child[0].propBindings.length; j++) {
       const bis = child[0].propBindings[j];
@@ -85,7 +84,18 @@ function updatePen(pen: Pen){
         const id = vs[n].func.split('@')[1];
         const exs = pen.properties.extend.find(el=>el.attr === id);
         if(exs){
-          const obj = { id: child[0].id, [k]: exs.value };
+          const obj = { id: child[0].id };
+          if(!child[0][k] || k === 'text'){
+            const index = child[0].properties.extend.findIndex(el=>el.attr === k);
+            if(index !== -1){
+              Object.assign(obj, { ['properties.extend.'+index+'.value']: exs.value });
+            }
+            if(k === 'text'){
+              Object.assign(obj, { ['text']: exs.value });
+            }
+          }else{
+            Object.assign(obj, { [k]: exs.value });
+          }
           meta2d.setValue(obj, { render: false, doEvent: false });
         }
       }
