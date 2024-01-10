@@ -47,8 +47,9 @@ function onAdd(pen: Pen) {
         pen.calculative.canvas.makePen(elem);
         pen.calculative.canvas.parent.pushChildren(pen, [elem]);
       }
-      pen.width = res.width;
-      pen.height = res.height;
+      const rect = pen.calculative.canvas.reversePenRect({x:0,y:0,width:res.width,height:res.height});
+      pen.width = rect.width;
+      pen.height = rect.height;
       for (let i = 0; i < res.properties.length; i++) {
         const item = res.properties[i];
         item.value = item.defaultValue;
@@ -56,6 +57,18 @@ function onAdd(pen: Pen) {
       pen.properties = {
         extend: res.properties
       };
+      // 根据extend的数据，初始化databinds的数据
+      const arr = [];
+      for (let i = 0; i < res.properties.length; i++) {
+        const item = res.properties[i];
+        const obj = {
+          source: { dataId: '', name: '' },
+          target: item.attr,
+          function: null
+        };
+        arr.push(obj);
+      }
+      pen.databindings = arr;
       pen.children = child;
       pen.calculative.canvas.updatePenRect(pen);
     }).catch(err => {
