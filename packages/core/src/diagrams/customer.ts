@@ -1,8 +1,13 @@
 import { Pen } from '../pen';
 import { s8 } from '../utils';
-
+const EXTEND = 'extend';
+const COMBINE = 'combine';
+const PROPERTIES = 'properties';
+const DOT = '.';
+const TEXT = 'text';
+const VALUE = 'value';
+const DEFAULT = 'default';
 export function customer(pen: Pen, ctx?: CanvasRenderingContext2D): Path2D {
-  // console.log('hello',pen.url);
   if (!pen.onDestroy) {
     pen.onDestroy = onDestroy;
     pen.onAdd = onAdd;
@@ -18,21 +23,25 @@ export function customer(pen: Pen, ctx?: CanvasRenderingContext2D): Path2D {
 function onRenderPenRaw(pen: Pen) {
 }
 function onAdd(pen: Pen) {
-  // console.log('onadd')
-  const meta2d = pen.calculative.canvas.parent;
   let parentId = pen.id, child = [];
   fetch((pen as any).url)
-    .then(response => response.json())
+    .then(response => {
+      try {
+        return response.json()
+      } catch (error) {
+        throw new Error(error);
+      }
+    })
     .then(res => {
-      for (let i = 0; i < res.components.length; i++) {
-        const elem = res.components[i];
-        if (elem.name === 'combine') {
+      for (let i = 0; i < res.pens.length; i++) {
+        const elem = res.pens[i];
+        if (elem.name === COMBINE) {
           continue;
         } else {
           elem.parentId = parentId;
           elem.id = s8();
           for (const key in elem.properties) {
-            if (Object.prototype.hasOwnProperty.call(elem.properties, key) && key !== 'extend') {
+            if (Object.prototype.hasOwnProperty.call(elem.properties, key) && key !== EXTEND) {
               const value = elem.properties[key];
               for (const k in value) {
                 if (Object.prototype.hasOwnProperty.call(value, k)) {
@@ -47,7 +56,7 @@ function onAdd(pen: Pen) {
         pen.calculative.canvas.makePen(elem);
         pen.calculative.canvas.parent.pushChildren(pen, [elem]);
       }
-      const rect = pen.calculative.canvas.reversePenRect({x:0,y:0,width:res.width,height:res.height});
+      const rect = pen.calculative.canvas.reversePenRect({ x: 0, y: 0, width: res.width, height: res.height });
       pen.width = rect.width;
       pen.height = rect.height;
       for (let i = 0; i < res.properties.length; i++) {
@@ -79,38 +88,37 @@ function onDestroy(pen: Pen) {
 
 }
 function onValue(pen: any) {
-  // console.log('onvalue')
   updatePen(pen);
 }
-function updatePen(pen: Pen){
+function updatePen(pen: Pen) {
   const meta2d = pen.calculative.canvas.parent;
   for (let i = 0; i < pen.children.length; i++) {
     const cId = pen.children[i];
     const child = meta2d.find(cId);
-    if(!child[0]) continue;
+    if (!child[0]) continue;
     for (let j = 0; j < child[0].propBindings.length; j++) {
-      const bis = child[0].propBindings[j];
-      const ks = Object.keys(bis);
-      const vs = Object.values(bis);
-      for (let n = 0; n < ks.length; n++) {
-        const k = ks[n];
-        const id = vs[n].func.split('@')[1];
-        const exs = pen.properties.extend.find(el=>el.attr === id);
-        if(exs){
-          const obj = { id: child[0].id };
-          if(!child[0][k] || k === 'text'){
-            const index = child[0].properties.extend.findIndex(el=>el.attr === k);
-            if(index !== -1){
-              Object.assign(obj, { ['properties.extend.'+index+'.value']: exs.value });
+      const pb = child[0].propBindings[j];
+      const exs = pen.properties.extend.find(el => el.attr === pb.src);
+      if (exs) {
+        const obj = { id: child[0].id };
+        // 除开内置属性的其他属性，更新流程都走properties.extend
+        if (pb.type !== DEFAULT) {
+          if (pb.type === EXTEND) {
+            const index = child[0].properties.extend.findIndex(el => el.attr === pb.target);
+            if (index !== -1) {
+              Object.assign(obj, { [`${PROPERTIES}${DOT}${pb.type}${DOT}` + index + DOT + VALUE]: exs.value });
             }
-            if(k === 'text'){
-              Object.assign(obj, { ['text']: exs.value });
-            }
-          }else{
-            Object.assign(obj, { [k]: exs.value });
+          } else {
+            Object.assign(obj, { [PROPERTIES + DOT + pb.type + DOT + pb.target]: exs.value });
           }
-          meta2d.setValue(obj, { render: false, doEvent: false });
+          if (pb.target === TEXT) {
+            Object.assign(obj, { [TEXT]: exs.value });
+          }
+        } else {
+          // 内置属性走一级属性
+          Object.assign(obj, { [pb.target]: exs.value });
         }
+        meta2d.setValue(obj, { render: false, doEvent: false });
       }
     }
   }
