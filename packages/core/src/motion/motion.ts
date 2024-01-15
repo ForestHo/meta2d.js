@@ -23,6 +23,7 @@ interface TextAct {
 export interface Motion {
   type: MotionType;
   nca: Boolean;
+  id: String;
   isEdgeTrigger: Boolean;
   when: When[];
   action: any;
