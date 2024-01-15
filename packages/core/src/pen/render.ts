@@ -2808,6 +2808,7 @@ export function setChildrenActive(pen: Pen, active = true) {
   pen.children.forEach((id) => {
     const child: Pen = store.pens[id];
     if (child) {
+      // 如果子节点是线条，不设置 active
       if(child.type !== PenType.Line){
         child.calculative.active = active;
       }

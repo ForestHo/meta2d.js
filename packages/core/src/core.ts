@@ -336,9 +336,11 @@ export class Meta2d {
       }
       this.startAnimate(pen.id);
     };
+    let lastMtId = ""; //记录上一次动效的id
     // 图像动效
     this.motions[MotionAction.IMAGE] = (pen: Pen, m: Motion) => {
-      if(pen.isAnimate){
+      // 如果在动画中，并且 上一次动效跟本次动效的id一致，则直接返回，保持原来的动效状态
+      if(pen.isAnimate && lastMtId === m.id){
         return;
       }
       pen.imageRatio = m.action.fillStyle;
@@ -363,6 +365,7 @@ export class Meta2d {
         { render: false }
       );
       this.startAnimate(pen.id);
+      lastMtId = m.id;
     };
     // 旋转动效--线性
     this.motions[MotionAction.ROTATE] = (pen: Pen, m: Motion) => {
@@ -2677,6 +2680,8 @@ export class Meta2d {
       this.doMotion(pen,this.store.pointData);
     }
   }
+  // 收集每一次的动效数组
+  canList = [];
   /**
    * @description 根据val判断是否执行motions动效
    * @author Joseph Ho
@@ -2768,10 +2773,9 @@ export class Meta2d {
           if(SpecialMotionType.indexOf(name) !== -1){
             pen.type = PenType.Node;
           }
-     
+          
           if(can){
-            // 当when中的每个条件都满足时，触发执行动作action
-            this.motions[mt.type](pen,mt);
+              this.canList.push(mt);
           }else{
             this.recoverMotions(pen,mt.type);
           }
@@ -2779,6 +2783,13 @@ export class Meta2d {
         }
       }
     }
+    for (let n = 0; n < this.canList.length; n++) {
+      const mt = this.canList[n];
+      this.recoverMotions(pen,mt.type);
+      // 当when中的每个条件都满足时，触发执行动作action
+      this.motions[mt.type](pen,mt);
+    }
+    this.canList = [];
   }
   /**
    * @description 从动效状态还原为初始状态
