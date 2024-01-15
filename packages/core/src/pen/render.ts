@@ -2808,8 +2808,9 @@ export function setChildrenActive(pen: Pen, active = true) {
   pen.children.forEach((id) => {
     const child: Pen = store.pens[id];
     if (child) {
-      child.calculative.active = active;
-
+      if(child.type !== PenType.Line){
+        child.calculative.active = active;
+      }
       setChildrenActive(child, active);
     }
   });
