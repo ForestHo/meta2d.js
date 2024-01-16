@@ -706,7 +706,7 @@ function linearGradient(
  * @param pen 画笔
  */
 function getImagePosition(pen: Pen) {
-  const {
+  let {
     worldIconRect: rect,
     iconWidth,
     iconHeight,
@@ -714,6 +714,12 @@ function getImagePosition(pen: Pen) {
     imgNaturalHeight,
   } = pen.calculative;
   let { x, y, width: w, height: h } = rect;
+  if(!imgNaturalWidth) {
+    imgNaturalWidth = imgList[pen.id].naturalWidth;
+  }
+  if(!imgNaturalHeight) {
+    imgNaturalHeight = imgList[pen.id].naturalHeight;
+  }
   if (iconWidth) {
     w = iconWidth;
   }

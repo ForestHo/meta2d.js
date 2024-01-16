@@ -2382,6 +2382,8 @@ export class Canvas {
           'SELECT'
         );
         this.setState('SELECT');
+        // 右键回到选择模式，disable 锚点显示
+        this.parent.setOptions({disableAnchor:true});
       } else if(this.currentState == State.MOVE || this.currentState == State.SELECT){
         if(this.currentState == State.MOVE && !this.store.active.length) {
           this.active([this.store.hover])
