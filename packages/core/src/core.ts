@@ -89,24 +89,32 @@ export class Meta2d {
       url?: string;
     }
   ) => boolean;
-  events: Record<number, (pen: Pen, e: Event) => void> = {};
-  motions: Record<number, (pen: Pen, m: Motion) => void> = {};
+  events: Record<number, (pen: Pen, e: Event) => void> = {};//事件map
+  motions: Record<number, (pen: Pen, m: Motion) => void> = {}; //动效map
   recordMotionMap: { [key: string]: any }; //记忆动效图元初态的map
   recordETriggerMap: { [key: string]: any }; //记忆包含边沿触发的动效图元的map
   map: ViewMap;
   mapTimer: any;
   constructor(parent: string | HTMLElement, opts: Options = {}) {
+    // meta2d画布实例构造函数
+    // 生成一个meta2d画布对应的store实例
     this.store = useStore(s8());
+    // 设置options参数
     this.setOptions(opts);
     this.setDatabyOptions(opts);
+    // 初始化
     this.init(parent);
+    // 注册图元
     this.register(commonPens());
     this.registerCanvasDraw({ cube });
+    // 注册锚点函数
     this.registerAnchors(commonAnchors());
     globalThis.meta2d = this;
+    // 初始化事件相关函数
     this.initEventFns();
     // 初始化动效的函数
     this.initMotionFns();
+    // 监听所有事件
     this.store.emitter.on('*', this.onEvent);
   }
 

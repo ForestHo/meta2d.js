@@ -15,6 +15,7 @@ export function customer(pen: Pen, ctx?: CanvasRenderingContext2D): Path2D {
     pen.onRenderPenRaw = onRenderPenRaw;
   }
   const path = !ctx ? new Path2D() : ctx;
+  // 初始渲染的时候,需要根据数据去更新pen的外观
   updatePen(pen);
   if (path instanceof Path2D) {
     return path;
@@ -24,6 +25,7 @@ function onRenderPenRaw(pen: Pen) {
 }
 function onAdd(pen: Pen) {
   let parentId = pen.id, child = [];
+  // 根据pen的url,获取自定义控件的JSON数据
   fetch((pen as any).url)
     .then(response => {
       try {
@@ -35,11 +37,15 @@ function onAdd(pen: Pen) {
     .then(res => {
       for (let i = 0; i < res.pens.length; i++) {
         const elem = res.pens[i];
+        // 如果name=combine，跳过
         if (elem.name === COMBINE) {
           continue;
         } else {
+          // 指定子图元的parentId为当前pen的id
           elem.parentId = parentId;
+          // 生成新的子图元id,避免拖拽多个自定义控件,子图元id重复
           elem.id = s8();
+          // 将extend的数据，赋值给子图元的一级属性
           for (const key in elem.properties) {
             if (Object.prototype.hasOwnProperty.call(elem.properties, key) && key !== EXTEND) {
               const value = elem.properties[key];
@@ -51,11 +57,15 @@ function onAdd(pen: Pen) {
               }
             }
           }
+          // 收集子图元的id
           child.push(elem.id);
         }
+        // 生成子pen
         pen.calculative.canvas.makePen(elem);
+        // 将子pen添加到父pen的children字段
         pen.calculative.canvas.parent.pushChildren(pen, [elem]);
       }
+      // 根据自定义控件的宽高,换算成画布坐标系的宽高
       const rect = pen.calculative.canvas.reversePenRect({ x: 0, y: 0, width: res.width, height: res.height });
       pen.width = rect.width;
       pen.height = rect.height;
@@ -63,6 +73,7 @@ function onAdd(pen: Pen) {
         const item = res.properties[i];
         item.value = item.defaultValue;
       }
+      // 将properties赋值给当前pen的properties的extend字段
       pen.properties = {
         extend: res.properties
       };
@@ -78,7 +89,9 @@ function onAdd(pen: Pen) {
         arr.push(obj);
       }
       pen.databindings = arr;
+      // 将收集到的子图元的id，赋值给pen的children字段
       pen.children = child;
+      // 根据最新的宽高，更新pen的rect
       pen.calculative.canvas.updatePenRect(pen);
     }).catch(err => {
       console.log(err);
@@ -92,6 +105,7 @@ function onValue(pen: any) {
 }
 function updatePen(pen: Pen) {
   const meta2d = pen.calculative.canvas.parent;
+  // 父图元的属性变化,更新子图元绑定的属性
   for (let i = 0; i < pen.children.length; i++) {
     const cId = pen.children[i];
     const child = meta2d.find(cId);
@@ -104,18 +118,21 @@ function updatePen(pen: Pen) {
         // 除开内置属性的其他属性，更新流程都走properties.extend
         if (pb.type !== DEFAULT) {
           if (pb.type === EXTEND) {
+            // extend是一个数组,所以更新路径为properties.extend.${index}.value
             const index = child[0].properties.extend.findIndex(el => el.attr === pb.target);
             if (index !== -1) {
               Object.assign(obj, { [`${PROPERTIES}${DOT}${pb.type}${DOT}` + index + DOT + VALUE]: exs.value });
             }
           } else {
+            // properties的其他属性,走以下更新路径,如properties.basic.width
             Object.assign(obj, { [PROPERTIES + DOT + pb.type + DOT + pb.target]: exs.value });
           }
+          // text属性,更新路径为一级属性
           if (pb.target === TEXT) {
             Object.assign(obj, { [TEXT]: exs.value });
           }
         } else {
-          // 内置属性走一级属性
+          // default默认属性走一级属性的更新路径
           Object.assign(obj, { [pb.target]: exs.value });
         }
         meta2d.setValue(obj, { render: false, doEvent: false });

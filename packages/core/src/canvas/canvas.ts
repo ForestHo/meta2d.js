@@ -280,8 +280,9 @@ export class Canvas {
     public parentElement: HTMLElement,
     public store: Meta2dStore
   ) {
+    // 实例化模板层
     this.canvasTemplate = new CanvasTemplate(parentElement, store);
-
+    // 实例化底层图片层
     this.canvasImageBottom = new CanvasImage(parentElement, store, true);
     this.canvasImageBottom.canvas.style.zIndex = '1';
 
@@ -290,13 +291,13 @@ export class Canvas {
     this.canvas.style.backgroundRepeat = 'no-repeat';
     this.canvas.style.backgroundSize = '100% 100%';
     this.canvas.style.zIndex = '2';
-
+    // 实例化上层图片层
     this.canvasImage = new CanvasImage(parentElement, store);
     this.canvasImage.canvas.style.zIndex = '3';
-
+    // 实例化放大镜层
     this.magnifierCanvas = new MagnifierCanvas(this, parentElement, store);
     this.magnifierCanvas.canvas.style.zIndex = '4';
-
+    // 设置外部容器样式
     this.externalElements.style.position = 'absolute';
     this.externalElements.style.left = '0';
     this.externalElements.style.top = '0';
