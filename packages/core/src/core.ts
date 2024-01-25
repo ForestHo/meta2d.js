@@ -1015,6 +1015,7 @@ export class Meta2d {
    * @memberof Meta2d
    */
   openWithCache(data?: Meta2dData, render:boolean = true,isCache:boolean = true){
+    // 先从缓存中查找是否有该图纸的缓存数据
     let index = this.store.cacheDatas.findIndex(
       (item) => item.data && item.data._id === data._id
     );
@@ -1036,6 +1037,7 @@ export class Meta2d {
       this.loadCacheData(cacheData, render);
       // render && this.startAnimate();
     } else {
+      // 缓存中没有数据，走正常的打开流程
       this.setBackgroundImage(data.bkImage);
       Object.assign(this.store.data, data);
       this.store.data.pens = [];
