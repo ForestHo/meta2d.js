@@ -2793,7 +2793,9 @@ export class Meta2d {
     }
     for (let n = 0; n < this.canList.length; n++) {
       const mt = this.canList[n];
-      this.recoverMotions(pen,mt.type);
+      if (mt.type !== MotionAction.IMAGE) {
+        this.recoverMotions(pen,mt.type);
+      }
       // 当when中的每个条件都满足时，触发执行动作action
       this.motions[mt.type](pen,mt);
     }
@@ -2816,7 +2818,7 @@ export class Meta2d {
               [key1]: this.recordMotionMap[pen.id][key1],
               [key2]: this.recordMotionMap[pen.id][key2],
             },
-            { render: true }
+            { render: false }
           );
         }
         break;
@@ -2879,7 +2881,7 @@ export class Meta2d {
             { id: pen.id,
               [key]: this.recordMotionMap[pen.id][key],
             },
-            { render: true }
+            { render: false }
           );
         }
         break;
