@@ -1125,7 +1125,8 @@ export class Canvas {
       if (json) {
         obj = JSON.parse(json);
       }
-    } catch (e) {}
+    } catch (e) { }
+    if (!obj) return;
     obj.width = obj.width * this.store.data.scale;
     obj.height = obj.height * this.store.data.scale;
     if (!obj) {
@@ -6589,7 +6590,7 @@ export class Canvas {
     if (
       this.store.hover &&
       !this.store.data.locked &&
-      (!this.store.options.disableInput ||(this.store.active.length == 1 && this.store.active[0].name == 'text'))
+      (!this.store.options.disableInput ||(this.store.active.length == 1 && this.store.active[0].name == 'text' && !this.store.active[0].template))
     ) {
       if (this.store.hover.onShowInput) {
         this.store.hover.onShowInput(this.store.hover, e as any);
