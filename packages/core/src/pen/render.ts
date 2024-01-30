@@ -714,6 +714,7 @@ function getImagePosition(pen: Pen) {
     imgNaturalHeight,
   } = pen.calculative;
   let { x, y, width: w, height: h } = rect;
+  // 如果从calculation中获取不到图片的宽高，就从imgList中获取
   if(!imgNaturalWidth) {
     imgNaturalWidth = imgList[pen.id].naturalWidth;
   }
@@ -2515,6 +2516,15 @@ export function getToAnchor(pen: Pen) {
   return pen.calculative.worldAnchors[pen.calculative.worldAnchors.length - 1];
 }
 
+/**
+ * @description 设置节点动画
+ * @author Joseph Ho
+ * @date 30/01/2024
+ * @export
+ * @param {Pen} pen
+ * @param {number} now
+ * @returns {*}  
+ */
 export function setNodeAnimate(pen: Pen, now: number) {
   if (pen.calculative.start === 0 || !pen.frames || !pen.frames.length) {
     pen.calculative.start = undefined;
@@ -2769,6 +2779,15 @@ function isLinear(value: unknown, key: string, pen: Pen): boolean {
   );
 }
 
+/**
+ * @description 设置线条动画
+ * @author Joseph Ho
+ * @date 30/01/2024
+ * @export
+ * @param {Pen} pen
+ * @param {number} now
+ * @returns {*}  
+ */
 export function setLineAnimate(pen: Pen, now: number) {
   if (pen.calculative.start === 0) {
     pen.calculative.start = undefined;
@@ -2806,6 +2825,15 @@ export function setLineAnimate(pen: Pen, now: number) {
   return true;
 }
 
+/**
+ * @description 设置children为active
+ * @author Joseph Ho
+ * @date 30/01/2024
+ * @export
+ * @param {Pen} pen
+ * @param {boolean} [active=true]
+ * @returns {*}  
+ */
 export function setChildrenActive(pen: Pen, active = true) {
   if (!pen.children) {
     return;
@@ -2842,6 +2870,15 @@ export function setHover(pen: Pen, hover = true) {
   }
 }
 
+/**
+ * @description 设置dom的位置
+ * @author Joseph Ho
+ * @date 30/01/2024
+ * @export
+ * @param {Pen} pen
+ * @param {HTMLElement} elem
+ * @returns {*}  
+ */
 export function setElemPosition(pen: Pen, elem: HTMLElement) {
   if (!elem) {
     return;

@@ -229,6 +229,7 @@ export class Meta2d {
     return this.canvas.areaSelection();
   }
   initMotionFns(){
+    // 初始化动效需要的变量
     this.recordMotionMap = {};
     this.recordETriggerMap = {};
     // 注册动效方法
@@ -237,9 +238,11 @@ export class Meta2d {
       const obj = { id: pen.id };
       if(pen.name !== 'text'){
         const COLOR = 'color',BACK = 'background';
+        // 记录图元初态的颜色
         if(this.recordMotionMap[pen.id][COLOR] === undefined){
           this.recordMotionMap[pen.id][COLOR] = pen.color||'';
         }
+        // 记录图元初态的背景色
         if(this.recordMotionMap[pen.id][BACK] === undefined){
           this.recordMotionMap[pen.id][BACK] = pen.background||'';
         }
@@ -248,10 +251,13 @@ export class Meta2d {
           [BACK]: m.action.backgroundColor,
         })
       }else{
+        // 对文本特殊处理
         const COLOR = 'textColor',BACK = 'textBackground';
+        // 记录图元初态的文字颜色
         if(this.recordMotionMap[pen.id][COLOR] === undefined){
           this.recordMotionMap[pen.id][COLOR] = pen.textColor||'';
         }
+        // 记录图元初态的文字背景色
         if(this.recordMotionMap[pen.id][BACK] === undefined){
           this.recordMotionMap[pen.id][BACK] = pen.textBackground||'';
         }
@@ -268,6 +274,7 @@ export class Meta2d {
     // 文本动效
     this.motions[MotionAction.TEXT] = (pen: Pen, m: Motion) => {
       const TEXT = 'text';
+      // 记录图元初态的文本
       if(this.recordMotionMap[pen.id][TEXT] === undefined){
         this.recordMotionMap[pen.id][TEXT] = pen.text;
       }
@@ -281,6 +288,7 @@ export class Meta2d {
     // 可视动效
     this.motions[MotionAction.VISION] = (pen: Pen, m: Motion) => {
       const VISIABLE = 'visible';
+      // 记录图元初态的可见性
       if(this.recordMotionMap[pen.id][VISIABLE] === undefined){
         this.recordMotionMap[pen.id][VISIABLE] = pen.visible||true;
       }
@@ -290,6 +298,7 @@ export class Meta2d {
     this.motions[MotionAction.BLINK] = (pen: Pen, m: Motion) => {
       pen.animateCycle = m.action.count !==0 ? m.action.count: Infinity;
       const BLINK = 'blink';
+      // 记录图元初态的闪烁状态
       if(this.recordMotionMap[pen.id][BLINK] === undefined){
         this.recordMotionMap[pen.id][BLINK] = true;
       }
@@ -335,6 +344,7 @@ export class Meta2d {
             {duration: m.action.ts2,visible:pen.visible,background:m.action.ts2_backgroundColor,color: m.action.ts2_borderColor},
           ];
         }
+        // 先设置动画帧
         this.setValue(
           { id: pen.id,
             frames,
@@ -342,12 +352,13 @@ export class Meta2d {
           { render: false }
         );
       }
+      // 然后开启动效
       this.startAnimate(pen.id);
     };
     let lastMtId = ""; //记录上一次动效的id
     // 图像动效
     this.motions[MotionAction.IMAGE] = (pen: Pen, m: Motion) => {
-      // 如果在动画中，并且 上一次动效跟本次动效的id一致，则直接返回，保持原来的动效状态
+      // 如果pen在动画中并且 上一次动效跟本次动效的id一致，则直接返回，保持原来的动效状态
       if(pen.isAnimate && lastMtId === m.id){
         return;
       }
@@ -362,9 +373,11 @@ export class Meta2d {
         })
       }
       const IMG = 'image';
+      // 记录图元初态的图片
       if(this.recordMotionMap[pen.id][IMG] === undefined){
         this.recordMotionMap[pen.id][IMG] = pen.image||'';
       }
+      // 先设置动画帧
       this.setValue(
         { id: pen.id,
           isAnimate: true,
@@ -373,6 +386,7 @@ export class Meta2d {
         { render: false }
       );
       this.startAnimate(pen.id);
+      // 记录上一次动效的id
       lastMtId = m.id;
     };
     // 旋转动效--线性
@@ -394,7 +408,8 @@ export class Meta2d {
           }
         ];
       }
-      const ROTATE = 'rotate'
+      const ROTATE = 'rotate';
+      // 记录图元初态的旋转角度
       if(this.recordMotionMap[pen.id][ROTATE] === undefined){
         this.recordMotionMap[pen.id][ROTATE] = pen.rotate;
       }
@@ -429,11 +444,13 @@ export class Meta2d {
       // }
       // const obj = { id: pen.id,frames};
       const PROGRESS = 'progress';
+      // 记录图元初态的填充进度
       if(this.recordMotionMap[pen.id][PROGRESS] === undefined){
         this.recordMotionMap[pen.id][PROGRESS] = pen.progress?pen.progress:0;
       }
       const obj = { id: pen.id, progress };
       let tObj = null;
+      // 配置填充方向
       if(m.action.fillType === FillType.DOWNUP){
         tObj = { verticalProgress: true, reverseProgress:false };
       }else if(m.action.fillType === FillType.UPDOWN){
@@ -470,6 +487,8 @@ export class Meta2d {
       //     }
       //   ];
       // }
+
+      //世界坐标换算成逻辑坐标
       const penRect = this.getPenRect(pen);
       let x = penRect.x, y = penRect.y;
       const X = 'x',Y = 'y';
@@ -507,6 +526,7 @@ export class Meta2d {
         animateReverse: m.action.reverse,
       }
       const SPEED = 'speed';
+      // 记录图元初态的流动速度
       if(this.recordMotionMap[pen.id][SPEED] === undefined){
         this.recordMotionMap[pen.id][SPEED] = m.action.speed;
       }
@@ -521,6 +541,7 @@ export class Meta2d {
     // 自定义动效
     this.motions[MotionAction.CUSTOMER] = (pen: Pen, m: Motion) => {
       const CUSTOMER = 'customer';
+      // 记录图元初态的自定义动效
       if(this.recordMotionMap[pen.id][CUSTOMER] === undefined){
         this.recordMotionMap[pen.id][CUSTOMER] = true;
       }
@@ -1284,6 +1305,14 @@ export class Meta2d {
     this.canvas.drawingLineName = lineName;
   }
 
+  /**
+   * @description 绘制圆弧
+   * @author Joseph Ho
+   * @date 30/01/2024
+   * @param {boolean} [isDrawArcLine=false]
+   * @returns {*}  
+   * @memberof Meta2d
+   */
   drawArcLine(isDrawArcLine = false){
     if(!isDrawArcLine) {
       this.canvas.arcLine = null;
@@ -2793,8 +2822,10 @@ export class Meta2d {
           }
           
           if(can){
-              this.canList.push(mt);
+            // 如果条件满足,则将动效加入到canList中
+            this.canList.push(mt);
           }else{
+            // 如果条件不满足,则将pen重置为初态
             this.recoverMotions(pen,mt.type);
           }
           onceFlag = can;
@@ -2803,6 +2834,7 @@ export class Meta2d {
     }
     for (let n = 0; n < this.canList.length; n++) {
       const mt = this.canList[n];
+      // 这里跳过图像动效,图像动效需要特殊处理
       if (mt.type !== MotionAction.IMAGE) {
         this.recoverMotions(pen,mt.type);
       }

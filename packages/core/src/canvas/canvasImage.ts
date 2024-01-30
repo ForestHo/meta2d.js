@@ -104,6 +104,14 @@ export class CanvasImage {
       .clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
+  /**
+   * @description 判断是否是图片
+   * @author Joseph Ho
+   * @date 30/01/2024
+   * @param {Pen} pen
+   * @returns {*}  {boolean}
+   * @memberof CanvasImage
+   */
   hasImage(pen: Pen) {
     pen.calculative.hasImage =
       pen.calculative &&
@@ -350,6 +358,14 @@ export class CanvasImage {
   //   ctx.restore();
   // }
 
+  /**
+   * @description 绘制标尺
+   * @author Joseph Ho
+   * @date 30/01/2024
+   * @param {(CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D)} ctx
+   * @returns {*}  
+   * @memberof CanvasImage
+   */
   renderRule(
     ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
   ) {

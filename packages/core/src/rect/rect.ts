@@ -425,6 +425,15 @@ export function scaleRect(rect: Rect, scale: number, center: Point) {
   calcCenter(rect);
 }
 
+/**
+ * @description 计算相对rect
+ * @author Joseph Ho
+ * @date 30/01/2024
+ * @export
+ * @param {Rect} rect
+ * @param {Rect} worldRect
+ * @returns {*}  relRect
+ */
 export function calcRelativeRect(rect: Rect, worldRect: Rect) {
   const relRect: Rect = {
     x: (rect.x - worldRect.x) / worldRect.width,

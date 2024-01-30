@@ -78,6 +78,17 @@ export function rotatePoint(pt: Point, angle: number, center: Point) {
   pt.next && rotatePoint(pt.next, angle, center);
 }
 
+/**
+ * @description 判断一个点是否命中另一个点的半径范围
+ * @author Joseph Ho
+ * @date 30/01/2024
+ * @export
+ * @param {Point} pt
+ * @param {Point} target
+ * @param {number} [radius=5]
+ * @param {Pen} [pen]
+ * @returns {*}  
+ */
 export function hitPoint(pt: Point, target: Point, radius = 5, pen?: Pen) {
   if (target.type === PointType.Line) {
     let _rotate = pen.rotate;
@@ -113,6 +124,15 @@ export function hitPoint(pt: Point, target: Point, radius = 5, pen?: Pen) {
   }
 }
 
+/**
+ * @description 缩放一个点
+ * @author Joseph Ho
+ * @date 30/01/2024
+ * @export
+ * @param {Point} pt
+ * @param {number} scale
+ * @param {Point} center
+ */
 export function scalePoint(pt: Point, scale: number, center: Point) {
   pt.x = center.x - (center.x - pt.x) * scale;
   pt.y = center.y - (center.y - pt.y) * scale;

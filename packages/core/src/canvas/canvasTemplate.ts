@@ -240,6 +240,14 @@ export class CanvasTemplate {
     }
   }
 
+  /**
+   * @description 绘制网格
+   * @author Joseph Ho
+   * @date 30/01/2024
+   * @param {(CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D)} ctx
+   * @returns {*}  
+   * @memberof CanvasTemplate
+   */
   renderGrid(
     ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
   ) {

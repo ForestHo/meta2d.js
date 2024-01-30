@@ -31,6 +31,13 @@ export interface Event {
   actions?: Event[];
 }
 
+/**
+ * @description 事件行为
+ * @author Joseph Ho
+ * @date 30/01/2024
+ * @export
+ * @enum {number}
+ */
 export enum EventAction {
   Link,
   SetProps,

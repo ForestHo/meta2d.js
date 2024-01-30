@@ -8,6 +8,13 @@ import { globalStore } from './global';
 import { Rect } from '../rect';
 import { PointVal } from '../motion';
 
+/**
+ * @description Meta2dData接口定义
+ * @author Joseph Ho
+ * @date 29/01/2024
+ * @export
+ * @interface Meta2dData
+ */
 export interface Meta2dData {
   pens: Pen[];
   x: number;
@@ -28,18 +35,18 @@ export interface Meta2dData {
   mqttTopics?: string;
   websocketProtocols?: string | string[];
   background?: string;
-  globalAlpha?: number;
-  socketCbJs?: string;
-  initJs?: string;
-  grid?: boolean;
-  gridColor?: string;
-  gridSize?: number;
-  gridRotate?: number;
-  rule?: boolean;
-  ruleColor?: string;
-  fromArrow?: string;
-  toArrow?: string;
-  lineWidth?: number;
+  globalAlpha?: number;//透明度
+  socketCbJs?: string;//socket回调js
+  initJs?: string;//初始化js
+  grid?: boolean; // 是否显示网格
+  gridColor?: string; //网格颜色
+  gridSize?: number; //网格大小
+  gridRotate?: number;//网格旋转角度
+  rule?: boolean;//是否显示标尺
+  ruleColor?: string;//标尺颜色
+  fromArrow?: string;//起始箭头
+  toArrow?: string;//终点箭头
+  lineWidth?: number;//线宽
   color?: string; // 画笔默认 color 优先级高于 options.color
   textColor?: string; // 画笔文字颜色
   penBackground?: string; // 画笔默认背景色
@@ -57,7 +64,6 @@ export interface Meta2dData {
   networkInterval?: number;
   networks?: Network[];
   iconUrls?: string[];
-  mockData?: Function;
   name?: string;
   template?: string; //模版id
 }
@@ -127,8 +133,8 @@ export interface Meta2dStore {
   pointAtIndex?: number;
   animates: Set<Pen>;
   options: Options;
-  emitter: Emitter;
-  dpiRatio?: number;
+  emitter: Emitter;//事件总线
+  dpiRatio?: number;//设备像素比
   clipboard?: Meta2dClipboard;
   // patchFlagsBackground?: boolean; // 是否需要重绘背景，包含网格
   patchFlagsTop?: boolean; // 是否需要重绘标尺
@@ -136,7 +142,6 @@ export interface Meta2dStore {
   // 测试使用
   fillWorldTextRect?: boolean; // 填充文本区域
   patchFlagsLast?: boolean; // 清除上次图片画布层
-  meta2dDatas?: Meta2dData[];
   cacheDatas?: {
     data: Meta2dData;
     offscreen?: any[];
@@ -149,6 +154,13 @@ export interface Meta2dStore {
   selectedPenType?:string;//记录选择的图元类型
 }
 
+/**
+ * @description 剪切板接口定义
+ * @author Joseph Ho
+ * @date 29/01/2024
+ * @export
+ * @interface Meta2dClipboard
+ */
 export interface Meta2dClipboard {
   meta2d?: boolean;
   pens: Pen[];
@@ -159,7 +171,7 @@ export interface Meta2dClipboard {
   initRect?: Rect;
   pos?: Point;
 }
-
+// 创建一个store
 export const createStore = () => {
   return {
     data: {
@@ -183,7 +195,6 @@ export const createStore = () => {
     binds: {},
     motionsIds: [],
     pointData: [],
-    meta2dDatas: [],
     cacheDatas: [],
     templatePens: {},
   } as Meta2dStore;
@@ -198,7 +209,7 @@ export const useStore = (id = 'default'): Meta2dStore => {
 
   return globalStore[id];
 };
-
+// 重置一个store
 export const clearStore = (store: Meta2dStore, template?: string) => {
   // 判断切换前的图纸和当前打开的图纸的模板是否相同
   const isSameTpl = store.data.template === template;

@@ -152,7 +152,7 @@ export enum MouseButton{
   RIGHT,
   LEFTRIGHT
 }
-
+// 矩形图元区分activeColor
 const borderSpecial = ['rectangle','square'];
 export class Canvas {
   canvas = document.createElement('canvas');
@@ -348,6 +348,14 @@ export class Canvas {
   line = lineSegment;
   arcline = arcLine;
 
+  /**
+   * @description 设置状态模式
+   * @author Joseph Ho
+   * @date 29/01/2024
+   * @param {string} state
+   * @param {string} [stateRecord]
+   * @memberof Canvas
+   */
   setState(state:string,stateRecord?:string) {
     this.currentState = State[state];
     switch(state) {
@@ -379,6 +387,14 @@ export class Canvas {
         break;
     }
   }
+  /**
+   * @description 绘制锁定形状
+   * @author Joseph Ho
+   * @date 29/01/2024
+   * @param {*} ctx
+   * @param {Pen} pen
+   * @memberof Canvas
+   */
   drawLock(ctx,pen:Pen) {
     let len = 10 * this.store.data.scale;
     let r = 3 * this.store.data.scale;
@@ -3043,6 +3059,13 @@ export class Canvas {
     emit && this.store.emitter.emit('active', this.store.active);
   }
 
+  /**
+   * @description 获取activeRect的4个锚点
+   * 
+   * @author Joseph Ho
+   * @date 29/01/2024
+   * @memberof Canvas
+   */
   getSizeCPs() {
     this.sizeCPs = rectToPoints(this.activeRect);
     // 正上 正右 正下 正左
@@ -4506,6 +4529,7 @@ export class Canvas {
 
       return;
     }
+    // 模板层渲染
     this.canvasTemplate.render();
     this.renderTimer = undefined;
     this.lastRender = now;
@@ -4513,15 +4537,19 @@ export class Canvas {
     offscreenCtx.clearRect(0, 0, this.offscreen.width, this.offscreen.height);
     offscreenCtx.save();
     offscreenCtx.translate(this.store.data.x, this.store.data.y);
+    // 渲染pens
     this.renderPens();
     // this.renderBorder();
+    // 渲染hover的point
     this.renderHoverPoint();
     offscreenCtx.restore();
     //this.magnifierCanvas.render();
     const ctx = this.canvas.getContext('2d');
+    // 渲染图片底层
     this.canvasImageBottom.render();
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.drawImage(this.offscreen, 0, 0, this.width, this.height);
+    // 渲染图片层·
     this.canvasImage.render();
     this.patchFlags = false;
   };
@@ -4577,6 +4605,12 @@ export class Canvas {
     });
   };
 
+  /**
+   * @description 渲染边框
+   * @author Joseph Ho
+   * @date 30/01/2024
+   * @memberof Canvas
+   */
   renderBorder = () => {
     if (!this.store.data.locked) {
       // Occupied territory.
@@ -5952,6 +5986,13 @@ export class Canvas {
     });
   }
 
+  /**
+   * @description 计算active rect
+   * @author Joseph Ho
+   * @date 29/01/2024
+   * @returns {*}  
+   * @memberof Canvas
+   */
   calcActiveRect() {
     // TODO: visible 不可见， 目前只是不计算 activeRect，考虑它是否进入活动层 store.active
     const canMovePens = this.store.active.filter(
@@ -6435,6 +6476,16 @@ export class Canvas {
     }
   }
 
+  /**
+   * @description 删除pens
+   * @author Joseph Ho
+   * @date 30/01/2024
+   * @param {*} [pens=this.store.active]
+   * @param {boolean} [canDelLocked=false]
+   * @param {boolean} [history=true]
+   * @returns {*}  
+   * @memberof Canvas
+   */
   async delete(pens = this.store.active, canDelLocked = false, history = true) {
     if (!pens || !pens.length) {
       return;
@@ -7756,6 +7807,12 @@ export class Canvas {
     this.render();
   }
 
+  /**
+   * @description 销毁函数
+   * @author Joseph Ho
+   * @date 30/01/2024
+   * @memberof Canvas
+   */
   destroy() {
     this.scroll && this.scroll.destroy();
     this.tooltip?.destroy();
