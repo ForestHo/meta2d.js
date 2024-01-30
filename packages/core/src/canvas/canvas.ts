@@ -2639,7 +2639,8 @@ export class Canvas {
           pen.locked === LockState.Disable ||
           pen.parentId ||
           // pen.lineType == 'connectLine' ||
-          pen.locked === LockState.DisableMove
+          pen.locked === LockState.DisableMove ||
+          pen.template === true
         ) {
           return false;
         }
