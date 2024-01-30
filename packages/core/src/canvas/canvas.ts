@@ -739,9 +739,9 @@ export class Canvas {
             this.store.data.pens.filter(
               (pen) => {
                 if(this.store.selectedPenType) {//若开启了区域选择
-                  return !pen.parentId && pen.locked !== LockState.Disable && this.isSetected(this.store.selectedPenType,pen);
+                  return !pen.parentId && pen.locked !== LockState.Disable && this.isSetected(this.store.selectedPenType,pen)  && !pen.template;
                 } else {
-                  return !pen.parentId && pen.locked !== LockState.Disable;
+                  return !pen.parentId && pen.locked !== LockState.Disable  && !pen.template;
                 }
               }
             )
@@ -1811,10 +1811,10 @@ export class Canvas {
                 this.store.emitter.emit('active', this.store.active);
               }
               this.patchFlags = true;
-            } else if (e.ctrlKey && e.shiftKey && this.store.hover.parentId && this.currentState != State.DRAG) {
+            } else if (e.ctrlKey && e.shiftKey && this.store.hover.parentId && this.currentState != State.DRAG && !pen.template) {
               this.active([this.store.hover]);
             } else {
-              if (!pen.calculative.active  && this.currentState != State.DRAG) {
+              if (!pen.calculative.active && this.currentState != State.DRAG  && !pen.template) {
                 this.active([pen]);
               }
             }
@@ -2656,7 +2656,8 @@ export class Canvas {
           pen.locked === LockState.Disable ||
           pen.parentId ||
           // pen.lineType == 'connectLine' ||
-          pen.locked === LockState.DisableMove
+          pen.locked === LockState.DisableMove ||
+          pen.template === true
         ) {
           return false;
         }
