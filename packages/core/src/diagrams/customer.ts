@@ -35,6 +35,7 @@ function onAdd(pen: Pen) {
       }
     })
     .then(res => {
+      res.meta && res.data && (res = res.data)
       for (let i = 0; i < res.pens.length; i++) {
         const elem = res.pens[i];
         // 如果name=combine，跳过
@@ -43,6 +44,7 @@ function onAdd(pen: Pen) {
         } else {
           // 指定子图元的parentId为当前pen的id
           elem.parentId = parentId;
+          elem.customerId = `${elem.id}`;
           // 生成新的子图元id,避免拖拽多个自定义控件,子图元id重复
           elem.id = s8();
           // 将extend的数据，赋值给子图元的一级属性
@@ -60,23 +62,39 @@ function onAdd(pen: Pen) {
           // 收集子图元的id
           child.push(elem.id);
         }
-        // 生成子pen
+        // 设置子pen的属性值
+        if (pen.properties && pen.properties.extend && pen.properties.extend.length > 0) {
+          for (let j = 0; j < elem.propBindings.length; j++) {
+            const pb = elem.propBindings[j];
+            const exs = pen.properties.extend.find(el => el.attr === pb.src);
+            if (pb.type === EXTEND) {
+              if (elem.properties.extend.find(el => el.attr === pb.target)) {
+                elem.properties.extend.find(el => el.attr === pb.target).value = exs.value;
+              }
+            }
+          }
+        }
         pen.calculative.canvas.makePen(elem);
         // 将子pen添加到父pen的children字段
         pen.calculative.canvas.parent.pushChildren(pen, [elem]);
       }
       // 根据自定义控件的宽高,换算成画布坐标系的宽高
+      if (!pen.properties || !pen.properties.extend || pen.properties.extend.length == 0) {
       const rect = pen.calculative.canvas.reversePenRect({ x: 0, y: 0, width: res.width, height: res.height });
       pen.width = rect.width;
       pen.height = rect.height;
+      }
+      
       for (let i = 0; i < res.properties.length; i++) {
         const item = res.properties[i];
         item.value = item.defaultValue;
       }
       // 将properties赋值给当前pen的properties的extend字段
+      if (!pen.properties || !pen.properties.extend || pen.properties.extend.length == 0) {
       pen.properties = {
         extend: res.properties
       };
+      }
       // 根据extend的数据，初始化databinds的数据
       const arr = [];
       for (let i = 0; i < res.properties.length; i++) {
