@@ -2854,7 +2854,7 @@ export class Meta2d {
                 [key1]: this.recordMotionMap[pen.id][key1],
                 [key2]: this.recordMotionMap[pen.id][key2],
               },
-              { render: true }
+              { render: false }
             );
           }else{
             const key1 = 'textColor',key2 = 'textBackground';
@@ -2863,7 +2863,7 @@ export class Meta2d {
                 [key1]: this.recordMotionMap[pen.id][key1],
                 [key2]: this.recordMotionMap[pen.id][key2],
               },
-              { render: true }
+              { render: false }
             );
           }
         }
