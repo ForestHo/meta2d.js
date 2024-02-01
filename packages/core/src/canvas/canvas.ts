@@ -3855,6 +3855,9 @@ export class Canvas {
             const rect = this.getPenRect(pen, action.origin, action.scale);
             this.setPenRect(pen, rect, false);
             this.updateLines(pen, true);
+            if (pen.image) {
+              this.loadImage(pen);
+            }
             if (pen.calculative.canvas.parent.isCombine(pen)) {
               let unPen: Pen = unPens.find((item) => item.id === pen.id);
               inheritanceProps.forEach((key) => {
@@ -4445,7 +4448,7 @@ export class Canvas {
       this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
     }else{
       // 运行态做特殊处理
-      if(!pen.externElement&&pen.name !== 'gif' && pen.name !== 'echarts' && pen.name.indexOf('cetchart') === -1){
+      if(!pen.externElement&&pen.name !== 'gif' && pen.name !== 'echarts' && !(pen.name.indexOf('cetchart') > -1 && !pen.parentId)){
         globalStore.path2dDraws[pen.name] &&
           this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
       }
