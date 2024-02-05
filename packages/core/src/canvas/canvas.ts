@@ -1170,6 +1170,8 @@ export class Canvas {
     }
 
     this.store.emitter.emit('drop', obj || json);
+    this.setState('SELECT');
+    this.store.emitter.emit('changeState','SELECT');
   };
 
   async dropPens(pens: Pen[], e: Point) {
