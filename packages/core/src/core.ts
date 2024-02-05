@@ -1127,7 +1127,9 @@ export class Meta2d {
     }
     // open图纸的时候，需要触发pen的onAdd钩子
     for (const pen of data.pens) {
-      pen.onAdd?.(pen);
+      if (render || pen.name != 'customer') {
+        pen.onAdd?.(pen); 
+      }
     }
     // 收集动效的pen的id
     this.store.motionsIds = this.store.data.pens.filter(el=>el.motions && el.motions.length > 0).map(el=>el.id);
