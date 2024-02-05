@@ -772,7 +772,7 @@ export class Canvas {
           if (e.ctrlKey || e.metaKey) {
             x = -1;
           }
-          this.translatePens(this.store.active, x, 0);
+          this.translatePens(this.store.active, x * this.store.data.scale, 0);
         }
         break;
       case 'ArrowUp':
@@ -788,7 +788,7 @@ export class Canvas {
           if (e.ctrlKey || e.metaKey) {
             y = -1;
           }
-          this.translatePens(this.store.active, 0, y);
+          this.translatePens(this.store.active, 0, y * this.store.data.scale);
         }
         break;
       case 'ArrowRight':
@@ -803,7 +803,7 @@ export class Canvas {
           if (e.ctrlKey || e.metaKey) {
             x = 1;
           }
-          this.translatePens(this.store.active, x, 0);
+          this.translatePens(this.store.active, x * this.store.data.scale, 0);
         }
         break;
       case 'ArrowDown':
@@ -818,7 +818,7 @@ export class Canvas {
           if (e.ctrlKey || e.metaKey) {
             y = 1;
           }
-          this.translatePens(this.store.active, 0, y);
+          this.translatePens(this.store.active, 0, y * this.store.data.scale);
         }
         break;
       case 'd':
@@ -3881,6 +3881,9 @@ export class Canvas {
             const rect = this.getPenRect(pen, action.origin, action.scale);
             this.setPenRect(pen, rect, false);
             this.updateLines(pen, true);
+            if (pen.image) {
+              this.loadImage(pen);
+            }
             if (pen.calculative.canvas.parent.isCombine(pen)) {
               let unPen: Pen = unPens.find((item) => item.id === pen.id);
               inheritanceProps.forEach((key) => {
@@ -4471,7 +4474,7 @@ export class Canvas {
       this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
     }else{
       // 运行态做特殊处理
-      if(!pen.externElement&&pen.name !== 'gif' && pen.name !== 'echarts' && pen.name.indexOf('cetchart') === -1){
+      if(!pen.externElement&&pen.name !== 'gif' && pen.name !== 'echarts' && !(pen.name.indexOf('cetchart') > -1 && !pen.parentId)){
         globalStore.path2dDraws[pen.name] &&
           this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
       }
