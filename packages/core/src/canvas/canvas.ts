@@ -6231,9 +6231,10 @@ export class Canvas {
     localStorage.removeItem(this.clipboardName);
     sessionStorage.setItem('page', page);
 
-    let copyPens: Pen[] = this.getAllByPens(
-      deepClone(pens || this.store.active, true)
-    );
+    // customer子图元不复制
+    const deepPens = deepClone(pens || this.store.active, true)
+    let copyPens: Pen[] = this.getAllByPens(deepPens.filter(x => x.name != 'customer'))
+    copyPens = copyPens.concat(deepPens.filter(x => x.name == 'customer'))
     //根据pens顺序复制
     copyPens.forEach((activePen: any) => {
       activePen.copyIndex = this.store.data.pens.findIndex(
