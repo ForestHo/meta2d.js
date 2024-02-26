@@ -91,9 +91,10 @@ function onAdd(pen: Pen) {
       }
       // 将properties赋值给当前pen的properties的extend字段
       if (!pen.properties || !pen.properties.extend || pen.properties.extend.length == 0) {
-      pen.properties = {
-        extend: res.properties
-      };
+      // pen.properties = {
+      //   extend: res.properties
+      // };
+      pen.properties.extend = res.properties
       }
       // 根据extend的数据，初始化databinds的数据
       const arr = [];
