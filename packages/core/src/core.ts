@@ -1067,6 +1067,18 @@ export class Meta2d {
     if (index !== -1) {
       // 从缓存中加载数据
       let cacheData = this.store.cacheDatas[index].data;
+
+      // 删除缓存中customer图元的子图元
+      const customerPens = cacheData.pens.filter(x => x.name == 'customer')
+      const cIds = customerPens.map(el=>el.children).flat();
+      for (let i = 0; i < cIds.length; i++) {
+        const id = cIds[i];
+        const index = cacheData.pens.findIndex(el=>el.id === id);
+        if(index !== -1){
+          cacheData.pens.splice(index,1);
+        }
+      }
+
       this.loadCacheData(cacheData, render);
       // render && this.startAnimate();
     } else {
@@ -1126,9 +1138,9 @@ export class Meta2d {
       // }, 300);
     }
     // open图纸的时候，需要触发pen的onAdd钩子
-    for (const pen of data.pens) {
+    for (const pen of this.store.data.pens) {
       if (render || pen.name != 'customer') {
-        pen.onAdd?.(pen); 
+        pen.onAdd?.(pen);
       }
     }
     // 收集动效的pen的id
