@@ -107,7 +107,10 @@ function onAdd(pen: Pen) {
         };
         arr.push(obj);
       }
-      pen.databindings = arr;
+      
+      if (!pen.databindings || pen.databindings.length == 0) {
+        pen.databindings = arr;
+      }
       // 将收集到的子图元的id，赋值给pen的children字段
       pen.children = child;
       // 根据最新的宽高，更新pen的rect
