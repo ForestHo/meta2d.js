@@ -3917,6 +3917,7 @@ export class Canvas {
           pen.calculative.backgroundImage = undefined;
           pen.calculative.strokeImage = undefined;
           this.loadImage(pen);
+          pen.onAdd?.(pen);
         });
         action.type = EditType.Add;
         break;

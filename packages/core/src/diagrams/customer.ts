@@ -76,7 +76,7 @@ function onAdd(pen: Pen) {
         }
         pen.calculative.canvas.makePen(elem);
         // 将子pen添加到父pen的children字段
-        pen.calculative.canvas.parent.pushChildren(pen, [elem]);
+        // pen.calculative.canvas.parent.pushChildren(pen, [elem]);
       }
       // 根据自定义控件的宽高,换算成画布坐标系的宽高
       if (!pen.properties || !pen.properties.extend || pen.properties.extend.length == 0) {
@@ -120,7 +120,12 @@ function onAdd(pen: Pen) {
     })
 }
 function onDestroy(pen: Pen) {
-
+  // 删除子图元
+  if (pen.children) {
+    pen.children.forEach((id) => {
+      pen.calculative.canvas.delForce(pen.calculative.canvas.store.pens[id]);
+    });
+  }
 }
 function onValue(pen: any) {
   updatePen(pen);
