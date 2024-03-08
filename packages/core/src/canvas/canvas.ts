@@ -3869,6 +3869,9 @@ export class Canvas {
             (item) => item.id === pen.id
           );
           if (i > -1) {
+            if (pen.name === 'customer') {
+              pen.children = this.store.data.pens[i].children
+            }
             pen.calculative = this.store.data.pens[i].calculative;
             this.store.data.pens[i] = pen;
             this.store.pens[pen.id] = pen;
@@ -3884,7 +3887,7 @@ export class Canvas {
             if (pen.image) {
               this.loadImage(pen);
             }
-            if (pen.calculative.canvas.parent.isCombine(pen)) {
+            if (pen.calculative.canvas.parent.isCombine(pen) || pen.name === 'customer') {
               let unPen: Pen = unPens.find((item) => item.id === pen.id);
               inheritanceProps.forEach((key) => {
                 if (pen[key] !== unPen[key]) {
