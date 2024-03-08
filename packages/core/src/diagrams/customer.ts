@@ -115,6 +115,8 @@ function onAdd(pen: Pen) {
       pen.children = child;
       // 根据最新的宽高，更新pen的rect
       pen.calculative.canvas.updatePenRect(pen);
+      // 加载完成后渲染子图元
+      pen.calculative.canvas.render();
     }).catch(err => {
       console.log(err);
     })
