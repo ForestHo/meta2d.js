@@ -1523,6 +1523,9 @@ export class Canvas {
   }) => {
 
     if (this.store.options.isRunMode) {
+      this.calibrateMouse(e);
+      this.mousePos.x = e.x;
+      this.mousePos.y = e.y;
       this.store.emitter.emit('click', {
         x: e.x,
         y: e.y,
