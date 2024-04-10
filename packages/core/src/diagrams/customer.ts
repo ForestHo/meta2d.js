@@ -26,7 +26,8 @@ function onRenderPenRaw(pen: Pen) {
 function onAdd(pen: Pen) {
   let parentId = pen.id, child = [];
   // 根据pen的url,获取自定义控件的JSON数据
-  fetch((pen as any).url)
+  pen.calculative.controller = new AbortController();
+  fetch((pen as any).url, {signal: pen.calculative.controller.signal})
     .then(response => {
       try {
         return response.json()
@@ -35,6 +36,9 @@ function onAdd(pen: Pen) {
       }
     })
     .then(res => {
+      if (pen.calculative.controller && pen.calculative.controller.signal.aborted) {
+        return
+      }
       res.meta && res.data && (res = res.data)
       for (let i = 0; i < res.pens.length; i++) {
         const elem = res.pens[i];
@@ -122,11 +126,13 @@ function onAdd(pen: Pen) {
     })
 }
 function onDestroy(pen: Pen) {
+  pen.calculative.controller?.abort();
   // 删除子图元
   if (pen.children) {
     pen.children.forEach((id) => {
       pen.calculative.canvas.delForce(pen.calculative.canvas.store.pens[id]);
     });
+    pen.children = []
   }
 }
 function onValue(pen: any) {
