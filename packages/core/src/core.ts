@@ -60,7 +60,20 @@ import {
 } from './rect';
 import { deepClone } from './utils/clone';
 import { Event, EventAction, EventName, TriggerCondition } from './event';
-import { Motion,MotionAction, PointVal, LogicType, getMotionsByName, MotionWhenMap, MotionWhenType, ClockWise, SpeedDuration, FillType, SpecialMotionType, MotionType } from './motion';
+import {
+  Motion,
+  MotionAction,
+  PointVal,
+  LogicType,
+  getMotionsByName,
+  MotionWhenMap,
+  MotionWhenType,
+  ClockWise,
+  SpeedDuration,
+  FillType,
+  SpecialMotionType,
+  MotionType,
+} from './motion';
 import { ViewMap } from './map';
 // TODO: 这种引入方式，引入 connect， webpack 5 报错
 import { MqttClient } from 'mqtt';
@@ -69,8 +82,6 @@ import * as mqtt from 'mqtt/dist/mqtt.min.js';
 import pkg from '../package.json';
 import { lockedError } from './utils/error';
 import { Scroll } from './scroll';
-
-
 
 export class Meta2d {
   store: Meta2dStore;
@@ -89,7 +100,7 @@ export class Meta2d {
       url?: string;
     }
   ) => boolean;
-  events: Record<number, (pen: Pen, e: Event) => void> = {};//事件map
+  events: Record<number, (pen: Pen, e: Event) => void> = {}; //事件map
   motions: Record<number, (pen: Pen, m: Motion) => void> = {}; //动效map
   recordMotionMap: { [key: string]: any }; //记忆动效图元初态的map
   recordETriggerMap: { [key: string]: any }; //记忆包含边沿触发的动效图元的map
@@ -164,7 +175,7 @@ export class Meta2d {
   setOptions(opts: Options = {}) {
     this.store.options = Object.assign(this.store.options, opts);
     // 如果设置画布的宽高，patch下背景canvas的标志位
-    if(opts.width ||opts.height){
+    if (opts.width || opts.height) {
       this.canvas && (this.canvas.canvasTemplate.bgPatchFlags = true);
     }
     if (this.canvas && opts.scroll !== undefined) {
@@ -228,7 +239,7 @@ export class Meta2d {
   areaSelection() {
     return this.canvas.areaSelection();
   }
-  initMotionFns(){
+  initMotionFns() {
     // 初始化动效需要的变量
     this.recordMotionMap = {};
     this.recordETriggerMap = {};
@@ -236,130 +247,132 @@ export class Meta2d {
     // 颜色动效
     this.motions[MotionAction.COLOR] = (pen: Pen, m: Motion) => {
       const obj = { id: pen.id };
-      if(pen.name !== 'text'){
-        const COLOR = 'color',BACK = 'background';
+      if (pen.name !== 'text') {
+        const COLOR = 'color',
+          BACK = 'background';
         // 记录图元初态的颜色
-        if(this.recordMotionMap[pen.id][COLOR] === undefined){
-          this.recordMotionMap[pen.id][COLOR] = pen.color||'';
+        if (this.recordMotionMap[pen.id][COLOR] === undefined) {
+          this.recordMotionMap[pen.id][COLOR] = pen.color || '';
         }
         // 记录图元初态的背景色
-        if(this.recordMotionMap[pen.id][BACK] === undefined){
-          this.recordMotionMap[pen.id][BACK] = pen.background||'';
+        if (this.recordMotionMap[pen.id][BACK] === undefined) {
+          this.recordMotionMap[pen.id][BACK] = pen.background || '';
         }
-        Object.assign(obj,{
+        Object.assign(obj, {
           [COLOR]: m.action.borderColor,
           [BACK]: m.action.backgroundColor,
-        })
-      }else{
+        });
+      } else {
         // 对文本特殊处理
-        const COLOR = 'textColor',BACK = 'textBackground';
+        const COLOR = 'textColor',
+          BACK = 'textBackground';
         // 记录图元初态的文字颜色
-        if(this.recordMotionMap[pen.id][COLOR] === undefined){
-          this.recordMotionMap[pen.id][COLOR] = pen.textColor||'';
+        if (this.recordMotionMap[pen.id][COLOR] === undefined) {
+          this.recordMotionMap[pen.id][COLOR] = pen.textColor || '';
         }
         // 记录图元初态的文字背景色
-        if(this.recordMotionMap[pen.id][BACK] === undefined){
-          this.recordMotionMap[pen.id][BACK] = pen.textBackground||'';
+        if (this.recordMotionMap[pen.id][BACK] === undefined) {
+          this.recordMotionMap[pen.id][BACK] = pen.textBackground || '';
         }
-        Object.assign(obj,{
+        Object.assign(obj, {
           [COLOR]: m.action.borderColor,
           [BACK]: m.action.backgroundColor,
-        })
+        });
       }
-      this.setValue(
-        obj,
-        { render: true }
-      );
+      this.setValue(obj, { render: true });
     };
     // 文本动效
     this.motions[MotionAction.TEXT] = (pen: Pen, m: Motion) => {
       const TEXT = 'text';
       // 记录图元初态的文本
-      if(this.recordMotionMap[pen.id][TEXT] === undefined){
+      if (this.recordMotionMap[pen.id][TEXT] === undefined) {
         this.recordMotionMap[pen.id][TEXT] = pen.text;
       }
-      this.setValue(
-        { id: pen.id,
-          'text': m.action.content,
-        },
-        { render: true }
-      );
+      this.setValue({ id: pen.id, text: m.action.content }, { render: true });
     };
     // 可视动效
     this.motions[MotionAction.VISION] = (pen: Pen, m: Motion) => {
       const VISIABLE = 'visible';
       // 记录图元初态的可见性
-      if(this.recordMotionMap[pen.id][VISIABLE] === undefined){
-        this.recordMotionMap[pen.id][VISIABLE] = pen.visible||true;
+      if (this.recordMotionMap[pen.id][VISIABLE] === undefined) {
+        this.recordMotionMap[pen.id][VISIABLE] = pen.visible || true;
       }
-      this.setVisible(pen, m.action.visibility=== VISIABLE,true);
+      this.setVisible(pen, m.action.visibility === VISIABLE, true);
     };
     // 闪烁动效
     this.motions[MotionAction.BLINK] = (pen: Pen, m: Motion) => {
-      pen.animateCycle = m.action.count !==0 ? m.action.count: Infinity;
+      pen.animateCycle = m.action.count !== 0 ? m.action.count : Infinity;
       const BLINK = 'blink';
       // 记录图元初态的闪烁状态
-      if(this.recordMotionMap[pen.id][BLINK] === undefined){
+      if (this.recordMotionMap[pen.id][BLINK] === undefined) {
         this.recordMotionMap[pen.id][BLINK] = true;
       }
-      if(m.action.blinkType === 'visibility'){
+      if (m.action.blinkType === 'visibility') {
         // 可见闪烁
         let frames = [];
-        if(pen.frames?.length > 0){
-          const obj = Object.assign({},pen.frames[0],
-            {duration: m.action.ts1,visible:true}
-          );
-          frames.push(obj);          
-          const obj2 = Object.assign({},pen.frames[0],
-            {duration: m.action.ts2,visible:false}
-          );
-          frames.push(obj2);  
-        }else{
+        if (pen.frames?.length > 0) {
+          const obj = Object.assign({}, pen.frames[0], {
+            duration: m.action.ts1,
+            visible: true,
+          });
+          frames.push(obj);
+          const obj2 = Object.assign({}, pen.frames[0], {
+            duration: m.action.ts2,
+            visible: false,
+          });
+          frames.push(obj2);
+        } else {
           frames = [
-            {duration: m.action.ts1,visible:true},
-            {duration: m.action.ts2,visible:false},
+            { duration: m.action.ts1, visible: true },
+            { duration: m.action.ts2, visible: false },
           ];
         }
-        this.setValue(
-          { id: pen.id,
-            frames,
-          },
-          { render: false }
-        );
-      }else if(m.action.blinkType === 'color'){
+        this.setValue({ id: pen.id, frames }, { render: false });
+      } else if (m.action.blinkType === 'color') {
         // 颜色闪烁
         let frames = [];
-        if(pen.frames?.length > 0){
-          const obj = Object.assign({},pen.frames[0],
-            {duration: m.action.ts1,visible:pen.visible,background:m.action.ts1_backgroundColor,color: m.action.ts1_borderColor}
-          );
-          frames.push(obj);          
-          const obj2 = Object.assign({},pen.frames[0],
-            {duration: m.action.ts2,visible:pen.visible,background:m.action.ts2_backgroundColor,color: m.action.ts2_borderColor}
-          );
-          frames.push(obj2);          
-        }else{
+        if (pen.frames?.length > 0) {
+          const obj = Object.assign({}, pen.frames[0], {
+            duration: m.action.ts1,
+            visible: pen.visible,
+            background: m.action.ts1_backgroundColor,
+            color: m.action.ts1_borderColor,
+          });
+          frames.push(obj);
+          const obj2 = Object.assign({}, pen.frames[0], {
+            duration: m.action.ts2,
+            visible: pen.visible,
+            background: m.action.ts2_backgroundColor,
+            color: m.action.ts2_borderColor,
+          });
+          frames.push(obj2);
+        } else {
           frames = [
-            {duration: m.action.ts1,visible:pen.visible,background:m.action.ts1_backgroundColor,color: m.action.ts1_borderColor},
-            {duration: m.action.ts2,visible:pen.visible,background:m.action.ts2_backgroundColor,color: m.action.ts2_borderColor},
+            {
+              duration: m.action.ts1,
+              visible: pen.visible,
+              background: m.action.ts1_backgroundColor,
+              color: m.action.ts1_borderColor,
+            },
+            {
+              duration: m.action.ts2,
+              visible: pen.visible,
+              background: m.action.ts2_backgroundColor,
+              color: m.action.ts2_borderColor,
+            },
           ];
         }
         // 先设置动画帧
-        this.setValue(
-          { id: pen.id,
-            frames,
-          },
-          { render: false }
-        );
+        this.setValue({ id: pen.id, frames }, { render: false });
       }
       // 然后开启动效
       this.startAnimate(pen.id);
     };
-    let lastMtId = ""; //记录上一次动效的id
+    let lastMtId = ''; //记录上一次动效的id
     // 图像动效
     this.motions[MotionAction.IMAGE] = (pen: Pen, m: Motion) => {
       // 如果pen在动画中并且 上一次动效跟本次动效的id一致，则直接返回，保持原来的动效状态
-      if(pen.isAnimate && lastMtId === m.id){
+      if (pen.isAnimate && lastMtId === m.id) {
         return;
       }
       pen.imageRatio = m.action.fillStyle;
@@ -370,21 +383,15 @@ export class Meta2d {
           duration: m.action.interval,
           visible: pen.visible,
           image: url,
-        })
+        });
       }
       const IMG = 'image';
       // 记录图元初态的图片
-      if(this.recordMotionMap[pen.id][IMG] === undefined){
-        this.recordMotionMap[pen.id][IMG] = pen.image||'';
+      if (this.recordMotionMap[pen.id][IMG] === undefined) {
+        this.recordMotionMap[pen.id][IMG] = pen.image || '';
       }
       // 先设置动画帧
-      this.setValue(
-        { id: pen.id,
-          isAnimate: true,
-          frames,
-        },
-        { render: false }
-      );
+      this.setValue({ id: pen.id, isAnimate: true, frames }, { render: false });
       this.startAnimate(pen.id);
       // 记录上一次动效的id
       lastMtId = m.id;
@@ -392,39 +399,36 @@ export class Meta2d {
     // 旋转动效--线性
     this.motions[MotionAction.ROTATE] = (pen: Pen, m: Motion) => {
       let frames = [];
-      if(pen.frames?.length > 0){
-        const obj = Object.assign({},pen.frames[0],{
-          duration: SpeedDuration[m.action.speed+''],
+      if (pen.frames?.length > 0) {
+        const obj = Object.assign({}, pen.frames[0], {
+          duration: SpeedDuration[m.action.speed + ''],
           visible: pen.visible,
           rotate: ClockWise[m.action.direction],
-        })
+        });
         frames.push(obj);
-      }else{
+      } else {
         frames = [
           {
-            duration: SpeedDuration[m.action.speed+''],
+            duration: SpeedDuration[m.action.speed + ''],
             visible: pen.visible,
             rotate: ClockWise[m.action.direction],
-          }
+          },
         ];
       }
       const ROTATE = 'rotate';
       // 记录图元初态的旋转角度
-      if(this.recordMotionMap[pen.id][ROTATE] === undefined){
+      if (this.recordMotionMap[pen.id][ROTATE] === undefined) {
         this.recordMotionMap[pen.id][ROTATE] = pen.rotate;
       }
-      this.setValue(
-        { id: pen.id,
-          frames,
-        },
-        { render: false }
-      );
+      this.setValue({ id: pen.id, frames }, { render: false });
       this.startAnimate(pen.id);
-    }
+    };
     // 填充动效--线性
     this.motions[MotionAction.FILL] = (pen: Pen, m: Motion) => {
-      const item = this.store.pointData.find(elem => elem.dataId === m.when[0].dataId);
-      const progress = item.value/(m.when[0].max - m.when[0].min);
+      const item = this.store.pointData.find(
+        (elem) => elem.dataId === m.when[0].dataId
+      );
+      const progress = item.value / (m.when[0].max - m.when[0].min);
       // let frames = [];
       // if(pen.frames?.length > 0){
       //   const obj = Object.assign({},pen.frames[0],{
@@ -445,29 +449,33 @@ export class Meta2d {
       // const obj = { id: pen.id,frames};
       const PROGRESS = 'progress';
       // 记录图元初态的填充进度
-      if(this.recordMotionMap[pen.id][PROGRESS] === undefined){
-        this.recordMotionMap[pen.id][PROGRESS] = pen.progress?pen.progress:0;
+      if (this.recordMotionMap[pen.id][PROGRESS] === undefined) {
+        this.recordMotionMap[pen.id][PROGRESS] = pen.progress
+          ? pen.progress
+          : 0;
       }
       const obj = { id: pen.id, progress };
       let tObj = null;
       // 配置填充方向
-      if(m.action.fillType === FillType.DOWNUP){
-        tObj = { verticalProgress: true, reverseProgress:false };
-      }else if(m.action.fillType === FillType.UPDOWN){
-        tObj = { verticalProgress: true, reverseProgress:true };
-      }else if(m.action.fillType === FillType.LEFTRIGHT){
-        tObj = { verticalProgress: false, reverseProgress:false };
-      }else if(m.action.fillType === FillType.RIGHTLEFT){
-        tObj = { verticalProgress: false, reverseProgress:true };
+      if (m.action.fillType === FillType.DOWNUP) {
+        tObj = { verticalProgress: true, reverseProgress: false };
+      } else if (m.action.fillType === FillType.UPDOWN) {
+        tObj = { verticalProgress: true, reverseProgress: true };
+      } else if (m.action.fillType === FillType.LEFTRIGHT) {
+        tObj = { verticalProgress: false, reverseProgress: false };
+      } else if (m.action.fillType === FillType.RIGHTLEFT) {
+        tObj = { verticalProgress: false, reverseProgress: true };
       }
-      Object.assign(obj,tObj);  
-      this.setValue(obj,{ render: true });
+      Object.assign(obj, tObj);
+      this.setValue(obj, { render: true });
       // this.startAnimate(pen.id);
-    }
+    };
     // 移动动效
     this.motions[MotionAction.MOVE] = (pen: Pen, m: Motion) => {
-      const item = this.store.pointData.find(elem => elem.dataId === m.when[0].dataId);
-      const percent = item.value/(m.when[0].max - m.when[0].min);
+      const item = this.store.pointData.find(
+        (elem) => elem.dataId === m.when[0].dataId
+      );
+      const percent = item.value / (m.when[0].max - m.when[0].min);
       // let frames = [];
       // if(pen.frames?.length > 0){
       //   const obj = Object.assign({},pen.frames[0],{
@@ -490,31 +498,34 @@ export class Meta2d {
 
       //世界坐标换算成逻辑坐标
       const penRect = this.getPenRect(pen);
-      let x = penRect.x, y = penRect.y;
-      const X = 'x',Y = 'y';
-      if(this.recordMotionMap[pen.id][X] === undefined){
+      let x = penRect.x,
+        y = penRect.y;
+      const X = 'x',
+        Y = 'y';
+      if (this.recordMotionMap[pen.id][X] === undefined) {
         // 缓存第一次的坐标值
         this.recordMotionMap[pen.id][X] = penRect.x;
-      }else{
+      } else {
         // 避免下一次动效生效，坐标在上一次动效的基础上叠加
         x = this.recordMotionMap[pen.id][X];
       }
-      if(this.recordMotionMap[pen.id][Y] === undefined){
+      if (this.recordMotionMap[pen.id][Y] === undefined) {
         // 缓存第一次的坐标值
         this.recordMotionMap[pen.id][Y] = penRect.y;
-      }else{
+      } else {
         // 避免下一次动效生效，坐标在上一次动效的基础上叠加
         y = this.recordMotionMap[pen.id][Y];
       }
       this.setValue(
-        { id: pen.id,
+        {
+          id: pen.id,
           x: x + m.action.x * percent,
           y: y + m.action.y * percent,
         },
         { render: true }
       );
       // this.startAnimate(pen.id);
-    }
+    };
     // 流动动效
     this.motions[MotionAction.FLOW] = (pen: Pen, m: Motion) => {
       const obj = {
@@ -524,35 +535,25 @@ export class Meta2d {
         animateColor: m.action.color,
         animateSpan: m.action.speed,
         animateReverse: m.action.reverse,
-      }
+      };
       const SPEED = 'speed';
       // 记录图元初态的流动速度
-      if(this.recordMotionMap[pen.id][SPEED] === undefined){
+      if (this.recordMotionMap[pen.id][SPEED] === undefined) {
         this.recordMotionMap[pen.id][SPEED] = m.action.speed;
       }
-      this.setValue(
-        { id: pen.id,
-          ...obj,
-        },
-        { render: false }
-      );
+      this.setValue({ id: pen.id, ...obj }, { render: false });
       this.startAnimate(pen.id);
-    }
+    };
     // 自定义动效
     this.motions[MotionAction.CUSTOMER] = (pen: Pen, m: Motion) => {
       const CUSTOMER = 'customer';
       // 记录图元初态的自定义动效
-      if(this.recordMotionMap[pen.id][CUSTOMER] === undefined){
+      if (this.recordMotionMap[pen.id][CUSTOMER] === undefined) {
         this.recordMotionMap[pen.id][CUSTOMER] = true;
       }
-      this.setValue(
-        { id: pen.id,
-          frames: m.action.frames,
-        },
-        { render: false }
-      );
+      this.setValue({ id: pen.id, frames: m.action.frames }, { render: false });
       this.startAnimate(pen.id);
-    }
+    };
   }
   initEventFns() {
     this.events[EventAction.Link] = (pen: Pen, e: Event) => {
@@ -967,7 +968,7 @@ export class Meta2d {
         this.canvas.makePen(pen);
       }
       for (const pen of data.pens) {
-        this.canvas.updateLines(pen,undefined,false);
+        this.canvas.updateLines(pen, undefined, false);
       }
     }
     if (!this.store.data.template) {
@@ -1010,8 +1011,8 @@ export class Meta2d {
    * @date 17/07/2023
    * @memberof Meta2d
    */
-  clearOnlyData(template?: string){
-    const isSameTpl = this.store.data.template === template
+  clearOnlyData(template?: string) {
+    const isSameTpl = this.store.data.template === template;
     for (const pen of this.store.data.pens) {
       // @wangyahua: 如果是不同的模板，应该将pen全部清除；如果是相同模板，则只清除非模板图元
       if (!isSameTpl || !pen.template) {
@@ -1024,7 +1025,7 @@ export class Meta2d {
     this.hideInput();
     this.store.clipboard = undefined;
     // 非同一个模板时，置标志位，下次open时更新模板渲染
-    if(!this.store.sameTemplate){
+    if (!this.store.sameTemplate) {
       this.canvas.canvasTemplate.patchFlags = true;
       this.canvas.canvasTemplate.bgPatchFlags = true;
     }
@@ -1037,7 +1038,7 @@ export class Meta2d {
     this.canvas.canvasImage.clear();
     this.canvas.canvasImageBottom.clear();
   }
-  lastQuietRender:boolean|undefined = undefined;//记录上一次是否静默打开的标志位
+  lastQuietRender: boolean | undefined = undefined; //记录上一次是否静默打开的标志位
   /**
    * @description 类似于meta2d.open函数,openWithCache函数做了图纸的缓存，图纸数据必须配置唯一的_id，才能被正确缓存
    * @author Joseph Ho
@@ -1047,13 +1048,17 @@ export class Meta2d {
    * @param {boolean} [isCache=true] 是否缓存，true-缓存，false-不缓存
    * @memberof Meta2d
    */
-  openWithCache(data?: Meta2dData, render:boolean = true,isCache:boolean = true){
+  openWithCache(
+    data?: Meta2dData,
+    render: boolean = true,
+    isCache: boolean = true
+  ) {
     // 先从缓存中查找是否有该图纸的缓存数据
     let index = this.store.cacheDatas.findIndex(
       (item) => item.data && item.data._id === data._id
     );
     // 静默打开时，清理画布
-    if(!render){
+    if (!render) {
       this.canvas.clearCanvas();
       this.canvas.canvasTemplate.clear();
     }
@@ -1069,13 +1074,13 @@ export class Meta2d {
       let cacheData = this.store.cacheDatas[index].data;
 
       // 删除缓存中customer图元的子图元
-      const customerPens = cacheData.pens.filter(x => x.name == 'customer')
-      const cIds = customerPens.map(el=>el.children).flat();
+      const customerPens = cacheData.pens.filter((x) => x.name == 'customer');
+      const cIds = customerPens.map((el) => el.children).flat();
       for (let i = 0; i < cIds.length; i++) {
         const id = cIds[i];
-        const index = cacheData.pens.findIndex(el=>el.id === id);
-        if(index !== -1){
-          cacheData.pens.splice(index,1);
+        const index = cacheData.pens.findIndex((el) => el.id === id);
+        if (index !== -1) {
+          cacheData.pens.splice(index, 1);
         }
       }
 
@@ -1096,42 +1101,52 @@ export class Meta2d {
       }
       for (const pen of data.pens) {
         this.canvas.makePen(pen);
-        if(render){
-          if(pen.externElement || pen.name === 'gif'|| pen.name === 'echarts'){
+        if (render) {
+          if (
+            pen.externElement ||
+            pen.name === 'gif' ||
+            pen.name === 'echarts'
+          ) {
             globalStore.path2dDraws[pen.name] &&
-            this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
+              this.store.path2dMap.set(
+                pen,
+                globalStore.path2dDraws[pen.name](pen)
+              );
           }
         }
       }
       for (const pen of data.pens) {
-        this.canvas.updateLines(pen,undefined,false);
+        this.canvas.updateLines(pen, undefined, false);
       }
       // 如果没有模板ID，生成一个
       if (!this.store.data.template) {
         this.store.data.template = s8();
       }
-      
+
       this.fitSizeView(true, this.store.options.fitPadding);
       // render && this.startAnimate();
       // this.doInitJS();
     }
     // 非静默打开，渲染gif，echarts，执行canvas的render
-    if(render) {
+    if (render) {
       for (const pen of this.store.data.pens) {
-        if(pen.externElement || pen.name === 'gif' || pen.name === 'echarts'){
+        if (pen.externElement || pen.name === 'gif' || pen.name === 'echarts') {
           globalStore.path2dDraws[pen.name] &&
-          this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
+            this.store.path2dMap.set(
+              pen,
+              globalStore.path2dDraws[pen.name](pen)
+            );
         }
       }
-      this.canvas.render(true,true);
+      this.canvas.render(true, true);
     }
-    if(isCache){
+    if (isCache) {
       // 在同步流程中深拷贝图纸的data数据
       if (index === -1) {
-        const tempData: Meta2dData = deepClone(this.store.data,true);
-        this.cacheData(tempData,data._id);
+        const tempData: Meta2dData = deepClone(this.store.data, true);
+        this.cacheData(tempData, data._id);
       }
-      
+
       // setTimeout(() => {
       //   //存入缓存
       //   this.cacheData(tempData,data._id);
@@ -1144,7 +1159,9 @@ export class Meta2d {
       }
     }
     // 收集动效的pen的id
-    this.store.motionsIds = this.store.data.pens.filter(el=>el.motions && el.motions.length > 0).map(el=>el.id);
+    this.store.motionsIds = this.store.data.pens
+      .filter((el) => el.motions && el.motions.length > 0)
+      .map((el) => el.id);
     this.store.emitter.emit('opened');
   }
   /**
@@ -1154,14 +1171,14 @@ export class Meta2d {
    * @date 17/07/2023
    * @memberof Meta2d
    */
-  recoverRender(){
+  recoverRender() {
     for (const pen of this.store.data.pens) {
-      if(pen.externElement || pen.name === 'gif' || pen.name === 'echarts'){
+      if (pen.externElement || pen.name === 'gif' || pen.name === 'echarts') {
         globalStore.path2dDraws[pen.name] &&
-        this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
+          this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
       }
     }
-    this.canvas.render(true,true);
+    this.canvas.render(true, true);
   }
   extendedFn() {
     this.store.data.pens.forEach((pen) => {
@@ -1182,7 +1199,7 @@ export class Meta2d {
    * @param {string} id 图纸的id
    * @memberof Meta2d
    */
-  cacheData(data: Meta2dData,id: string) {
+  cacheData(data: Meta2dData, id: string) {
     if (id && this.store.options.cacheLength) {
       let index = this.store.cacheDatas.findIndex(
         (item) => item.data && item.data._id === id
@@ -1213,21 +1230,28 @@ export class Meta2d {
    * @returns {*}
    * @memberof Meta2d
    */
-  loadCacheData(cacheData: Meta2dData,render?:boolean) {
+  loadCacheData(cacheData: Meta2dData, render?: boolean) {
     this.store.data = cacheData;
     this.setBackgroundImage(this.store.data.bkImage);
     this.store.pens = {};
     this.store.data.pens.forEach((pen) => {
       pen.calculative.canvas = this.canvas;
       this.store.pens[pen.id] = pen;
-      if(!render){
-        if(!pen.externElement&& pen.name !== 'gif'&& pen.name !== 'echarts'){
+      if (!render) {
+        if (
+          !pen.externElement &&
+          pen.name !== 'gif' &&
+          pen.name !== 'echarts'
+        ) {
           globalStore.path2dDraws[pen.name] &&
-          this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
+            this.store.path2dMap.set(
+              pen,
+              globalStore.path2dDraws[pen.name](pen)
+            );
         }
-      }else{
+      } else {
         globalStore.path2dDraws[pen.name] &&
-        this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
+          this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
       }
       pen.type &&
         this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
@@ -1237,11 +1261,11 @@ export class Meta2d {
         this.canvas.loadImage(pen);
       }
     });
-    if(!render){
+    if (!render) {
       this.canvas.clearCanvas();
-    }else{
+    } else {
       // lastQuietRender不是默认的undefined，并且lastQuietRender上一次是静默打开，当前是正常打开，记录变化的上升沿
-      if(this.lastQuietRender !== undefined && !this.lastQuietRender){
+      if (this.lastQuietRender !== undefined && !this.lastQuietRender) {
         this.canvas.canvasTemplate.init();
       }
     }
@@ -1324,40 +1348,39 @@ export class Meta2d {
    * @author Joseph Ho
    * @date 30/01/2024
    * @param {boolean} [isDrawArcLine=false]
-   * @returns {*}  
+   * @returns {*}
    * @memberof Meta2d
    */
-  drawArcLine(isDrawArcLine = false){
-    if(!isDrawArcLine) {
+  drawArcLine(isDrawArcLine = false) {
+    if (!isDrawArcLine) {
       this.canvas.arcLine = null;
       return;
     }
     lockedError(this.store);
     this.canvas.arcLine = {
-      name:'arcLine',
+      name: 'arcLine',
       state: 0,
       // @ts-ignore
       calculative: {
         canvas: this.canvas,
-        inView: true
+        inView: true,
       },
       // @ts-ignore
-      circle:{
-        name:"circle",
-        x:0,
-        y:0,
+      circle: {
+        name: 'circle',
+        x: 0,
+        y: 0,
         concentric: true,
-        width:0,
-        height:0,
-        calculative:{
-          canvas:this.canvas
-        }
-      }
+        width: 0,
+        height: 0,
+        calculative: {
+          canvas: this.canvas,
+        },
+      },
     };
-
   }
 
-  alignPenToGrid(pen:Pen) {
+  alignPenToGrid(pen: Pen) {
     this.canvas.alignPenToGrid(pen);
   }
   drawingPencil() {
@@ -1561,8 +1584,8 @@ export class Meta2d {
   getPenRect(pen: Pen) {
     return this.canvas.getPenRect(pen);
   }
-  reversePenRect(pen: Pen, origin:Point, scale:number) {
-    return this.canvas.reversePenRect(pen,origin,scale);
+  reversePenRect(pen: Pen, origin: Point, scale: number) {
+    return this.canvas.reversePenRect(pen, origin, scale);
   }
 
   setPenRect(pen: Pen, rect: Rect, render = true) {
@@ -1570,7 +1593,7 @@ export class Meta2d {
   }
 
   startAnimate(idOrTagOrPens?: string | Pen[], params?: number | string): void {
-    this.stopAnimate(idOrTagOrPens,false);
+    this.stopAnimate(idOrTagOrPens, false);
     let pens: Pen[];
     if (!idOrTagOrPens) {
       pens = this.store.data.pens.filter((pen) => {
@@ -1654,7 +1677,7 @@ export class Meta2d {
     });
   }
 
-  stopAnimate(idOrTagOrPens?: string | Pen[], needRender: boolean=true) {
+  stopAnimate(idOrTagOrPens?: string | Pen[], needRender: boolean = true) {
     let pens: Pen[] = [];
     if (!idOrTagOrPens) {
       this.store.animates.forEach((pen) => {
@@ -1677,7 +1700,7 @@ export class Meta2d {
       this.store.animateMap.delete(pen);
     });
 
-    if(needRender){
+    if (needRender) {
       this.initImageCanvas(pens);
       this.canvas.calcActiveRect();
       this.render();
@@ -1750,7 +1773,7 @@ export class Meta2d {
     const childs = [];
     children.forEach((id) => {
       childs.push(this.store.pens[id]);
-    })
+    });
     const rect = getRect(childs);
     childs.forEach((pen) => {
       const childRect = calcRelativeRect(pen.calculative.worldRect, rect);
@@ -2512,8 +2535,9 @@ export class Meta2d {
    * @param {Pen} pen
    * @memberof Meta2d
    */
-  updatePath2D(pen: Pen){
-    globalStore.path2dDraws[pen.name] && this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
+  updatePath2D(pen: Pen) {
+    globalStore.path2dDraws[pen.name] &&
+      this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));
   }
   setValue(
     data: IValue,
@@ -2636,18 +2660,18 @@ export class Meta2d {
         this.onSizeUpdate();
         break;
       case 'enter':
-         // 只有编辑态才需要响应此事件
-         if(!this.store.options.isRunMode){
-            e && e.onMouseEnter && e.onMouseEnter(e, this.canvas.mousePos);
-            this.store.data.locked && this.doEvent(e, eventName);
-         }
+        // 只有编辑态才需要响应此事件
+        if (!this.store.options.isRunMode) {
+          e && e.onMouseEnter && e.onMouseEnter(e, this.canvas.mousePos);
+          this.store.data.locked && this.doEvent(e, eventName);
+        }
         break;
       case 'leave':
-         // 只有编辑态才需要响应此事件
-         if(!this.store.options.isRunMode){
-            e && e.onMouseLeave && e.onMouseLeave(e, this.canvas.mousePos);
-            this.store.data.locked && this.doEvent(e, eventName);
-         }
+        // 只有编辑态才需要响应此事件
+        if (!this.store.options.isRunMode) {
+          e && e.onMouseLeave && e.onMouseLeave(e, this.canvas.mousePos);
+          this.store.data.locked && this.doEvent(e, eventName);
+        }
         break;
       case 'active':
       case 'inactive':
@@ -2664,16 +2688,16 @@ export class Meta2d {
         break;
       case 'mousedown':
         // 只有编辑态才需要响应此事件
-        if(!this.store.options.isRunMode){
+        if (!this.store.options.isRunMode) {
           e.pen &&
-          e.pen.onMouseDown &&
-          e.pen.onMouseDown(e.pen, this.canvas.mousePos);
+            e.pen.onMouseDown &&
+            e.pen.onMouseDown(e.pen, this.canvas.mousePos);
           this.store.data.locked && e.pen && this.doEvent(e.pen, eventName);
         }
         break;
       case 'mouseup':
         // 只有编辑态才需要响应此事件
-        if(!this.store.options.isRunMode){
+        if (!this.store.options.isRunMode) {
           e.pen &&
             e.pen.onMouseUp &&
             e.pen.onMouseUp(e.pen, this.canvas.mousePos);
@@ -2681,7 +2705,7 @@ export class Meta2d {
         }
         break;
       case 'dblclick':
-        if(!this.store.options.isRunMode){
+        if (!this.store.options.isRunMode) {
           this.store.data.locked && e.pen && this.doEvent(e.pen, eventName);
         }
         break;
@@ -2706,14 +2730,14 @@ export class Meta2d {
    * @param {PointVal[]} data
    * @memberof Meta2d
    */
-  doMotionByValues(data: PointVal[]){
+  doMotionByValues(data: PointVal[]) {
     // 实现测点数据的缓存功能
     if (!this.singleMFlag) {
       // 首次备份外部参数列表,这里不能用JSON.parse(JSON.stringify())的形式深拷贝，因为states会有对象属性为函数的情况
       this.store.pointData = deepClone(data);
       this.singleMFlag = true;
     } else {
-       // 合并后面的动态参数
+      // 合并后面的动态参数
       for (let i = 0; i < data.length; i++) {
         const elem = data[i];
         const index = this.store.pointData.findIndex(
@@ -2732,13 +2756,13 @@ export class Meta2d {
     for (let i = 0; i < this.store.motionsIds.length; i++) {
       const id = this.store.motionsIds[i];
       const pen = this.findOne(id);
-      if(!this.recordMotionMap[pen.id]){
+      if (!this.recordMotionMap[pen.id]) {
         this.recordMotionMap[pen.id] = {};
       }
-      if(!this.recordETriggerMap[pen.id]){
+      if (!this.recordETriggerMap[pen.id]) {
         this.recordETriggerMap[pen.id] = {};
       }
-      this.doMotion(pen,this.store.pointData);
+      this.doMotion(pen, this.store.pointData);
     }
   }
   // 收集每一次的动效数组
@@ -2753,55 +2777,68 @@ export class Meta2d {
    * @memberof Meta2d
    */
   private doMotion = (pen: Pen, data: PointVal[]) => {
-    if(!pen){
+    if (!pen) {
       return;
     }
     // 相同动效的条件重叠的匹配逻辑：优先匹配第一个
     // 动效分类
-    const mType =  Array.from(new Set(pen.motions.map(el=>el.type)));
+    const mType = Array.from(new Set(pen.motions.map((el) => el.type)));
     for (let k = 0; k < mType.length; k++) {
-      const mts = pen.motions.filter(el=>el.type === mType[k]);
+      const mts = pen.motions.filter((el) => el.type === mType[k]);
       let onceFlag = false; //满足一次条件的标志位
       for (let i = 0; i < mts.length; i++) {
         // 一旦同类型动效有一个满足条件，则跳出
-        if(onceFlag) break;
+        if (onceFlag) break;
         const mt = mts[i];
         // 如果图元不支持创建多个动画场景，那么只遍历一次
-        if(i >= 1 && !MotionWhenMap[mt.type][MotionWhenType.ISMUILT]) continue;
+        if (i >= 1 && !MotionWhenMap[mt.type][MotionWhenType.ISMUILT]) continue;
         // 这里校验下图元类型与动效是否有对应关系
         let name = pen.name;
-        if(pen.name === 'line'){
-          name = pen.name+'-'+pen.lineName+'-'+pen.lineType;
+        if (pen.name === 'line') {
+          name = pen.name + '-' + pen.lineName + '-' + pen.lineType;
         }
         const ms = getMotionsByName(name);
         // 如果图元支持这种动画类型，才会执行下面的逻辑
-        if(Array.isArray(ms) && ms.indexOf(mt.type) !== -1 && this.motions[mt.type]){
+        if (
+          Array.isArray(ms) &&
+          ms.indexOf(mt.type) !== -1 &&
+          this.motions[mt.type]
+        ) {
           let can = false;
           // nca=false表示关闭无条件动效，需要判定when是否满足条件
           // && MotionWhenMap[mt.type][MotionWhenType.ISNCA]
-          if(!mt.nca){
+          if (!mt.nca) {
             const limitWhen = MotionWhenMap[mt.type][MotionWhenType.LIMIT];
-            if(mt.when.length === 1 || limitWhen){
+            if (mt.when.length === 1 || limitWhen) {
               // 如果只有一个条件，只需要满足条件1
-              const elem = data.find(elem => elem.dataId === mt.when[0].dataId);
-              can = (elem.value >= mt.when[0].min) && (elem.value <= mt.when[0].max);
-            }else if(mt.when.length >= 2 && !limitWhen){
+              const elem = data.find(
+                (elem) => elem.dataId === mt.when[0].dataId
+              );
+              can =
+                elem.value >= mt.when[0].min && elem.value <= mt.when[0].max;
+            } else if (mt.when.length >= 2 && !limitWhen) {
               // 如果有多个条件，则以每个条件之间做逻辑运算
-              const whs = mt.when.map(el=>{
-                const item = data.find(elem => elem.dataId === el.dataId);
-                if(item){
-                  return {relation: el.relation, cond:(item.value >= el.min) && (item.value <= el.max)};
-                }else{
-                  return {relation:'',cond: false};
+              const whs = mt.when.map((el) => {
+                const item = data.find((elem) => elem.dataId === el.dataId);
+                if (item) {
+                  return {
+                    relation: el.relation,
+                    cond: item.value >= el.min && item.value <= el.max,
+                  };
+                } else {
+                  return { relation: '', cond: false };
                 }
               });
               let rel = true;
               for (let j = 0; j < whs.length; j++) {
                 const item = whs[j];
-                if(j === 0) {rel = item.cond;continue};
-                if(item.relation === LogicType.AND){
+                if (j === 0) {
+                  rel = item.cond;
+                  continue;
+                }
+                if (item.relation === LogicType.AND) {
                   rel = rel && item.cond;
-                }else if(item.relation === LogicType.OR){
+                } else if (item.relation === LogicType.OR) {
                   rel = rel || item.cond;
                 }
               }
@@ -2811,36 +2848,36 @@ export class Meta2d {
             // if(!can && mt.isEdgeTrigger){
             //   can = true;
             // }
-            if(can){
+            if (can) {
               // 如果满足一次条件，并且是边沿触发，那么记录下来
-              if(mt.isEdgeTrigger){
+              if (mt.isEdgeTrigger) {
                 this.recordETriggerMap[pen.id][mt.type] = true;
               }
-            }else{
+            } else {
               // 如果不满足条件，并且是边沿触发，那么检查是否已经触发过，如果触发过，那么执行动效
-              if(this.recordETriggerMap[pen.id][mt.type]){
+              if (this.recordETriggerMap[pen.id][mt.type]) {
                 can = true;
               }
             }
-          }else{
+          } else {
             // nca=true表示启用无条件动效，when条件失效，直接执行动效；
             can = true;
             // 如果不支持nca，那么这里即使nca=true即配置了无条件，也无法执行满足条件
-            if(!MotionWhenMap[mt.type][MotionWhenType.ISNCA]){
+            if (!MotionWhenMap[mt.type][MotionWhenType.ISNCA]) {
               can = false;
             }
           }
           // 对特殊图形的type做处理，将线变成节点，以支持旋转，移动，填充动效
-          if(SpecialMotionType.indexOf(name) !== -1){
+          if (SpecialMotionType.indexOf(name) !== -1) {
             pen.type = PenType.Node;
           }
-          
-          if(can){
+
+          if (can) {
             // 如果条件满足,则将动效加入到canList中
             this.canList.push(mt);
-          }else{
+          } else {
             // 如果条件不满足,则将pen重置为初态
-            this.recoverMotions(pen,mt.type);
+            this.recoverMotions(pen, mt.type);
           }
           onceFlag = can;
         }
@@ -2850,13 +2887,13 @@ export class Meta2d {
       const mt = this.canList[n];
       // 这里跳过图像动效,图像动效需要特殊处理
       if (mt.type !== MotionAction.IMAGE) {
-        this.recoverMotions(pen,mt.type);
+        this.recoverMotions(pen, mt.type);
       }
       // 当when中的每个条件都满足时，触发执行动作action
-      this.motions[mt.type](pen,mt);
+      this.motions[mt.type](pen, mt);
     }
     this.canList = [];
-  }
+  };
   /**
    * @description 从动效状态还原为初始状态
    * @author Joseph Ho
@@ -2864,97 +2901,103 @@ export class Meta2d {
    * @param {Pen} pen
    * @memberof Meta2d
    */
-  recoverMotions(pen: Pen,type: MotionType){
+  recoverMotions(pen: Pen, type: MotionType) {
     switch (type) {
       case MotionAction.MOVE:
         {
-          const key1 = 'x', key2='y';
-          this.recordMotionMap[pen.id].hasOwnProperty(key1) && this.setValue(
-            { id: pen.id,
-              [key1]: this.recordMotionMap[pen.id][key1],
-              [key2]: this.recordMotionMap[pen.id][key2],
-            },
-            { render: false }
-          );
+          const key1 = 'x',
+            key2 = 'y';
+          this.recordMotionMap[pen.id].hasOwnProperty(key1) &&
+            this.setValue(
+              {
+                id: pen.id,
+                [key1]: this.recordMotionMap[pen.id][key1],
+                [key2]: this.recordMotionMap[pen.id][key2],
+              },
+              { render: false }
+            );
         }
         break;
       case MotionAction.FILL:
         {
           const key = 'progress';
-          this.recordMotionMap[pen.id].hasOwnProperty(key) && this.setValue(
-            { id: pen.id,
-              [key]: this.recordMotionMap[pen.id][key],
-            },
-            { render: true }
-          );
+          this.recordMotionMap[pen.id].hasOwnProperty(key) &&
+            this.setValue(
+              { id: pen.id, [key]: this.recordMotionMap[pen.id][key] },
+              { render: true }
+            );
         }
         break;
       case MotionAction.ROTATE:
-        this.recordMotionMap[pen.id].hasOwnProperty('rotate') && this.stopAnimate(pen.id);
+        this.recordMotionMap[pen.id].hasOwnProperty('rotate') &&
+          this.stopAnimate(pen.id);
         break;
       case MotionAction.FLOW:
-        this.recordMotionMap[pen.id].hasOwnProperty('speed') && this.stopAnimate(pen.id);
+        this.recordMotionMap[pen.id].hasOwnProperty('speed') &&
+          this.stopAnimate(pen.id);
         break;
       case MotionAction.TEXT:
         {
           const key = 'text';
-          this.recordMotionMap[pen.id].hasOwnProperty(key) && this.setValue(
-            { id: pen.id,
-              [key]: this.recordMotionMap[pen.id][key],
-            },
-            { render: true }
-          );
+          this.recordMotionMap[pen.id].hasOwnProperty(key) &&
+            this.setValue(
+              { id: pen.id, [key]: this.recordMotionMap[pen.id][key] },
+              { render: false }
+            );
         }
         break;
       case MotionAction.COLOR:
         {
           const isNotText = pen.name !== 'text';
-          if(isNotText){
-            const key1 = 'color',key2 = 'background';
-            this.recordMotionMap[pen.id].hasOwnProperty(key1) && this.setValue(
-              { id: pen.id,
-                [key1]: this.recordMotionMap[pen.id][key1],
-                [key2]: this.recordMotionMap[pen.id][key2],
-              },
-              { render: false }
-            );
-          }else{
-            const key1 = 'textColor',key2 = 'textBackground';
-            this.recordMotionMap[pen.id].hasOwnProperty(key1) && this.setValue(
-              { id: pen.id,
-                [key1]: this.recordMotionMap[pen.id][key1],
-                [key2]: this.recordMotionMap[pen.id][key2],
-              },
-              { render: false }
-            );
+          if (isNotText) {
+            const key1 = 'color',
+              key2 = 'background';
+            this.recordMotionMap[pen.id].hasOwnProperty(key1) &&
+              this.setValue(
+                {
+                  id: pen.id,
+                  [key1]: this.recordMotionMap[pen.id][key1],
+                  [key2]: this.recordMotionMap[pen.id][key2],
+                },
+                { render: false }
+              );
+          } else {
+            const key1 = 'textColor',
+              key2 = 'textBackground';
+            this.recordMotionMap[pen.id].hasOwnProperty(key1) &&
+              this.setValue(
+                {
+                  id: pen.id,
+                  [key1]: this.recordMotionMap[pen.id][key1],
+                  [key2]: this.recordMotionMap[pen.id][key2],
+                },
+                { render: false }
+              );
           }
         }
         break;
       case MotionAction.VISION:
         {
           const key = 'visible';
-          this.recordMotionMap[pen.id].hasOwnProperty(key) && this.setValue(
-            { id: pen.id,
-              [key]: this.recordMotionMap[pen.id][key],
-            },
-            { render: false }
-          );
+          this.recordMotionMap[pen.id].hasOwnProperty(key) &&
+            this.setValue(
+              { id: pen.id, [key]: this.recordMotionMap[pen.id][key] },
+              { render: false }
+            );
         }
         break;
       case MotionAction.IMAGE:
-        this.recordMotionMap[pen.id].hasOwnProperty('image') && this.stopAnimate(pen.id);
-        this.setValue(
-          { id: pen.id,
-            isAnimate: false,
-          },
-          { render: false }
-        );
+        this.recordMotionMap[pen.id].hasOwnProperty('image') &&
+          this.stopAnimate(pen.id);
+        this.setValue({ id: pen.id, isAnimate: false }, { render: false });
         break;
       case MotionAction.BLINK:
-        this.recordMotionMap[pen.id].hasOwnProperty('blink') && this.stopAnimate(pen.id);
+        this.recordMotionMap[pen.id].hasOwnProperty('blink') &&
+          this.stopAnimate(pen.id);
         break;
       case MotionAction.CUSTOMER:
-        this.recordMotionMap[pen.id].hasOwnProperty('customer') && this.stopAnimate(pen.id);
+        this.recordMotionMap[pen.id].hasOwnProperty('customer') &&
+          this.stopAnimate(pen.id);
         break;
       default:
         break;
@@ -3260,9 +3303,9 @@ export class Meta2d {
     // 3. 获取图形尺寸
     const rect = this.getRect(this.store.active);
     // 4. 计算缩放比例
-    const w = (width -10) / rect.width;
+    const w = (width - 10) / rect.width;
     const h = (height - 10) / rect.height;
-    let ratio =  w > h ? h : w;
+    let ratio = w > h ? h : w;
     // 该方法直接更改画布的 scale 属性，所以比率应该乘以当前 scale
     this.scale(ratio * this.store.data.scale);
     // 5. 居中
@@ -3350,18 +3393,18 @@ export class Meta2d {
     this.canvas.templateTranslatePens(pens, -_rect.x, -_rect.y);
     // 5. 居中
     // setTimeout(() => {
-      this.store.data.pens.forEach((pen) => {
-        if (!pen.type) {
-          this.canvas.updateLines(pen);
-        } else {
-          this.canvas.initLineRect(pen);
-        }
-      });
-      this.centerView();
-      // this.canvas.canvasTemplate.init();
-      // this.canvas.canvasImage.init();
-      // this.canvas.canvasImageBottom.init();
-      // this.render();
+    this.store.data.pens.forEach((pen) => {
+      if (!pen.type) {
+        this.canvas.updateLines(pen);
+      } else {
+        this.canvas.initLineRect(pen);
+      }
+    });
+    this.centerView();
+    // this.canvas.canvasTemplate.init();
+    // this.canvas.canvasImage.init();
+    // this.canvas.canvasImageBottom.init();
+    // this.render();
     // }, 100);
   }
 
@@ -3375,7 +3418,12 @@ export class Meta2d {
    * @param {number} height
    * @memberof Meta2d
    */
-  fitViewBySet(fit: boolean = true, viewPadding: Padding = 10,width: number,height: number){
+  fitViewBySet(
+    fit: boolean = true,
+    viewPadding: Padding = 10,
+    width: number,
+    height: number
+  ) {
     // 2. 获取设置的留白值
     const padding = formatPadding(viewPadding);
 
@@ -3397,7 +3445,7 @@ export class Meta2d {
     // 5. 居中
     this.centerView();
   }
-  
+
   fitSizeView(fit: boolean = true, viewPadding: Padding = 10) {
     // 默认垂直填充，两边留白
     // if (!this.hasView()) return;
@@ -3425,7 +3473,7 @@ export class Meta2d {
     } else {
       ratio = w > h ? w : h;
     }
- 
+
     // 该方法直接更改画布的 scale 属性，所以比率应该乘以当前 scale
     this.scale(ratio * this.store.data.scale);
 
@@ -3518,10 +3566,10 @@ export class Meta2d {
     canvas.scrollTo(x, y);
   }
 
-  centerView(isActiveView=false) {
+  centerView(isActiveView = false) {
     if (!this.hasView()) return;
     let rect;
-    if(isActiveView) {
+    if (isActiveView) {
       rect = this.getRect(this.store.active);
     } else {
       rect = this.getRect();
@@ -3715,7 +3763,7 @@ export class Meta2d {
   }
 
   alignNodes(align: string, pens: Pen[] = this.store.data.pens, rect?: Rect) {
-    if(pens.length != 1) {
+    if (pens.length != 1) {
       !rect && (rect = this.getPenRect(this.getRect(pens)));
     }
     const initPens = deepClone(pens); // 原 pens ，深拷贝一下
@@ -3797,11 +3845,15 @@ export class Meta2d {
         penRect.y = bottom - penRect.height;
         break;
       case 'center':
-        const width = rect ? rect.x + rect.width / 2 : this.store.options.width / 2;
+        const width = rect
+          ? rect.x + rect.width / 2
+          : this.store.options.width / 2;
         penRect.x = width - penRect.width / 2;
         break;
       case 'middle':
-        const height = rect ? rect.y + rect.height / 2 : this.store.options.height / 2;
+        const height = rect
+          ? rect.y + rect.height / 2
+          : this.store.options.height / 2;
         penRect.y = height - penRect.height / 2;
         break;
     }
