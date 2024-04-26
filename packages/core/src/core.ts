@@ -279,7 +279,7 @@ export class Meta2d {
           [BACK]: m.action.backgroundColor,
         });
       }
-      this.setValue(obj, { render: true });
+      this.setValue(obj, { render: false });
     };
     // 文本动效
     this.motions[MotionAction.TEXT] = (pen: Pen, m: Motion) => {
@@ -288,7 +288,7 @@ export class Meta2d {
       if (this.recordMotionMap[pen.id][TEXT] === undefined) {
         this.recordMotionMap[pen.id][TEXT] = pen.text;
       }
-      this.setValue({ id: pen.id, text: m.action.content }, { render: true });
+      this.setValue({ id: pen.id, text: m.action.content }, { render: false });
     };
     // 可视动效
     this.motions[MotionAction.VISION] = (pen: Pen, m: Motion) => {
@@ -297,7 +297,7 @@ export class Meta2d {
       if (this.recordMotionMap[pen.id][VISIABLE] === undefined) {
         this.recordMotionMap[pen.id][VISIABLE] = pen.visible || true;
       }
-      this.setVisible(pen, m.action.visibility === VISIABLE, true);
+      this.setVisible(pen, m.action.visibility === VISIABLE, false);
     };
     // 闪烁动效
     this.motions[MotionAction.BLINK] = (pen: Pen, m: Motion) => {
@@ -467,7 +467,7 @@ export class Meta2d {
         tObj = { verticalProgress: false, reverseProgress: true };
       }
       Object.assign(obj, tObj);
-      this.setValue(obj, { render: true });
+      this.setValue(obj, { render: false });
       // this.startAnimate(pen.id);
     };
     // 移动动效
@@ -522,7 +522,7 @@ export class Meta2d {
           x: x + m.action.x * percent,
           y: y + m.action.y * percent,
         },
-        { render: true }
+        { render: false }
       );
       // this.startAnimate(pen.id);
     };
@@ -2924,7 +2924,7 @@ export class Meta2d {
           this.recordMotionMap[pen.id].hasOwnProperty(key) &&
             this.setValue(
               { id: pen.id, [key]: this.recordMotionMap[pen.id][key] },
-              { render: true }
+              { render: false }
             );
         }
         break;
