@@ -1616,6 +1616,8 @@ export class Canvas {
         this.drawingLine.calculative.activeAnchor = _pt;
         connectLine(this.store.hover, anchor, this.drawingLine, pt);
         this.drawline();
+        this.setState('SELECT');
+        this.store.emitter.emit('changeState', 'SELECT');
         return;
       }
     }
@@ -1653,6 +1655,8 @@ export class Canvas {
         );
         this.drawline();
         this.finishDrawline(true);
+        this.setState('SELECT');
+        this.store.emitter.emit('changeState', 'SELECT');
         return;
       }
 
@@ -1670,6 +1674,8 @@ export class Canvas {
           connectLine(this.store.hover, anchor, this.drawingLine, to);
           this.drawline();
           this.finishDrawline(true);
+          this.setState('SELECT');
+          this.store.emitter.emit('changeState', 'SELECT');
           return;
         }
       }
@@ -1677,6 +1683,8 @@ export class Canvas {
       if (this.drawingLineName == 'line' && this.lineType == 'default') {
         if (e.buttons === MouseButton.LEFT) {
           this.finishDrawline(true);
+          this.setState('SELECT');
+          this.store.emitter.emit('changeState', 'SELECT');
         } else if (e.buttons == MouseButton.RIGHT) {
           this.drawingLine = undefined;
           this.setState('DRAW');
@@ -1693,6 +1701,8 @@ export class Canvas {
             this.store.options.drawingLineLength)
       ) {
         this.finishDrawline(true, true);
+        this.setState('SELECT');
+        this.store.emitter.emit('changeState', 'SELECT');
         if (this.store.active[0]?.anchors[0].connectTo) {
           this.drawingLineName = '';
         }
@@ -1717,6 +1727,8 @@ export class Canvas {
         connectLine(this.store.hover, anchor, this.drawingLine, to);
         this.drawline();
         this.finishDrawline(true);
+        this.setState('SELECT');
+        this.store.emitter.emit('changeState', 'SELECT');
         return;
       }
       // 添加点
@@ -1785,9 +1797,15 @@ export class Canvas {
         this.arcLine.height = this.arcLine.circle.calculative.height;
         this.arcLine.state = 2;
       } else if (this.arcLine.state === 2) {
+        if (!this.arcLine.width || !this.arcLine.endAngle) {
+          this.arcLine.state = 1;
+          return;
+        }
         await this.addPen(this.arcLine, true, true);
         this.finishArcLine(false);
-        this.setState('DRAW');
+        this.setState('SELECT');
+        this.store.emitter.emit('changeState', 'SELECT');
+        // this.setState('DRAW');
         // this.render();
       }
       return;
@@ -2105,8 +2123,8 @@ export class Canvas {
             width: Math.abs(e.x - this.mouseDown.x),
             height: Math.abs(e.y - this.mouseDown.y),
           };
-          // 框选模式，从左往右为true
-          this.dragRect.mode = this.mouseDown.x < e.x;
+          // 框选模式，从右往左为true
+          this.dragRect.mode = this.mouseDown.x > e.x;
           if (this.currentState == State.DRAW) {
             this.setState('DRAWING');
           }
@@ -2766,8 +2784,11 @@ export class Canvas {
             }
           }
           this.dropPens(deepClone(this.addCaches), e);
-          this.setState('DRAW');
         }
+        setTimeout(() => {
+          this.store.emitter.emit('changeState', 'SELECT');
+          this.setState('SELECT');
+        });
       }
       // this.addCaches = undefined;
     }
@@ -2788,6 +2809,8 @@ export class Canvas {
       // setTimeout(() => {
       this.showInput(pens[0]);
       // })
+      this.store.emitter.emit('changeState', 'SELECT');
+      this.setState('SELECT');
       return;
     }
     // Rotate
@@ -4033,7 +4056,6 @@ export class Canvas {
     this.inactive();
     this.store.hoverAnchor = undefined;
     this.store.hover = undefined;
-
     switch (action.type) {
       case EditType.Add:
         action.pens.forEach((aPen) => {
@@ -5520,7 +5542,6 @@ export class Canvas {
         arr.push(pen);
       }
     }
-
     this.movingPens = deepClone(arr, true);
     const containChildPens = this.getAllByPens(this.movingPens);
     const copyContainChildPens = deepClone(containChildPens, true);

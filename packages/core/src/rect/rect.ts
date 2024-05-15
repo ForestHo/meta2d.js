@@ -14,7 +14,7 @@ export interface Rect {
 }
 
 export interface dragRect extends Rect {
-  // 框选模式 从左往右为true
+  // 框选模式 从右往左为true
   mode?: boolean;
 }
 
