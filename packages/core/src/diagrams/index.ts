@@ -16,6 +16,9 @@ export * from './line';
 export * from './iframe';
 export * from './video';
 export * from './panel';
+export * from './uml/usecase/participant';
+export * from './uml/usecase/usecase';
+export * from './uml/usecase/childsys';
 
 import { rectangle, square } from './rectangle';
 import { circle } from './circle';
@@ -38,6 +41,9 @@ import { gif } from './gif';
 import { mindNode, mindNodeAnchors } from './mindNode';
 import { mindLine, mindLineAnchors } from './mindLine';
 import { panel } from './panel';
+import { usecase } from './uml/usecase/usecase';
+import { participant } from './uml/usecase/participant';
+import { childsys } from './uml/usecase/childsys';
 
 export function commonPens() {
   return {
@@ -64,7 +70,10 @@ export function commonPens() {
     mindNode,
     mindLine,
     mindNode2:rectangle,
-    panel
+    panel,
+    usecase,
+    participant,
+    childsys
   };
 }
 
