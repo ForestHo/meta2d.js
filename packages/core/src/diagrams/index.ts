@@ -19,6 +19,25 @@ export * from './panel';
 export * from './uml/usecase/participant';
 export * from './uml/usecase/usecase';
 export * from './uml/usecase/childsys';
+export * from './uml/activity/action';
+export * from './uml/activity/judgement';
+export * from './uml/activity/merge';
+export * from './uml/activity/initial';
+export * from './uml/activity/terminate';
+export * from './uml/activity/branch';
+export * from './uml/activity/converge';
+export * from './uml/activity/swimlaneV';
+export * from './uml/activity/comment';
+export * from './uml/deployment/node';
+export * from './uml/deployment/nodeexample';
+export * from './uml/deployment/project';
+export * from './uml/deployment/projectexample';
+export * from './uml/deployment/deployspec';
+export * from './uml/deployment/deployspecexample';
+export * from './uml/deployment/component';
+export * from './uml/deployment/componentexample';
+export * from './uml/deployment/pack';
+export * from './uml/sequence/lifeline';
 
 import { rectangle, square } from './rectangle';
 import { circle } from './circle';
@@ -32,7 +51,7 @@ import { leftArrow, rightArrow, twowayArrow } from './arrow';
 import { message } from './message';
 import { cloud } from './cloud';
 import { file } from './file';
-import { cube } from './cube';
+// import { cube } from './cube';
 import { people } from './people';
 import { line } from './line';
 import { iframe } from './iframe';
@@ -44,6 +63,21 @@ import { panel } from './panel';
 import { usecase } from './uml/usecase/usecase';
 import { participant } from './uml/usecase/participant';
 import { childsys } from './uml/usecase/childsys';
+import { action } from './uml/activity/action';
+import { judgement } from './uml/activity/judgement';
+import { merge } from './uml/activity/merge';
+import { initial } from './uml/activity/initial';
+import { terminate } from './uml/activity/terminate';
+import { branch } from './uml/activity/branch';
+import { converge } from './uml/activity/converge';
+import { swimlaneV } from './uml/activity/swimlaneV';
+import { comment } from './uml/activity/comment';
+import { deployspec } from './uml/deployment/deployspec';
+import { deployspecexample } from './uml/deployment/deployspecexample';
+import { component } from './uml/deployment/component';
+import { componentexample } from './uml/deployment/componentexample';
+import { project } from './uml/deployment/project';
+import { projectexample } from './uml/deployment/projectexample';
 
 export function commonPens() {
   return {
@@ -73,7 +107,22 @@ export function commonPens() {
     panel,
     usecase,
     participant,
-    childsys
+    childsys,
+    action,
+    judgement,
+    merge,
+    initial,
+    terminate,
+    branch,
+    converge,
+    swimlaneV,
+    comment,
+    deployspec,
+    deployspecexample,
+    component,
+    componentexample,
+    project,
+    projectexample,
   };
 }
 
