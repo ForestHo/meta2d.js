@@ -38,6 +38,10 @@ export * from './uml/deployment/component';
 export * from './uml/deployment/componentexample';
 export * from './uml/deployment/pack';
 export * from './uml/sequence/lifeline';
+export * from './uml/communication/lifelineC';
+export * from './uml/sequence/plifeline';
+export * from './uml/state/terminate1';
+export * from './uml/state/title';
 
 import { rectangle, square } from './rectangle';
 import { circle } from './circle';
@@ -78,6 +82,7 @@ import { component } from './uml/deployment/component';
 import { componentexample } from './uml/deployment/componentexample';
 import { project } from './uml/deployment/project';
 import { projectexample } from './uml/deployment/projectexample';
+import { lifelineC } from './uml/communication/lifelineC';
 
 export function commonPens() {
   return {
@@ -123,6 +128,7 @@ export function commonPens() {
     componentexample,
     project,
     projectexample,
+    lifelineC,
   };
 }
 

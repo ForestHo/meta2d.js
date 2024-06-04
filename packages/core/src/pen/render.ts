@@ -1987,6 +1987,7 @@ export function renderAnchor(
   if (pt.radius) {
     r = pt.radius;
   }
+  console.log(r)
   if (active) {
     if (pt.prev) {
       ctx.save();
