@@ -47,6 +47,7 @@ export function title(ctx: CanvasRenderingContext2D, pen: Pen) {
 
   //右上角圆弧  
   ctx.arc(ex - r, y + r, r, Math.PI * 3 / 2, Math.PI * 2);
+  ctx.moveTo(x, y + r);
   ctx.lineTo(ex, y + r);
   fillStyle && ctx.fill();
   ctx.stroke();

@@ -42,6 +42,10 @@ export * from './uml/communication/lifelineC';
 export * from './uml/sequence/plifeline';
 export * from './uml/state/terminate1';
 export * from './uml/state/title';
+export * from './uml/state/titlec';
+export * from './uml/class/divider';
+export * from './uml/class/member';
+export * from './uml/class/class1';
 
 import { rectangle, square } from './rectangle';
 import { circle } from './circle';
