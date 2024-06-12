@@ -31,6 +31,14 @@ export enum Direction {
   Bottom,
   Left,
 }
+export enum MouseButtonType{
+  NONE = 0,
+  LEFT = 1,
+  RIGHT = 2,
+  WHEEL_MIDDLE = 4,
+  FOUR_BACK = 8,
+  FIFTH_FORWARD = 16,
+}
 
 export const defaultCursors = [
   'nw-resize',

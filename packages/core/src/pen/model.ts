@@ -120,6 +120,7 @@ export interface Pen extends Rect {
   borderRadius?: number;
   // Hidden only visible == false
   visible?: boolean;
+  dropAnchor?: boolean;
   locked?: LockState;
 
   // 连线是否闭合路径
@@ -582,11 +583,13 @@ export interface Pen extends Rect {
   onRotate?: (pen: Pen) => void;
   onScale?: (pen: Pen) => void;
   onClick?: (pen: Pen, e: Point) => void;
+  onDbClick?: (pen: Pen, e: Point) => void;
   onMouseEnter?: (pen: Pen, e: Point) => void;
   onMouseLeave?: (pen: Pen, e: Point) => void;
   onMouseDown?: (pen: Pen, e: Point) => void;
   onMouseMove?: (pen: Pen, e: Point) => void;
   onMouseUp?: (pen: Pen, e: Point) => void;
+  onIntersect?: (pen: Pen, e: Point) => void;
   onShowInput?: (pen: Pen, e: Point) => void;
   onInput?: (pen: Pen, text: string) => void;
   onChangeId?: (pen: Pen, oldId: string, newId: string) => void;

@@ -113,6 +113,7 @@ import {
   HoverType,
   MouseRight,
   rotatedCursors,
+  MouseButtonType,
 } from '../data';
 import { createOffscreen } from './offscreen';
 import {
@@ -1661,13 +1662,13 @@ export class Canvas {
     shiftKey?: boolean;
     altKey?: boolean;
   }) => {
-    if (e.buttons === 2 && !this.drawingLine) {
+    if (e.buttons === MouseButtonType.RIGHT && !this.drawingLine) {
       this.mouseRight = MouseRight.Down;
     }
     this.hideInput();
     if (
       this.store.data.locked === LockState.Disable ||
-      (e.buttons !== 1 && e.buttons !== 2)
+      (e.buttons !== MouseButtonType.LEFT && e.buttons !== MouseButtonType.RIGHT)
     ) {
       this.hoverType = HoverType.None;
       return;
@@ -1764,7 +1765,7 @@ export class Canvas {
 
       // 右键，完成绘画
       if (
-        e.buttons === 2 ||
+        e.buttons === MouseButtonType.RIGHT ||
         (this.drawingLineName === 'mind' &&
           this.drawingLine?.calculative.worldAnchors.length > 1) ||
         (this.store.options.drawingLineLength &&
@@ -1960,8 +1961,8 @@ export class Canvas {
     if (
       this.mouseDown &&
       !this.mouseDown.restore &&
-      e.buttons !== 1 &&
-      e.buttons !== 2
+      e.buttons !== MouseButtonType.LEFT &&
+      e.buttons !== MouseButtonType.RIGHT
     ) {
       this.onMouseUp(e);
       return;
@@ -2050,7 +2051,7 @@ export class Canvas {
         }
 
         // 框选
-        if (e.buttons === 1 &&( e.ctrlKey || !this.hoverType && !this.hotkeyType)) {
+        if (e.buttons === MouseButtonType.LEFT &&( e.ctrlKey || !this.hoverType && !this.hotkeyType)) {
           this.dragRect = {
             x: Math.min(this.mouseDown.x, e.x),
             y: Math.min(this.mouseDown.y, e.y),
@@ -2143,7 +2144,9 @@ export class Canvas {
               return;
             }
           }
-          this.movePens(e);
+          if(!this.store.active[0]?.locked && !this.store.active[0]?.dropAnchor){
+            this.movePens(e);
+          }
           //图元是否进入容器图元
           this.getContainerHover(e);
           return;
@@ -2482,7 +2485,7 @@ export class Canvas {
       this.active(pens);
     }
 
-    if (e.button !== 2) {
+    if (e.button !== MouseButtonType.RIGHT) {
       if (distance(this.mouseDown, e) < 2) {
         if (this.store.hover && this.store.hover.input) {
           this.showInput(this.store.hover);
@@ -2493,17 +2496,19 @@ export class Canvas {
           pen: this.store.hover,
         });
       }
-
-      this.store.emitter.emit('mouseup', {
-        x: e.x,
-        y: e.y,
-        pen: this.store.hover,
-      });
-      this.store.emitter.emit('mouseup', {
-        x: e.x,
-        y: e.y,
-        pen: this.store.hoverContainer,
-      });
+      if(this.store.hover){
+        this.store.emitter.emit('mouseup', {
+          x: e.x,
+          y: e.y,
+          pen: this.store.hover,
+        });
+      }else if(this.store.hoverContainer){
+        this.store.emitter.emit('mouseup', {
+          x: e.x,
+          y: e.y,
+          pen: this.store.hoverContainer,
+        });
+      }
     }
 
     if (this.willInactivePen) {
@@ -2531,6 +2536,33 @@ export class Canvas {
       this.movingPens = undefined;
     }
 
+    // 检测是否有交集,找到最近有交集的图元
+    if (this.store.active.length > 0) {
+      const {x,y,ex,ey} = this.store.active[0].calculative.worldRect;
+      for (let i = 0; i < this.store.data.pens.length; i++) {
+        const pen = this.store.data.pens[i];
+        if(pen.container){
+          const lHit = pointInRect({x,y},pen.calculative.worldRect);
+          const rHit = pointInRect({x:ex,y:ey},pen.calculative.worldRect);
+          let x1 = 0,y1 = 0;
+          if(lHit){
+            x1 = x;
+            y1 = y;
+          }else if(rHit){
+            x1 = ex;
+            y1 = ey;
+          }
+          if(rHit || lHit){
+            this.store.emitter.emit('intersect', {
+              x: x1,
+              y: y1,
+              pen,
+            });
+          }
+        }
+      }
+    }
+ 
     if (this.store.active && this.store.active[0]) {
       this.store.active[0].calculative.h = undefined;
     }
@@ -2858,6 +2890,10 @@ export class Canvas {
       pen.calculative.active = undefined;
       pen.calculative.activeAnchor = undefined;
       pen.calculative.hover = false;
+      if(pen.container && pen?.highLightIndex > -1) {
+        pen.highLightIndex = -1;
+        pen.dropAnchor = false;
+      }
       setChildrenActive(pen, false);
     });
     !drawing && this.store.emitter.emit('inactive', this.store.active);

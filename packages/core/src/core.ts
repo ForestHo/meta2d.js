@@ -2477,7 +2477,15 @@ export class Meta2d {
           e.pen.onMouseUp(e.pen, this.canvas.mousePos);
         this.store.data.locked && e.pen && (!e.pen.disabled) && this.doEvent(e.pen, eventName);
         break;
+      case 'intersect':
+        e.pen &&
+          e.pen.onIntersect && (!e.pen.disabled) &&
+          e.pen.onIntersect(e.pen, {x: e.x, y: e.y});
+        break;
       case 'dblclick':
+        e.pen &&
+          e.pen.onDbClick && (!e.pen.disabled) &&
+          e.pen.onDbClick(e.pen, this.canvas.mousePos);
         this.store.data.locked && e.pen && (!e.pen.disabled) && this.doEvent(e.pen, eventName);
         break;
       case 'valueUpdate':
