@@ -1,4 +1,4 @@
-import { commonAnchors, commonPens, cube,node,nodeexample,lifeline,pack,plifeline,terminate1,title,titlec,divider,member,class1 } from './diagrams';
+import { commonAnchors, commonPens, cube,node,nodeexample,lifeline,pack,plifeline,terminate1,title,titlec,divider,member,class1,supplyinterface,needinterface } from './diagrams';
 import { EventType, Handler, WildcardHandler } from 'mitt';
 import { Canvas } from './canvas';
 import {Options, PenPlugin, PluginOptions} from './options';
@@ -109,7 +109,7 @@ export class Meta2d {
     this.setDatabyOptions(opts);
     this.init(parent);
     this.register(commonPens());
-    this.registerCanvasDraw({ cube,node,nodeexample,lifeline,pack,plifeline,terminate1,title,titlec,divider,member,class1 });
+    this.registerCanvasDraw({ cube,node,nodeexample,lifeline,pack,plifeline,terminate1,title,titlec,divider,member,class1,supplyinterface,needinterface });
     this.registerAnchors(commonAnchors());
     globalThis.meta2d = this;
     this.initEventFns();

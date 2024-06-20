@@ -233,6 +233,7 @@ export interface Pen extends Rect {
   disableRotate?: boolean;
   disableSize?: boolean;
   disableAnchor?: boolean;
+  disableDelete?: boolean;
 
   // 相对值，若小于 1 认为是相对坐标
   paddingTop?: number;

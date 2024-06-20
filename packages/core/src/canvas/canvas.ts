@@ -6687,6 +6687,9 @@ export class Canvas {
     if (!pens) {
       return;
     }
+    if(pens.length === 1 && pens[0].disableDelete){
+      return;
+    }
     pens.forEach((pen) => {
       if (pen.type) {
         pen.lastConnected = {};

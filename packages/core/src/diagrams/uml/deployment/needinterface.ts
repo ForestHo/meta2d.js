@@ -1,48 +1,129 @@
 
 import { Pen } from '../../../pen';
+import { Point } from '../../../point'
+import { s8 } from '../../../utils'
 
-export function needinterface(pen: Pen, ctx?: CanvasRenderingContext2D): Path2D {
-  const path = !ctx ? new Path2D() : ctx;
-  // 1.绘制矩形外框
-  let wr = pen.calculative.borderRadius || 0,
-    hr = wr;
+const offset = 20, rectH = 36, two = 2;
+export function needinterface(ctx: CanvasRenderingContext2D, pen: Pen) {
   const { x, y, width, height, ex, ey } = pen.calculative.worldRect;
-  if (wr < 1) {
-    wr = width * wr;
-    hr = height * hr;
+  if (!pen.onDestroy) {
+    pen.onMouseDown = onMouseDown;
+    pen.onMouseUp = onMouseUp;
+    pen.onAdd = onAdd;
   }
-  let r = wr < hr ? wr : hr;
-  if (width < 2 * r) {
-    r = width / 2;
+  const fillStyle = pen.background || "";
+
+  ctx.beginPath();
+  ctx.rect(x, y + offset, width, rectH);
+  ctx.stroke();
+  ctx.closePath();
+  fillStyle && ctx.fill();
+
+  // console.log(pen.free.type, 'type');
+  // 绘制游离的圆形
+  ctx.beginPath();
+  // ctx.arc(
+  //   x + width / two,
+  //   ey+50,
+  //   width / two,
+  //   0,
+  //   Math.PI * two
+  // );
+
+  if (!pen.free.x) {
+    pen.free.x = x + width / two;
   }
-  if (height < 2 * r) {
-    r = height / 2;
+  if (!pen.free.y) {
+    pen.free.y = ey;
+  }
+  // ctx.moveTo(x + width / two, y + rectH / two + offset);
+  // ctx.lineTo(pen.free.x, pen.free.y);
+  // ctx.stroke();
+  // ctx.closePath();
+  fillStyle && ctx.fill();
+}
+function onMouseDown(pen: Pen, e: Point) {
+  console.log('onMouseDown', pen, e);
+}
+function onMouseUp(pen: Pen, e: Point) { }
+
+function onAdd(pen: Pen, e: Point) {
+  console.log('onAdd', pen, e);
+  if (!pen.followers) {
+    pen.followers = [];
   }
 
-  path.moveTo(x + r, y);
-  path.arcTo(ex, y, ex, ey, r);
-  path.arcTo(ex, ey, x, ey, r);
-  path.arcTo(x, ey, x, y, r);
-  path.arcTo(x, y, ex, y, r);
-
-  // 2.绘制里面的形状
-  const offsetX = 10,w = 20,h = 30;
-  const startY = y + offsetX-3;
-  const startX = ex - offsetX-w-3;
-  const endX = startX+w;
-  const endY = startY+h;
-  path.moveTo(startX, startY);
-  path.lineTo(endX - offsetX, startY);
-  path.lineTo(endX, startY + offsetX);
-  path.lineTo(endX, endY);
-  path.lineTo(startX, endY);
-  path.closePath();
-  path.moveTo(endX - offsetX, startY);
-  path.lineTo(endX - offsetX, startY + offsetX);
-  path.lineTo(endX, startY + offsetX);
-  path.closePath();
-
-  if (path instanceof Path2D) {
-    return path;
-  }
+  const id = s8();
+  const p = {
+    name: pen.free.type || "arc",
+    x: pen.free.x- pen.width / two,
+    y: pen.free.y,
+    width: pen.width,
+    height: pen.width,
+    disableSize: true,
+    disableDelete: true,
+    background:'#fff',
+    id,
+    anchors: [
+      { id: '0', penId: id, x: 0.5, y: 0 },
+      // { id: '1', penId: id, x: 0.5, y: 0.5 },
+    ],
+  };
+  pen.calculative.canvas.makePen(p);
+  pen.followers.push(p.id);
+  const toPen = pen.calculative.canvas.find(p.id)[0];
+  const p1 = pen.calculative.canvas.parent.connectLine(
+    pen,
+    toPen,
+    pen.calculative.worldAnchors[8],
+    toPen.calculative.worldAnchors[0]);
+  p1.locked = 2;
+}
+export function needinterfaceAnchors(pen: Pen) {
+  const points = [
+    {
+      x: 0,
+      y: 0,
+    },
+    {
+      x: 0.5,
+      y: 0,
+    },
+    {
+      x: 1,
+      y: 0,
+    },
+    {
+      x: 0,
+      y: 1,
+    },
+    {
+      x: 0.5,
+      y: 1,
+    },
+    {
+      x: 1,
+      y: 1,
+    },
+    {
+      x: 0,
+      y: 0.5,
+    },
+    {
+      x: 1,
+      y: 0.5,
+    },
+    {
+      x: 0.5,
+      y: 0.13,
+    },
+  ] as const;
+  pen.anchors = points.map(({ x, y }, index) => {
+    return {
+      id: `${index}`,
+      penId: pen.id,
+      x,
+      y,
+    };
+  });
 }

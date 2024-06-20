@@ -46,6 +46,9 @@ export * from './uml/state/titlec';
 export * from './uml/class/divider';
 export * from './uml/class/member';
 export * from './uml/class/class1';
+export * from './uml/deployment/supplyinterface';
+export * from './uml/deployment/needinterface';
+export * from './uml/deployment/arc';
 
 import { rectangle, square } from './rectangle';
 import { circle } from './circle';
@@ -87,6 +90,9 @@ import { componentexample } from './uml/deployment/componentexample';
 import { project } from './uml/deployment/project';
 import { projectexample } from './uml/deployment/projectexample';
 import { lifelineC } from './uml/communication/lifelineC';
+import { supplyinterfaceAnchors } from './uml/deployment/supplyinterface';
+import { needinterfaceAnchors } from './uml/deployment/needinterface';
+import { arc } from './uml/deployment/arc';
 
 export function commonPens() {
   return {
@@ -133,6 +139,7 @@ export function commonPens() {
     project,
     projectexample,
     lifelineC,
+    arc
   };
 }
 
@@ -143,5 +150,7 @@ export function commonAnchors() {
     pentagram: pentagramAnchors,
     mindNode: mindNodeAnchors,
     mindLine: mindLineAnchors,
+    supplyinterface: supplyinterfaceAnchors,
+    needinterface: needinterfaceAnchors
   };
 }
