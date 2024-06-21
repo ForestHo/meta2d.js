@@ -82,7 +82,7 @@ import { terminate } from './uml/activity/terminate';
 import { branch } from './uml/activity/branch';
 import { converge } from './uml/activity/converge';
 import { swimlaneV } from './uml/activity/swimlaneV';
-import { comment } from './uml/activity/comment';
+import { comment,commentAnchors } from './uml/activity/comment';
 import { deployspec } from './uml/deployment/deployspec';
 import { deployspecexample } from './uml/deployment/deployspecexample';
 import { component } from './uml/deployment/component';
@@ -151,6 +151,7 @@ export function commonAnchors() {
     mindNode: mindNodeAnchors,
     mindLine: mindLineAnchors,
     supplyinterface: supplyinterfaceAnchors,
-    needinterface: needinterfaceAnchors
+    needinterface: needinterfaceAnchors,
+    comment: commentAnchors,
   };
 }

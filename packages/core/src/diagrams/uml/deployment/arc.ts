@@ -1,11 +1,12 @@
 import { Pen } from '../../../pen';
 import { Point } from '../../../point'
-
+let isMouseIn = false; // 判断是否是鼠标移入状态
 export function arc(pen: Pen, ctx?: CanvasRenderingContext2D): Path2D {
   const path = !ctx ? new Path2D() : ctx;
   const { x, y, width, height } = pen.calculative.worldRect;
   if (!pen.onDestroy) {
-    pen.onMouseUp = onMouseUp;
+    pen.onMouseEnter = onMouseEnter;
+    pen.onMouseLeave = onMouseLeave;
     pen.onMove = onMove;
   }
   path.ellipse(
@@ -23,31 +24,41 @@ export function arc(pen: Pen, ctx?: CanvasRenderingContext2D): Path2D {
   }
 }
 
-function onMouseUp(pen: Pen, e: Point) {
+function onMouseEnter(pen: Pen, e: Point) {
+  isMouseIn = true;
+}
+function onMouseLeave(pen: Pen, e: Point) {
+  isMouseIn = false;
 }
 function onMove(pen: Pen, e: Point) {
+  // console.log('onMove',isMouseIn, pen, e);
+  if (!isMouseIn) return;
   const p1 = pen.calculative.canvas.find(pen.connectedLines[0].lineId);
-  const { x: x3, y: y3 } = pen.calculative.worldRect.center;
   const { a, b, c } = lineFromPoints(p1[0].calculative.worldAnchors[0], pen.calculative.worldRect.center);
   // 垂直相交线的斜率
   const k1 = -(b / a);
-  const deg = getTanDeg(k1);
+  const deg = getTanDegByK(k1);
+  // 判断是否需要旋转180度
   let reverseAngle = false;
 
   const { x: x1, y: y1 } = p1[0].calculative.worldAnchors[0];
-  const { x: x2, y: y2 } = p1[0].calculative.worldAnchors[1];
-  if (x1 >= x3 && y1 > y3 || x1 <= x3 && y1 > y3) {
+  const { x: x2, y: y2 } = pen.calculative.worldRect.center;
+  if (x1 >= x2 && y1 > y2 || x1 <= x2 && y1 > y2) {
     reverseAngle = true;
   }
+  // 更新旋转角度
   pen.calculative.rotate = !reverseAngle ? 360 - deg : 180 - deg;
 
-  const ret = inteceptCircleLineSeg({ radius: pen.calculative.worldRect.width / 2, x: x3, y: y3 }, { p1: { x: x1, y: y1 }, p2: { x: x3, y: y3 } });
+  const ret = inteceptCircleLineSeg({ radius: pen.calculative.worldRect.width / 2, x: x2, y: y2 }, { p1: { x: x1, y: y1 }, p2: { x: x2, y: y2 } });
+  if (!ret.length) return;
+  // 更新切线的锚点
   pen.calculative.worldAnchors[0].x = ret[0].x;
   pen.calculative.worldAnchors[0].y = ret[0].y;
 
+  // 更新连线
   pen.calculative.canvas.updateLines(pen);
+  // 更新activeRect的旋转角度
   pen.calculative.canvas.activeRect.rotate = pen.calculative.rotate;
-
 }
 // 计算圆与直线的交点
 
@@ -59,7 +70,8 @@ function lineFromPoints(p1: Point, p2: Point) {
   const c = a * (p1.x) + b * (p1.y);
   return { a, b, c };
 }
-function getTanDeg(tan) {
+// 根据斜率求角度
+function getTanDegByK(tan) {
   var result = Math.atan(tan) / (Math.PI / 180);
   result = Math.round(result);
   return result;
