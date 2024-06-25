@@ -246,6 +246,7 @@ export interface Pen extends Rect {
 
   children?: string[];
   followers?: string[];
+  leader?: string;
 
   anchors?: Point[];
   anchorRadius?: number;

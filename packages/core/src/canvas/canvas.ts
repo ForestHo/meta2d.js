@@ -87,7 +87,9 @@ import {
   rectToPoints,
   resizeRect,
   translateRect,
-  pointInPolygon
+  pointInPolygon,
+  calcRectGapRect,
+  calcRectDistRect
 } from '../rect';
 import {
   EditAction,
@@ -2552,12 +2554,80 @@ export class Canvas {
             x1 = ex;
             y1 = ey;
           }
-          if(rHit || lHit){
-            this.store.emitter.emit('intersect', {
-              x: x1,
-              y: y1,
-              pen,
-            });
+          console.log('lHit rHit',lHit,rHit);
+          if(lHit && rHit){
+            // this.store.emitter.emit('inside', {
+            //   x: x1,
+            //   y: y1,
+            //   pen,
+            // });
+            const index = pen.followers.indexOf(this.store.active[0].id);
+            if(index < 0){
+              pen.followers.push(this.store.active[0].id);
+              this.store.active[0].leader = pen.id;
+            }
+          }else{
+            const gap = calcRectGapRect({x,y,ex,ey},pen.calculative.worldRect);
+            // console.log('gap',gap,pen.calculative.worldRect.width);
+            if(gap){
+              const {x:x1,y:y1,width: w1,height: h1,ex:ex1,ey:ey1} = this.store.active[0].calculative.worldRect;
+              const safeGap = this.store.options.safeGap;
+              // 左侧边缘溢出
+              if(gap.left && gap.left < safeGap){
+                const fX = x1 - safeGap;
+                const fW = pen.calculative.worldRect.width + safeGap + gap.left;
+                pen.calculative.worldRect.x = fX;
+                pen.x = fX;
+                pen.calculative.worldRect.width = fW;
+                pen.width = fW;
+                pen.calculative.width = fW;
+                pen.calculative.worldRect.ex = fX + fW;
+              }
+              // 右侧边缘溢出
+              if(gap.right && gap.right < safeGap){
+                const fW = pen.calculative.worldRect.width + safeGap + gap.right;
+                const fEx = ex1 + safeGap;
+                pen.calculative.worldRect.width = fW;
+                pen.calculative.worldRect.ex = fEx;
+                pen.width = fW;
+                pen.ex = fEx;
+                pen.calculative.worldRect.x = fEx - fW;
+              }
+              // 顶部边缘溢出
+              if(gap.top && gap.top < safeGap){
+                const fY = y1 - safeGap;
+                const fH = pen.calculative.worldRect.height + safeGap + gap.top;
+                pen.calculative.worldRect.y = fY;
+                pen.calculative.worldRect.height = fH;
+                pen.y = fY;
+                pen.height = fH;
+                pen.calculative.worldRect.ey = fY + fH;
+              }
+              // 底部边缘溢出
+              if(gap.bottom && gap.bottom < safeGap){
+                const fH = pen.calculative.worldRect.height + safeGap + gap.bottom;
+                const fEy = ey1 + safeGap;
+                pen.calculative.worldRect.height = fH;
+                pen.calculative.worldRect.ey = fEy;
+                pen.height = fH;
+                pen.ey = fEy;
+                pen.calculative.worldRect.y = fEy - fH;
+              }
+              calcWorldAnchors(pen);
+            }
+            if(!rHit && !lHit){
+              // 移出就从followers中删除
+              const index = pen.followers.indexOf(this.store.active[0].id);
+              if(index >= 0){
+                pen.followers.splice(index,1);
+              }
+            }else{
+              this.store.emitter.emit('intersect', {
+                x: x1,
+                y: y1,
+                pen,
+              });
+            }
           }
         }
       }
@@ -5226,6 +5296,107 @@ export class Canvas {
     this.getSizeCPs();
     this.initImageCanvas(this.store.active);
     this.initTemplateCanvas(this.store.active);
+    // console.log('resizeIndex',this.resizeIndex);
+    // 在pen拉伸的过程中，更新pen的leader的rect
+    if(this.store.active[0].leader){
+      const leader = this.store.data.pens.find(p => p.id === this.store.active[0].leader);
+      if(!leader) return;
+      const {x,y,ex,ey} = this.store.active[0].calculative.worldRect;
+      console.log(x,y,ex,ey);
+      const safeGap = this.store.options.safeGap;
+      const gap = calcRectDistRect({x,y,ex,ey},leader.calculative.worldRect);
+      // console.log('gap 123',gap);
+      switch(this.resizeIndex){
+        case 0:
+          // 左上角
+          // left top
+          if(gap){
+            if(gap.left && gap.left < safeGap){
+              const fX = x - safeGap;
+              const fW = leader.calculative.worldRect.ex - fX;
+              leader.calculative.worldRect.x = fX;
+              leader.x = fX;
+              leader.calculative.worldRect.width = fW;
+              leader.width = fW;
+              leader.calculative.width = fW;
+            }
+            if(gap.top && gap.top < safeGap){
+              const fY = y - safeGap;
+              const fH = leader.calculative.worldRect.ey - fY;
+              leader.calculative.worldRect.y = fY;
+              leader.y = fY;
+              leader.calculative.worldRect.height = fH;
+              leader.height = fH;
+              leader.calculative.height = fH;
+            }
+          }
+          break;
+        case 1:
+          // 右上角
+          // right top
+          if(gap){
+            if(gap.right && gap.right < safeGap){
+              const fEx = ex + safeGap;
+              const fW = fEx - leader.calculative.worldRect.x;
+              leader.calculative.worldRect.ex = fEx;
+              leader.calculative.worldRect.width = fW;
+              leader.width = fW;
+            }
+            if(gap.top && gap.top < safeGap){
+              const fY = y - safeGap;
+              const fH = leader.calculative.worldRect.ey - fY;
+              leader.calculative.worldRect.y = fY;
+              leader.y = fY;
+              leader.calculative.worldRect.height = fH;
+              leader.height = fH;
+              leader.calculative.height = fH;
+            }
+          }
+          break;
+        case 2:
+          // 右下角
+          // right bottom
+          if(gap){
+            if(gap.right && gap.right < safeGap){
+              const fEx = ex + safeGap;
+              const fW = fEx - leader.calculative.worldRect.x;
+              leader.calculative.worldRect.ex = fEx;
+              leader.calculative.worldRect.width = fW;
+              leader.width = fW;
+            }
+            if(gap.bottom && gap.bottom < safeGap){
+              const fEy = ey + safeGap;
+              const fH = fEy - leader.calculative.worldRect.y;
+              leader.calculative.worldRect.ey = fEy;
+              leader.calculative.worldRect.height = fH;
+              leader.height = fH;
+            }
+          }
+          break;
+        case 3:
+          // 左下角
+          // left bottom
+          if(gap){
+            if(gap.left && gap.left < safeGap){
+              const fX = x - safeGap;
+              const fW = leader.calculative.worldRect.ex - fX;
+              leader.calculative.worldRect.x = fX;
+              leader.x = fX;
+              leader.calculative.worldRect.width = fW;
+              leader.width = fW;
+              leader.calculative.width = fW;
+            }
+            if(gap.bottom && gap.bottom < safeGap){
+              const fEy = ey + safeGap;
+              const fH = fEy - leader.calculative.worldRect.y;
+              leader.calculative.worldRect.ey = fEy;
+              leader.calculative.worldRect.height = fH;
+              leader.height = fH;
+            }
+          }
+          break;
+      }
+    }
     this.render();
     this.store.emitter.emit('resizePens', this.store.active);
 

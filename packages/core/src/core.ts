@@ -2477,6 +2477,8 @@ export class Meta2d {
           e.pen.onMouseUp(e.pen, this.canvas.mousePos);
         this.store.data.locked && e.pen && (!e.pen.disabled) && this.doEvent(e.pen, eventName);
         break;
+      case 'inside':
+        break;
       case 'intersect':
         e.pen &&
           e.pen.onIntersect && (!e.pen.disabled) &&

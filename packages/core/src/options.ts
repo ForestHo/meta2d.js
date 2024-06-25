@@ -111,6 +111,7 @@ export interface Options {
   svgPathStroke?:boolean; //svg path是否显示边框
   disabledColor?: string;
   disabledBackground?: string;
+  safeGap?: number; // 安全间隙
 }
 
 export const defaultOptions: Options = {
@@ -185,7 +186,8 @@ export const defaultOptions: Options = {
   textRotate: true,
   unavailableKeys: [],
   diagramOptions: {},
-  svgPathStroke:true
+  svgPathStroke:true,
+  safeGap: 30,
 };
 
 export interface PenPlugin {

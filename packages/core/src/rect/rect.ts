@@ -488,3 +488,79 @@ export function pointInPolygon(pt: Point, pts: Point[]) {
   }
   return inside;
 }
+
+// 计算souce rect与target rect之间的距离(source rect在 target rect内部，且有越界情况)
+export function calcRectGapRect(source: Rect, target: Rect) {
+  let deltaX = 0, deltaY = 0;// source rect的x,y方向与target rect的x,y方向的距离
+  // 1.判断source rect是否在target rect内部
+  if(source.x > target.ex ||
+    source.ex < target.x ||
+    source.ey < target.y ||
+    source.y > target.ey){
+      return null;
+  }
+  const gap = {
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0
+  }
+  // 2.计算不同方向的距离
+  if(source.x < target.x && source.ex > target.x){
+    deltaX = target.x - source.x;
+    gap.left = deltaX;
+  }
+  if(source.ex > target.ex && source.x < target.ex){
+    deltaX = source.ex - target.ex;
+    gap.right = deltaX;
+  }
+  if(source.y < target.y && source.ey > target.y){
+    deltaY = target.y - source.y;
+    gap.top = deltaY;
+  }
+  if(source.ey > target.ey && source.y < target.ey){
+    deltaY = source.ey - target.ey;
+    gap.bottom = deltaY;
+  }
+  return gap;
+}
+// 计算souce rect与target rect之间的距离(source rect完全在 target rect内部)
+export function calcRectDistRect(source: Rect, target: Rect) {
+  // let deltaX = 0, deltaY = 0;// source rect的x,y方向与target rect的x,y方向的距离
+  // 1.判断source rect是否在target rect内部
+  if(source.x > target.x &&
+    source.ex < target.ex &&
+    source.y > target.y &&
+    source.ey < target.ey){
+    const gap = {
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0
+    }
+    gap.left = source.x - target.x;
+    gap.right = target.ex - source.ex;
+    gap.top = source.y - target.y;
+    gap.bottom = target.ey - source.ey;
+    // 2.计算不同方向的距离
+    // if(source.x > target.x && source.ex < target.ex){
+    //   deltaX = target.x - source.x;
+    //   gap.left = deltaX;
+    // }
+    // if(source.ex > target.ex && source.x < target.ex){
+    //   deltaX = source.ex - target.ex;
+    //   gap.right = deltaX;
+    // }
+    // if(source.y > target.y && source.ey < target.ey){
+    //   deltaY = target.y - source.y;
+    //   gap.top = deltaY;
+    // }
+    // if(source.ey > target.ey && source.y < target.ey){
+    //   deltaY = source.ey - target.ey;
+    //   gap.bottom = deltaY;
+    // }
+    return gap;
+  }else {
+    return null;
+  }
+}
