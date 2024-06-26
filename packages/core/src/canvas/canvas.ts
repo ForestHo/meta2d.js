@@ -2566,6 +2566,41 @@ export class Canvas {
               pen.followers.push(this.store.active[0].id);
               this.store.active[0].leader = pen.id;
             }
+            const gap = calcRectDistRect({x,y,ex,ey},pen.calculative.worldRect);
+            const safeGap = this.store.options.safeGap;
+            // console.log('inside gap',gap);
+            if(gap.left && gap.left < safeGap){
+              const fX = x - safeGap;
+              const fW = pen.calculative.worldRect.ex - fX;
+              pen.calculative.worldRect.x = fX;
+              pen.x = fX;
+              pen.calculative.worldRect.width = fW;
+              pen.width = fW;
+              pen.calculative.width = fW;
+            }
+            if(gap.top && gap.top < safeGap){
+              const fY = y - safeGap;
+              const fH = pen.calculative.worldRect.ey - fY;
+              pen.calculative.worldRect.y = fY;
+              pen.y = fY;
+              pen.calculative.worldRect.height = fH;
+              pen.height = fH;
+              pen.calculative.height = fH;
+            }
+            if(gap.right && gap.right < safeGap){
+              const fEx = ex + safeGap;
+              const fW = fEx - pen.calculative.worldRect.x;
+              pen.calculative.worldRect.ex = fEx;
+              pen.calculative.worldRect.width = fW;
+              pen.width = fW;
+            }
+            if(gap.bottom && gap.bottom < safeGap){
+              const fEy = ey + safeGap;
+              const fH = fEy - pen.calculative.worldRect.y;
+              pen.calculative.worldRect.ey = fEy;
+              pen.calculative.worldRect.height = fH;
+              pen.height = fH;
+            }
           }else{
             const gap = calcRectGapRect({x,y,ex,ey},pen.calculative.worldRect);
             // console.log('gap',gap,pen.calculative.worldRect.width);
@@ -5302,7 +5337,7 @@ export class Canvas {
       const leader = this.store.data.pens.find(p => p.id === this.store.active[0].leader);
       if(!leader) return;
       const {x,y,ex,ey} = this.store.active[0].calculative.worldRect;
-      console.log(x,y,ex,ey);
+      // console.log(x,y,ex,ey);
       const safeGap = this.store.options.safeGap;
       const gap = calcRectDistRect({x,y,ex,ey},leader.calculative.worldRect);
       // console.log('gap 123',gap);
@@ -5319,6 +5354,7 @@ export class Canvas {
               leader.calculative.worldRect.width = fW;
               leader.width = fW;
               leader.calculative.width = fW;
+              leader.calculative.worldRect.ex = fX + fW;
             }
             if(gap.top && gap.top < safeGap){
               const fY = y - safeGap;
@@ -5328,6 +5364,7 @@ export class Canvas {
               leader.calculative.worldRect.height = fH;
               leader.height = fH;
               leader.calculative.height = fH;
+              leader.calculative.worldRect.ey = fY + fH;
             }
           }
           break;
@@ -5341,6 +5378,7 @@ export class Canvas {
               leader.calculative.worldRect.ex = fEx;
               leader.calculative.worldRect.width = fW;
               leader.width = fW;
+              leader.calculative.worldRect.x = fEx - fW;
             }
             if(gap.top && gap.top < safeGap){
               const fY = y - safeGap;
@@ -5350,6 +5388,7 @@ export class Canvas {
               leader.calculative.worldRect.height = fH;
               leader.height = fH;
               leader.calculative.height = fH;
+              leader.calculative.worldRect.ey = fY + fH;
             }
           }
           break;
