@@ -124,3 +124,14 @@ export function rgba(c: string, p: number) {
 
   return `rgba(${f.r},${f.g},${f.b},${p + f.a})`;
 }
+export function pickPixels(canvas,event) {
+  // console.log(event,'canvas');
+  const _ctx = canvas.getContext('2d');
+  var x = event.x
+  var y = event.y
+  // console.log('x:', x, 'y:', y)
+  return _ctx.getImageData(x, y, 200, 200)
+  // var data = pixel.data
+  // var rgba = 'rgba(' + data[0] + ',' + data[1] + ',' + data[2] + ',' + data[3] / 255 + ')'
+  // console.log(rgba,'rgba');
+}

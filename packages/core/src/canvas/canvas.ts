@@ -133,12 +133,14 @@ import { Scroll } from '../scroll';
 import { CanvasImage } from './canvasImage';
 import { MagnifierCanvas } from './magnifierCanvas';
 import { lockedError } from '../utils/error';
+import { pickPixels } from '../utils/color';
 import { Meta2d } from '../core';
 import { Dialog } from '../dialog';
 import { setter } from '../utils/object';
 import { Title } from '../title';
 import { CanvasTemplate } from './canvasTemplate';
 import { getLinePoints } from '../diagrams/line';
+import { ColorMonitor } from './colorMonitor';
 
 export const movingSuffix = '-moving' as const;
 export class Canvas {
@@ -258,6 +260,7 @@ export class Canvas {
   canvasImage: CanvasImage;
   canvasImageBottom: CanvasImage;
   magnifierCanvas: MagnifierCanvas;
+  colorMonitor: ColorMonitor;
   dialog: Dialog;
   autoPolylineFlag: boolean = false; //标记open不自动计算
 
@@ -286,6 +289,9 @@ export class Canvas {
 
     this.magnifierCanvas = new MagnifierCanvas(this, parentElement, store);
     this.magnifierCanvas.canvas.style.zIndex = '5';
+
+    this.colorMonitor = new ColorMonitor(this, parentElement, store);
+    this.colorMonitor.canvas.style.zIndex = '6';
 
     this.externalElements.style.position = 'absolute';
     this.externalElements.style.left = '0';
@@ -1984,7 +1990,7 @@ export class Canvas {
       this.render();
       return;
     }
-
+ 
     if (this.mouseDown && !this.store.options.disableTranslate) {
       // 画布平移前提
       if (this.mouseRight === MouseRight.Down) {
@@ -2245,6 +2251,18 @@ export class Canvas {
       this.hoverTimer = now;
       this.getHover(e);
     }
+    // if(this.store.options.colorPickOn){
+    //   console.log(this.store.hover,'pick');
+    //   this.externalElements.style.cursor = "default";
+    //   // this.externalElements.style.cursor = "url('/img/colorpick.ico'), auto";
+    //   // if(this.store.hover){
+    //     const data = pickPixels(this.canvas,e);
+    //     console.log('data',data);
+    //     this.colorMonitor.render(data);
+    //   // }else{
+    //     // pickPixels(this.canvasTemplate.canvas,e);
+    //   // }
+    // }
     globalThis.debug && console.timeEnd('hover');
     if (this.hotkeyType === HotkeyType.AddAnchor) {
       this.patchFlags = true;
@@ -3231,7 +3249,7 @@ export class Canvas {
           if(pen.calculative.disabled){
             this.externalElements.style.cursor = 'not-allowed';
           }
-
+          console.log(111);
           this.store.hover = pen;
           this.store.pointAt = pos.point;
           this.store.pointAtIndex = pos.i;
@@ -3280,7 +3298,7 @@ export class Canvas {
           if(pen.calculative.disabled){
             this.externalElements.style.cursor = 'not-allowed';
           }
-
+          console.log(222);
           this.store.hover = pen;
           this.initTemplateCanvas([this.store.hover]);
           hoverType = HoverType.Node;
@@ -3350,7 +3368,7 @@ export class Canvas {
       if (!pointInSimpleRect(pt, pen.calculative.worldRect, r)) {
         continue;
       }
-
+      console.log(333);
       this.store.hover = pen;
       // 锚点
       if (this.hotkeyType !== HotkeyType.Resize) {
@@ -3454,7 +3472,7 @@ export class Canvas {
       }
       this.store.hoverAnchor = anchor;
       this.store.hover = pen;
-
+      console.log(444);
       if (pen.type) {
         if (anchor.connectTo && !pen.calculative.active) {
           this.store.hover = this.store.pens[anchor.connectTo];
@@ -3497,6 +3515,7 @@ export class Canvas {
         this.store.hoverAnchor = anchor;
         this.store.hover = pen;
         this.externalElements.style.cursor = 'pointer';
+        console.log(555);
         return HoverType.LineAnchorPrev;
       }
 
@@ -3508,6 +3527,7 @@ export class Canvas {
         this.store.hoverAnchor = anchor;
         this.store.hover = pen;
         this.externalElements.style.cursor = 'pointer';
+        console.log(666);
         return HoverType.LineAnchorNext;
       }
     }
