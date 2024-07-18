@@ -1809,6 +1809,12 @@ export function ctxDrawPath(
         renderLineAnchors(ctx, pen);
       }
     }
+    try {
+      const svgString = (path as any).toSVGString();
+      pen.pathValue = svgString;
+    } catch (error) {
+      console.error('path.toSVGString error', error);
+    }
   }
 }
 

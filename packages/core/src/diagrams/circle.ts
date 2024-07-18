@@ -12,7 +12,7 @@ export function circle(pen: Pen, ctx?: CanvasRenderingContext2D): Path2D {
     0,
     Math.PI * 2
   );
-
+  console.log('circle', path);
   if (path instanceof Path2D) {
     return path;
   }

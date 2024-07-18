@@ -38,6 +38,7 @@ import { gif } from './gif';
 import { mindNode, mindNodeAnchors } from './mindNode';
 import { mindLine, mindLineAnchors } from './mindLine';
 import { panel } from './panel';
+import { customPath } from './customPath';
 
 export function commonPens() {
   return {
@@ -64,7 +65,8 @@ export function commonPens() {
     mindNode,
     mindLine,
     mindNode2:rectangle,
-    panel
+    panel,
+    customPath
   };
 }
 
