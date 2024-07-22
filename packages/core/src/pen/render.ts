@@ -1812,6 +1812,8 @@ export function ctxDrawPath(
     try {
       const svgString = (path as any).toSVGString();
       pen.pathValue = svgString;
+      const box = (path as any).getBBox();
+      pen.BBox = box;
     } catch (error) {
       console.error('path.toSVGString error', error);
     }
