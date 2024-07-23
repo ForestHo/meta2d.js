@@ -5193,6 +5193,8 @@ export class Canvas {
     const scaleX = this.activeRect.width / w;
     const scaleY = this.activeRect.height / h;
     this.store.active.forEach((pen, i) => {
+      // follow的图元不缩放
+      if(pen?.follow) return;
       pen.calculative.worldRect.x =
         this.activeInitPos[i].x * this.activeRect.width + this.activeRect.x;
       pen.calculative.worldRect.y =

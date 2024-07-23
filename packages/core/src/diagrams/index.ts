@@ -39,6 +39,7 @@ import { mindNode, mindNodeAnchors } from './mindNode';
 import { mindLine, mindLineAnchors } from './mindLine';
 import { panel } from './panel';
 import { customPath } from './customPath';
+import { frame } from '../pen/frame';
 
 export function commonPens() {
   return {
@@ -66,7 +67,8 @@ export function commonPens() {
     mindLine,
     mindNode2:rectangle,
     panel,
-    customPath
+    customPath,
+    frame,
   };
 }
 
