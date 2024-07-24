@@ -33,7 +33,7 @@ import { calcTextLines, calcTextDrawRect, calcTextRect } from './text';
 import { deepClone } from '../utils/clone';
 import { renderFromArrow, renderToArrow } from './arrow';
 import { Gradient, isEqual, PenType } from '@meta2d/core';
-import { pSBC, rgba } from '../utils';
+import { pSBC, rgba, round } from '../utils';
 import { Canvas } from '../canvas';
 
 /**
@@ -1810,10 +1810,22 @@ export function ctxDrawPath(
       }
     }
     try {
+      // 根据 path 获取 svg 字符串
       const svgString = (path as any).toSVGString();
       pen.pathValue = svgString;
+      // 获取 path 的 DOM Rect
       const box = (path as any).getBBox();
-      pen.BBox = box;
+      if(!pen.BBox){
+        pen.BBox = {};
+      }
+      // pen.BBox.x = box.x;
+      // pen.BBox.y = box.y;
+      // pen.BBox.width = box.width;
+      // pen.BBox.height = box.height;
+      pen.BBox.left = box.left;
+      pen.BBox.right = box.right;
+      pen.BBox.top = box.top;
+      pen.BBox.bottom = box.bottom;
     } catch (error) {
       console.error('path.toSVGString error', error);
     }
@@ -2174,7 +2186,11 @@ export function calcWorldAnchors(pen: Pen) {
       );
     });
   }
-
+  for (let i = 0; i < anchors.length; i++) {
+    const anc = anchors[i];
+    anc.x = round(anc.x,2);
+    anc.y = round(anc.y,2);
+  }
   if (!pen.type || pen.anchors) {
     pen.calculative.worldAnchors = anchors;
   }

@@ -1,6 +1,7 @@
 import { Pen } from '.';
 import { Canvas } from '../canvas';
 import { calcRightBottom, Rect } from '../rect';
+import { round } from '../utils';
 import { getFont } from './render';
 
 export function calcTextRect(pen: Pen) {
@@ -71,6 +72,11 @@ export function calcTextRect(pen: Pen) {
     width: textWidth || width,
     height: textHeight || height,
   };
+  rect.x = round(rect.x,2);
+  rect.y = round(rect.y,2);
+  rect.width = round(rect.width,2);
+  rect.height = round(rect.height,2);
+
   calcRightBottom(rect);
   pen.calculative.worldTextRect = rect;
 
@@ -107,10 +113,10 @@ export function calcTextDrawRect(ctx: CanvasRenderingContext2D, pen: Pen) {
   }
 
   pen.calculative.textDrawRect = {
-    x,
-    y,
-    width: textWidth,
-    height: h,
+    x: round(x,2),
+    y: round(y,2),
+    width: round(textWidth,2),
+    height: round(h,2),
   };
   calcRightBottom(pen.calculative.textDrawRect);
 }
@@ -267,7 +273,7 @@ export function calcTextAdaptionWidth(
   let maxWidth = 0;
   pen.calculative.textLineWidths = [];
   pen.calculative.textLines.forEach((text: string) => {
-    const width = ctx.measureText(text).width;
+    const width = round(ctx.measureText(text).width,2);
     pen.calculative.textLineWidths.push(width);
     maxWidth < width && (maxWidth = width);
   });

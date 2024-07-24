@@ -104,6 +104,7 @@ import {
   Padding,
   rgba,
   s8,
+  round
 } from '../utils';
 import {
   inheritanceProps,
@@ -3249,7 +3250,6 @@ export class Canvas {
           if(pen.calculative.disabled){
             this.externalElements.style.cursor = 'not-allowed';
           }
-          console.log(111);
           this.store.hover = pen;
           this.store.pointAt = pos.point;
           this.store.pointAtIndex = pos.i;
@@ -3298,7 +3298,6 @@ export class Canvas {
           if(pen.calculative.disabled){
             this.externalElements.style.cursor = 'not-allowed';
           }
-          console.log(222);
           this.store.hover = pen;
           this.initTemplateCanvas([this.store.hover]);
           hoverType = HoverType.Node;
@@ -3368,7 +3367,6 @@ export class Canvas {
       if (!pointInSimpleRect(pt, pen.calculative.worldRect, r)) {
         continue;
       }
-      console.log(333);
       this.store.hover = pen;
       // 锚点
       if (this.hotkeyType !== HotkeyType.Resize) {
@@ -3472,7 +3470,6 @@ export class Canvas {
       }
       this.store.hoverAnchor = anchor;
       this.store.hover = pen;
-      console.log(444);
       if (pen.type) {
         if (anchor.connectTo && !pen.calculative.active) {
           this.store.hover = this.store.pens[anchor.connectTo];
@@ -3515,7 +3512,6 @@ export class Canvas {
         this.store.hoverAnchor = anchor;
         this.store.hover = pen;
         this.externalElements.style.cursor = 'pointer';
-        console.log(555);
         return HoverType.LineAnchorPrev;
       }
 
@@ -3527,7 +3523,6 @@ export class Canvas {
         this.store.hoverAnchor = anchor;
         this.store.hover = pen;
         this.externalElements.style.cursor = 'pointer';
-        console.log(666);
         return HoverType.LineAnchorNext;
       }
     }
@@ -4393,8 +4388,8 @@ export class Canvas {
 
   setCalculativeByScale(pen: Pen) {
     const scale = this.store.data.scale;
-    pen.calculative.lineWidth = pen.lineWidth * scale;
-    pen.calculative.fontSize = pen.fontSize * scale;
+    pen.calculative.lineWidth = round(pen.lineWidth * scale,2);
+    pen.calculative.fontSize = round(pen.fontSize * scale,2);
     if (pen.fontSize < 1) {
       pen.calculative.fontSize =
         pen.fontSize * pen.calculative.worldRect.height;
@@ -4643,6 +4638,15 @@ export class Canvas {
           Math.PI * 2
         );
         ctx.fill();
+        // 在底部绘制宽高信息
+        ctx.font = "16px Arial";
+        ctx.fillStyle = this.store.options.activeColor;
+        ctx.fillText(
+          `${this.activeRect.width} ✖ ${this.activeRect.height}`,
+          this.activeRect.x+this.activeRect.width/2 - 50,
+          this.activeRect.ey + 16,
+          100
+        );
         ctx.stroke();
 
         ctx.restore();
@@ -4959,8 +4963,8 @@ export class Canvas {
     }
 
     this.calibrateMouse(center);
-    const s = scale / this.store.data.scale;
-    this.store.data.scale = scale;
+    const s = round(scale / this.store.data.scale,2);
+    this.store.data.scale = round(scale,2);
     this.store.data.center = center;
 
     if (this.store.clipboard?.pos) {
@@ -5009,8 +5013,8 @@ export class Canvas {
     if (!(scale >= minScale && scale <= maxScale)) {
       return;
     }
-    const s = scale / this.store.data.scale;
-    this.store.data.scale = scale;
+    const s = round(scale / this.store.data.scale,2);
+    this.store.data.scale = round(scale,2);
     this.store.data.center = { x: 0, y: 0 };
     this.store.data.origin = { x: 0, y: 0 };
     this.store.data.pens.forEach((pen) => {
@@ -5157,20 +5161,20 @@ export class Canvas {
 
         if (this.activeRect.x < vRect.x) {
           this.activeRect.width =
-            this.activeRect.width - (vRect.x - this.activeRect.x);
+            round(this.activeRect.width - (vRect.x - this.activeRect.x),2);
           this.activeRect.x = vRect.x;
         }
         if (this.activeRect.y < vRect.y) {
           this.activeRect.height =
-            this.activeRect.height - (vRect.y - this.activeRect.y);
+          round(this.activeRect.height - (vRect.y - this.activeRect.y),2);
           this.activeRect.y = vRect.y;
         }
         if (this.activeRect.x + this.activeRect.width > vRect.x + vRect.width) {
           this.activeRect.width =
-            this.activeRect.width -
+            round(this.activeRect.width -
             (this.activeRect.x +
               this.activeRect.width -
-              (vRect.x + vRect.width));
+              (vRect.x + vRect.width)),2);
           this.activeRect.x = vRect.x + vRect.width - this.activeRect.width;
           this.activeRect.ex = this.activeRect.x + this.activeRect.width;
         }
@@ -5179,17 +5183,16 @@ export class Canvas {
           vRect.y + vRect.height
         ) {
           this.activeRect.height =
-            this.activeRect.height -
+          round(this.activeRect.height -
             (this.activeRect.y +
               this.activeRect.height -
-              (vRect.y + vRect.height));
+              (vRect.y + vRect.height)),2);
           this.activeRect.y = vRect.y + vRect.height - this.activeRect.height;
           this.activeRect.ey = this.activeRect.y + this.activeRect.height;
         }
       }
     }
     calcCenter(this.activeRect);
-
     const scaleX = this.activeRect.width / w;
     const scaleY = this.activeRect.height / h;
     this.store.active.forEach((pen, i) => {
@@ -5199,9 +5202,9 @@ export class Canvas {
         this.activeInitPos[i].x * this.activeRect.width + this.activeRect.x;
       pen.calculative.worldRect.y =
         this.activeInitPos[i].y * this.activeRect.height + this.activeRect.y;
-      pen.calculative.worldRect.width *= scaleX;
+      pen.calculative.worldRect.width = round(pen.calculative.worldRect.width * scaleX,2);
       pen.calculative.iconWidth && (pen.calculative.iconWidth *= scaleX);
-      pen.calculative.worldRect.height *= scaleY;
+      pen.calculative.worldRect.height = round(pen.calculative.worldRect.height * scaleY,2);
       pen.calculative.iconHeight && (pen.calculative.iconHeight *= scaleY);
       calcRightBottom(pen.calculative.worldRect);
       calcCenter(pen.calculative.worldRect);
@@ -6098,6 +6101,8 @@ export class Canvas {
       this.activeRect = getRect(canMovePens);
       this.activeRect.rotate = 0;
     }
+    this.activeRect.width = round(this.activeRect.width,2);
+      this.activeRect.height = round(this.activeRect.height,2);
     this.lastRotate = 0;
     this.getSizeCPs();
   }

@@ -56,17 +56,17 @@ function mouseLeave(pen: Pen) {
 function mouseUp(pen: Pen) {
   console.log('mouseUp',pen);
   const activePens = pen.calculative.canvas.store.active;
+  // console.log('activePens',activePens);
   if (activePens && activePens.length) {
     activePens.forEach((activePen: Pen) => {
-      const movingPen =
-        pen.calculative.canvas.store.pens[activePen.id + movingSuffix];
-      if (movingPen && movingPen.calculative) {
+      // console.log('activePen',activePen);
         let inRect = deepClone(pen.calculative.worldRect);
         inRect.x -= 1;
         inRect.y -= 1;
         inRect.width += 2;
         inRect.height += 2;
-        if (rectInRect(movingPen.calculative.worldRect, inRect, true)) {
+        // console.log('inRect',rectInRect(activePen.calculative.worldRect, inRect, true));
+        if (rectInRect(activePen.calculative.worldRect, inRect, true)) {
           if (!pen.followers) {
             pen.followers = [];
           }
@@ -74,7 +74,6 @@ function mouseUp(pen: Pen) {
             pen.followers.push(activePen.id);
           }
         }
-      }
     });
   }
 }

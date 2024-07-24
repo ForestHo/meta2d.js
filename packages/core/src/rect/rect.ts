@@ -1,6 +1,6 @@
 import { isEqual, Pen } from '../pen';
 import { Point, rotatePoint, scalePoint } from '../point';
-import { formatPadding, Padding } from '../utils';
+import { formatPadding, Padding,round } from '../utils';
 
 export interface Rect {
   x?: number;
@@ -56,13 +56,13 @@ export function calcCenter(rect: Rect) {
   if (!rect.center) {
     rect.center = {} as Point;
   }
-  rect.center.x = rect.x + rect.width / 2;
-  rect.center.y = rect.y + rect.height / 2;
+  rect.center.x = round(rect.x + rect.width / 2,2);
+  rect.center.y = round(rect.y + rect.height / 2,2);
 }
 
 export function calcRightBottom(rect: Rect) {
-  rect.ex = rect.x + rect.width;
-  rect.ey = rect.y + rect.height;
+  rect.ex = round(rect.x + rect.width,2);
+  rect.ey = round(rect.y + rect.height,2);
 }
 
 export function pointInVertices(
@@ -204,6 +204,10 @@ export function translateRect(rect: Rect | Pen, x: number, y: number) {
     rect.center.x += x;
     rect.center.y += y;
   }
+  rect.x = round(rect.x, 2);
+  rect.y = round(rect.y, 2);
+  rect.ex = round(rect.ex, 2);
+  rect.ey = round(rect.ey, 2);
 }
 
 /**
@@ -417,14 +421,21 @@ export function resizeRect(
       rect.width -= offsetX;
       break;
   }
+  // 保留两位小数
+  rect.width = round(rect.width, 2);
+  rect.height = round(rect.height, 2);
+  rect.x = round(rect.x, 2);
+  rect.y = round(rect.y, 2);
+  rect.ex = round(rect.ex, 2);
+  rect.ey = round(rect.ey, 2);
 }
 
 export function scaleRect(rect: Rect, scale: number, center: Point) {
   if (!rect) {
     return;
   }
-  rect.width *= scale;
-  rect.height *= scale;
+  rect.width = round(rect.width * scale, 2);
+  rect.height = round(rect.height * scale, 2);
   scalePoint(rect as Point, scale, center);
 
   calcRightBottom(rect);

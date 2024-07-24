@@ -2,6 +2,7 @@ import { Direction } from '../data';
 import { Pen } from '../pen';
 import { pointInRect } from '../rect';
 import { Meta2dStore } from '../store';
+import { round } from '../utils';
 
 export enum PrevNextType {
   Mirror,
@@ -114,8 +115,8 @@ export function hitPoint(pt: Point, target: Point, radius = 5, pen?: Pen) {
 }
 
 export function scalePoint(pt: Point, scale: number, center: Point) {
-  pt.x = center.x - (center.x - pt.x) * scale;
-  pt.y = center.y - (center.y - pt.y) * scale;
+  pt.x = round(center.x - (center.x - pt.x) * scale,2);
+  pt.y = round(center.y - (center.y - pt.y) * scale,2);
 }
 
 export function calcRotate(pt: Point, center: Point) {
