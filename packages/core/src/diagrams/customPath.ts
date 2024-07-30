@@ -10,13 +10,13 @@ import {
 } from './svg/parse';
 
 export function customPath(pen: Pen, ctx?: CanvasRenderingContext2D): Path2D {
-  // const store: Meta2dStore = pen.calculative.canvas.store;
-  // const pathText = store.data.paths[pen.pathId];
-  // if (!pathText) {
-  //   return new Path2D();
-  // }
+  const store: Meta2dStore = pen.calculative.canvas.store;
+  const pathText = store.data.paths[pen.pathId];
+  if (!pathText) {
+    return new Path2D();
+  }
 
-  const path = parseSvgPath(pen.pathData);
+  const path = parseSvgPath(pathText);
   pen.calculative.svgRect = getRect(path);
   calcCenter(pen.calculative.svgRect);
 

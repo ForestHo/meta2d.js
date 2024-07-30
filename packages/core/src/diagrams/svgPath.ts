@@ -10,13 +10,13 @@ import {
 } from './svg/parse';
 
 export function svgPath(pen: Pen, ctx?: CanvasRenderingContext2D): Path2D {
-  // const store: Meta2dStore = pen.calculative.canvas.store;
-  // const pathText = store.data.paths[pen.pathId];
-  // if (!pathText) {
-  //   return new Path2D();
-  // }
+  const store: Meta2dStore = pen.calculative.canvas.store;
+  const pathText = store.data.paths[pen.pathId];
+  if (!pathText) {
+    return new Path2D();
+  }
 
-  const path = parseSvgPath(pen.pathData);
+  const path = parseSvgPath(pathText);
   pen.calculative.svgRect = getRect(path);
   calcCenter(pen.calculative.svgRect);
 
@@ -44,7 +44,7 @@ export function svgPath(pen: Pen, ctx?: CanvasRenderingContext2D): Path2D {
     (ctx as any).svgPath?.(pathStr);
     return;
   }
-  // pen.pathValue = pathStr;
+
   const path2D = new Path2D(pathStr);
   // TODO: 为何要闭合曲线
   // path2D.closePath();

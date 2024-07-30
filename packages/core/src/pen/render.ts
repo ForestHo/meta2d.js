@@ -1810,9 +1810,13 @@ export function ctxDrawPath(
       }
     }
     try {
-      // 根据 path 获取 svg 字符串
+      // 根据 最新的path 获取 svg 字符串
       const svgString = (path as any).toSVGString();
       pen.pathValue = svgString;
+      console.log('pen',pen.pathId);
+      if(pen.pathId){
+        store.data.paths[pen.pathId] = svgString;
+      }
       // 获取 path 的 DOM Rect
       const box = (path as any).getBBox();
       if(!pen.BBox){
