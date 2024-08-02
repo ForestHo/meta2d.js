@@ -112,6 +112,8 @@ export interface Options {
   disabledColor?: string;
   disabledBackground?: string;
   safeGap?: number; // 安全间隙
+  vx?: number; //视图x
+  vy?: number; //视图y
 }
 
 export const defaultOptions: Options = {

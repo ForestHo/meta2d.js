@@ -102,8 +102,8 @@ export class CanvasTemplate {
     if (this.bgPatchFlags) {
       const ctx = this.bgOffscreen.getContext('2d');
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      const width = this.store.data.width || this.store.options.width;
-      const height = this.store.data.height || this.store.options.height;
+      const width = this.store.data.width;
+      const height = this.store.data.height;
       const x = this.store.data.x || this.store.options.x || 0;
       const y = this.store.data.y || this.store.options.y || 0;
       const background =
@@ -119,8 +119,8 @@ export class CanvasTemplate {
           ctx.shadowBlur = this.store.options.shadowBlur;
           ctx.shadowColor = this.store.options.shadowColor;
           ctx.fillRect(
-            this.store.data.origin.x + x,
-            this.store.data.origin.y + y,
+            this.store.data.origin.x + x + this.store.data.vx * this.store.data.scale,
+            this.store.data.origin.y + y + this.store.data.vy * this.store.data.scale,
             width * this.store.data.scale,
             height * this.store.data.scale
           );

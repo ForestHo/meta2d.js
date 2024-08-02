@@ -194,7 +194,15 @@ export class Meta2d {
       }
     }
     if (opts.width !== undefined || opts.height !== undefined) {
+      this.store.data.vw = this.store.data.width = opts.width;
+      this.store.data.vh = this.store.data.height = opts.height;
       this.canvas && (this.canvas.canvasTemplate.bgPatchFlags = true);
+    }
+    if(opts.x !== undefined || opts.y !== undefined){
+      this.store.data.vx = opts.vx;
+      this.store.data.x = opts.x;
+      this.store.data.vy = opts.vy;
+      this.store.data.y = opts.y;
     }
     this.store.options = Object.assign(this.store.options, opts);
     if (this.canvas && opts.scroll !== undefined) {
@@ -3086,11 +3094,9 @@ export class Meta2d {
     const padding = formatPadding(viewPadding);
 
     const _width =
-      (this.store.data.width || this.store.options.width) *
-      this.store.data.scale;
+      (this.store.data.width) * this.store.data.scale;
     const _height =
-      (this.store.data.height || this.store.options.height) *
-      this.store.data.scale;
+      (this.store.data.height) * this.store.data.scale;
     // 4. 计算缩放比例
     const w = (width - padding[1] - padding[3]) / _width;
     const h = (height - padding[0] - padding[2]) / _height;
@@ -3118,8 +3124,8 @@ export class Meta2d {
     // if (!this.hasView()) return;
     const viewCenter = this.getViewCenter();
     //根据画布尺寸居中对齐
-    const _width = this.store.data.width || this.store.options.width;
-    const _height = this.store.data.height || this.store.options.height;
+    const _width = this.store.data.width;
+    const _height = this.store.data.height;
     const pensRect: any = {
       x: 0,
       y: 0,
@@ -3453,8 +3459,8 @@ export class Meta2d {
 
   //对齐大屏
   alignNodesV(align: string, pens: Pen[] = this.store.data.pens) {
-    const width = this.store.data.width || this.store.options.width;
-    const height = this.store.data.height || this.store.options.height;
+    const width = this.store.data.width;
+    const height = this.store.data.height;
     let rect = {
       x: 0,
       y: 0,

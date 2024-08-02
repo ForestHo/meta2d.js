@@ -70,6 +70,10 @@ export interface Meta2dData {
   smoothNum?:number;//平滑量 值越大，平滑效果越好
   triggers?:Trigger[]; //全局状态
   dataPoints?: string[]; //数据点
+  vx?: number; //视图x
+  vy?: number; //视图y
+  vw?: number; //视图宽
+  vh?: number; //视图高
 }
 
 export interface Network {

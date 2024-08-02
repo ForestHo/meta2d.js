@@ -656,8 +656,8 @@ export class Canvas {
     let y = 10;
     let vRect: Rect = null;
     if (this.store.options.strictScope) {
-      const width = this.store.data.width || this.store.options.width;
-      const height = this.store.data.height || this.store.options.height;
+      const width = this.store.data.width;
+      const height = this.store.data.height;
       if (width && height) {
         vRect = {
           x: this.store.data.origin.x,
@@ -766,6 +766,9 @@ export class Canvas {
         }
 
         this.translatePens(this.store.active, x, 0);
+        if(this.store.active.length > 0) {
+          this.calculateView();
+        }
         break;
       case 'ArrowUp':
         if (this.movingAnchor) {
@@ -798,6 +801,9 @@ export class Canvas {
           break;
         }
         this.translatePens(this.store.active, 0, y);
+        if(this.store.active.length > 0) {
+          this.calculateView();
+        }
         break;
       case 'ArrowRight':
         if (this.movingAnchor) {
@@ -833,6 +839,9 @@ export class Canvas {
             vRect.x + vRect.width - (this.activeRect.x + this.activeRect.width);
         }
         this.translatePens(this.store.active, x, 0);
+        if(this.store.active.length > 0) {
+          this.calculateView();
+        }
         break;
       case 'ArrowDown':
         if (this.movingAnchor) {
@@ -870,6 +879,9 @@ export class Canvas {
           break;
         }
         this.translatePens(this.store.active, 0, y);
+        if(this.store.active.length > 0) {
+          this.calculateView();
+        }
         break;
       case 'd':
       case 'D':
@@ -1292,65 +1304,83 @@ export class Canvas {
         }
       }
     }
-    //大屏区域
-    const width = this.store.data.width || this.store.options.width;
-    const height = this.store.data.height || this.store.options.height;
-    if (width && height) {
-      let rect = {
-        x: this.store.data.origin.x,
-        y: this.store.data.origin.y,
-        width: width * this.store.data.scale,
-        height: height * this.store.data.scale,
-      };
-      let flag = true;
-      for (const pen of pens) {
-        if (!pen.parentId) {
-          let points = [
-            { x: pen.x, y: pen.y },
-            { x: pen.x + pen.width, y: pen.y },
-            { x: pen.x, y: pen.y + pen.height },
-            { x: pen.x + pen.width, y: pen.y + pen.height },
-            { x: pen.x + pen.width / 2, y: pen.y + pen.height / 2 },
-          ];
-          if (
-            (pen.x === rect.x &&
-              pen.y === rect.y &&
-              pen.width === rect.width &&
-              pen.height === rect.height) ||
-            points.some((point) => pointInRect(point, rect))
-          ) {
-            flag = false;
-            //严格范围模式下对齐大屏边界
-            if (this.store.options.strictScope) {
-              if (pen.x < rect.x) {
-                pen.x = rect.x;
-              }
-              if (pen.y < rect.y) {
-                pen.y = rect.y;
-              }
-              if (pen.x + pen.width > rect.x + rect.width) {
-                pen.x = rect.x + rect.width - pen.width;
-              }
-              if (pen.y + pen.height > rect.y + rect.height) {
-                pen.y = rect.y + rect.height - pen.height;
-              }
-            }
-            break;
-          }
-        }
-      }
-      if (flag) {
-        console.info('画笔在大屏范围外');
-        return;
-      }
-    }
-
+    setTimeout(() => {
+      this.calculateView();
+    });
     await this.addPens(pens, true);
     this.active(pens.filter((pen) => !pen.parentId));
     this.render();
     this.externalElements.focus(); // 聚焦
   }
-
+  calculateView() {
+    const rect = this.parent.getRect();
+    const {vx, vy, width, height , scale, vw, vh} = this.store.data;
+    const view = {
+      x: this.store.data.origin.x + vx * scale,
+      y: this.store.data.origin.y  + vy * scale,
+      ex: this.store.data.origin.x  + vx * scale + width * scale,
+      ey: this.store.data.origin.y  + vy * scale + height * scale
+    };
+    const w = vw * scale, h = vh * scale;
+    if(rect.x < view.x && rect.ex > view.x) {
+      this.store.data.vx -= vw;
+      this.store.data.width += vw;
+      view.x -= w;
+    }
+    while(rect.ex < view.x) {
+      this.store.data.vx -= vw;
+      view.x -= w;
+      view.ex -= w;
+    }
+    if(rect.ex > view.ex && rect.x < view.ex){
+      this.store.data.width += vw;
+      view.ex += w;
+    }
+    while(rect.x > view.ex) {
+      this.store.data.vx += vw;
+      view.x += w;
+      view.ex += w;
+    }
+    if(rect.y < view.y  && rect.ey > view.y) {
+      this.store.data.vy -= vh;
+      this.store.data.height += vh;
+      view.y -= h;
+    } 
+    while(rect.ey < view.y) {
+      this.store.data.vy -= vh;
+      view.y -= h;
+      view.ey -= h;
+    }
+    if(rect.ey > view.ey  && rect.y < view.ey) {
+      this.store.data.height += vh;
+      view.ey += h;
+    } 
+    while(rect.y > view.ey) {
+      this.store.data.vy += vh;
+      view.y += h;
+      view.ey += h;
+    }
+    while(rect.x > view.x + w) {
+      this.store.data.vx += vw;
+      this.store.data.width -= vw;
+      view.x += w;
+    }
+    while(rect.y > view.y + h) {
+      this.store.data.vy += vh;
+      this.store.data.height -= vh;
+      view.y += h;
+    }
+    while(rect.ex < view.ex - w) {
+      this.store.data.width -= vw;
+      view.ex -= w;
+    }
+    while(rect.ey < view.ey - h) {
+      this.store.data.height -= vh;
+      view.ey -= h;
+    }
+    this.canvasTemplate.bgPatchFlags = true;
+    this.canvasTemplate.render();
+  }
   randomCombineId(pen: Pen, pens: Pen[], parentId?: string) {
     let beforeIds = null;
     if (pen.type) {
@@ -2531,6 +2561,7 @@ export class Canvas {
         this.copyMovedPens();
       } else {
         this.movedActivePens(e.ctrlKey && e.shiftKey);
+        this.calculateView();
       }
       this.getAllByPens(this.movingPens).forEach((pen) => {
         this.store.pens[pen.id] = undefined;
@@ -4977,14 +5008,12 @@ export class Canvas {
   };
 
   translate(x: number = 0, y: number = 0) {
-    this.store.data.x += x * this.store.data.scale;
-    this.store.data.y += y * this.store.data.scale;
-    this.store.data.x = Math.round(this.store.data.x);
-    this.store.data.y = Math.round(this.store.data.y);
+    this.store.data.x += Math.round(x * this.store.data.scale);
+    this.store.data.y += Math.round(y * this.store.data.scale);
     if (this.store.options.padding) {
       let p = formatPadding(this.store.options.padding);
-      const width = this.store.data.width || this.store.options.width;
-      const height = this.store.data.height || this.store.options.height;
+      const width = this.store.data.width;
+      const height = this.store.data.height;
       if (this.width < (width + p[1] + p[3]) * this.store.data.scale) {
         if (
           this.store.data.x + this.store.data.origin.x >
@@ -5266,8 +5295,8 @@ export class Canvas {
     resizeRect(this.activeRect, offsetX, offsetY, this.resizeIndex);
     //大屏区域
     if (this.store.options.strictScope) {
-      const width = this.store.data.width || this.store.options.width;
-      const height = this.store.data.height || this.store.options.height;
+      const width = this.store.data.width;
+      const height = this.store.data.height;
       if (width && height) {
         let vRect: Rect = {
           x: this.store.data.origin.x,
@@ -5499,8 +5528,8 @@ export class Canvas {
     translateRect(rect, x, y);
     let vFlag = false;
     if (this.store.options.strictScope) {
-      const width = this.store.data.width || this.store.options.width;
-      const height = this.store.data.height || this.store.options.height;
+      const width = this.store.data.width;
+      const height = this.store.data.height;
       if (width && height) {
         let vRect: Rect = {
           x: this.store.data.origin.x,
@@ -7920,8 +7949,8 @@ export class Canvas {
       isRight = rect.x === 0;
       isBottom = rect.y === 0;
     }
-    const width = this.store.data.width || this.store.options.width;
-    const height = this.store.data.height || this.store.options.height;
+    const width = this.store.data.width;
+    const height = this.store.data.height;
     //大屏
     let isV = false;
     if (width && height && !this.store.data.component) {
