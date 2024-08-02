@@ -77,7 +77,7 @@ function onAdd(pen: Pen, e: Point) {
     toPen,
     pen.calculative.worldAnchors[8],
     toPen.calculative.worldAnchors[0]);
-  p1.locked = 2;
+  p1.disableDelete = true;
 }
 export function needinterfaceAnchors(pen: Pen) {
   const points = [

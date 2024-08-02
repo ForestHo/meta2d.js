@@ -109,7 +109,24 @@ export class Meta2d {
     this.setDatabyOptions(opts);
     this.init(parent);
     this.register(commonPens());
-    this.registerCanvasDraw({ cube,node,nodeexample,lifeline,pack,plifeline,terminate1,title,titlec,divider,member,class1,supplyinterface,needinterface });
+    this.registerCanvasDraw({ 
+      cube,
+      node,
+      nodeexample,
+      lifeline,
+      pack,
+      plifeline,
+      terminate1,
+      "title-s":title,
+      "title-i":title,
+      "title-c":title,
+      titlec,
+      divider,
+      member,
+      class1,
+      supplyinterface,
+      needinterface 
+    });
     this.registerAnchors(commonAnchors());
     globalThis.meta2d = this;
     this.initEventFns();

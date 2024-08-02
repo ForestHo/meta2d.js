@@ -90,6 +90,7 @@ import { componentexample } from './uml/deployment/componentexample';
 import { project } from './uml/deployment/project';
 import { projectexample } from './uml/deployment/projectexample';
 import { lifelineC } from './uml/communication/lifelineC';
+import { participantC } from './uml/communication/participantC';
 import { supplyinterfaceAnchors } from './uml/deployment/supplyinterface';
 import { needinterfaceAnchors } from './uml/deployment/needinterface';
 import { arc } from './uml/deployment/arc';
@@ -139,6 +140,8 @@ export function commonPens() {
     project,
     projectexample,
     lifelineC,
+    "participant-c": participantC,
+    "recyclefragment": rectangle,
     arc
   };
 }

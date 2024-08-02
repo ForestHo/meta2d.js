@@ -2652,7 +2652,7 @@ export class Canvas {
             }
             if(!rHit && !lHit){
               // 移出就从followers中删除
-              const index = pen.followers.indexOf(this.store.active[0].id);
+              const index = pen.followers?.indexOf(this.store.active[0].id);
               if(index >= 0){
                 pen.followers.splice(index,1);
               }
