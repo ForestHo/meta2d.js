@@ -22,6 +22,11 @@ export enum PointType {
   Default,
   Line,
 }
+export enum AnchorType {
+  DEFAULT,
+  DYNAMIC,
+  OUTOFRECT
+}
 
 export interface Point {
   x: number;
@@ -56,6 +61,7 @@ export interface Point {
   type?: PointType;
   length?: number;
   distance?: number;
+  aType: AnchorType;
 }
 
 export function rotatePoint(pt: Point, angle: number, center: Point) {

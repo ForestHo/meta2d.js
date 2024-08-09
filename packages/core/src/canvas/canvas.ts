@@ -61,6 +61,7 @@ import {
   getAllFollowers,
 } from '../pen';
 import {
+  AnchorType,
   calcRotate,
   distance,
   getDistance,
@@ -2107,6 +2108,10 @@ export class Canvas {
           const pt = { x: e.x, y: e.y };
           // Move line anchor
           if (this.hoverType === HoverType.LineAnchor) {
+            if(this.store.activeAnchor.aType && this.store.activeAnchor.aType === AnchorType.DYNAMIC){
+              // dline连线的非两端的中间动态锚点不做调整
+              return;
+            }
             if (
               (this.dockInAnchor(e) || this.store.active[0]?.lineName === 'line') &&
               !this.store.options.disableDock &&
@@ -2147,7 +2152,7 @@ export class Canvas {
 
         // Resize
         if (this.hoverType === HoverType.Resize) {
-          this.resizePens(e);
+            this.resizePens(e);
           return;
         }
 
@@ -2327,7 +2332,7 @@ export class Canvas {
     this.mousePos.x = e.x;
     this.mousePos.y = e.y;
     this.pencil && this.finishPencil();
-
+   
     if (this.drawingLine) {
       // 在锚点上，完成绘画
       if (this.store.hoverAnchor) {
@@ -2434,12 +2439,39 @@ export class Canvas {
               this.store.activeAnchor.x = this.store.hoverAnchor.x;
               this.store.activeAnchor.y = this.store.hoverAnchor.y;
             }
-            connectLine(
-              this.store.hover,
-              this.store.hoverAnchor,
-              line,
-              this.store.activeAnchor
-            );
+            // console.log('connectLine1111122222222222', this.store.hover);
+            // console.log('connectLine3333222222222222', this.store.hoverAnchor);
+            // console.log('connectLine44425222222222222', line);
+            // console.log('connectLine555552222222222222', this.store.activeAnchor);
+            // connectLine(
+            //   this.store.hover,
+            //   this.store.hoverAnchor,
+            //   line,
+            //   this.store.activeAnchor
+            // );
+            if(!this.store.hoverAnchor.connectTo){
+              connectLine(
+                this.store.hover,
+                this.store.hoverAnchor,
+                line,
+                this.store.activeAnchor
+              );
+            }else{
+              const connectPen = this.store.data.pens.find(el=>el.id === this.store.hoverAnchor.connectTo);
+              console.log(connectPen,'connectPen')
+              const hoverAnchor = connectPen.calculative.worldAnchors.find(el=>el.connectTo === this.store.hoverAnchor.penId);
+              console.log(hoverAnchor,'hoverAnchor')
+              if(connectPen.lineName === 'dline'){
+                console.log('dline')
+                connectLine(
+                  connectPen,
+                  hoverAnchor,
+                  line,
+                  this.store.activeAnchor
+                );
+              }
+            }
+         
           }
         }
         if (this[line.lineName] && line.lineName !== 'polyline') {
@@ -2585,7 +2617,7 @@ export class Canvas {
             x1 = ex;
             y1 = ey;
           }
-          console.log('lHit rHit',lHit,rHit);
+          // console.log('lHit rHit',lHit,rHit);
           if(lHit && rHit){
             // this.store.emitter.emit('inside', {
             //   x: x1,
@@ -2929,6 +2961,62 @@ export class Canvas {
       pens,
       initPens,
     });
+    // 移动图元结束，线的连接关系重置
+    for (let k = 0; k < this.store.active.length; k++) {
+      const p = this.store.active[k];
+      // this.moveLineAnchor({x:e.x,y:e.y}, e);
+      console.log('upup this.xxxxx',p);
+      if(p.type === PenType.Line && p.connectedLines && p.connectedLines.length > 0){
+        for (let q = 0; q < p.connectedLines.length; q++) {
+          const conn = p.connectedLines[q];
+          const otherL = this.store.data.pens.find(el=>el.id === conn.lineId);
+          const otherIndex = otherL.connectedLines.findIndex(el=>el.lineId === p.id);
+          const otherConn = otherL.connectedLines.find(el=>el.lineId === p.id);
+          const anIndex = otherL.calculative.worldAnchors.findIndex(el=>el.id === otherConn.anchor);
+          console.log('upup this.movingPens4444',p,otherL,otherIndex,anIndex);
+          if(anIndex > -1){
+            otherL.calculative.worldAnchors[anIndex].connectTo = undefined;
+            otherL.calculative.worldAnchors[anIndex].anchorId = undefined;
+            otherL.anchors[anIndex].connectTo = undefined;
+            otherL.anchors[anIndex].anchorId = undefined;
+          }
+          if(otherIndex > -1){
+            otherL.connectedLines.splice(otherIndex,1);
+          }
+        }
+        p.calculative.worldAnchors.forEach((anchor) => {
+          anchor.connectTo = undefined;
+          anchor.anchorId = undefined;
+        });
+        p.anchors.forEach((anchor) => {
+          anchor.connectTo = undefined;
+          anchor.anchorId = undefined;
+        });
+        p.connectedLines = [];
+        // const p1 = this.store.data.pens.find(el=>el.id === p.connectedLines[0].lineId);
+        // const pAnchor = getAnchor(p1, p.connectedLines[0].lineAnchor);
+        // const lAnchor = getAnchor(p, p.connectedLines[0].anchor);
+        // console.log('upup this.movingPens3333',p,p1,pAnchor,lAnchor);
+
+        // const index = p1.connectedLines.findIndex(el=>el.lineId === p.id);
+        // console.log('upup this.movingPens44444444',index);
+        // if(index >= 0){
+        //   p1.connectedLines.splice(index,1);
+        // }
+        // const wIndex = p.calculative.worldAnchors.findIndex(el=>el.id === p.connectedLines[0].anchor);
+        // console.log('upup this.movingPens555555555',wIndex);
+        // if(wIndex >= 0){
+        //   p.calculative.worldAnchors[wIndex].anchorId = undefined;
+        //   p.calculative.worldAnchors[wIndex].connectTo = undefined;
+        // }
+        // disconnectLine(
+        //   p1,
+        //   pAnchor,
+        //   p,
+        //   lAnchor
+        // );
+      }
+    }
     this.store.emitter.emit('translatePens', pens);
   }
 
@@ -3085,7 +3173,7 @@ export class Canvas {
   getSpecialAngle(to: Point, last: Point) {
     //快捷定位到特殊角度
     let angle = 0;
-    let angleArr = [0, 30, 45, 60, 90, 120, 150, 135, 180];
+    // let angleArr = [0, 30, 45, 60, 90, 120, 150, 135, 180];
     //获取实际角度
     if (to.x - last.x !== 0) {
       angle = (Math.atan((last.y - to.y) / (to.x - last.x)) * 180) / Math.PI;
@@ -3257,8 +3345,8 @@ export class Canvas {
 
       // 大小控制点
       if (!activePensLock && !activePensDisableResize) {
-        for (let i = 0; i < 8; i++) {
-          const firstFour = i < 4;
+        for (let i = 0; i < this.sizeCPs.length; i++) {
+          const firstFour = i < 20;
           const hotKeyIsResize =
             this.hotkeyType === HotkeyType.Resize ||
             (firstFour && !this.hotkeyType);
@@ -4956,7 +5044,8 @@ export class Canvas {
             ctx.rotate((this.activeRect.rotate * Math.PI) / 180);
             ctx.translate(-pt.x, -pt.y);
           }
-          if (i < 4 || this.hotkeyType === HotkeyType.Resize) {
+          if (i < 20 || this.hotkeyType === HotkeyType.Resize) {
+          // if (i < 4 || this.hotkeyType === HotkeyType.Resize) {
             ctx.beginPath();
             ctx.fillRect(pt.x - 4.5, pt.y - 4.5, 8, 8);
             ctx.strokeRect(pt.x - 5.5, pt.y - 5.5, 10, 10);
@@ -5349,7 +5438,7 @@ export class Canvas {
         this.activeInitPos[i].y * this.activeRect.height + this.activeRect.y;
       pen.calculative.worldRect.width *= scaleX;
       pen.calculative.iconWidth && (pen.calculative.iconWidth *= scaleX);
-      pen.calculative.worldRect.height *= scaleY;
+        pen.calculative.worldRect.height *= scaleY;
       pen.calculative.iconHeight && (pen.calculative.iconHeight *= scaleY);
       calcRightBottom(pen.calculative.worldRect);
       calcCenter(pen.calculative.worldRect);
@@ -5757,6 +5846,14 @@ export class Canvas {
         }else{
           offsetX = pt.x - this.store.activeAnchor.x;
           offsetY = pt.y - this.store.activeAnchor.y;
+        }
+        if(line.lineName === 'dline'){
+          // dline的连线只能垂直或者水平调整
+          if(line.direction === 'horizontal'){
+            offsetY = 0;
+          }else{
+            offsetX = 0;
+          }
         }
       }
       translatePoint(this.store.activeAnchor, offsetX, offsetY);
@@ -6323,7 +6420,51 @@ export class Canvas {
           this.initLineRect(line);
         }
       }
+      if(line.lineName === 'dline'){
+        // dline的连线只能垂直或者水平调整
+        const startIndex = line.calculative.worldAnchors.findIndex(el=>el.start);
+        const startX = line.calculative.worldAnchors[startIndex].x,startY = line.calculative.worldAnchors[startIndex].y;
+        for (let i = 0; i < line.calculative.worldAnchors.length; i++) {
+          const an = line.calculative.worldAnchors[i];
+          if(an.aType === AnchorType.DYNAMIC){
+            if(line.direction === 'horizontal'){
+              an.y = startY;
+            }else{
+              an.x = startX;
+            }
+          }
+          if(i === line.calculative.worldAnchors.length - 1){
+            if(line.direction === 'horizontal'){
+              an.x = startX+line.calculative.worldRect.width;
+            }else{
+              an.y = startY+line.calculative.worldRect.height;              
+            }
+          }
+        }
+        // const sIndex = line.anchors.findIndex(el=>el.start);
+        // const sX = line.anchors[sIndex].x,sY = line.anchors[sIndex].y;
+        // for (let i = 0; i < line.anchors.length; i++) {
+        //   const an = line.anchors[i];
+        //   if(an.aType === AnchorType.DYNAMIC){
+        //     if(line.direction === 'horizontal'){
+        //       an.y = sY;
+        //     }else{
+        //       an.x = sX;
+        //     }
+        //   }
+        //   if(i === line.calculative.worldAnchors.length - 1){
+        //     if(line.direction === 'horizontal'){
 
+        //     }else{
+        //       an.y = 1;              
+        //     }
+        //   }
+        // }
+        this.updateLines(line);
+      }
+    
+      // console.log('updateLines---------------11',JSON.stringify(line.calculative.worldAnchors));
+      // console.log('updateLines---------------22',JSON.stringify(line.anchors));
       this.store.path2dMap.set(line, globalStore.path2dDraws[line.name](line));
       this.patchFlagsLines.add(line);
       if (line.calculative.gradientSmooth) {

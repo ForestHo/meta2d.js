@@ -3,11 +3,16 @@ import { hitPoint, Point } from '../../point';
 import { getRectOfPoints, pointInSimpleRect, Rect } from '../../rect';
 import { Meta2dStore } from '../../store';
 import { getBezierPoint, getQuadraticPoint } from './curve';
+import { AnchorType } from '../../point/point';
+import { round } from '../../utils/math';
+import { s8 } from '../../utils/uuid';
+import { deepClone } from '../../utils';
 
 export function line(
   pen: Pen,
   ctx?: CanvasRenderingContext2D | Path2D
 ): Path2D {
+  // console.log('line',pen);
   const path = !ctx ? new Path2D() : ctx;
   if (pen.lineName === 'line' || pen.lineName === 'polyline') {
     if (pen.calculative.lineSmooth) {
@@ -17,6 +22,118 @@ export function line(
     }
   }
   const worldAnchors = pen.calculative.worldAnchors;
+  // console.log('worldAnchors',JSON.stringify(worldAnchors),pen.height);
+  // 计算dline的动态锚点
+  if (pen.lineName === 'dline') {
+    const step = pen.lineStep || 20;
+    // 备份锚点的连接关系
+    const anchorBaks = pen.anchorBaks || [];
+    for (let i = 0; i < worldAnchors.length; i++) {
+      const an = worldAnchors[i];
+      if (an.aType === AnchorType.DYNAMIC && an.connectTo) {
+        const index = anchorBaks.findIndex(el=> el.id === an.id);
+        if(index === -1){
+          anchorBaks.push({
+            index: i,
+            connectTo: an.connectTo,
+            anchorId: an.anchorId,
+            id: an.id
+          });
+        }
+      }
+    }
+    // console.log('anchorBaks',(anchorBaks));
+    if(anchorBaks.length > 0){
+      pen.anchorBaks = deepClone(anchorBaks)
+    }
+    // 收集无效连接关系的锚点
+    // 动态锚点的删除
+    for (let i = 0; i < worldAnchors.length; i++) {
+      const an = worldAnchors[i];
+      if (an.aType === AnchorType.DYNAMIC) {
+        worldAnchors.splice(i, 1);
+        i--;
+      }
+    }
+    if(pen.direction === 'horizontal'){
+      const startIndex = worldAnchors.findIndex(el=> el.x === pen.calculative.worldRect.x);
+      const endIndex = worldAnchors.findIndex(el=> el.x === pen.calculative.worldRect.ex);
+      if(startIndex > -1 && endIndex > -1){
+        const dAnchors = [];
+        let startX = worldAnchors[startIndex].x,endX = worldAnchors[endIndex].x,startY = worldAnchors[startIndex].y;
+        const penId = worldAnchors[startIndex].penId;
+        startX += step;
+        while (startX < endX) {
+          dAnchors.push({
+            x: startX, 
+            y: startY,
+            penId,
+            id: s8(),
+            aType: AnchorType.DYNAMIC 
+          });
+          startX = startX + step;
+        }
+        const many = worldAnchors.length === 2 ? 0 : dAnchors.length
+        if(many > 0){
+          for (let k = 0; k < dAnchors.length; k++) {
+            const d = dAnchors[k];
+            worldAnchors[startIndex+k+1].x = d.x;
+            worldAnchors[startIndex+k+1].y = d.y;
+          }
+        }else{
+          worldAnchors.splice(startIndex+1,many,...dAnchors);
+        }
+        worldAnchors[worldAnchors.length-1].x = startY;
+      }
+    }else{
+      const startIndex = worldAnchors.findIndex(el=> el.y === pen.calculative.worldRect.y);
+      const endIndex = worldAnchors.findIndex(el=> el.y === pen.calculative.worldRect.ey);
+      // console.log('startIndex  v',startIndex,endIndex);
+      if(startIndex > -1 && endIndex > -1){
+        const dAnchors = [];
+        let startY = worldAnchors[startIndex].y,endY = worldAnchors[endIndex].y,startX = worldAnchors[startIndex].x;
+        const penId = worldAnchors[startIndex].penId;
+        startY += step;
+        while (startY < endY) {
+          dAnchors.push({
+            x: startX,
+            y: startY,
+            penId,
+            id: s8(),
+            aType: AnchorType.DYNAMIC
+          });
+          startY = startY + step;
+        }
+        const many = worldAnchors.length === 2?0:dAnchors.length
+        worldAnchors.splice(startIndex+1,many,...dAnchors);
+        // if(many > 0){
+        //   for (let k = 0; k < dAnchors.length; k++) {
+        //     const d = dAnchors[k];
+        //     worldAnchors[startIndex+k+1].x = d.x;
+        //     worldAnchors[startIndex+k+1].y = d.y;
+        //   }
+        // }else{
+        //   worldAnchors.splice(startIndex+1,many,...dAnchors);
+        // }
+        worldAnchors[worldAnchors.length-1].x = startX;
+        // 从备份的anchors中恢复连接关系
+        for (let i = 0; i < anchorBaks.length; i++) {
+          const ana = anchorBaks[i];
+          console.log('ana',ana.index,worldAnchors.length);
+          if(ana.index < worldAnchors.length){
+            worldAnchors[ana.index].connectTo = ana.connectTo;
+            worldAnchors[ana.index].anchorId = ana.anchorId;
+            worldAnchors[ana.index].id = ana.id;
+          }
+          if(ana.index > worldAnchors.length-1){
+            // worldAnchors[ana.index].connectTo = worldAnchors[startIndex].connectTo;
+            // worldAnchors[ana.index].anchorId = worldAnchors[startIndex].anchorId;
+            // worldAnchors[ana.index].id = worldAnchors[startIndex].id;
+          }
+        }
+      }
+    }
+  }
   if (worldAnchors.length > 1) {
     let from: Point; // 上一个点
     worldAnchors.forEach((pt: Point) => {

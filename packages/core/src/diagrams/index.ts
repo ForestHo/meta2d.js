@@ -38,6 +38,7 @@ export * from './uml/deployment/component';
 export * from './uml/deployment/componentexample';
 export * from './uml/deployment/pack';
 export * from './uml/sequence/lifeline';
+export * from './uml/sequence/recyclefragment';
 export * from './uml/communication/lifelineC';
 export * from './uml/sequence/plifeline';
 export * from './uml/state/terminate1';
@@ -92,6 +93,8 @@ import { projectexample } from './uml/deployment/projectexample';
 import { lifelineC } from './uml/communication/lifelineC';
 import { participantC } from './uml/communication/participantC';
 import { supplyinterfaceAnchors } from './uml/deployment/supplyinterface';
+// import { lifelineAnchors } from './uml/sequence/lifeline';
+// import { plifelineAnchors } from './uml/sequence/plifeline';
 import { needinterfaceAnchors } from './uml/deployment/needinterface';
 import { arc } from './uml/deployment/arc';
 
@@ -141,7 +144,6 @@ export function commonPens() {
     projectexample,
     lifelineC,
     "participant-c": participantC,
-    "recyclefragment": rectangle,
     arc
   };
 }
@@ -156,5 +158,7 @@ export function commonAnchors() {
     supplyinterface: supplyinterfaceAnchors,
     needinterface: needinterfaceAnchors,
     comment: commentAnchors,
+    // lifeline: lifelineAnchors,
+    // plifeline: plifelineAnchors,
   };
 }

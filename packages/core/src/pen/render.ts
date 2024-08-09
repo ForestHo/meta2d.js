@@ -2407,6 +2407,10 @@ export function deleteTempAnchor(pen: Pen) {
 /**
  * 添加line到pen的connectedLines中，并关联相关属性
  * 不添加连线到画布中，请确保画布中已经有该连线。
+ * pen 被连接线
+ * anchor 被连接线的锚点
+ * line 当前连接线
+ * lineAnchor 当前连接线的锚点
  * */
 export function connectLine(
   pen: Pen,
@@ -2471,7 +2475,30 @@ export function connectLine(
       anchor: anchor.id,
     });
   }
-
+  // 处理多条线往同一个线的锚点连线的情况
+  // if(anchor.connectTo){
+  //   const mLine = pen.calculative.canvas.store.pens[anchor.connectTo];
+  //   console.log('connectLine55',mLine);
+  //   if(mLine && mLine.lineName === 'dline'){
+  //     const i = mLine.connectedLines.findIndex(
+  //       (elem) =>
+  //         elem.lineId === line.id &&
+  //         elem.lineAnchor === lineAnchor.id &&
+  //         elem.anchor === anchor.id
+  //     );
+  //     if(i < 0){
+  //       mLine.connectedLines.push({
+  //         lineId: line.id,
+  //         lineAnchor: lineAnchor.id,
+  //         anchor: anchor.id,
+  //       })
+  //     }
+  //     const mLineAnchor = mLine.calculative.worldAnchors.find(i=>i.id === anchor.anchorId);
+  //     console.log('connectLine66',mLineAnchor);
+  //     // if(mLineAnchor){
+  //     // }
+  //   }
+  // }
   lineAnchor.connectTo = pen.id;
   lineAnchor.anchorId = anchor.id;
 

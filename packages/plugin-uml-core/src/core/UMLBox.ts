@@ -125,7 +125,7 @@ export class UMLBox {
 
     const clickMenuFunc = (e: any) => {
       const key = e.target.dataset.key;
-      console.log('clickMenuFunc', key, e);
+      // console.log('clickMenuFunc', key, e);
       const id = s8();
       const p = {
         name: key,
@@ -292,17 +292,17 @@ export class UMLBox {
     this.box.style.display = 'none';
   }
   translateWithPen(pen: any) {
-    console.log('translateWithPen', pen);
+    // console.log('translateWithPen');
     if (!pen) {
       pen = this.pen;
     }
     const store = pen.calculative.canvas.store;
     const worldRect = pen.calculative.worldRect;
     const pos = {
-      x: worldRect.x + store.data.x,
-      y: worldRect.y + store.data.y,
-      width: worldRect.width,
-      height: worldRect.height
+        x: worldRect.x + store.data.x,
+        y: worldRect.y + store.data.y,
+        width: worldRect.width,
+        height: worldRect.height
     }
     this.traslatePosition(pos);
   }
