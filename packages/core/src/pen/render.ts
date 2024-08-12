@@ -2418,6 +2418,7 @@ export function connectLine(
   line: Pen,
   lineAnchor: Point
 ) {
+  // console.log('connectLine 1111111111');
   if (
     !pen ||
     !anchor ||
@@ -2430,7 +2431,7 @@ export function connectLine(
   ) {
     return;
   }
-
+  // console.log('connectLine 2222222222');
   if (anchor.twoWay === TwoWay.In) {
     if (line.calculative.worldAnchors.length === 1) {
       return;
@@ -2440,24 +2441,26 @@ export function connectLine(
       return;
     }
   }
-
+  // console.log('connectLine 3333333333333');
   if (anchor.twoWay === TwoWay.Out) {
     const from = getFromAnchor(line);
     if (lineAnchor.id !== from.id) {
       return;
     }
   }
-
+  // console.log('connectLine 4444444444444');
   if (lineAnchor.connectTo === pen.id && lineAnchor.anchorId === anchor.id) {
     return;
   }
-
+  // console.log('connectLine 55555555555555');
   if (lineAnchor.connectTo) {
     const p = pen.calculative.canvas.store.pens[lineAnchor.connectTo];
+    // console.log('disconnectLine 55555');
     disconnectLine(p, getAnchor(p, lineAnchor.anchorId), line, lineAnchor);
   }
-
+  // console.log('connectLine 666666666666666');
   if (!pen.connectedLines) {
+    // console.log('pen.connectedLines',pen.lineName);
     pen.connectedLines = [];
   }
 
@@ -2467,7 +2470,7 @@ export function connectLine(
       item.lineAnchor === lineAnchor.id &&
       item.anchor === anchor.id
   );
-
+  // console.log('connectLine 7777777777 i',pen,i);
   if (i < 0) {
     pen.connectedLines.push({
       lineId: line.id,
@@ -2550,6 +2553,7 @@ export function disconnectLine(
       item.anchor === anchor.id
     ) {
       arr.splice(index, 1);
+      // console.log('disconnectLine',pen.lineName);
     }
   });
 
@@ -2561,6 +2565,7 @@ export function disconnectLine(
     anchor.connectTo === line.id &&
     anchor.anchorId === lineAnchor.id
   ) {
+    // console.log('disconnectLine 66666');
     disconnectLine(line, lineAnchor, pen, anchor);
   }
 

@@ -2313,7 +2313,6 @@ export class Canvas {
     if (!this.mouseDown) {
       return;
     }
-
     if (this.mouseRight === MouseRight.Down) {
       if(this.store.hover&&this.store.hover.calculative.focus){
         this.store.hover.onContextmenu &&
@@ -2343,6 +2342,7 @@ export class Canvas {
           to.x = this.store.hoverAnchor.x;
           to.y = this.store.hoverAnchor.y;
         }
+        // console.log('connectLine1111', this.store.hover);
         connectLine(
           this.store.hover,
           this.store.hoverAnchor,
@@ -2369,7 +2369,6 @@ export class Canvas {
         return;
       }
     }
-
     // 拖拽连线锚点
     if (
       this.hoverType === HoverType.LineAnchor &&
@@ -2424,6 +2423,7 @@ export class Canvas {
 
           this.render();
         } else {
+          // console.log('connectLine before', this.store.activeAnchor);
           // 连接连线
           if (this.store.activeAnchor) {
             /**
@@ -2439,38 +2439,38 @@ export class Canvas {
               this.store.activeAnchor.x = this.store.hoverAnchor.x;
               this.store.activeAnchor.y = this.store.hoverAnchor.y;
             }
-            // console.log('connectLine1111122222222222', this.store.hover);
+            // console.log('connectLine22222222222', this.store.hover);
             // console.log('connectLine3333222222222222', this.store.hoverAnchor);
             // console.log('connectLine44425222222222222', line);
             // console.log('connectLine555552222222222222', this.store.activeAnchor);
-            // connectLine(
-            //   this.store.hover,
-            //   this.store.hoverAnchor,
-            //   line,
-            //   this.store.activeAnchor
-            // );
-            if(!this.store.hoverAnchor.connectTo){
-              connectLine(
-                this.store.hover,
-                this.store.hoverAnchor,
-                line,
-                this.store.activeAnchor
-              );
-            }else{
-              const connectPen = this.store.data.pens.find(el=>el.id === this.store.hoverAnchor.connectTo);
-              console.log(connectPen,'connectPen')
-              const hoverAnchor = connectPen.calculative.worldAnchors.find(el=>el.connectTo === this.store.hoverAnchor.penId);
-              console.log(hoverAnchor,'hoverAnchor')
-              if(connectPen.lineName === 'dline'){
-                console.log('dline')
-                connectLine(
-                  connectPen,
-                  hoverAnchor,
-                  line,
-                  this.store.activeAnchor
-                );
-              }
-            }
+            connectLine(
+              this.store.hover,
+              this.store.hoverAnchor,
+              line,
+              this.store.activeAnchor
+            );
+            // if(!this.store.hoverAnchor.connectTo){
+            //   connectLine(
+            //     this.store.hover,
+            //     this.store.hoverAnchor,
+            //     line,
+            //     this.store.activeAnchor
+            //   );
+            // }else{
+            //   const connectPen = this.store.data.pens.find(el=>el.id === this.store.hoverAnchor.connectTo);
+            //   // console.log(connectPen,'connectPen')
+            //   const hoverAnchor = connectPen.calculative.worldAnchors.find(el=>el.connectTo === this.store.hoverAnchor.penId);
+            //   // console.log(hoverAnchor,'hoverAnchor')
+            //   if(connectPen.lineName === 'dline'){
+            //     // console.log('dline')
+            //     connectLine(
+            //       connectPen,
+            //       hoverAnchor,
+            //       line,
+            //       this.store.activeAnchor
+            //     );
+            //   }
+            // }
          
           }
         }
@@ -2506,7 +2506,6 @@ export class Canvas {
       }
       this.addCaches = undefined;
     }
-
     // Rotate
     if (this.hoverType === HoverType.Rotate) {
       this.getSizeCPs();
@@ -2514,14 +2513,13 @@ export class Canvas {
         pen.rotate = pen.calculative.rotate;
       });
     }
-
     this.patchFlagsLines.forEach((pen) => {
       if (pen.type) {
+        // console.log('patchFlagsLines 1111', pen);
         this.initLineRect(pen);
       }
     });
     this.patchFlagsLines.clear();
-
     if (this.dragRect) {
       const pens = this.store.data.pens.filter((pen) => {
         if (
@@ -2574,7 +2572,6 @@ export class Canvas {
         });
       }
     }
-
     if (this.willInactivePen) {
       this.willInactivePen.calculative.active = undefined;
       setChildrenActive(this.willInactivePen, false); // 子节点取消激活
@@ -2587,7 +2584,6 @@ export class Canvas {
       this.store.emitter.emit('inactive', [this.willInactivePen]);
       this.render();
     }
-
     if (this.movingPens) {
       if (e.altKey && !e.shiftKey) {
         this.copyMovedPens();
@@ -2600,7 +2596,6 @@ export class Canvas {
       });
       this.movingPens = undefined;
     }
-
     // 检测是否有交集,找到最近有交集的图元
     if (this.store.active.length > 0) {
       const {x,y,ex,ey} = this.store.active[0].calculative.worldRect;
@@ -2730,7 +2725,6 @@ export class Canvas {
         }
       }
     }
- 
     if (this.store.active && this.store.active[0]) {
       this.store.active[0].calculative.h = undefined;
     }
@@ -2882,6 +2876,7 @@ export class Canvas {
       // TODO: mouseup 中重复执行 patchFlagsLines
       this.patchFlagsLines.forEach((pen) => {
         if (pen.type) {
+          // console.log('patchFlagsLines 2222', pen);
           this.initLineRect(pen);
         }
       });
@@ -2965,7 +2960,7 @@ export class Canvas {
     for (let k = 0; k < this.store.active.length; k++) {
       const p = this.store.active[k];
       // this.moveLineAnchor({x:e.x,y:e.y}, e);
-      console.log('upup this.xxxxx',p);
+      // console.log('upup this.xxxxx',p);
       if(p.type === PenType.Line && p.connectedLines && p.connectedLines.length > 0){
         for (let q = 0; q < p.connectedLines.length; q++) {
           const conn = p.connectedLines[q];
@@ -2973,7 +2968,7 @@ export class Canvas {
           const otherIndex = otherL.connectedLines.findIndex(el=>el.lineId === p.id);
           const otherConn = otherL.connectedLines.find(el=>el.lineId === p.id);
           const anIndex = otherL.calculative.worldAnchors.findIndex(el=>el.id === otherConn.anchor);
-          console.log('upup this.movingPens4444',p,otherL,otherIndex,anIndex);
+          // console.log('upup this.movingPens4444',p,otherL,otherIndex,anIndex);
           if(anIndex > -1){
             otherL.calculative.worldAnchors[anIndex].connectTo = undefined;
             otherL.calculative.worldAnchors[anIndex].anchorId = undefined;
@@ -2982,6 +2977,7 @@ export class Canvas {
           }
           if(otherIndex > -1){
             otherL.connectedLines.splice(otherIndex,1);
+            // console.log('upup this.movingPens2222222222',p,otherL,otherIndex);
           }
         }
         p.calculative.worldAnchors.forEach((anchor) => {
@@ -2992,6 +2988,7 @@ export class Canvas {
           anchor.connectTo = undefined;
           anchor.anchorId = undefined;
         });
+        // console.log('upup this.movingPens end',p);
         p.connectedLines = [];
         // const p1 = this.store.data.pens.find(el=>el.id === p.connectedLines[0].lineId);
         // const pAnchor = getAnchor(p1, p.connectedLines[0].lineAnchor);
@@ -4271,6 +4268,10 @@ export class Canvas {
       return;
     }
     const rect = getLineRect(pen);
+    // 计算line pen的高度变化的差值
+    if(pen.height > 0 && rect.height > 0){
+      pen.deltaH = rect.height - pen.height;
+    }
     if (!pen.parentId) {
       Object.assign(pen, rect);
     }
@@ -5692,6 +5693,7 @@ export class Canvas {
         }
         return line;
       });
+      // console.log('pen.connectedLines22222222222222',pen.connectedLines);
     }
     if (pen.type && pen.calculative.worldAnchors) {
       pen.calculative.worldAnchors = pen.calculative.worldAnchors.map(
@@ -5768,6 +5770,7 @@ export class Canvas {
 
     if (this.store.activeAnchor?.connectTo) {
       const pen = this.store.pens[this.store.activeAnchor.connectTo];
+      // console.log('disconnectLine 11111');
       disconnectLine(
         pen,
         getAnchor(pen, this.store.activeAnchor.anchorId),
@@ -5779,9 +5782,11 @@ export class Canvas {
     let connectedLine = this.store.pens[
       this.store.activeAnchor.penId
     ]?.connectedLines?.filter((item) => item.anchor === anchorId);
+    // console.log('movalineanchor connectedLine',connectedLine,this.store.activeAnchor,this.store.activeAnchor.penId);
     if (connectedLine && connectedLine.length > 0) {
       connectedLine.forEach((connected) => {
         const pen = this.store.pens[connected.lineId];
+        // console.log('disconnectLine 22222');
         disconnectLine(
           this.store.pens[this.store.activeAnchor.penId],
           this.store.activeAnchor,
@@ -6098,6 +6103,7 @@ export class Canvas {
         if (!pen || pen.type) {
           return;
         }
+        // console.log('disconnectLine 333333333333');
         disconnectLine(pen, getAnchor(pen, anchor.anchorId), line, anchor);
       }
     });
@@ -6992,6 +6998,7 @@ export class Canvas {
         from.connectTo === oldId && (from.connectTo = pen.id);
         to.connectTo === oldId && (to.connectTo = pen.id);
       } else {
+        // console.log('节点不在本次复制的范围内');
         // 说明它的连接线不在本次复制的范围内
         pen.connectedLines.splice(index, 1);
         index--;
@@ -7187,6 +7194,7 @@ export class Canvas {
       const connectTo = this.store.pens[lineAnchor.connectTo];
       if (connectTo) {
         connectTo.calculative.worldAnchors?.forEach((anchor) => {
+          // console.log('disconnectLine 444444444444');
           disconnectLine(connectTo, anchor, pen, lineAnchor);
         });
       }

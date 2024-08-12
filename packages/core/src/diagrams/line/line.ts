@@ -42,6 +42,15 @@ export function line(
         }
       }
     }
+    // 删除无效的动态锚点
+    for (let i = 0; i < anchorBaks.length; i++) {
+      const ana = anchorBaks[i];
+      const index = pen.connectedLines.findIndex(el=> el.lineId === ana.connectTo && el.lineAnchor === ana.anchorId);
+      if(index === -1){
+        anchorBaks.splice(i,1);
+        i--;
+      }
+    }
     // console.log('anchorBaks',(anchorBaks));
     if(anchorBaks.length > 0){
       pen.anchorBaks = deepClone(anchorBaks)
@@ -106,6 +115,7 @@ export function line(
         }
         const many = worldAnchors.length === 2?0:dAnchors.length
         worldAnchors.splice(startIndex+1,many,...dAnchors);
+        // console.log('worldAnchors22222',worldAnchors);
         // if(many > 0){
         //   for (let k = 0; k < dAnchors.length; k++) {
         //     const d = dAnchors[k];
@@ -119,16 +129,76 @@ export function line(
         // 从备份的anchors中恢复连接关系
         for (let i = 0; i < anchorBaks.length; i++) {
           const ana = anchorBaks[i];
-          console.log('ana',ana.index,worldAnchors.length);
+          // console.log('ana',ana.index,worldAnchors.length,pen.height);
           if(ana.index < worldAnchors.length){
+            // console.log('worldAnchors[ana.index]',worldAnchors[ana.index]);
             worldAnchors[ana.index].connectTo = ana.connectTo;
             worldAnchors[ana.index].anchorId = ana.anchorId;
             worldAnchors[ana.index].id = ana.id;
+            const mIndex = pen.connectedLines.findIndex(el=> el.lineId === ana.connectTo);
+            // console.log('mIndex',mIndex);
+            if(mIndex > -1){
+              // pen.connectedLines[mIndex].anchor = ana.anchorId;
+            }
+            // 恢复连到起点锚点的动态锚点的连接关系
+            // console.log('ana.index <= worldAnchors.length-2',ana.index <= worldAnchors.length-2,pen.deltaH);
+            if(ana.index <= worldAnchors.length-2 && pen.deltaH > 0){
+              // console.log("backup anchors");
+              pen.connectedLines[mIndex].anchor = worldAnchors[ana.index].id;
+              const anaPen = pen.calculative.canvas.store.data.pens.find(el=> el.id === ana.connectTo);
+              const anaIndex = anaPen.calculative.worldAnchors.findIndex(el=> el.id === ana.anchorId);
+              // console.log('anaIndex',anaPen,anaIndex);
+              anaPen.calculative.worldAnchors[anaIndex].anchorId = worldAnchors[ana.index].id;
+              anaPen.anchors[anaIndex].anchorId = worldAnchors[ana.index].id;
+              pen.calculative.canvas.updateLines(pen);
+            }
           }
-          if(ana.index > worldAnchors.length-1){
+          if(ana.index >= worldAnchors.length-1){
+            // console.log("worldAnchors[startIndex]",worldAnchors[startIndex]);
             // worldAnchors[ana.index].connectTo = worldAnchors[startIndex].connectTo;
             // worldAnchors[ana.index].anchorId = worldAnchors[startIndex].anchorId;
             // worldAnchors[ana.index].id = worldAnchors[startIndex].id;
+            // ana.lastIndex = ana.index;
+            // ana.index = 0;
+            // worldAnchors[ana.index].connectTo = ana.connectTo;
+            // worldAnchors[ana.index].anchorId = ana.anchorId;
+            // worldAnchors[ana.index].id = ana.id;
+            // const mpen = pen.calculative.canvas.store.data.pens.find(el=> el.id === worldAnchors[startIndex].connectTo);
+            // console.log('mpen',mpen);
+            const mIndex = pen.connectedLines.findIndex(el=> el.lineId === ana.connectTo);
+            // console.log('mIndex',mIndex,ana.connectTo);
+            if(mIndex === -1){
+              // const anaPen = pen.calculative.canvas.store.data.pens.find(el=> el.id === ana.connectTo);
+              // console.log('anaPen',anaPen);
+              // const anaIndex = anaPen.calculative.worldAnchors.findIndex(el=> el.id === ana.anchorId);
+              // console.log('anaIndex',anaIndex);
+              // let obj = {
+              //   anchor: worldAnchors[startIndex].anchorId,
+              //   lineId: anaPen.id,
+              //   lineAnchor: ana.anchorId
+              // }
+              // console.log('obj',obj);
+              // mpen.connectedLines.push(obj);
+
+              // anaPen.calculative.worldAnchors[anaIndex].connectTo = mpen.id;
+              // anaPen.calculative.worldAnchors[anaIndex].anchorId = obj.anchor;
+              // anaPen.anchors[anaIndex].connectTo = mpen.id;
+              // anaPen.anchors[anaIndex].anchorId = obj.anchor;
+
+              // pen.calculative.canvas.updateLines(mpen);
+            }else{
+              // console.log('pen.deltaH',pen.deltaH);
+              // 中间动态锚点练到起点锚点
+              if(pen.deltaH < 0){
+                pen.connectedLines[mIndex].anchor = worldAnchors[startIndex].id;
+                const anaPen = pen.calculative.canvas.store.data.pens.find(el=> el.id === ana.connectTo);
+                const anaIndex = anaPen.calculative.worldAnchors.findIndex(el=> el.id === ana.anchorId);
+                // console.log('anaIndex',anaPen,anaIndex);
+                anaPen.calculative.worldAnchors[anaIndex].anchorId = worldAnchors[startIndex].id;
+                anaPen.anchors[anaIndex].anchorId = worldAnchors[startIndex].id;
+                pen.calculative.canvas.updateLines(pen);
+              }
+            }
           }
         }
       }

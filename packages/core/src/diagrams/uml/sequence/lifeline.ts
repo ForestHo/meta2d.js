@@ -76,7 +76,7 @@ function onAdd(pen: Pen) {
     type: 1,
     x:fromAnchor.x,
     y:fromAnchor.y,
-    lineStep: 30,
+    lineStep: 40,
     lineDash: [10, 10],
     lineWidth: 1,
     id,
@@ -122,7 +122,7 @@ function onAdd(pen: Pen) {
 }
 
 function onResize(pen: Pen) {
-  console.log('onResize', pen.headHRatio);
+  // console.log('onResize', pen.headHRatio);
   const stepRatio = round(dashAnchorStep / pen.calculative.worldRect.height, 3);
   const hRatio = pen.headHRatio;
   const halfY = round(hRatio / 2, 3);
