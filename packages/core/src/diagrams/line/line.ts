@@ -109,6 +109,7 @@ export function line(
             y: startY,
             penId,
             id: s8(),
+            // hidden: true,
             aType: AnchorType.DYNAMIC
           });
           startY = startY + step;

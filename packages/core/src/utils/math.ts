@@ -140,3 +140,20 @@ export function round(number: number, precision: number): number {
   }
   return func(number)
 }
+
+// Function to find the line given two points 根据两个点返回一条直线的表达式
+/**
+ * @description 根据两个点返回一条直线的表达式
+ * @author Joseph Ho
+ * @date 12/08/2024
+ * @export
+ * @param {*} p1
+ * @param {*} p2
+ * @returns {*}  
+ */
+export function lineFromPoints(p1: any, p2: any) {
+  const a = p2.y - p1.y;
+  const b = p1.x - p2.x;
+  const c = a * (p1.x) + b * (p1.y);
+  return { a, b, c };
+}

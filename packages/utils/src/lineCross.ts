@@ -31,7 +31,7 @@ let anchors = [];
 let downToUpFlag = false;
 // 图纸渲染完成是否默认相交弯曲
 let isDefaultCross = false;
-const crossLines = ['line', 'polyline'];
+const crossLines = ['line', 'polyline', 'vline'];
 export function lineCross(defaultCross: any) {
   (window as any).meta2d.on('mouseup', mouseUp);
   (window as any).meta2d.on('mousedown', mouseDown);

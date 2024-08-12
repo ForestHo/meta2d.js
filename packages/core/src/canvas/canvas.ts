@@ -107,6 +107,7 @@ import {
   Padding,
   rgba,
   s8,
+  lineFromPoints
 } from '../utils';
 import {
   inheritanceProps,
@@ -2127,7 +2128,9 @@ export class Canvas {
               this.dock?.xDock && (pt.x += this.dock.xDock.step);
               this.dock?.yDock && (pt.y += this.dock.yDock.step);
             }
+            // console.log('moveLineAnchor 1111',this.store.hover);
             this.moveLineAnchor(pt, e);
+            // console.log('moveLineAnchor 222',this.store.hover)
             return;
           }
 
@@ -2488,6 +2491,38 @@ export class Canvas {
         }
       }
     }
+    //拖拽vline连线的锚点结束
+    if(this.hoverType === HoverType.LineAnchor && this.store.active[0] && this.store.active[0].lineName === 'vline'){
+      const line = this.store.active[0];
+      let endIndex = line.calculative.worldAnchors.length - 1,startIndex = 0;
+      const deltaX = line.calculative.worldAnchors[startIndex].x - line.calculative.worldAnchors[endIndex].x;
+      if(deltaX >= 0 && deltaX <= 10){
+        if(line.calculative.worldAnchors.length === 2 && line.anchorBaks.length > 0){
+          line.calculative.worldAnchors.splice(startIndex+1,0,...line.anchorBaks);
+          endIndex = line.calculative.worldAnchors.length - 1;
+          line.anchorBaks = [];
+        }
+        line.calculative.worldAnchors[startIndex+1].y = line.calculative.worldAnchors[startIndex].y;
+        line.calculative.worldAnchors[startIndex+2].x = line.calculative.worldAnchors[startIndex+1].x;
+        line.calculative.worldAnchors[startIndex+2].y = line.calculative.worldAnchors[endIndex].y;
+      }else if(deltaX < 0 && deltaX >= -10){
+          if(line.calculative.worldAnchors.length === 2 && line.anchorBaks.length > 0){
+          line.calculative.worldAnchors.splice(startIndex+1,0,...line.anchorBaks);
+          endIndex = line.calculative.worldAnchors.length - 1;
+          line.anchorBaks = [];
+        }
+        line.calculative.worldAnchors[startIndex+1].y = line.calculative.worldAnchors[startIndex].y;
+        line.calculative.worldAnchors[startIndex+2].x = line.calculative.worldAnchors[endIndex].x + 20;
+        line.calculative.worldAnchors[startIndex+1].x = line.calculative.worldAnchors[startIndex+2].x;
+        line.calculative.worldAnchors[startIndex+2].y = line.calculative.worldAnchors[endIndex].y;
+      }else{
+        if(line.calculative.worldAnchors.length === 4){
+          line.anchorBaks = [];
+          line.anchorBaks.push(...[line.calculative.worldAnchors[startIndex+1],line.calculative.worldAnchors[startIndex+2]]);
+          line.calculative.worldAnchors.splice(startIndex+1,2);
+        }
+      }
+    }
 
     // Add pen
     if (this.addCaches && this.addCaches.length) {
@@ -2515,7 +2550,7 @@ export class Canvas {
     }
     this.patchFlagsLines.forEach((pen) => {
       if (pen.type) {
-        // console.log('patchFlagsLines 1111', pen);
+        console.log('patchFlagsLines 1111', pen);
         this.initLineRect(pen);
       }
     });
@@ -4973,7 +5008,9 @@ export class Canvas {
             );
             ctx.restore();
           } else {
-            ctx.arc(anchor.x, anchor.y, size, 0, Math.PI * 2);
+            if(anchor.aType !== AnchorType.DYNAMIC && !anchor.hidden){
+              ctx.arc(anchor.x, anchor.y, size, 0, Math.PI * 2);
+            }
           }
           if (this.store.hover.type && this.store.hoverAnchor === anchor) {
             ctx.save();
@@ -5761,13 +5798,13 @@ export class Canvas {
     pt: { x: number; y: number },
     keyOptions: { ctrlKey?: boolean; shiftKey?: boolean; altKey?: boolean }
   ) {
-    if (!this.activeRect || this.store.data.locked) {
+    if (!this.activeRect || this.store.data.locked || this.store.activeAnchor.hidden) {
       return;
     }
     if (!this.initPens) {
       this.initPens = deepClone(this.store.active, true);
     }
-
+    // console.log(this.store.activeAnchor,'activeanchor');
     if (this.store.activeAnchor?.connectTo) {
       const pen = this.store.pens[this.store.activeAnchor.connectTo];
       // console.log('disconnectLine 11111');
@@ -5859,6 +5896,8 @@ export class Canvas {
           }else{
             offsetX = 0;
           }
+        }else if(line.lineName === 'vline'){
+          // console.log('xline');
         }
       }
       translatePoint(this.store.activeAnchor, offsetX, offsetY);

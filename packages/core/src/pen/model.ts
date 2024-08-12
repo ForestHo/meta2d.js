@@ -104,7 +104,11 @@ export enum LineAnimateType {
   Arrow, // 箭头,
   WaterDrop, // 水滴
 }
-
+export enum VType{
+  DEFAULT,
+  SELF,
+  ASYNC
+}
 export interface ColorStop {
   i: number; //取值0-1,色标位置
   color: string;
