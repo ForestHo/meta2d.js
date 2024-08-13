@@ -2639,7 +2639,7 @@ export class Canvas {
         if(pen.container){
           const lHit = pointInRect({x,y},pen.calculative.worldRect);
           const rHit = pointInRect({x:ex,y:ey},pen.calculative.worldRect);
-          let x1 = 0,y1 = 0;
+          let x1 = 0,y1 = 0, disableSize = pen.disableSize;
           if(lHit){
             x1 = x;
             y1 = y;
@@ -2648,13 +2648,13 @@ export class Canvas {
             y1 = ey;
           }
           // console.log('lHit rHit',lHit,rHit);
-          if(lHit && rHit){
+          if(lHit && rHit && !disableSize){
             // this.store.emitter.emit('inside', {
             //   x: x1,
             //   y: y1,
             //   pen,
             // });
-            const index = pen.followers.indexOf(this.store.active[0].id);
+            const index = pen.followers?.indexOf(this.store.active[0].id);
             if(index < 0){
               pen.followers.push(this.store.active[0].id);
               this.store.active[0].leader = pen.id;
@@ -2696,8 +2696,8 @@ export class Canvas {
             }
           }else{
             const gap = calcRectGapRect({x,y,ex,ey},pen.calculative.worldRect);
-            // console.log('gap',gap,pen.calculative.worldRect.width);
-            if(gap){
+            // console.log('gap',gap);
+            if(gap && !disableSize){
               const {x:x1,y:y1,width: w1,height: h1,ex:ex1,ey:ey1} = this.store.active[0].calculative.worldRect;
               const safeGap = this.store.options.safeGap;
               // 左侧边缘溢出
@@ -2750,12 +2750,19 @@ export class Canvas {
                 pen.followers.splice(index,1);
               }
             }else{
-              this.store.emitter.emit('intersect', {
-                x: x1,
-                y: y1,
-                pen,
-              });
+              // this.store.emitter.emit('intersect', {
+              //   x: x1,
+              //   y: y1,
+              //   pen,
+              // });
             }
+          }
+          if(lHit || rHit){
+            this.store.emitter.emit('intersect', {
+              x: x1,
+              y: y1,
+              pen,
+            });
           }
         }
       }

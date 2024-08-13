@@ -1,6 +1,6 @@
 import { Pen, calcWorldAnchors } from '../../../pen';
 import { Point } from '../../../point'
-import { pointInRect } from '../../../rect'
+import { pointInSimpleRect } from '../../../rect'
 import { s8 } from '../../../utils'
 let lastHighLightId = ""; //上次内部选中高亮的pen的id
 enum MouseState {
@@ -11,6 +11,8 @@ enum MouseState {
   MOUSELEAVE,
   MOUSEENTER,
 }
+const headH = 50, memberH = 40, memberW = 160, dividerH = 6, padding = 7;
+let isHeadEdit = false;
 export function class1(ctx: CanvasRenderingContext2D, pen: Pen) {
   const { x, y, width, height, ex, ey } = pen.calculative.worldRect;
   if (!pen.onDestroy) {
@@ -24,6 +26,7 @@ export function class1(ctx: CanvasRenderingContext2D, pen: Pen) {
     pen.onShowInput = onShowInput;
     pen.onMouseUp = onMouseUp;
     pen.onInput = onInput;
+    pen.onClick = click;
   }
   if (!pen.hasOwnProperty('xylist')) {
     pen.xylist = [];
@@ -35,42 +38,49 @@ export function class1(ctx: CanvasRenderingContext2D, pen: Pen) {
     pen.moveChildFlag = -1; //-1 未移动 0 
   }
   // 绘制header
-  const h1 = 50;
   ctx.beginPath();
-  ctx.strokeStyle = 'black';
-  ctx.rect(x, y, width, h1);
-  ctx.stroke();
+  ctx.fillStyle = pen.background;
+  ctx.fillRect(x, y, width, headH);
+
+  ctx.fillStyle = "white";
+  ctx.textBaseline = "middle";
+  ctx.fillText(
+    pen.mText,
+    x,
+    y + headH / 2,
+    width
+  );
   ctx.fill();
   ctx.closePath();
 
   // 绘制body
-  const h = 40, padding = 7;
-  const startY = y + h1 + padding, startX = x + padding;
+  const startY = y + headH + padding, startX = x + padding;
   let currentY = startY, currentW = 0;
   pen.xylist = [];
+  ctx.fillStyle = pen.color;
   for (let i = 0; i < pen.list.length; i++) {
     const item = pen.list[i];
     if (!item) return;
     if (item.name === 'member') {
       ctx.beginPath();
       currentW = width - padding * 2;
-      ctx.rect(startX, currentY, currentW, h);
+      ctx.rect(startX, currentY, currentW, memberH);
       ctx.textBaseline = "middle";
       ctx.fillText(
         item.text,
         startX,
-        currentY + h / 2,
+        currentY + memberH / 2,
         currentW
       );
       if (i === pen.highLightIndex) {
         ctx.strokeStyle = '#595959';
         ctx.stroke();
       }
-      pen.xylist.push({ x: startX, y: currentY, ex: startX + currentW, ey: currentY + h });
-      currentY += h;
+      pen.xylist.push({ x: startX, y: currentY, ex: startX + currentW, ey: currentY + memberH });
+      currentY += memberH;
     } else if (item.name === 'divider') {
       currentW = width - padding * 2;
-      div(pen, ctx, startX, currentY, ex, currentW, 10, i === pen.highLightIndex);
+      div(pen, ctx, startX, currentY, ex, currentW, dividerH, i === pen.highLightIndex);
       pen.xylist.push({ x: startX, y: currentY, ex: startX + currentW, ey: currentY + 10 });
       currentY += 10;
     }
@@ -78,8 +88,8 @@ export function class1(ctx: CanvasRenderingContext2D, pen: Pen) {
   ctx.closePath();
   // 绘制body框
   ctx.beginPath();
-  ctx.moveTo(x, y + h1);
-  ctx.rect(x, y + h1, width, currentY - startY + padding * 2);
+  ctx.moveTo(x, y + headH);
+  ctx.rect(x, y + headH, width, currentY - startY + padding * 2);
   ctx.stroke();
   ctx.closePath();
 
@@ -89,8 +99,8 @@ export function class1(ctx: CanvasRenderingContext2D, pen: Pen) {
 }
 
 function div(pen: Pen, ctx: CanvasRenderingContext2D, x: number, y: number, ex: number, width: number, height: number, highLight: boolean = false) {
-  const w = 10, h = 2;
-  const gap = 5;
+  const w = 4, h = 1;
+  const gap = 2;
   const count = Math.floor(width / (w + gap));
   let startX = x;
   let startY = y + height / 2 - h / 2;
@@ -117,8 +127,31 @@ function div(pen: Pen, ctx: CanvasRenderingContext2D, x: number, y: number, ex: 
 }
 function destory(pen: Pen) { }
 function onShowInput(pen: any, e: Point) {
-  pen.calculative.tempText = pen.list[pen.highLightIndex].text || '';
-  pen.calculative.canvas.showInput(pen, pen.xylist[pen.highLightIndex], '#ffffff');
+  if (pen.highLightIndex > -1) {
+    pen.calculative.tempText = pen.list[pen.highLightIndex].text || '';
+    pen.calculative.canvas.showInput(pen, pen.xylist[pen.highLightIndex], '#ffffff');
+    isHeadEdit = false;
+  } else {
+    const hRect = {
+      x: pen.calculative.worldRect.x,
+      y: pen.calculative.worldRect.y,
+      ex: pen.calculative.worldRect.ex,
+      ey: pen.calculative.worldRect.y + headH
+    }
+    const isIn = pointInSimpleRect({ x: e.offsetX, y: e.offsetY }, hRect);
+    if (isIn) {
+      pen.calculative.tempText = pen.mText;
+      pen.calculative.canvas.showInput(pen, hRect, '#ffffff');
+      isHeadEdit = true;
+    }
+  }
+
+}
+function click(pen: Pen, e: Point) {
+  const ret = pen.xylist.findIndex((item,index)=>{
+    return pointInSimpleRect(e, item);
+  })
+  pen.highLightIndex = ret;
 }
 function onMove(pen: Pen) {
 
@@ -127,19 +160,25 @@ function onMouseUp(pen: Pen, e: any) {
   if (pen.currentState === MouseState.MOUSEMOVE) {
     pen.currentState = MouseState.MOUSEDUP;
   }
-  const isIn = pointInRect(e, pen.calculative.worldRect);
+  const isIn = pointInSimpleRect(e, pen.calculative.worldRect);
   if (!isIn && pen.currentState === MouseState.MOUSEDUP) {
     if (pen.moveChildFlag && pen.highLightIndex > -1) {
       pen.moveChildFlag = false;
       const item = pen.list[pen.highLightIndex];
       if (!item) return;
       const name = item.name;
+      let h = 0;
+      if (name === 'member') {
+        h = memberH;
+      } else if (name === 'divider') {
+        h = dividerH;
+      }
       const p: Pen = {
         name,
         x: e.x,
         y: e.y,
-        width: 200,
-        height: 24,
+        width: memberW,
+        height: h,
         disableSize: true,
         disableAnchor: true,
         textAlign: 'left',
@@ -169,7 +208,7 @@ function onMouseUp(pen: Pen, e: any) {
   if (isIn) {
     // 内部交换成员顺序
     for (let i = 0; i < pen.xylist.length; i++) {
-      let isHit = pointInRect(e, pen.xylist[i]);
+      let isHit = pointInSimpleRect(e, pen.xylist[i]);
       if (isHit && pen.highLightIndex > 0 && pen.highLightIndex !== i) {
         const temp = pen.list[i];
         pen.list[i] = pen.list[pen.highLightIndex];
@@ -191,7 +230,11 @@ function mouseMove(pen: Pen, e: any) {
 
 //将输入的数据写入到对应的data中
 function onInput(pen: any, text: string) {
-  pen.list[pen.highLightIndex].text = text;
+  if (!isHeadEdit) {
+    pen.list[pen.highLightIndex].text = text;
+  } else {
+    pen.mText = text;
+  }
   pen.calculative.canvas.store.emitter.emit('valueUpdate', pen);
   pen.calculative.isInput = false;
   pen.calculative.isHover = true;
@@ -208,7 +251,7 @@ function intersect(pen: Pen, e: Point) {
   let isHit = false;
   if (pen.xylist.length > 0) {
     for (let i = 0; i < pen.xylist.length; i++) {
-      isHit = pointInRect({ x: e.x, y: e.y }, pen.xylist[i]);
+      isHit = pointInSimpleRect({ x: e.x, y: e.y }, pen.xylist[i]);
       if (isHit) {
         pen.highLightIndex = i + 1;
         lastHighLightId = pen.id;
@@ -230,7 +273,7 @@ function mouseLeave(pen: Pen) {
 function onMouseDown(pen: Pen, e: Point) {
   pen.currentState = MouseState.MOUSEDOWN;
   for (let i = 0; i < pen.xylist.length; i++) {
-    if (pointInRect(e, pen.xylist[i])) {
+    if (pointInSimpleRect(e, pen.xylist[i])) {
       if (lastHighLightId !== pen.id) {
         pen.calculative.canvas.store.data.pens.forEach((item) => {
           // 找到上次高亮的图元，
