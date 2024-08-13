@@ -47,6 +47,8 @@ export * from './uml/state/titlec';
 export * from './uml/class/divider';
 export * from './uml/class/member';
 export * from './uml/class/class1';
+export * from './uml/class/interface1';
+export * from './uml/class/enum1';
 export * from './uml/deployment/supplyinterface';
 export * from './uml/deployment/needinterface';
 export * from './uml/deployment/arc';

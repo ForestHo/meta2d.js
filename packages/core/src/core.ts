@@ -1,4 +1,24 @@
-import { commonAnchors, commonPens, cube,node,nodeexample,lifeline,recyclefragment,pack,plifeline,terminate1,title,titlec,divider,member,class1,supplyinterface,needinterface } from './diagrams';
+import { 
+  commonAnchors, 
+  commonPens, 
+  cube,
+  node,
+  nodeexample,
+  lifeline,
+  recyclefragment,
+  pack,
+  plifeline,
+  terminate1,
+  title,
+  titlec,
+  divider,
+  member,
+  class1,
+  interface1,
+  enum1,
+  supplyinterface,
+  needinterface 
+} from './diagrams';
 import { EventType, Handler, WildcardHandler } from 'mitt';
 import { Canvas } from './canvas';
 import {Options, PenPlugin, PluginOptions} from './options';
@@ -125,6 +145,8 @@ export class Meta2d {
       divider,
       member,
       class1,
+      interface1,
+      enum1,
       supplyinterface,
       needinterface 
     });

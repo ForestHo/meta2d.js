@@ -13,7 +13,7 @@ enum MouseState {
 }
 const headH = 50, memberH = 40, memberW = 160, dividerH = 6, padding = 7;
 let isHeadEdit = false;
-export function class1(ctx: CanvasRenderingContext2D, pen: Pen) {
+export function interface1(ctx: CanvasRenderingContext2D, pen: Pen) {
   const { x, y, width, height, ex, ey } = pen.calculative.worldRect;
   if (!pen.onDestroy) {
     pen.onDestroy = destory;
