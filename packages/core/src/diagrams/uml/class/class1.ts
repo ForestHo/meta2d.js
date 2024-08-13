@@ -229,7 +229,8 @@ function mouseMove(pen: Pen, e: any) {
 }
 
 //将输入的数据写入到对应的data中
-function onInput(pen: any, text: string) {
+function onInput(pen: any, text: string,h: number) {
+  // console.log('onInput', text,h);
   if (!isHeadEdit) {
     pen.list[pen.highLightIndex].text = text;
   } else {

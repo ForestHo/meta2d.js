@@ -7337,6 +7337,24 @@ export class Canvas {
       this.inputRight.style.display = 'none';
     }
     this.inputDiv.contentEditable = 'true';
+    const {fontSize,fontFamily} = pen.calculative;
+    const zoom = (pen.fontSize / 12) * this.store.data.scale;
+    const len = zoom > 1 ? fontSize * 1.5 : fontSize * 1.5 / zoom;
+    let style = `
+      height:auto;
+      width:auto;
+      outline:0;
+      position:static;
+      box-sizing:border-box;
+      background:#FFF;
+      padding:0 2px;
+      color:#000;
+      line-height:${len}px;
+      min-width:${pen.width}px;
+      min-height:${pen.height}px;
+      font-size:${fontSize}px;
+    `;
+    this.inputDiv.style = style;
     this.inputDiv.focus();
     const range = window.getSelection(); //创建range
     range.selectAllChildren(this.inputDiv); //range 选择obj下所有子内容
@@ -7548,7 +7566,7 @@ export class Canvas {
         this.inputDiv.dataset.value
       );
       if (pen.onInput) {
-        pen.onInput(pen, this.inputDiv.dataset.value);
+        pen.onInput(pen, this.inputDiv.dataset.value,this.inputDiv.offsetHeight);
       } else if (pen.text !== this.inputDiv.dataset.value) {
         const initPens = [deepClone(pen, true)];
         pen.text = this.inputDiv.dataset.value;
@@ -7660,6 +7678,7 @@ export class Canvas {
       },300)
     }
     this.inputDiv.oninput = (e: any) => {
+      // console.log('oninput',e)
       const pen = this.store.pens[this.inputDiv.dataset.penId];
       if(pen.inputType === 'number'){
         const value = e.target.innerText;
