@@ -43,10 +43,10 @@ export function supplyinterface(ctx: CanvasRenderingContext2D, pen: Pen) {
   fillStyle && ctx.fill();
 }
 function onMouseDown(pen: Pen, e: Point) {
-  console.log('onMouseDown', pen, e);
+  // console.log('onMouseDown', pen, e);
 }
 function onAdd(pen: Pen, e: Point) {
-  console.log('onAdd', pen, e);
+  // console.log('onAdd', pen, e);
   if (!pen.followers) {
     pen.followers = [];
   }

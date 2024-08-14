@@ -11,8 +11,7 @@ enum MouseState {
   MOUSELEAVE,
   MOUSEENTER,
 }
-const headH = 50, memberH = 40, memberW = 160, dividerH = 6, padding = 7;
-let isHeadEdit = false;
+const headH = 50, memberH = 40, memberW = 160, dividerH = 6, padding = 7, lineHeight = 18, breakSymbol = '\n';
 export function class1(ctx: CanvasRenderingContext2D, pen: Pen) {
   const { x, y, width, height, ex, ey } = pen.calculative.worldRect;
   if (!pen.onDestroy) {
@@ -39,57 +38,73 @@ export function class1(ctx: CanvasRenderingContext2D, pen: Pen) {
   }
   // 绘制header
   ctx.beginPath();
+  const deltaH = pen.list.filter(el => { return el.name === 'title' }).reduce((accumulator, currentValue) => accumulator + currentValue.h, 0);
+  ctx.fillRect(x, y, width, deltaH);
   ctx.fillStyle = pen.background;
-  ctx.fillRect(x, y, width, headH);
-
-  ctx.fillStyle = "white";
-  ctx.textBaseline = "middle";
-  ctx.fillText(
-    pen.hText,
-    x,
-    y + headH / 2,
-    width
-  );
   ctx.fill();
-  ctx.closePath();
 
   // 绘制body
-  const startY = y + headH + padding, startX = x + padding;
-  let currentY = startY, currentW = 0;
+  const startY = y + deltaH + padding, startX = x + padding;
+  let currentW = 0, currentY = y;
+  const fMemberIndex = pen.list.findIndex((item) => { return item.name === 'member' });
   pen.xylist = [];
   ctx.fillStyle = pen.color;
   for (let i = 0; i < pen.list.length; i++) {
     const item = pen.list[i];
+    let h = item.h;
     if (!item) return;
-    if (item.name === 'member') {
+    if (item.name === 'title') {
+      ctx.fillStyle = "white";
+      ctx.textBaseline = "middle";
+      const lines = item.text.split(breakSymbol);
+      let tY = currentY + lineHeight / 2;
+      if (lines.length === 1) {
+        tY = currentY + h / 2;
+      }
+      for (let k = 0; k < lines.length; k++) {
+        const l = lines[k];
+        ctx.fillText(l, startX, tY, width);
+        tY += lineHeight;
+      }
+      pen.xylist.push({ x: x, y: currentY, ex: x + width, ey: currentY + h, width, height: h, minH: item.minH });
+      currentY += h;
+    } else if (item.name === 'member') {
+      if (i === fMemberIndex) {
+        currentY += padding;
+      }
       ctx.beginPath();
       currentW = width - padding * 2;
-      ctx.rect(startX, currentY, currentW, memberH);
+      ctx.rect(startX, currentY, currentW, h);
       ctx.textBaseline = "middle";
-      ctx.fillText(
-        item.text,
-        startX,
-        currentY + memberH / 2,
-        currentW
-      );
+      ctx.fillStyle = pen.color;
+      const lines = item.text.split(breakSymbol);
+      let tY = currentY + lineHeight / 2;
+      if (lines.length === 1) {
+        tY = currentY + h / 2;
+      }
+      for (let k = 0; k < lines.length; k++) {
+        const l = lines[k];
+        ctx.fillText(l, startX, tY, width);
+        tY += lineHeight;
+      }
       if (i === pen.highLightIndex) {
         ctx.strokeStyle = '#595959';
         ctx.stroke();
       }
-      pen.xylist.push({ x: startX, y: currentY, ex: startX + currentW, ey: currentY + memberH });
-      currentY += memberH;
+      pen.xylist.push({ x: startX, y: currentY, ex: startX + currentW, ey: currentY + h, width: currentW, height: h, minH: item.minH });
+      currentY += h;
     } else if (item.name === 'divider') {
       currentW = width - padding * 2;
-      div(pen, ctx, startX, currentY, ex, currentW, dividerH, i === pen.highLightIndex);
-      pen.xylist.push({ x: startX, y: currentY, ex: startX + currentW, ey: currentY + 10 });
-      currentY += 10;
+      div(pen, ctx, startX, currentY, ex, currentW, h, i === pen.highLightIndex);
+      pen.xylist.push({ x: startX, y: currentY, ex: startX + currentW, ey: currentY + h, width: currentW, height: h, minH: item.minH });
+      currentY += h;
     }
   }
   ctx.closePath();
   // 绘制body框
   ctx.beginPath();
-  ctx.moveTo(x, y + headH);
-  ctx.rect(x, y + headH, width, currentY - startY + padding * 2);
+  ctx.moveTo(x, y + deltaH);
+  ctx.rect(x, y + deltaH, width, currentY - startY + padding * 2);
   ctx.stroke();
   ctx.closePath();
 
@@ -128,27 +143,29 @@ function div(pen: Pen, ctx: CanvasRenderingContext2D, x: number, y: number, ex: 
 function destory(pen: Pen) { }
 function onShowInput(pen: any, e: Point) {
   if (pen.highLightIndex > -1) {
+    if (pen.list[pen.highLightIndex].name === 'divider') {
+      return;
+    }
+    // console.log('onShowInput', pen.xylist[pen.highLightIndex]);
     pen.calculative.tempText = pen.list[pen.highLightIndex].text || '';
     pen.calculative.canvas.showInput(pen, pen.xylist[pen.highLightIndex], '#ffffff');
-    isHeadEdit = false;
   } else {
-    const hRect = {
-      x: pen.calculative.worldRect.x,
-      y: pen.calculative.worldRect.y,
-      ex: pen.calculative.worldRect.ex,
-      ey: pen.calculative.worldRect.y + headH
-    }
-    const isIn = pointInSimpleRect({ x: e.offsetX, y: e.offsetY }, hRect);
-    if (isIn) {
-      pen.calculative.tempText = pen.hText;
-      pen.calculative.canvas.showInput(pen, hRect, '#ffffff');
-      isHeadEdit = true;
-    }
+    // const hRect = {
+    //   x: pen.calculative.worldRect.x,
+    //   y: pen.calculative.worldRect.y,
+    //   ex: pen.calculative.worldRect.ex,
+    //   ey: pen.calculative.worldRect.y + headH
+    // }
+    // const isIn = pointInSimpleRect({ x: e.offsetX, y: e.offsetY }, hRect);
+    // if (isIn) {
+    //   pen.calculative.tempText = pen.hText;
+    //   pen.calculative.canvas.showInput(pen, hRect, '#ffffff');
+    // }
   }
 
 }
 function click(pen: Pen, e: Point) {
-  const ret = pen.xylist.findIndex((item,index)=>{
+  const ret = pen.xylist.findIndex((item, index) => {
     return pointInSimpleRect(e, item);
   })
   pen.highLightIndex = ret;
@@ -165,14 +182,14 @@ function onMouseUp(pen: Pen, e: any) {
     if (pen.moveChildFlag && pen.highLightIndex > -1) {
       pen.moveChildFlag = false;
       const item = pen.list[pen.highLightIndex];
-      if (!item) return;
+      if (!item || item.fixed) return;
       const name = item.name;
-      let h = 0;
-      if (name === 'member') {
-        h = memberH;
-      } else if (name === 'divider') {
-        h = dividerH;
-      }
+      let h = item.h;
+      // if (name === 'member') {
+      //   h = memberH;
+      // } else if (name === 'divider') {
+      //   h = dividerH;
+      // }
       const p: Pen = {
         name,
         x: e.x,
@@ -210,6 +227,9 @@ function onMouseUp(pen: Pen, e: any) {
     for (let i = 0; i < pen.xylist.length; i++) {
       let isHit = pointInSimpleRect(e, pen.xylist[i]);
       if (isHit && pen.highLightIndex > 0 && pen.highLightIndex !== i) {
+        if (pen.list[i].fixed || pen.list[pen.highLightIndex].fixed) {
+          continue;
+        }
         const temp = pen.list[i];
         pen.list[i] = pen.list[pen.highLightIndex];
         pen.list[pen.highLightIndex] = temp;
@@ -229,13 +249,10 @@ function mouseMove(pen: Pen, e: any) {
 }
 
 //将输入的数据写入到对应的data中
-function onInput(pen: any, text: string,h: number) {
-  // console.log('onInput', text,h);
-  if (!isHeadEdit) {
-    pen.list[pen.highLightIndex].text = text;
-  } else {
-    pen.hText = text;
-  }
+function onInput(pen: any, text: string, h: string) {
+  // console.log('onInput', text, h);
+  pen.list[pen.highLightIndex].text = text;
+  pen.list[pen.highLightIndex].h = parseInt(h);
   pen.calculative.canvas.store.emitter.emit('valueUpdate', pen);
   pen.calculative.isInput = false;
   pen.calculative.isHover = true;
@@ -288,8 +305,10 @@ function onMouseDown(pen: Pen, e: Point) {
       }
       // 点击 选中内部成员
       pen.highLightIndex = i;
-      // 抛锚图元
-      pen.dropAnchor = true;
+      if (!pen.list[pen.highLightIndex].fixed) {
+        // 抛锚图元
+        pen.dropAnchor = true;
+      }
       // 记录选中的图元id
       lastHighLightId = pen.id;
     }

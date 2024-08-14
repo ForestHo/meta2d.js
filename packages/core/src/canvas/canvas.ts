@@ -2550,7 +2550,7 @@ export class Canvas {
     }
     this.patchFlagsLines.forEach((pen) => {
       if (pen.type) {
-        console.log('patchFlagsLines 1111', pen);
+        // console.log('patchFlagsLines 1111', pen);
         this.initLineRect(pen);
       }
     });
@@ -7340,18 +7340,20 @@ export class Canvas {
     const {fontSize,fontFamily} = pen.calculative;
     const zoom = (pen.fontSize / 12) * this.store.data.scale;
     const len = zoom > 1 ? fontSize * 1.5 : fontSize * 1.5 / zoom;
+    console.log('show',rect);
     let style = `
       height:auto;
-      width:auto;
+      width:100%;
       outline:0;
       position:static;
       box-sizing:border-box;
       background:#FFF;
       padding:0 2px;
       color:#000;
+      border: 1px solid #ccc;
       line-height:${len}px;
-      min-width:${pen.width}px;
-      min-height:${pen.height}px;
+      min-width:${rect?rect.width:pen.width}px;
+      min-height:${rect?rect.minH:pen.height}px;
       font-size:${fontSize}px;
     `;
     this.inputDiv.style = style;
@@ -7566,7 +7568,7 @@ export class Canvas {
         this.inputDiv.dataset.value
       );
       if (pen.onInput) {
-        pen.onInput(pen, this.inputDiv.dataset.value,this.inputDiv.offsetHeight);
+        pen.onInput(pen, this.inputDiv.dataset.value,this.inputDiv.dataset.height);
       } else if (pen.text !== this.inputDiv.dataset.value) {
         const initPens = [deepClone(pen, true)];
         pen.text = this.inputDiv.dataset.value;
@@ -7648,6 +7650,8 @@ export class Canvas {
       sheet.insertRule(`.input-div div{}`);
     }
     this.inputDiv.onfocus = (e: any) => {
+      this.inputDiv.dataset.height = this.inputDiv.offsetHeight;
+      console.log('focus',this.inputDiv.dataset.height)
       if (navigator.userAgent.includes('Firefox')) {
         if (!e.target.innerText) {
           let left = this.inputDiv.offsetWidth / 2;
@@ -7678,7 +7682,8 @@ export class Canvas {
       },300)
     }
     this.inputDiv.oninput = (e: any) => {
-      // console.log('oninput',e)
+      this.inputDiv.dataset.height = this.inputDiv.offsetHeight;
+      console.log('input',this.inputDiv.dataset.height)
       const pen = this.store.pens[this.inputDiv.dataset.penId];
       if(pen.inputType === 'number'){
         const value = e.target.innerText;
