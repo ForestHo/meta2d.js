@@ -11,8 +11,8 @@ enum MouseState {
   MOUSELEAVE,
   MOUSEENTER,
 }
-const memberW = 160, padding = 7, lineHeight = 18, breakSymbol = '\n';
-export function enum1(ctx: CanvasRenderingContext2D, pen: Pen) {
+const condCut = 60, padding = 0, lineHeight = 18, breakSymbol = '\n', xOffset2 = 7;
+export function backupfragment(ctx: CanvasRenderingContext2D, pen: Pen) {
   const { x, y, width, height, ex, ey } = pen.calculative.worldRect;
   if (!pen.onDestroy) {
     pen.onDestroy = destory;
@@ -28,7 +28,12 @@ export function enum1(ctx: CanvasRenderingContext2D, pen: Pen) {
     pen.onClick = click;
   }
   if (!pen.hasOwnProperty('xylist')) {
+    // 记录内部成员的区域坐标
     pen.xylist = [];
+  }
+  if (!pen.hasOwnProperty('tlist')) {
+    // 记录内部成员的文本区域坐标
+    pen.tlist = [];
   }
   if (!pen.hasOwnProperty('currentState')) {
     pen.currentState = MouseState.NONE;
@@ -37,24 +42,33 @@ export function enum1(ctx: CanvasRenderingContext2D, pen: Pen) {
     pen.moveChildFlag = -1; //-1 未移动 0 
   }
   // 绘制header
-  ctx.beginPath();
-  const deltaH = pen.list.filter(el => { return el.name === 'title' }).reduce((accumulator, currentValue) => accumulator + currentValue.h, 0);
-  ctx.fillRect(x, y, width, deltaH);
-  ctx.fillStyle = pen.background;
-  ctx.fill();
-
   // 绘制body
-  const startY = y + deltaH + padding, startX = x + padding;
+  const startY = y, startX = x;
   let currentW = 0, currentY = y;
-  const fMemberIndex = pen.list.findIndex((item) => { return item.name === 'member' });
   pen.xylist = [];
+  pen.tlist = [];
   ctx.fillStyle = pen.color;
+  ctx.beginPath();
   for (let i = 0; i < pen.list.length; i++) {
     const item = pen.list[i];
-    let h = item.h;
+    let h = item.ch;
     if (!item) return;
     if (item.name === 'title') {
-      ctx.fillStyle = "white";
+      let th = item.th, tw = item.tw;
+      // 超出宽度时，减去偏移量
+      if (tw >= width) {
+        tw -= xOffset2;
+      }
+      item.ch = item.th;
+      // console.log('title', item.text, th, tw);
+      // 绘制外框
+      ctx.moveTo(x, y + th);
+      ctx.lineTo(x + tw, y + th);
+      ctx.lineTo(x + tw + xOffset2, y + th - xOffset2);
+      ctx.lineTo(x + tw + xOffset2, y);
+      ctx.stroke();
+
+      ctx.fillStyle = pen.color;
       ctx.textBaseline = "middle";
       const lines = item.text.split(breakSymbol);
       let tY = currentY + lineHeight / 2;
@@ -66,12 +80,10 @@ export function enum1(ctx: CanvasRenderingContext2D, pen: Pen) {
         ctx.fillText(l, startX, tY, width);
         tY += lineHeight;
       }
-      pen.xylist.push({ x: x, y: currentY, ex: x + width, ey: currentY + h, width, height: h, minH: item.minH });
+      pen.xylist.push({ x: x, y: currentY, ex: x + width, ey: currentY + h, width, height: h });
+      pen.tlist.push({ x: x, y: currentY, ex: x + item.tw, ey: currentY + item.th, width: item.tw, height: item.th, minH: item.minH, maxWidth: width });
       currentY += h;
-    } else if (item.name === 'member') {
-      if (i === fMemberIndex) {
-        currentY += padding;
-      }
+    } else if (item.name === 'cond') {
       ctx.beginPath();
       currentW = width - padding * 2;
       ctx.rect(startX, currentY, currentW, h);
@@ -80,31 +92,28 @@ export function enum1(ctx: CanvasRenderingContext2D, pen: Pen) {
       const lines = item.text.split(breakSymbol);
       let tY = currentY + lineHeight / 2;
       if (lines.length === 1) {
-        tY = currentY + h / 2;
+        tY = currentY + item.th / 2;
       }
       for (let k = 0; k < lines.length; k++) {
         const l = lines[k];
         ctx.fillText(l, startX, tY, width);
         tY += lineHeight;
       }
+      // 选中高亮某一个成员
       if (i === pen.highLightIndex) {
         ctx.strokeStyle = '#595959';
         ctx.stroke();
       }
-      pen.xylist.push({ x: startX, y: currentY, ex: startX + currentW, ey: currentY + h, width: currentW, height: h, minH: item.minH });
-      currentY += h;
-    } else if (item.name === 'divider') {
-      currentW = width - padding * 2;
-      div(pen, ctx, startX, currentY, ex, currentW, h, i === pen.highLightIndex);
-      pen.xylist.push({ x: startX, y: currentY, ex: startX + currentW, ey: currentY + h, width: currentW, height: h, minH: item.minH });
-      currentY += h;
+      pen.xylist.push({ x: startX, y: currentY, ex: startX + currentW, ey: currentY + h, width: currentW, height: h });
+      pen.tlist.push({ x: startX, y: currentY, ex: startX + item.tw, ey: currentY + item.th, width: item.tw, height: item.th, minH: item.minH, maxWidth: width });
+      currentY = currentY + h;
     }
   }
   ctx.closePath();
   // 绘制body框
   ctx.beginPath();
-  ctx.moveTo(x, y + deltaH);
-  ctx.rect(x, y + deltaH, width, currentY - startY + padding * 2);
+  ctx.moveTo(x, y);
+  ctx.rect(x, y, width, currentY - startY + padding * 2);
   ctx.stroke();
   ctx.closePath();
 
@@ -112,42 +121,11 @@ export function enum1(ctx: CanvasRenderingContext2D, pen: Pen) {
   pen.calculative.worldRect.ey = currentY - y + pen.calculative.worldRect.y;
   calcWorldAnchors(pen);
 }
-
-function div(pen: Pen, ctx: CanvasRenderingContext2D, x: number, y: number, ex: number, width: number, height: number, highLight: boolean = false) {
-  const w = 4, h = 1;
-  const gap = 2;
-  const count = Math.floor(width / (w + gap));
-  let startX = x;
-  let startY = y + height / 2 - h / 2;
-  if (highLight) {
-    ctx.beginPath();
-    ctx.strokeStyle = '#595959';
-    ctx.rect(x, y, width, height);
-    ctx.stroke();
-  }
-  ctx.strokeStyle = pen.color || 'black';
-  for (let i = 0; i <= count; i++) {
-    ctx.beginPath();
-    if (startX < ex) {
-      if (startX + w <= ex) {
-        ctx.rect(startX, startY, w, h);
-      } else {
-        ctx.rect(startX, startY, ex - (startX + w), h);
-      }
-    }
-    startX += (gap + w);
-    ctx.fill();
-    ctx.stroke();
-  }
-}
 function destory(pen: Pen) { }
 function onShowInput(pen: any, e: Point) {
   if (pen.highLightIndex > -1) {
-    if (pen.list[pen.highLightIndex].name === 'divider') {
-      return;
-    }
     pen.calculative.tempText = pen.list[pen.highLightIndex].text || '';
-    pen.calculative.canvas.showInput(pen, pen.xylist[pen.highLightIndex], '#ffffff');
+    pen.calculative.canvas.showInput(pen, pen.tlist[pen.highLightIndex], '#ffffff');
   }
 }
 function click(pen: Pen, e: Point) {
@@ -170,25 +148,23 @@ function onMouseUp(pen: Pen, e: any) {
       const item = pen.list[pen.highLightIndex];
       if (!item || item.fixed) return;
       const name = item.name;
-      let h = item.h;
+      let h = item.ch;
       const p: Pen = {
         name,
         x: e.x,
         y: e.y,
-        width: memberW,
-        height: h,
         disableSize: true,
         disableAnchor: true,
-        textAlign: 'left',
-        textLeft: 6,
-        lineWidth: 0,
+        width: pen.calculative.worldRect.width - condCut,
+        height: h,
+        ratio: true,
+        lineWidth: 1,
         id: s8(),
-        color: '#6495ED',
-        background: '#6495ED',
-        text: item.text,
       };
+      p.trect = pen.list[pen.highLightIndex];
       pen.list.splice(pen.highLightIndex, 1);
       pen.xylist.splice(pen.highLightIndex, 1);
+      pen.tlist.splice(pen.highLightIndex, 1);
       pen.calculative.canvas.makePen(p);
       pen.highLightIndex = -1;
       setTimeout(() => {
@@ -230,10 +206,11 @@ function mouseMove(pen: Pen, e: any) {
 }
 
 //将输入的数据写入到对应的data中
-function onInput(pen: any, text: string, {h, w}) {
-  // console.log('onInput', text, h);
+function onInput(pen: any, text: string, { h, w }) {
+  console.log('onInput', text, h, w);
   pen.list[pen.highLightIndex].text = text;
-  pen.list[pen.highLightIndex].h = parseInt(h);
+  pen.list[pen.highLightIndex].tw = parseInt(w);
+  pen.list[pen.highLightIndex].th = parseInt(h);
   pen.calculative.canvas.store.emitter.emit('valueUpdate', pen);
   pen.calculative.isInput = false;
   pen.calculative.isHover = true;
@@ -242,7 +219,7 @@ function onInput(pen: any, text: string, {h, w}) {
 
 function intersect(pen: Pen, e: Point) {
   const activePens = pen.calculative.canvas.store.active;
-  if (!activePens || activePens.length === 0 || ['divider', 'member'].indexOf(activePens[0].name) === -1) {
+  if (!activePens || activePens.length === 0 || ['cond'].indexOf(activePens[0].name) === -1) {
     return;
   }
   const name = activePens[0].name;
@@ -255,7 +232,7 @@ function intersect(pen: Pen, e: Point) {
         pen.highLightIndex = i + 1;
         lastHighLightId = pen.id;
         const h = pen.calculative.canvas.store.active[0].height;
-        pen.list.splice(i + 1, 0, { text, name ,h,minH:h});
+        pen.list.splice(i + 1, 0, pen.calculative.canvas.store.active[0].trect);
         pen.calculative.canvas.delete(pen.calculative.canvas.store.active);
         break;
       }
@@ -264,7 +241,7 @@ function intersect(pen: Pen, e: Point) {
     // 内部无成员时，直接添加
     if (pen.calculative.canvas.store.active[0].name !== pen.name) {
       const h = pen.calculative.canvas.store.active[0].height;
-      pen.list.push({ text, name,h,minH:h });
+      pen.list.push(pen.calculative.canvas.store.active[0].trect);
       pen.calculative.canvas.delete(pen.calculative.canvas.store.active);
     }
   }

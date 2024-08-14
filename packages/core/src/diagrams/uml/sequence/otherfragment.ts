@@ -12,7 +12,7 @@ enum MouseState {
   MOUSEENTER,
 }
 const condCut = 60, padding = 0, lineHeight = 18, breakSymbol = '\n', xOffset2 = 7;
-export function recyclefragment(ctx: CanvasRenderingContext2D, pen: Pen) {
+export function otherfragment(ctx: CanvasRenderingContext2D, pen: Pen) {
   const { x, y, width, height, ex, ey } = pen.calculative.worldRect;
   if (!pen.onDestroy) {
     pen.onDestroy = destory;

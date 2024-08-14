@@ -11,7 +11,7 @@ enum MouseState {
   MOUSELEAVE,
   MOUSEENTER,
 }
-const headH = 50, memberH = 40, memberW = 160, dividerH = 6, padding = 7, lineHeight = 18, breakSymbol = '\n';
+const memberW = 160, padding = 7, lineHeight = 18, breakSymbol = '\n';
 export function interface1(ctx: CanvasRenderingContext2D, pen: Pen) {
   const { x, y, width, height, ex, ey } = pen.calculative.worldRect;
   if (!pen.onDestroy) {
@@ -146,23 +146,9 @@ function onShowInput(pen: any, e: Point) {
     if (pen.list[pen.highLightIndex].name === 'divider') {
       return;
     }
-    // console.log('onShowInput', pen.xylist[pen.highLightIndex]);
     pen.calculative.tempText = pen.list[pen.highLightIndex].text || '';
     pen.calculative.canvas.showInput(pen, pen.xylist[pen.highLightIndex], '#ffffff');
-  } else {
-    // const hRect = {
-    //   x: pen.calculative.worldRect.x,
-    //   y: pen.calculative.worldRect.y,
-    //   ex: pen.calculative.worldRect.ex,
-    //   ey: pen.calculative.worldRect.y + headH
-    // }
-    // const isIn = pointInSimpleRect({ x: e.offsetX, y: e.offsetY }, hRect);
-    // if (isIn) {
-    //   pen.calculative.tempText = pen.hText;
-    //   pen.calculative.canvas.showInput(pen, hRect, '#ffffff');
-    // }
   }
-
 }
 function click(pen: Pen, e: Point) {
   const ret = pen.xylist.findIndex((item, index) => {
@@ -249,7 +235,7 @@ function mouseMove(pen: Pen, e: any) {
 }
 
 //将输入的数据写入到对应的data中
-function onInput(pen: any, text: string, h: string) {
+function onInput(pen: any, text: string,{h, w}) {
   // console.log('onInput', text, h);
   pen.list[pen.highLightIndex].text = text;
   pen.list[pen.highLightIndex].h = parseInt(h);
@@ -273,7 +259,8 @@ function intersect(pen: Pen, e: Point) {
       if (isHit) {
         pen.highLightIndex = i + 1;
         lastHighLightId = pen.id;
-        pen.list.splice(i + 1, 0, { text, name });
+        const h = pen.calculative.canvas.store.active[0].height;
+        pen.list.splice(i + 1, 0, { text, name ,h,minH:h});
         pen.calculative.canvas.delete(pen.calculative.canvas.store.active);
         break;
       }
@@ -281,7 +268,8 @@ function intersect(pen: Pen, e: Point) {
   } else {
     // 内部无成员时，直接添加
     if (pen.calculative.canvas.store.active[0].name !== pen.name) {
-      pen.list.push({ text, name });
+      const h = pen.calculative.canvas.store.active[0].height;
+      pen.list.push({ text, name,h,minH:h });
       pen.calculative.canvas.delete(pen.calculative.canvas.store.active);
     }
   }

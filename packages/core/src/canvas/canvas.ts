@@ -7314,7 +7314,8 @@ export class Canvas {
     this.inputParent.style.top =
       textRect.y + this.store.data.y - (pen.textTop || 0) + 'px'; //+ 5
     let _width = textRect.width + (pen.textLeft || 0);
-    this.inputParent.style.width = (_width < 0 ? 12 : _width) + 'px'; //(textRect.width < pen.width ? 0 : 10)
+    // console.log('show',rect.maxWidth);
+    this.inputParent.style.maxWidth = (rect.maxWidth ? rect.maxWidth :(_width < 0 ? 12 : _width)) + 'px'; //(textRect.width < pen.width ? 0 : 10)
     this.inputParent.style.height = textRect.height + (pen.textTop || 0) + 'px'; //   (textRect.height < pen.height ? 0 : 10)
     this.inputParent.style.zIndex = '9999';
     this.inputParent.style.background = background;
@@ -7340,7 +7341,7 @@ export class Canvas {
     const {fontSize,fontFamily} = pen.calculative;
     const zoom = (pen.fontSize / 12) * this.store.data.scale;
     const len = zoom > 1 ? fontSize * 1.5 : fontSize * 1.5 / zoom;
-    console.log('show',rect);
+    // console.log('show',rect);
     let style = `
       height:auto;
       width:100%;
@@ -7356,6 +7357,7 @@ export class Canvas {
       min-height:${rect?rect.minH:pen.height}px;
       font-size:${fontSize}px;
     `;
+    // console.log('show',style);
     this.inputDiv.style = style;
     this.inputDiv.focus();
     const range = window.getSelection(); //创建range
@@ -7568,7 +7570,7 @@ export class Canvas {
         this.inputDiv.dataset.value
       );
       if (pen.onInput) {
-        pen.onInput(pen, this.inputDiv.dataset.value,this.inputDiv.dataset.height);
+        pen.onInput(pen, this.inputDiv.dataset.value,{h:this.inputDiv.dataset.height,w:this.inputDiv.dataset.width});
       } else if (pen.text !== this.inputDiv.dataset.value) {
         const initPens = [deepClone(pen, true)];
         pen.text = this.inputDiv.dataset.value;
@@ -7645,13 +7647,14 @@ export class Canvas {
       sheet.insertRule(`.input-div::-webkit-scrollbar {display:none}`);
       sheet.insertRule(`.input-div{scrollbar-width: none;}`);
       sheet.insertRule(
-        '.meta2d-input .input-div{resize:none;border:none;outline:none;background:transparent;flex-grow:1;height:100%;width: 100%;left:0;top:0;display:flex;text-align: center;justify-content: center;flex-direction: column;}'
+        '.meta2d-input .input-div{resize:none;border:none;outline:none;background:transparent;flex-grow:1;height:100%;width: 100%;left:0;top:0;display:flex;text-align: left;justify-content: center;flex-direction: column;}'
       );
       sheet.insertRule(`.input-div div{}`);
     }
     this.inputDiv.onfocus = (e: any) => {
       this.inputDiv.dataset.height = this.inputDiv.offsetHeight;
-      console.log('focus',this.inputDiv.dataset.height)
+      this.inputDiv.dataset.width = this.inputDiv.offsetWidth;
+      // console.log('focus',this.inputDiv.dataset.height)
       if (navigator.userAgent.includes('Firefox')) {
         if (!e.target.innerText) {
           let left = this.inputDiv.offsetWidth / 2;
@@ -7683,7 +7686,8 @@ export class Canvas {
     }
     this.inputDiv.oninput = (e: any) => {
       this.inputDiv.dataset.height = this.inputDiv.offsetHeight;
-      console.log('input',this.inputDiv.dataset.height)
+      this.inputDiv.dataset.width = this.inputDiv.offsetWidth;
+      // console.log('input',this.inputDiv.dataset.height)
       const pen = this.store.pens[this.inputDiv.dataset.penId];
       if(pen.inputType === 'number'){
         const value = e.target.innerText;

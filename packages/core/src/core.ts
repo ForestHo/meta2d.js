@@ -6,6 +6,8 @@ import {
   nodeexample,
   lifeline,
   recyclefragment,
+  selectfragment,
+  otherfragment,
   pack,
   plifeline,
   terminate1,
@@ -14,8 +16,10 @@ import {
   divider,
   member,
   class1,
+  backupfragment,
   interface1,
   enum1,
+  cond,
   supplyinterface,
   needinterface 
 } from './diagrams';
@@ -137,6 +141,8 @@ export class Meta2d {
       pack,
       plifeline,
       recyclefragment,
+      selectfragment,
+      otherfragment,
       terminate1,
       "title-s":title,
       "title-i":title,
@@ -145,8 +151,10 @@ export class Meta2d {
       divider,
       member,
       class1,
+      backupfragment,
       interface1,
       enum1,
+      cond,
       supplyinterface,
       needinterface 
     });
