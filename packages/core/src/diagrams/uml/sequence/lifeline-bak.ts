@@ -44,7 +44,7 @@ export function lifeline(ctx: CanvasRenderingContext2D, pen: Pen) {
   // ctx.stroke();
   // ctx.restore();
 }
-function onAdd(pen: Pen, e: Point) {
+function onAdd(pen: Pen) {
   if (!pen.followers) {
     pen.followers = [];
   }

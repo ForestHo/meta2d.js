@@ -7314,8 +7314,8 @@ export class Canvas {
     this.inputParent.style.top =
       textRect.y + this.store.data.y - (pen.textTop || 0) + 'px'; //+ 5
     let _width = textRect.width + (pen.textLeft || 0);
-    // console.log('show',rect.maxWidth);
-    this.inputParent.style.maxWidth = (rect.maxWidth ? rect.maxWidth :(_width < 0 ? 12 : _width)) + 'px'; //(textRect.width < pen.width ? 0 : 10)
+    // console.log('show',rect);
+    this.inputParent.style.maxWidth = (rect?.maxWidth ? rect?.maxWidth :(_width < 0 ? 12 : _width)) + 'px'; //(textRect.width < pen.width ? 0 : 10)
     this.inputParent.style.height = textRect.height + (pen.textTop || 0) + 'px'; //   (textRect.height < pen.height ? 0 : 10)
     this.inputParent.style.zIndex = '9999';
     this.inputParent.style.background = background;

@@ -47,7 +47,7 @@ function onMouseDown(pen: Pen, e: Point) {
 }
 function onMouseUp(pen: Pen, e: Point) { }
 
-function onAdd(pen: Pen, e: Point) {
+function onAdd(pen: Pen) {
   // console.log('onAdd', pen, e);
   if (!pen.followers) {
     pen.followers = [];
