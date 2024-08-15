@@ -45,7 +45,7 @@ export function supplyinterface(ctx: CanvasRenderingContext2D, pen: Pen) {
 function onMouseDown(pen: Pen, e: Point) {
   // console.log('onMouseDown', pen, e);
 }
-function onAdd(pen: Pen, e: Point) {
+function onAdd(pen: Pen) {
   // console.log('onAdd', pen, e);
   if (!pen.followers) {
     pen.followers = [];

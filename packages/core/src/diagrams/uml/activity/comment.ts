@@ -34,7 +34,7 @@ export function comment(pen: Pen, ctx?: CanvasRenderingContext2D): Path2D {
   if (path instanceof Path2D) return path;
 }
 
-function onAdd(pen: Pen, e: Point) {
+function onAdd(pen: Pen) {
   const fromAnchor = pen.calculative.worldAnchors[8];
   const toAnchor = { x: pen.free.x + pen.width / 4, y: pen.free.y + pen.height };
 
