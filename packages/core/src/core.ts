@@ -21,7 +21,8 @@ import {
   enum1,
   cond,
   supplyinterface,
-  needinterface 
+  needinterface,
+  swimlane
 } from './diagrams';
 import { EventType, Handler, WildcardHandler } from 'mitt';
 import { Canvas } from './canvas';
@@ -156,7 +157,8 @@ export class Meta2d {
       enum1,
       cond,
       supplyinterface,
-      needinterface 
+      needinterface,
+      swimlane
     });
     this.registerAnchors(commonAnchors());
     globalThis.meta2d = this;

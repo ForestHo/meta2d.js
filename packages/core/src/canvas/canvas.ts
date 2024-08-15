@@ -1974,7 +1974,7 @@ export class Canvas {
     this.render();
   };
 
-  onMouseMove = (e: {
+  onMouseMove = async(e: {
     x: number;
     y: number;
     clientX: number;
@@ -2179,15 +2179,206 @@ export class Canvas {
             if (activePen.locked === undefined || activePen.locked < LockState.DisableMove) {
               activePen?.onMouseMove?.(activePen, this.mousePos);
             }
-            if(activePen.calculative.focus){
-              //执行图元的操作
-              return;
+            if(activePen.resizeChild && (activePen?.calculative.resizeBox != 'none' || activePen?.calculative.activeFunIndex >= 0)) {
+              const {resizeBox, resizeIndex} = activePen.calculative;
+              const p1 = { x: this.mouseDown.x, y: this.mouseDown.y };
+              const p2 = { x: e.x, y: e.y };
+              if(activePen.direction == 'vertical') {
+                if(activePen?.calculative.activeFunIndex >= 0 && activePen?.calculative.resizeBox == 'none') {
+                    console.log('resizeIndex', resizeIndex);
+                    // const p1 = { x: this.mouseDown.x, y: this.mouseDown.y };
+                    // const p2 = { x: e.x, y: e.y };
+                    // let x = p2.x - p1.x;
+                    // let offsetX = x - this.lastOffsetX;
+                    // let y = p2.y - p1.y;
+                    // let offsetY = y - this.lastOffsetY;
+                    // this.lastOffsetY = y;
+                    // this.lastOffsetX = x;
+                    // if(!this.dragChild) {
+                    //   this.dragChild = await this.addPen({
+                    //     name:'rectangle',
+                    //     x: activePen.calculative.worldRect.x + activePen.stageWidth,
+                    //     y: activePen.calculative.worldRect.y + activePen.headHeight,
+                    //     width: activePen.data[activePen.calculative.activeFunIndex].width,
+                    //     height: activePen.height - activePen.headHeight,
+                    //   });
+                    // } else {
+                    //   this.translatePens(this.dragChild, offsetX, offsetY, true);
+                    // }
+                    // translateRect(this.activeRect, x, y);
+                } else if (activePen?.calculative.resizeBox != 'none') {
+                  if(resizeBox == 'stage') {
+                    let x = p2.x - p1.x;
+                    let offsetX = x - this.lastOffsetX;
+                    const targetStageWidth = activePen.stageWidth + offsetX;
+                    const scale = this.store.data.scale;
+                    const minStageWidth = activePen.calculative.fontSize + 20 * scale;
+                    if(targetStageWidth > minStageWidth) {
+                      activePen.width += offsetX;
+                      activePen.stageWidth = targetStageWidth;
+                      this.lastOffsetX = x;
+                      resizeRect(this.activeRect, offsetX, 0, 5);
+                      calcWorldRects(activePen);
+                    } else if(activePen.stageWidth > minStageWidth) {
+                      activePen.width -= activePen.stageWidth - minStageWidth;
+                      offsetX = -activePen.stageWidth + minStageWidth;
+                      activePen.stageWidth = minStageWidth;
+                      resizeRect(this.activeRect, offsetX, 0, 5);
+                      calcWorldRects(activePen);
+                    } 
+                    
+                  } else if(resizeIndex >= 0) {
+                    let x = p2.x - p1.x;
+                    let offsetX = x - this.lastOffsetX;
+                    const item = activePen.data[resizeIndex];
+                    const targetWidth = item.width + offsetX;
+                    if(targetWidth >= 0) {
+                      activePen.width += offsetX;
+                      item.width = targetWidth;
+                      this.lastOffsetX = x;
+                      resizeRect(this.activeRect, offsetX, 0, 5);
+                      calcWorldRects(activePen);
+                    } else {
+                      activePen.width -= item.width;
+                      offsetX = -item.width;
+                      item.width = 0;
+                      resizeRect(this.activeRect, offsetX, 0, 5);
+                      calcWorldRects(activePen);
+                    }
+                  } else {
+                    let { fontSize } = activePen.calculative;
+                    const { height } = activePen.calculative.worldRect;
+                    const {funHeight, headHeight } = activePen;
+                    let y = p2.y - p1.y;
+                    let offsetY = y - this.lastOffsetY;
+                    if(resizeBox == 'complete') {
+                      const targetHeight = height + offsetY;
+                      if(targetHeight > funHeight + headHeight) {
+                        activePen.height = targetHeight;
+                        this.lastOffsetY = y;
+                        resizeRect(this.activeRect, 0, offsetY, 6);
+                        calcWorldRects(activePen);
+                      } else {
+                        offsetY = funHeight + headHeight - height;
+                        activePen.height = funHeight + headHeight;
+                        resizeRect(this.activeRect, 0, offsetY, 6);
+                        calcWorldRects(activePen);
+                      }
+                    } else {
+                      const targetFunHeight = funHeight + offsetY;
+                      const scale = this.store.data.scale;
+                      if(targetFunHeight >= fontSize + 20 * scale && targetFunHeight <= height - headHeight - 100 * scale){
+                        this.lastOffsetY = y;
+                        activePen.funHeight += offsetY;
+                      }
+                    }
+                  }
+                } 
+              } else {
+                if(this.mouseDown && 
+                  activePen?.calculative.activeFunIndex >= 0 && 
+                  activePen?.calculative.resizeBox == 'none'){
+                    // const p1 = { x: this.mouseDown.x, y: this.mouseDown.y };
+                    // const p2 = { x: e.x, y: e.y };
+                    // let x = p2.x - p1.x;
+                    // let offsetX = x - this.lastOffsetX;
+                    // let y = p2.y - p1.y;
+                    // let offsetY = y - this.lastOffsetY;
+                    // this.lastOffsetY = y;
+                    // this.lastOffsetX = x;
+                    // if(!this.dragChild) {
+                    //   this.dragChild = await this.addPen({
+                    //     name:'rectangle',
+                    //     x: activePen.calculative.worldRect.x + activePen.stageWidth,
+                    //     y: activePen.calculative.worldRect.y + activePen.headHeight,
+                    //     width: activePen.data[activePen.calculative.activeFunIndex].width,
+                    //     height: activePen.height - activePen.headHeight,
+                    //   });
+                    // } else {
+                    //   this.translatePens(this.dragChild, offsetX, offsetY, true);
+                    // }
+                    // translateRect(this.activeRect, x, y);
+                } else if (activePen?.calculative.resizeBox != 'none') {
+                  if(resizeBox == 'stage') {
+                    let y = p2.y - p1.y;
+                    let offsetY = y - this.lastOffsetY;
+                    const targetStageHeight = activePen.stageHeight + offsetY;
+                    const scale = this.store.data.scale;
+                    const minStageHeight = activePen.calculative.fontSize + 20 * scale;
+                    if(targetStageHeight > minStageHeight) {
+                      activePen.height += offsetY;
+                      activePen.stageHeight = targetStageHeight;
+                      this.lastOffsetY = y;
+                      resizeRect(this.activeRect, 0, offsetY, 6);
+                      calcWorldRects(activePen);
+                    } else if(activePen.stageHeight > minStageHeight) {
+                      activePen.height -= activePen.stageHeight - minStageHeight;
+                      offsetY = -activePen.stageHeight + minStageHeight;
+                      activePen.stageHeight = minStageHeight;
+                      resizeRect(this.activeRect, 0, offsetY, 6);
+                      calcWorldRects(activePen);
+                    } 
+                  } else if(resizeIndex >= 0) {
+                    let y = p2.y - p1.y;
+                    let offsetY = y - this.lastOffsetY;
+                    const item = activePen.data[resizeIndex];
+                    const targetHeight = item.height + offsetY;
+                    if(targetHeight >= 0) {
+                      activePen.height += offsetY;
+                      item.height = targetHeight;
+                      this.lastOffsetY = y;
+                      resizeRect(this.activeRect, 0, offsetY, 6);
+                      calcWorldRects(activePen);
+                    } else {
+                      activePen.height -= item.height;
+                      offsetY = -item.height;
+                      item.height = 0;
+                      resizeRect(this.activeRect, 0, offsetY, 6);
+                      calcWorldRects(activePen);
+                    }
+                  } else {
+                    const { width } = activePen.calculative.worldRect;
+                    const { funWidth } = activePen;
+                    let x = p2.x - p1.x;
+                    let offsetX = x - this.lastOffsetX;
+                    if(resizeBox == 'complete') {
+                      const targetWidth = width + offsetX;
+                      if(targetWidth > funWidth) {
+                        activePen.width = targetWidth;
+                        this.lastOffsetX = x;
+                        resizeRect(this.activeRect, offsetX, 0, 5);
+                        calcWorldRects(activePen);
+                      } else {
+                        offsetX = funWidth - width;
+                        activePen.width = funWidth;
+                        resizeRect(this.activeRect, offsetX, 0, 5);
+                        calcWorldRects(activePen);
+                      }
+                    } else {
+                      let { fontSize } = activePen.calculative;
+                      const targetFunHeight = funWidth + offsetX;
+                      const scale = this.store.data.scale;
+                      if(targetFunHeight >= fontSize + 20 * scale && targetFunHeight <= width - 100 * scale){
+                        this.lastOffsetX = x;
+                        activePen.funWidth += offsetX;
+                      }
+                    }
+                  }
+                } 
+              }
+              this.render();
+            } else {
+              
+              if(activePen.calculative.focus){
+                //执行图元的操作
+                return;
+              }
+              if(!this.store.active[0]?.locked && !this.store.active[0]?.dropAnchor){
+                this.movePens(e);
+              }
             }
+            
           }
-          if(!this.store.active[0]?.locked && !this.store.active[0]?.dropAnchor){
-            this.movePens(e);
-          }
-          //图元是否进入容器图元
           this.getContainerHover(e);
           return;
         }
@@ -2524,6 +2715,105 @@ export class Canvas {
       }
     }
 
+    if(this.store.active && this.store.active.length === 1 && this.store.active[0]?.resizeChild) {
+      const activePen = this.store.active[0];
+      if(activePen?.calculative.resizeBox == 'none' && activePen?.calculative.activeFunIndex >= 0) {//
+          // this.delete(this.dragChild);
+          if ( //拖拽到另一个泳道合并
+            e.x < activePen.calculative.worldRect.x ||
+            e.x > activePen.calculative.worldRect.ex ||
+            e.y < activePen.calculative.worldRect.y ||
+            e.y > activePen.calculative.worldRect.ey){
+              if(this.store.hoverContainer && this.store.hoverContainer.resizeChild) { // 拖拽泳道到另一个泳道
+                const hoverContainer = this.store.hoverContainer;
+                const {activeFunIndex} = activePen.calculative;
+                const activeFun = activePen.data[activeFunIndex];
+                let oldKey = 'height', newKey = 'width',start = hoverContainer.calculative.worldRect.x + hoverContainer.stageWidth,eKey = 'x';
+                if(this.store.hoverContainer.direction == 'horizontal') {
+                  oldKey = 'width';
+                  newKey = 'height';
+                  start = hoverContainer.calculative.worldRect.y + hoverContainer.stageHeight + hoverContainer.headHeight;
+                  eKey = 'y';
+                  resizeRect(this.activeRect, 0, -activeFun[newKey], 6);
+                } else {
+                  resizeRect(this.activeRect, -activeFun[newKey], 0, 5);
+                }
+                if(!activeFun[newKey] && activeFun[oldKey]) {
+                  activeFun[newKey] = activeFun[oldKey];
+                  delete activeFun[oldKey];
+                }
+                for(let i = 0; i < hoverContainer.data.length; i++) {
+                  const item = hoverContainer.data[i];
+                  if(e[eKey] > start && e[eKey] < start + item[newKey]){
+                    hoverContainer[newKey] += activeFun[newKey];
+                    hoverContainer.data.splice(i,0,activeFun);
+                    if(activePen.data.length === 1) {
+                      this.delete([activePen]);
+                    } else {
+                      activePen.data.splice(activeFunIndex,1);
+                      if(activePen.direction == hoverContainer.direction) {
+                        activePen[newKey] -= activeFun[newKey];
+                      } else {
+                        activePen[oldKey] -= activeFun[newKey];
+                      }
+                      calcWorldRects(activePen);
+                      activePen.calculative.activeFunIndex = -1;
+                    }
+                    calcWorldRects(hoverContainer);
+                    break;
+                  }
+                  start += item[newKey];
+                }
+              } else if(activePen.data.length === 1){//当只有一个子泳道且拖拽完毕没有拖到其他泳道
+                this.translatePens([activePen], e.x - this.mouseDown.x, e.y - this.mouseDown.y);
+              } else{//当有多个子泳道且拖拽完毕没有拖到其他泳道
+                const { activeFunIndex } = activePen.calculative;
+                const newSwimlane = deepClone(activePen);
+                const activeFun = activePen.data[activeFunIndex];
+                newSwimlane.id = s8();
+                newSwimlane.x = e.x;
+                newSwimlane.y = e.y;
+                newSwimlane.data = [activeFun];
+                // this.addCaches = [newSwimlane];
+                if(activePen.direction == 'vertical') {
+                  newSwimlane.width = newSwimlane.stageWidth + activeFun.width;
+                  activePen.width -= activeFun.width;
+                } else {
+                  activePen.height -= activeFun.height;
+                  newSwimlane.height = newSwimlane.headHeight + newSwimlane.stageHeight + activeFun.height;
+                }
+                activePen.data.splice(activeFunIndex,1);
+                activePen.calculative.activeFunIndex = -1;
+                this.addPen(newSwimlane);
+                calcWorldRects(activePen);
+              } 
+          } else {// 拖拽移动子泳道顺序
+            const {activeFunIndex , worldRect} = activePen.calculative;
+            const {stageWidth} = activePen;
+            let key = 'width', eKey = 'x', start = worldRect.x + stageWidth;
+            if(activePen.direction == 'horizontal') {
+              key = 'height';
+              eKey = 'y';
+              start = worldRect.y + activePen.headHeight + activePen.stageHeight;
+            }
+            for(let i = 0; i < activePen.data.length; i++) {
+              const item = activePen.data[i];
+              if(e[eKey] > start && e[eKey] < start + item[key] && i != activeFunIndex){
+                let temp = activePen.data[i];
+                activePen.data[i] = activePen.data[activeFunIndex];
+                activePen.data[activeFunIndex] = temp;
+                activePen.calculative.activeFunIndex = i;
+                break;
+              }
+              start += item[key];
+            }
+          }
+      }
+      if(this.dragChild) {
+        this.delete([this.dragChild]);
+        this.dragChild = undefined;
+      }
+    }
     // Add pen
     if (this.addCaches && this.addCaches.length) {
       if (!this.store.data.locked) {
@@ -3326,6 +3616,7 @@ export class Canvas {
             }
             this.store.lastHoverContainer = this.store.hoverContainer;
           }
+          break;
         }else{
           this.store.hoverContainer = undefined;
           if(this.store.lastHoverContainer !== this.store.hoverContainer){
@@ -3340,7 +3631,50 @@ export class Canvas {
       }
     }
   };
-
+  pointAroundResizeLine(pen: Pen, pt: Point) {
+    if(!pen || !pen.resizeChild) return false;
+    pen.calculative.resizeIndex = -1;
+    pen.calculative.resizeBox = 'none';
+    const minDistance = 10;
+    const { x, y, ey,ex } = pen.calculative.worldRect;
+    let completeDistance = 0,funDistance = 0,stageDistance =0,start = 0;
+    if(pen.direction == 'horizontal'){
+      let { funWidth, stageHeight, headHeight } = pen;
+      completeDistance = Math.abs(pt.x - ex);
+      funDistance = Math.abs(pt.x - x - funWidth);
+      stageDistance = Math.abs(pt.y - y - headHeight - stageHeight);
+      start = pt.y - y - headHeight - stageHeight;
+    } else {
+      let { funHeight, stageWidth, headHeight } = pen;
+      completeDistance = Math.abs(pt.y - ey);
+      funDistance = Math.abs(pt.y - y - headHeight - funHeight);
+      stageDistance = Math.abs(pt.x - x - stageWidth);
+      start = pt.x - x - stageWidth;
+    }
+    if (completeDistance < minDistance) {
+      pen.calculative.resizeBox = 'complete';
+      return true;
+    }
+    if (funDistance < minDistance) {
+      // 只允许鼠标在功能区头部上方10像素范围内拖拽调整大小，避免和选中功能区冲突
+      pen.calculative.resizeBox = 'fun';
+      return true;
+    }
+    if (stageDistance < minDistance) {
+      pen.calculative.resizeBox = 'stage';
+      return true;
+    }
+    for (let i = 0; i < pen.data.length; i++) {
+      const l = pen.data[i].width || pen.data[i].height;
+      if (pt.y > y + pen.headHeight && Math.abs(start - l) < minDistance) {
+        pen.calculative.resizeIndex = i;
+        pen.calculative.resizeBox = 'fun';
+        return true;
+      }
+      start -= l;
+    }
+    return false;
+  }
   private getHover = (pt: Point) => {
     if (this.dragRect) {
       return;
@@ -3411,8 +3745,22 @@ export class Canvas {
     if (hoverType === HoverType.None) {
       hoverType = this.inPens(pt, this.store.data.pens);
     }
-
-    if (!hoverType && !activeLine && pointInRect(pt, this.activeRect)) {
+    if(this.pointAroundResizeLine(this.store.hover, pt)) {
+      const {resizeBox, resizeIndex} = this.store.hover.calculative;
+      if(this.store.hover.direction == 'vertical'){
+        if((resizeBox === 'fun' && resizeIndex >= 0) || resizeBox == 'stage'){
+          this.externalElements.style.cursor = 'col-resize';
+        } else {
+          this.externalElements.style.cursor = 'row-resize';
+        }
+      }else{
+        if((resizeBox === 'fun' && resizeIndex >= 0) || resizeBox == 'stage'){
+          this.externalElements.style.cursor = 'row-resize';
+        } else {
+          this.externalElements.style.cursor = 'col-resize';
+        }
+      }
+    } else if (!hoverType && !activeLine && pointInRect(pt, this.activeRect)) {
       hoverType = HoverType.Node;
       this.externalElements.style.cursor = 'move';
     }

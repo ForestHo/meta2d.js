@@ -567,6 +567,9 @@ export interface Pen extends Rect {
     disabledColor?: string;
     disabledBackground?: string;
     disabledTextColor?:string; //禁用文字颜色
+    resizeBox?: string;
+    resizeIndex?: number;
+    activeFunIndex?: number;
   };
   lastConnected?:any;
   // 下划线相关配置属性
@@ -579,7 +582,16 @@ export interface Pen extends Rect {
   textStrickout?: boolean;
   // 前一个动画帧状态数据
   prevFrame?: Pen;
-
+  stageWidth?: number;
+  stageHeight?: number;
+  stageText?: string;
+  funHeight?: number;
+  funWidth?: number;
+  headHeight?: number;
+  headText?: string;
+  data?: any;
+  direction?: string;
+  resizeChild?: boolean;
   onAdd?: (pen: Pen) => void;
   onValue?: (pen: Pen) => void;
   onBeforeValue?: (pen: Pen, value: ChartData) => any;

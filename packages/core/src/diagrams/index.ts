@@ -26,7 +26,7 @@ export * from './uml/activity/initial';
 export * from './uml/activity/terminate';
 export * from './uml/activity/branch';
 export * from './uml/activity/converge';
-export * from './uml/activity/swimlaneV';
+export * from './uml/activity/swimlane';
 export * from './uml/activity/comment';
 export * from './uml/deployment/node';
 export * from './uml/deployment/nodeexample';
@@ -88,7 +88,7 @@ import { initial } from './uml/activity/initial';
 import { terminate } from './uml/activity/terminate';
 import { branch } from './uml/activity/branch';
 import { converge } from './uml/activity/converge';
-import { swimlaneV } from './uml/activity/swimlaneV';
+import { swimlane } from './uml/activity/swimlane';
 import { comment,commentAnchors } from './uml/activity/comment';
 import { deployspec } from './uml/deployment/deployspec';
 import { deployspecexample } from './uml/deployment/deployspecexample';
@@ -140,7 +140,6 @@ export function commonPens() {
     terminate,
     branch,
     converge,
-    swimlaneV,
     comment,
     deployspec,
     deployspecexample,
