@@ -222,6 +222,7 @@ function onInput(pen: any, text: string, { h, w }) {
   pen.calculative.worldRect.height = totalH;
   pen.calculative.worldRect.ey = pen.calculative.worldRect.y + totalH;
   pen.height = totalH;
+  calcWorldAnchors(pen);
 
   pen.calculative.canvas.store.emitter.emit('valueUpdate', pen);
   pen.calculative.isInput = false;
