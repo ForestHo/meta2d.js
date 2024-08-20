@@ -95,7 +95,6 @@ import { initial } from './uml/activity/initial';
 import { terminate } from './uml/activity/terminate';
 import { branch } from './uml/activity/branch';
 import { converge } from './uml/activity/converge';
-import { swimlane } from './uml/activity/swimlane';
 import { comment,commentAnchors } from './uml/activity/comment';
 import { deployspec } from './uml/deployment/deployspec';
 import { deployspecexample } from './uml/deployment/deployspecexample';
