@@ -157,3 +157,18 @@ export function lineFromPoints(p1: any, p2: any) {
   const c = a * (p1.x) + b * (p1.y);
   return { a, b, c };
 }
+
+/**
+ * @description 计算字符串中某个字符的个数
+ * @author Joseph Ho
+ * @date 16/08/2024
+ * @export
+ * @param {*} str
+ * @param {*} ch
+ * @returns {*}  
+ */
+export function countCharacter(str, ch) {
+  return str.split('').reduce((count, character) => {
+    return count + (character === ch);
+  }, 0);
+}
