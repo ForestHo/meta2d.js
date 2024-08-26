@@ -581,6 +581,9 @@ export interface Pen extends Rect {
     resizeBox?: string;
     resizeIndex?: number;
     activeFunIndex?: number;
+    lastX?: number;
+    lastY?: number;
+    dragChild?: boolean;
   };
   lastConnected?:any;
   // 下划线相关配置属性
@@ -593,11 +596,9 @@ export interface Pen extends Rect {
   textStrickout?: boolean;
   // 前一个动画帧状态数据
   prevFrame?: Pen;
-  stageWidth?: number;
-  stageHeight?: number;
+  stageLen?: number;
   stageText?: string;
-  funHeight?: number;
-  funWidth?: number;
+  funTitleLen?: number;
   headHeight?: number;
   headText?: string;
   data?: any;

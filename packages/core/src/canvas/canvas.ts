@@ -1976,7 +1976,7 @@ export class Canvas {
     this.render();
   };
 
-  onMouseMove = async(e: {
+  onMouseMove = (e: {
     x: number;
     y: number;
     clientX: number;
@@ -2371,7 +2371,6 @@ export class Canvas {
               }
             }
             
-          }
           this.getContainerHover(e);
           return;
         }
@@ -2705,106 +2704,6 @@ export class Canvas {
           line.anchorBaks.push(...[line.calculative.worldAnchors[startIndex+1],line.calculative.worldAnchors[startIndex+2]]);
           line.calculative.worldAnchors.splice(startIndex+1,2);
         }
-      }
-    }
-
-    if(this.store.active && this.store.active.length === 1 && this.store.active[0]?.resizeChild) {
-      const activePen = this.store.active[0];
-      if(activePen?.calculative.resizeBox == 'none' && activePen?.calculative.activeFunIndex >= 0) {//
-          // this.delete(this.dragChild);
-          if ( //拖拽到另一个泳道合并
-            e.x < activePen.calculative.worldRect.x ||
-            e.x > activePen.calculative.worldRect.ex ||
-            e.y < activePen.calculative.worldRect.y ||
-            e.y > activePen.calculative.worldRect.ey){
-              if(this.store.hoverContainer && this.store.hoverContainer.resizeChild) { // 拖拽泳道到另一个泳道
-                const hoverContainer = this.store.hoverContainer;
-                const {activeFunIndex} = activePen.calculative;
-                const activeFun = activePen.data[activeFunIndex];
-                let oldKey = 'height', newKey = 'width',start = hoverContainer.calculative.worldRect.x + hoverContainer.stageWidth,eKey = 'x';
-                if(this.store.hoverContainer.direction == 'horizontal') {
-                  oldKey = 'width';
-                  newKey = 'height';
-                  start = hoverContainer.calculative.worldRect.y + hoverContainer.stageHeight + hoverContainer.headHeight;
-                  eKey = 'y';
-                  resizeRect(this.activeRect, 0, -activeFun[newKey], 6);
-                } else {
-                  resizeRect(this.activeRect, -activeFun[newKey], 0, 5);
-                }
-                if(!activeFun[newKey] && activeFun[oldKey]) {
-                  activeFun[newKey] = activeFun[oldKey];
-                  delete activeFun[oldKey];
-                }
-                for(let i = 0; i < hoverContainer.data.length; i++) {
-                  const item = hoverContainer.data[i];
-                  if(e[eKey] > start && e[eKey] < start + item[newKey]){
-                    hoverContainer[newKey] += activeFun[newKey];
-                    hoverContainer.data.splice(i,0,activeFun);
-                    if(activePen.data.length === 1) {
-                      this.delete([activePen]);
-                    } else {
-                      activePen.data.splice(activeFunIndex,1);
-                      if(activePen.direction == hoverContainer.direction) {
-                        activePen[newKey] -= activeFun[newKey];
-                      } else {
-                        activePen[oldKey] -= activeFun[newKey];
-                      }
-                      calcWorldRects(activePen);
-                      activePen.calculative.activeFunIndex = -1;
-                    }
-                    calcWorldRects(hoverContainer);
-                    break;
-                  }
-                  start += item[newKey];
-                }
-              } else if(activePen.data.length === 1){//当只有一个子泳道且拖拽完毕没有拖到其他泳道
-                this.translatePens([activePen], e.x - this.mouseDown.x, e.y - this.mouseDown.y);
-              } else{//当有多个子泳道且拖拽完毕没有拖到其他泳道
-                const { activeFunIndex } = activePen.calculative;
-                const newSwimlane = deepClone(activePen);
-                const activeFun = activePen.data[activeFunIndex];
-                newSwimlane.id = s8();
-                newSwimlane.x = e.x;
-                newSwimlane.y = e.y;
-                newSwimlane.data = [activeFun];
-                // this.addCaches = [newSwimlane];
-                if(activePen.direction == 'vertical') {
-                  newSwimlane.width = newSwimlane.stageWidth + activeFun.width;
-                  activePen.width -= activeFun.width;
-                } else {
-                  activePen.height -= activeFun.height;
-                  newSwimlane.height = newSwimlane.headHeight + newSwimlane.stageHeight + activeFun.height;
-                }
-                activePen.data.splice(activeFunIndex,1);
-                activePen.calculative.activeFunIndex = -1;
-                this.addPen(newSwimlane);
-                calcWorldRects(activePen);
-              } 
-          } else {// 拖拽移动子泳道顺序
-            const {activeFunIndex , worldRect} = activePen.calculative;
-            const {stageWidth} = activePen;
-            let key = 'width', eKey = 'x', start = worldRect.x + stageWidth;
-            if(activePen.direction == 'horizontal') {
-              key = 'height';
-              eKey = 'y';
-              start = worldRect.y + activePen.headHeight + activePen.stageHeight;
-            }
-            for(let i = 0; i < activePen.data.length; i++) {
-              const item = activePen.data[i];
-              if(e[eKey] > start && e[eKey] < start + item[key] && i != activeFunIndex){
-                let temp = activePen.data[i];
-                activePen.data[i] = activePen.data[activeFunIndex];
-                activePen.data[activeFunIndex] = temp;
-                activePen.calculative.activeFunIndex = i;
-                break;
-              }
-              start += item[key];
-            }
-          }
-      }
-      if(this.dragChild) {
-        this.delete([this.dragChild]);
-        this.dragChild = undefined;
       }
     }
     // Add pen
@@ -3681,50 +3580,6 @@ export class Canvas {
       }
     }
   };
-  pointAroundResizeLine(pen: Pen, pt: Point) {
-    if(!pen || !pen.resizeChild) return false;
-    pen.calculative.resizeIndex = -1;
-    pen.calculative.resizeBox = 'none';
-    const minDistance = 10;
-    const { x, y, ey,ex } = pen.calculative.worldRect;
-    let completeDistance = 0,funDistance = 0,stageDistance =0,start = 0;
-    if(pen.direction == 'horizontal'){
-      let { funWidth, stageHeight, headHeight } = pen;
-      completeDistance = Math.abs(pt.x - ex);
-      funDistance = Math.abs(pt.x - x - funWidth);
-      stageDistance = Math.abs(pt.y - y - headHeight - stageHeight);
-      start = pt.y - y - headHeight - stageHeight;
-    } else {
-      let { funHeight, stageWidth, headHeight } = pen;
-      completeDistance = Math.abs(pt.y - ey);
-      funDistance = Math.abs(pt.y - y - headHeight - funHeight);
-      stageDistance = Math.abs(pt.x - x - stageWidth);
-      start = pt.x - x - stageWidth;
-    }
-    if (completeDistance < minDistance) {
-      pen.calculative.resizeBox = 'complete';
-      return true;
-    }
-    if (funDistance < minDistance) {
-      // 只允许鼠标在功能区头部上方10像素范围内拖拽调整大小，避免和选中功能区冲突
-      pen.calculative.resizeBox = 'fun';
-      return true;
-    }
-    if (stageDistance < minDistance) {
-      pen.calculative.resizeBox = 'stage';
-      return true;
-    }
-    for (let i = 0; i < pen.data.length; i++) {
-      const l = pen.data[i].width || pen.data[i].height;
-      if (pt.y > y + pen.headHeight && Math.abs(start - l) < minDistance) {
-        pen.calculative.resizeIndex = i;
-        pen.calculative.resizeBox = 'fun';
-        return true;
-      }
-      start -= l;
-    }
-    return false;
-  }
   private getHover = (pt: Point) => {
     if (this.dragRect) {
       return;
@@ -3795,7 +3650,7 @@ export class Canvas {
     if (hoverType === HoverType.None) {
       hoverType = this.inPens(pt, this.store.data.pens);
     }
-    if(this.pointAroundResizeLine(this.store.hover, pt)) {
+    if(this.store.hover?.calculative?.resizeBox && this.store.hover?.calculative?.resizeBox != 'none') {
       const {resizeBox, resizeIndex} = this.store.hover.calculative;
       if(this.store.hover.direction == 'vertical'){
         if((resizeBox === 'fun' && resizeIndex >= 0) || resizeBox == 'stage'){
@@ -7735,7 +7590,6 @@ export class Canvas {
     ) {
       return;
     }
-
     if (this.inputDiv.dataset.penId === pen.id) {
       this.inputDiv.dataset.isInput = 'true';
       this.inputDiv.contentEditable = 'true';
@@ -7805,7 +7659,7 @@ export class Canvas {
       position:static;
       box-sizing:border-box;
       background:#FFF;
-      padding:0 2px;
+      padding:5px;
       color:#000;
       border: 1px solid #ccc;
       line-height:${len}px;
