@@ -1,6 +1,6 @@
 import { Pen, calcWorldAnchors } from '../../../pen';
 import { Point } from '../../../point'
-import { pointInSimpleRect } from '../../../rect'
+import { pointInSimpleRect, resizeRect } from '../../../rect'
 import { s8 } from '../../../utils'
 let lastHighLightId = ""; //上次内部选中高亮的pen的id
 enum MouseState {
@@ -18,6 +18,7 @@ export function enum1(ctx: CanvasRenderingContext2D, pen: Pen) {
     pen.onDestroy = destory;
     pen.onMove = onMove;
     pen.onAdd = add;
+    pen.beforeDelete = beforeDelete;
     pen.onIntersect = intersect;
     pen.onMouseLeave = mouseLeave;
     pen.onMouseMove = mouseMove;
@@ -63,7 +64,7 @@ export function enum1(ctx: CanvasRenderingContext2D, pen: Pen) {
       }
       for (let k = 0; k < lines.length; k++) {
         const l = lines[k];
-        ctx.fillText(l, startX, tY, width);
+        ctx.fillText(l, startX, tY);
         tY += lineHeight;
       }
       pen.xylist.push({ x: x, y: currentY, ex: x + width, ey: currentY + h, width, height: h, minH: item.minH });
@@ -84,7 +85,7 @@ export function enum1(ctx: CanvasRenderingContext2D, pen: Pen) {
       }
       for (let k = 0; k < lines.length; k++) {
         const l = lines[k];
-        ctx.fillText(l, startX, tY, width);
+        ctx.fillText(l, startX, tY);
         tY += lineHeight;
       }
       if (i === pen.highLightIndex) {
@@ -141,6 +142,19 @@ function div(pen: Pen, ctx: CanvasRenderingContext2D, x: number, y: number, ex: 
   }
 }
 function destory(pen: Pen) { }
+function beforeDelete(pen: Pen) {
+  // 当前高亮索引大于-1，且不是title时，不允许删除
+  if (pen.highLightIndex > -1 && pen.list[pen.highLightIndex].name !== 'title') {
+    const h = pen.list[pen.highLightIndex].h;
+    pen.list.splice(pen.highLightIndex, 1);
+    pen.xylist.splice(pen.highLightIndex, 1);
+    pen.highLightIndex = -1;
+    resizeRect(pen.calculative.canvas.activeRect, 0, -h, 6);
+    pen.calculative.canvas.render();
+    return false;
+  }
+  return true;
+}
 function onShowInput(pen: any, e: Point) {
   if (pen.highLightIndex > -1) {
     if (pen.list[pen.highLightIndex].name === 'divider') {
@@ -230,7 +244,7 @@ function mouseMove(pen: Pen, e: any) {
 }
 
 //将输入的数据写入到对应的data中
-function onInput(pen: any, text: string, {h, w}) {
+function onInput(pen: any, text: string, { h, w }) {
   // console.log('onInput', text, h);
   pen.list[pen.highLightIndex].text = text;
   pen.list[pen.highLightIndex].h = parseInt(h);
@@ -250,12 +264,12 @@ function intersect(pen: Pen, e: Point) {
   let isHit = false;
   if (pen.xylist.length > 0) {
     for (let i = 0; i < pen.xylist.length; i++) {
-      isHit = pointInSimpleRect({ x: e.x, y: e.y }, pen.xylist[i]);
+      isHit = pointInSimpleRect({ x: e.x, y: e.y } as Point, pen.xylist[i]);
       if (isHit) {
         pen.highLightIndex = i + 1;
         lastHighLightId = pen.id;
         const h = pen.calculative.canvas.store.active[0].height;
-        pen.list.splice(i + 1, 0, { text, name ,h,minH:h});
+        pen.list.splice(i + 1, 0, { text, name, h, minH: h });
         pen.calculative.canvas.delete(pen.calculative.canvas.store.active);
         break;
       }
@@ -264,7 +278,7 @@ function intersect(pen: Pen, e: Point) {
     // 内部无成员时，直接添加
     if (pen.calculative.canvas.store.active[0].name !== pen.name) {
       const h = pen.calculative.canvas.store.active[0].height;
-      pen.list.push({ text, name,h,minH:h });
+      pen.list.push({ text, name, h, minH: h });
       pen.calculative.canvas.delete(pen.calculative.canvas.store.active);
     }
   }

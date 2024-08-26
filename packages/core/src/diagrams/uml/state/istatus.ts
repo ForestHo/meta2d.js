@@ -100,6 +100,7 @@ export function istatus(ctx: CanvasRenderingContext2D, pen: Pen) {
       let h = item.th;
       ctx.fillStyle = "#fff";
       ctx.textBaseline = "middle";
+      ctx.textAlign = 'center';
       const lines = item.text.split(breakSymbol);
       let tY = currentY + lineHeight / 2;
       if (lines.length === 1) {
@@ -107,15 +108,16 @@ export function istatus(ctx: CanvasRenderingContext2D, pen: Pen) {
       }
       for (let k = 0; k < lines.length; k++) {
         const l = lines[k];
-        ctx.fillText(l, startX, tY, width);
+        ctx.fillText(l, x + width / 2, tY);
         tY += lineHeight;
       }
       pen.xylist.push({ x: x, y: currentY, ex: x + width, ey: currentY + item.ch, width, height: item.ch, minH: item.minH });
-      pen.tlist.push({ x: x, y: currentY, ex: x + width, ey: currentY + item.th, width: width, height: item.th, minH: item.minH, maxWidth: width });
+      pen.tlist.push({ x: x, y: currentY, ex: x + width, ey: currentY + item.th, width: width, height: item.th, minH: item.minH, maxWidth: width, nowrap: true, wAuto: true });
       currentY += h;
     } else if (item.name === 'content') {
       let h = item.th;
       ctx.textBaseline = "middle";
+      ctx.textAlign = 'left';
       ctx.fillStyle = pen.color;
       const lines = item.text.split(breakSymbol);
       let tY = currentY + lineHeight / 2;
@@ -124,7 +126,7 @@ export function istatus(ctx: CanvasRenderingContext2D, pen: Pen) {
       }
       for (let k = 0; k < lines.length; k++) {
         const l = lines[k];
-        ctx.fillText(l, startX, tY, width);
+        ctx.fillText(l, startX, tY);
         tY += lineHeight;
       }
       if (i === pen.highLightIndex) {
@@ -132,7 +134,7 @@ export function istatus(ctx: CanvasRenderingContext2D, pen: Pen) {
         ctx.stroke();
       }
       pen.xylist.push({ x: x, y: currentY, ex: x + width, ey: currentY + item.ch, width, height: item.ch, minH: item.minH });
-      pen.tlist.push({ x: startX, y: currentY, ex: startX + width, ey: currentY + item.th, width, height: item.th, minH: item.minH, maxWidth: width });
+      pen.tlist.push({ x: startX, y: currentY, ex: startX + width, ey: currentY + item.th, width, height: item.th, minH: item.minH, maxWidth: width, nowrap: true, wAuto: true });
       currentY += h;
     }
   }
@@ -140,7 +142,7 @@ export function istatus(ctx: CanvasRenderingContext2D, pen: Pen) {
   ctx.closePath();
 }
 function onResize(pen: Pen) {
-   // console.log('onResize', pen);
+  // console.log('onResize', pen);
   // for (let i = 0; i < pen.list.length; i++) {
   //   const item = pen.list[i];
   //   // item.h = pen.height * item.per;
@@ -180,14 +182,29 @@ function onShowInput(pen: any, e: Point) {
 }
 //将输入的数据写入到对应的data中
 function onInput(pen: any, text: string, { h, w }) {
-  console.log('onInput', text, h);
+  console.log('onInput', text, h,w);
   pen.list[pen.highLightIndex].text = text;
+  pen.list[pen.highLightIndex].tw = parseInt(w);
   pen.list[pen.highLightIndex].th = parseInt(h);
   if (pen.list[pen.highLightIndex].name === 'title') {
     pen.list[pen.highLightIndex].ch = parseInt(h);
   }
-  // const totalH = pen.list.reduce((accumulator, currentValue) => accumulator + currentValue.h, 0);
 
+  // 更新宽度
+  const list = pen.list.map(el=>el.tw);
+  const maxW = Math.max(...list);
+  if(maxW >= pen.list[pen.highLightIndex].minW){
+    pen.calculative.worldRect.width = maxW;
+    pen.calculative.worldRect.ex = pen.calculative.worldRect.x + maxW;
+    pen.width = maxW;
+  }else{
+    let minW = pen.list[pen.highLightIndex].minW;
+    pen.calculative.worldRect.width = minW;
+    pen.calculative.worldRect.ex = pen.calculative.worldRect.x + minW;
+    pen.width = minW;
+  }
+  calcWorldAnchors(pen);
+  // const totalH = pen.list.reduce((accumulator, currentValue) => accumulator + currentValue.h, 0);
   // pen.calculative.worldRect.height = totalH;
   // pen.calculative.worldRect.ey = pen.calculative.worldRect.y + totalH;
   // pen.height = totalH;

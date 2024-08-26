@@ -45,6 +45,7 @@ export interface Point {
   next?: Point;
   prevNextType?: PrevNextType;
   start?: boolean;
+  end?: boolean;
   lineLength?: number;
   step?: number;
   curvePoints?: Point[];

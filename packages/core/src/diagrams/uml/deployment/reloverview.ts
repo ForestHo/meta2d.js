@@ -77,7 +77,7 @@ export function reloverview(ctx: CanvasRenderingContext2D, pen: Pen) {
       }
       for (let k = 0; k < lines.length; k++) {
         const l = lines[k];
-        ctx.fillText(l, startX, tY, width);
+        ctx.fillText(l, startX, tY);
         tY += lineHeight;
       }
       pen.xylist.push({ x: x, y: currentY, ex: x + width, ey: currentY + h, width, height: h });
@@ -96,7 +96,7 @@ export function reloverview(ctx: CanvasRenderingContext2D, pen: Pen) {
       }
       for (let k = 0; k < lines.length; k++) {
         const l = lines[k];
-        ctx.fillText(l, startX, tY, width);
+        ctx.fillText(l, startX, tY);
         tY += lineHeight;
       }
       // 选中高亮某一个成员

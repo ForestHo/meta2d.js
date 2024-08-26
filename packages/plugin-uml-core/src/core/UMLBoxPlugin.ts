@@ -49,7 +49,7 @@ export const UMLBoxPlugin = {
           if(param.p.tag === 'umlNode') {
             UMLBoxPlugin.combineUMLBox(toPen);
           }
-          window.umlbox.translateWithPen(toPen);
+          (window as any).umlbox.translateWithPen(toPen);
           meta2d.active([toPen]);
           if(toPen.undone) {
             toPen.onAdd(toPen);

@@ -8,6 +8,7 @@ export function pack(ctx: CanvasRenderingContext2D, pen: Pen) {
   const { x, y, width, height, ex, ey } = pen.calculative.worldRect;
   if (!pen.onDestroy) {
     pen.onAdd = onAdd;
+    pen.onResize = onResize;
     pen.onShowInput = onShowInput;
   }
 
@@ -52,10 +53,19 @@ export function pack(ctx: CanvasRenderingContext2D, pen: Pen) {
 function onShowInput(pen: any, e: Point) {
   return null;
 }
-function onAdd(pen: Pen) {
-  if (!pen.followers) {
-    pen.followers = [];
+function onResize(pen: Pen) {
+  //  更新上方文本的位置
+  const p = pen.calculative.canvas.store.data.pens.find(el => el.id === pen.partnerIds[0]);
+  if (p) {
+    p.x = pen.calculative.worldRect.x;
+    p.y = pen.calculative.worldRect.y - p.trect.th;
+    pen.calculative.canvas.updatePenRect(p);
   }
+}
+function onAdd(pen: Pen) {
+  // if (!pen.followers) {
+  //   pen.followers = [];
+  // }
   const p: Pen = {
     id: s8(),
     width: pen.width,
@@ -65,13 +75,14 @@ function onAdd(pen: Pen) {
     ratio: true,
     disableSize: true,
     disableDelete: true,
+    disableAnchor: true,
     trect: { text: '文本', name: 'text', minH: 20, minW: 20, tw: 60, th: 20 },
     name: 'vtext',
     direction: 'up',
-    followed: pen.id,
     x: pen.calculative.worldRect.x,
     y: pen.calculative.worldRect.y - 20,
   };
   pen.calculative.canvas.makePen(p);
-  pen.followers.push(p.id);
+  p.partnerIds = [pen.id];
+  pen.partnerIds = [p.id];
 }

@@ -6,10 +6,10 @@ export function comment(pen: Pen, ctx?: CanvasRenderingContext2D): Path2D {
   const path = !ctx ? new Path2D() : ctx;
   const { x, y, width, ex, ey } = pen.calculative.worldRect;
   if (!pen.onDestroy) {
-    pen.onAdd = onAdd;
-    pen.onClick = onClick;
-    pen.onMove = onMove;
-    pen.onMouseEnter = onMouseEnter;
+    // pen.onAdd = onAdd;
+    // pen.onClick = onClick;
+    // pen.onMove = onMove;
+    // pen.onMouseEnter = onMouseEnter;
   }
 
   const offsetX = width / 10;
@@ -41,6 +41,7 @@ function onAdd(pen: Pen) {
   const absWidth = Math.abs(fromAnchor.x - toAnchor.x);
   const absHeight = Math.abs(fromAnchor.y - toAnchor.y);
   const line: Pen = {
+    id: s8(),
     height: absHeight,
     lineName: 'line',
     lineWidth: 1,
@@ -54,6 +55,7 @@ function onAdd(pen: Pen) {
         x: 1,
         y: 0,
         id: s8(),
+        hidden: true,
       },
       {
         x: 0,
@@ -64,7 +66,9 @@ function onAdd(pen: Pen) {
   };
   pen.calculative.canvas.addPens([line]);
   connectLine(pen, fromAnchor, line, line.calculative.worldAnchors[0]);
-
+  // 互为partner
+  line.partnerIds = [pen.id];
+  pen.partnerIds = [line.id];
   pen.calculative.canvas.parent.top([pen]);
 }
 function onMouseEnter(pen: Pen, e: Point) {
@@ -118,15 +122,15 @@ export function commentAnchors(pen: Pen) {
       y: 0.5,
     },
   ] as const;
-  pen.anchors = points.map(({ x, y }, index) => {
-    if(index !== points.length - 1) {
+  pen.anchors = points.map(({ x, y,hidden }, index) => {
+    if (!hidden) {
       return {
         id: `${index}`,
         penId: pen.id,
         x,
         y,
       };
-    }else{
+    } else {
       return {
         id: `${index}`,
         penId: pen.id,
@@ -135,6 +139,6 @@ export function commentAnchors(pen: Pen) {
         hidden: true,
       };
     }
-   
+
   });
 }

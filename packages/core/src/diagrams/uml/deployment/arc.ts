@@ -8,6 +8,7 @@ export function arc(pen: Pen, ctx?: CanvasRenderingContext2D): Path2D {
     pen.onMouseEnter = onMouseEnter;
     pen.onMouseLeave = onMouseLeave;
     pen.onMove = onMove;
+    pen.onDestroy = destroy;
   }
   path.ellipse(
     x + width / 2,
@@ -24,6 +25,10 @@ export function arc(pen: Pen, ctx?: CanvasRenderingContext2D): Path2D {
   }
 }
 
+function destroy(pen: Pen) {
+  const partners = pen.calculative.canvas.store.data.pens.filter(el=>el.partnerIds && el.partnerIds.includes(pen.id))
+  pen.calculative.canvas.delete(partners);
+}
 function onMouseEnter(pen: Pen, e: Point) {
   isMouseIn = true;
 }

@@ -1,4 +1,5 @@
-import { Pen, Point } from '@meta2d/core';
+import { Pen } from '../pen';
+import {  Point } from '../point';
 
 export function mindLine(pen: Pen, ctx?: CanvasRenderingContext2D): Path2D {
   const path = !ctx ? new Path2D() : ctx;

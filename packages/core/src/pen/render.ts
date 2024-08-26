@@ -2034,7 +2034,13 @@ export function renderAnchor(
     ctx.stroke();
   } else {
     ctx.save();
-    ctx.fillStyle = '#ffffff';
+    if(!pt.connectTo && (pt.start || pt.end)){
+      // 未连接的锚点,显示红色
+      ctx.fillStyle = pen.calculative.canvas.store.options.unConnectColor || "#f5222d";
+      ctx.strokeStyle = ctx.fillStyle;
+    }else{
+      ctx.fillStyle = '#ffffff';
+    }
     ctx.beginPath();
     ctx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
     ctx.fill();
@@ -2448,7 +2454,7 @@ export function connectLine(
       return;
     }
   }
-  // console.log('connectLine 4444444444444');
+  // console.log('connectLine 4444444444444',lineAnchor,pen.id,anchor);
   if (lineAnchor.connectTo === pen.id && lineAnchor.anchorId === anchor.id) {
     return;
   }
@@ -2456,11 +2462,11 @@ export function connectLine(
   if (lineAnchor.connectTo) {
     const p = pen.calculative.canvas.store.pens[lineAnchor.connectTo];
     // console.log('disconnectLine 55555');
-    disconnectLine(p, getAnchor(p, lineAnchor.anchorId), line, lineAnchor);
+    // disconnectLine(p, getAnchor(p, lineAnchor.anchorId), line, lineAnchor);
   }
   // console.log('connectLine 666666666666666');
   if (!pen.connectedLines) {
-    // console.log('pen.connectedLines',pen.lineName);
+    // console.log('clear connectedLines',pen.lineName);
     pen.connectedLines = [];
   }
 
@@ -2470,13 +2476,29 @@ export function connectLine(
       item.lineAnchor === lineAnchor.id &&
       item.anchor === anchor.id
   );
-  // console.log('connectLine 7777777777 i',pen,i);
+  // console.log('connectLine 7777777777 i',i);
   if (i < 0) {
     pen.connectedLines.push({
       lineId: line.id,
       lineAnchor: lineAnchor.id,
       anchor: anchor.id,
     });
+    if(pen.lineName === 'dline'){
+      anchor.connectTo = line.id;
+      anchor.anchorId = lineAnchor.id;
+      
+      // 一旦连上dline，备份它的连接关系
+      const index = pen.anchorBaks.findIndex(el=> el.id === anchor.id);
+      if(index === -1){
+        const i = pen.calculative.worldAnchors.findIndex(el=>el.id === anchor.id);
+        pen.anchorBaks.push({
+          index: i,
+          connectTo: anchor.connectTo,
+          anchorId: anchor.anchorId,
+          id: anchor.id
+        });
+      }
+    }
   }
   // 处理多条线往同一个线的锚点连线的情况
   // if(anchor.connectTo){
@@ -2504,9 +2526,10 @@ export function connectLine(
   // }
   lineAnchor.connectTo = pen.id;
   lineAnchor.anchorId = anchor.id;
+  
 
   // 如果两条连线，则相互关联
-  if (pen.type) {
+  if (pen.type && pen.lineName !== 'dline') {
     connectLine(line, lineAnchor, pen, anchor);
   }
 
@@ -2556,7 +2579,7 @@ export function disconnectLine(
       // console.log('disconnectLine',pen.lineName);
     }
   });
-
+  console.log('disconnectLine 55555');
   lineAnchor.connectTo = undefined;
   lineAnchor.anchorId = undefined;
   // 如果两条连线相互关联，则都取消关联

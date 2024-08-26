@@ -17,7 +17,12 @@ export function cstatus(ctx: CanvasRenderingContext2D, pen: Pen) {
     pen.onInput = onInput;
   }
   if (!pen.hasOwnProperty('xylist')) {
+     // 记录内部成员的区域坐标
     pen.xylist = [];
+  }
+  if (!pen.hasOwnProperty('tlist')) {
+    // 记录内部成员的文本区域坐标
+    pen.tlist = [];
   }
 
   const fillStyle = pen.background || "";
@@ -32,7 +37,7 @@ export function cstatus(ctx: CanvasRenderingContext2D, pen: Pen) {
   if (height < 2 * r) {
     r = height / 2;
   }
-  const titleH = pen.list.find(el => el.name === 'title').h;
+  const titleH = pen.list.find(el => el.name === 'title').th;
   // console.log('titleH', titleH);
   // 1.绘制下方区域
   ctx.beginPath();
@@ -85,16 +90,17 @@ export function cstatus(ctx: CanvasRenderingContext2D, pen: Pen) {
   const startY = y + padding, startX = x;
   let currentW = 0, currentY = y;
   pen.xylist = [];
+  pen.tlist = [];
   ctx.beginPath();
   ctx.fillStyle = pen.color;
   for (let i = 0; i < pen.list.length; i++) {
     const item = pen.list[i];
-    let h = item.h;
-    item.per = h / pen.height;
     if (!item) return;
     if (item.name === 'title') {
+      let h = item.th;
       ctx.fillStyle = "#fff";
       ctx.textBaseline = "middle";
+      ctx.textAlign = 'center';
       const lines = item.text.split(breakSymbol);
       let tY = currentY + lineHeight / 2;
       if (lines.length === 1) {
@@ -102,13 +108,16 @@ export function cstatus(ctx: CanvasRenderingContext2D, pen: Pen) {
       }
       for (let k = 0; k < lines.length; k++) {
         const l = lines[k];
-        ctx.fillText(l, startX, tY, width);
+        ctx.fillText(l, x + width / 2, tY);
         tY += lineHeight;
       }
-      pen.xylist.push({ x: x, y: currentY, ex: x + width, ey: currentY + h, width, height: h, minH: item.minH });
+      pen.xylist.push({ x: x, y: currentY, ex: x + width, ey: currentY + item.ch, width, height: item.ch, minH: item.minH });
+      pen.tlist.push({ x: x, y: currentY, ex: x + width, ey: currentY + item.th, width: width, height: item.th, minH: item.minH, maxWidth: width, nowrap: false, wAuto: false });
       currentY += h;
     } else if (item.name === 'content') {
+      let h = item.th;
       ctx.textBaseline = "middle";
+      ctx.textAlign = 'left';
       ctx.fillStyle = pen.color;
       const lines = item.text.split(breakSymbol);
       let tY = currentY + lineHeight / 2;
@@ -117,14 +126,15 @@ export function cstatus(ctx: CanvasRenderingContext2D, pen: Pen) {
       }
       for (let k = 0; k < lines.length; k++) {
         const l = lines[k];
-        ctx.fillText(l, startX, tY, width);
+        ctx.fillText(l, startX, tY);
         tY += lineHeight;
       }
       if (i === pen.highLightIndex) {
         ctx.strokeStyle = '#595959';
         ctx.stroke();
       }
-      pen.xylist.push({ x: x, y: currentY, ex: x + width, ey: currentY + h, width, height: h, minH: item.minH });
+      pen.xylist.push({ x: x, y: currentY, ex: x + width, ey: currentY + item.ch, width, height: item.ch, minH: item.minH });
+      pen.tlist.push({ x: startX, y: currentY, ex: startX + width, ey: currentY + item.th, width, height: item.th, minH: item.minH, maxWidth: width, nowrap: false, wAuto: false });
       currentY += h;
     }
   }
@@ -133,29 +143,74 @@ export function cstatus(ctx: CanvasRenderingContext2D, pen: Pen) {
 }
 function onResize(pen: Pen) {
   // console.log('onResize', pen);
-  for (let i = 0; i < pen.list.length; i++) {
-    const item = pen.list[i];
-    item.h = pen.height * item.per;
-  }
+  // for (let i = 0; i < pen.list.length; i++) {
+  //   const item = pen.list[i];
+  //   item.h = pen.height * item.per;
+  // }
+  const titleH = pen.list.find(el => el.name === 'title').th;
+  const cIndex = pen.list.findIndex(el => el.name === 'content');
+  pen.list[cIndex].ch = pen.height - titleH;
 }
 function onShowInput(pen: any, e: Point) {
+  console.log('onShowInput', pen.highLightIndex);
   if (pen.highLightIndex > -1) {
     console.log('onShowInput', pen.xylist[pen.highLightIndex].height);
-    pen.calculative.tempText = pen.list[pen.highLightIndex].text || '';
-    pen.calculative.canvas.showInput(pen, pen.xylist[pen.highLightIndex], '#ffffff');
+    const { text, minH, h } = pen.list[pen.highLightIndex];
+    // 判断文本高度 和 当前的高度
+    // if(h > minH){
+    //   console.log('h > minH', h, minH);
+    //   const n = round(h / lineHeight,0);
+    //   let num = countCharacter(text,breakSymbol);
+    //   console.log('n', n,num,!text.startsWith(breakSymbol) && text.length > 0);
+    //   if(!text.startsWith(breakSymbol) && text.length > 0){
+    //     num += 1;
+    //   }
+    //   let str = "";
+    //   for (let i = num; i < n; i++) {
+    //     str += breakSymbol;
+    //   }
+    //   console.log('str', str,str.length);
+    //   pen.list[pen.highLightIndex].text = text + str;
+    //   pen.calculative.tempText = text + str;
+    // }else{
+    //   pen.calculative.tempText = text || '';
+    // }
+    pen.calculative.tempText = text || '';
+    pen.calculative.canvas.showInput(pen, pen.tlist[pen.highLightIndex], '#ffffff');
+    // console.log('onShowInput', pen.xylist[pen.highLightIndex],text,countCharacter(text,breakSymbol));
   }
 }
 //将输入的数据写入到对应的data中
 function onInput(pen: any, text: string, { h, w }) {
-  console.log('onInput', text, h);
+  console.log('onInput', text, h, w);
   pen.list[pen.highLightIndex].text = text;
-  pen.list[pen.highLightIndex].h = parseInt(h);
-  const totalH = pen.list.reduce((accumulator, currentValue) => accumulator + currentValue.h, 0);
+  pen.list[pen.highLightIndex].tw = parseInt(w);
+  pen.list[pen.highLightIndex].th = parseInt(h);
+  if (pen.list[pen.highLightIndex].name === 'title') {
+    pen.list[pen.highLightIndex].ch = parseInt(h);
+  }
 
-  pen.calculative.worldRect.height = totalH;
-  pen.calculative.worldRect.ey = pen.calculative.worldRect.y + totalH;
-  pen.height = totalH;
+  // 更新宽度
+  const list = pen.list.map(el => el.tw);
+  const maxW = Math.max(...list);
+  console.log("list", list);
+  // if (maxW >= pen.list[pen.highLightIndex].minW) {
+  //   pen.calculative.worldRect.width = maxW;
+  //   pen.calculative.worldRect.ex = pen.calculative.worldRect.x + maxW;
+  //   pen.width = maxW;
+  // } else {
+  //   let minW = pen.list[pen.highLightIndex].minW;
+  //   pen.calculative.worldRect.width = minW;
+  //   pen.calculative.worldRect.ex = pen.calculative.worldRect.x + minW;
+  //   pen.width = minW;
+  // }
   calcWorldAnchors(pen);
+  pen.calculative.canvas.calcActiveRect();
+
+  // const totalH = pen.list.reduce((accumulator, currentValue) => accumulator + currentValue.h, 0);
+  // pen.calculative.worldRect.height = totalH;
+  // pen.calculative.worldRect.ey = pen.calculative.worldRect.y + totalH;
+  // pen.height = totalH;
 
   pen.calculative.canvas.store.emitter.emit('valueUpdate', pen);
   pen.calculative.isInput = false;

@@ -47,35 +47,40 @@ function onMouseDown(pen: Pen, e: Point) {
 }
 function onAdd(pen: Pen) {
   // console.log('onAdd', pen, e);
-  if (!pen.followers) {
-    pen.followers = [];
-  }
+  // if (!pen.followers) {
+  //   pen.followers = [];
+  // }
 
   const id = s8();
   const p = {
-    name: pen.free.type || "circle",
+    name: pen.free.type || "circle1",
     x: pen.free.x,
     y: pen.free.y,
     width: pen.width,
     height: pen.width,
     lineWidth: 0,
     disableSize: true,
-    disableDelete: true,
     id,
     background: pen.background,
     anchors: [
-      { id: '1', penId: id, x: 0.5, y: 0.5 }
+      { id: '1', penId: id, x: 0.5, y: 0.5, hidden: true }
     ],
   };
   pen.calculative.canvas.makePen(p);
-  pen.followers.push(p.id);
+  // pen.followers.push(p.id);
   const toPen = pen.calculative.canvas.find(p.id)[0];
-  const p1 = pen.calculative.canvas.parent.connectLine(
+  const line = pen.calculative.canvas.parent.connectLine(
     pen,
     toPen,
     pen.calculative.worldAnchors[8],
     toPen.calculative.worldAnchors[0]);
-  p1.disableDelete = true;
+
+  line.partnerIds = [pen.id, p.id];
+  pen.partnerIds = [line.id, p.id];
+  for (let i = 0; i < line.calculative.worldAnchors.length; i++) {
+    const an = line.calculative.worldAnchors[i];
+    an.hidden = true;
+  }
 }
 function onMouseUp(pen: Pen, e: Point) { }
 export function supplyinterfaceAnchors(pen: Pen) {
@@ -115,18 +120,25 @@ export function supplyinterfaceAnchors(pen: Pen) {
     {
       x: 0.5,
       y: 0.13,
+      hidden: true,
     },
   ] as const;
-  pen.anchors = points.map(({ x, y }, index) => {
-    return {
-      id: `${index}`,
-      penId: pen.id,
-      x,
-      y,
-    };
-  });
-}
-function pointInsideCircle(p: any, circle, r) {
-  if (r === 0) return false;
-  return (circle.x - p.x) ** 2 + (circle.y - p.y) ** 2 < r ** 2;
+  pen.anchors = points.map(({ x, y,hidden }, index) => {
+    if(hidden){
+      return {
+        id: `${index}`,
+        penId: pen.id,
+        x,
+        y,
+        hidden,
+      };
+    }else{
+      return {
+        id: `${index}`,
+        penId: pen.id,
+        x,
+        y,
+      };
+    }
+  }) as any;
 }

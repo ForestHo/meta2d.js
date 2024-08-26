@@ -63,6 +63,7 @@ export * from './uml/deployment/needinterface';
 export * from './uml/deployment/arc';
 export * from './uml/deployment/vtext';
 export * from './uml/deployment/reloverview';
+export * from './uml/deployment/circle1';
 
 import { rectangle, square } from './rectangle';
 import { circle } from './circle';
@@ -103,6 +104,7 @@ import { component } from './uml/deployment/component';
 import { componentexample } from './uml/deployment/componentexample';
 import { project } from './uml/deployment/project';
 import { projectexample } from './uml/deployment/projectexample';
+import { circle1 } from './uml/deployment/circle1';
 import { lifelineC } from './uml/communication/lifelineC';
 import { participantC } from './uml/communication/participantC';
 import { supplyinterfaceAnchors } from './uml/deployment/supplyinterface';
@@ -156,6 +158,7 @@ export function commonPens() {
     projectexample,
     lifelineC,
     "participant-c": participantC,
+    circle1,
     arc
   };
 }

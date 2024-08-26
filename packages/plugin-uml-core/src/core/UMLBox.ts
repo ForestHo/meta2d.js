@@ -69,7 +69,7 @@ export class UMLBox {
         rect.width = menuW;
         rect.height = menuH;
         this.arrow[0].style.opacity = FullOpacity;
-        this.menu.children[0].style.flexDirection = 'row';
+        (this.menu.children[0] as any).style.flexDirection = 'row';
         this.hoverDirection = DIRECTION.TOP;
       } else if (className.indexOf(DIRECTION.RIGHT) > -1) {
         rect.x = x + w + menuOffset;
@@ -77,7 +77,7 @@ export class UMLBox {
         rect.width = menuH;
         rect.height = menuW;
         this.arrow[1].style.opacity = FullOpacity;
-        this.menu.children[0].style.flexDirection = 'column';
+        (this.menu.children[0] as any).style.flexDirection = 'column';
         this.hoverDirection = DIRECTION.RIGHT;
       } else if (className.indexOf(DIRECTION.BOTTOM) > -1) {
         rect.x = x + (w / 2) - (menuW / 2);
@@ -85,7 +85,7 @@ export class UMLBox {
         rect.width = menuW;
         rect.height = menuH;
         this.arrow[2].style.opacity = FullOpacity;
-        this.menu.children[0].style.flexDirection = 'row';
+        (this.menu.children[0] as any).style.flexDirection = 'row';
         this.hoverDirection = DIRECTION.BOTTOM;
       } else if (className.indexOf(DIRECTION.LEFT) > -1) {
         rect.x = x - menuH - menuOffset;
@@ -93,7 +93,7 @@ export class UMLBox {
         rect.width = menuH;
         rect.height = menuW;
         this.arrow[3].style.opacity = FullOpacity;
-        this.menu.children[0].style.flexDirection = 'column';
+        (this.menu.children[0] as any).style.flexDirection = 'column';
         this.hoverDirection = DIRECTION.LEFT;
       }
       this.showMenu();
@@ -132,7 +132,7 @@ export class UMLBox {
         x: 0,
         y: 0,
         id,
-      };
+      } as any;
       Object.assign(p, shapeDatas[key]);
       const w = this.boxRect.width;
       const h = this.boxRect.height;
@@ -151,7 +151,7 @@ export class UMLBox {
         p.x = x - p.width - nextGap;
         p.y = y + (h / 2) - p.height / 2;
       }
-      meta2d.emit('plugin:umlBox:addNode', { plugin: 'umlBox', p });
+      (window as any).meta2d.emit('plugin:umlBox:addNode', { plugin: 'umlBox', p });
       this.hideMenu();
     }
     const menuContainer = document.createElement('div');

@@ -270,6 +270,17 @@ export interface Pen extends Rect {
   autoTo?: boolean;
 
   connectedLines?: ConnectLine[];
+  list?: any[]; // 子成员的数据
+  xylist?: any[];// 子成员的坐标
+  tlist?: any[];//子成员的文本坐标
+  highLightIndex?: number; //当前高亮的索引
+  currentState?: any;//当前的状态
+  moveChildFlag?: any;//移动子元素的标志
+  trect?: any;//文本框的信息
+  free?: any;//自由绘制的图形
+  undone?: any;//还未完成的图形
+  partnerIds?: string[];//伙伴id列表
+  anchorBaks?: any[];//备份的锚点连接关系
 
   // Cycle count. Infinite if == 0.
   animateCycle?: number;
@@ -627,6 +638,7 @@ export interface Pen extends Rect {
     pen: Pen;
     fromPen: Pen
   }) => void;
+  beforeDelete?: (pen: Pen)=> boolean; //删除前的回调中间件
 }
 
 // 属性绑定变量

@@ -23,7 +23,7 @@ export function cond(ctx: CanvasRenderingContext2D, pen: Pen) {
   }
   for (let k = 0; k < lines.length; k++) {
     const l = lines[k];
-    ctx.fillText(l, startX, tY, width);
+    ctx.fillText(l, startX, tY);
     tY += lineHeight;
   }
   ctx.closePath();

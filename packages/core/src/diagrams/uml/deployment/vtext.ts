@@ -35,7 +35,7 @@ export function vtext(ctx: CanvasRenderingContext2D, pen: Pen) {
   }
   for (let k = 0; k < lines.length; k++) {
     const l = lines[k];
-    ctx.fillText(l, startX, tY, width);
+    ctx.fillText(l, startX, tY);
     tY += lineHeight;
   }
 
@@ -50,14 +50,14 @@ export function vtext(ctx: CanvasRenderingContext2D, pen: Pen) {
 }
 //将输入的数据写入到对应的data中
 function onInput(pen: any, text: string, { h, w }) {
-  console.log('onInput', text, h, w);
+  // console.log('onInput', text, h, w);
   pen.trect.text = text;
   pen.trect.tw = parseInt(w);
   pen.trect.th = parseInt(h);
-  console.log('h more', pen.followed);
-  if (pen.followed) {
+  console.log('h more', pen.partnerIds);
+  if (pen.partnerIds && pen.partnerIds.length > 0) {
     // 动态向上增加高度
-    const fPen = pen.calculative.canvas.store.data.pens.find(el=> el.id === pen.followed);
+    const fPen = pen.calculative.canvas.store.data.pens.find(el=> el.id === pen.partnerIds[0]);
     if (fPen && pen.direction === 'up') {
       pen.calculative.worldRect.ey = fPen.calculative.worldRect.y;
       pen.calculative.worldRect.y = pen.calculative.worldRect.ey - h;

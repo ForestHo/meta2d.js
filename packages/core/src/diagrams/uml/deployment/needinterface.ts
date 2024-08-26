@@ -49,19 +49,18 @@ function onMouseUp(pen: Pen, e: Point) { }
 
 function onAdd(pen: Pen) {
   // console.log('onAdd', pen, e);
-  if (!pen.followers) {
-    pen.followers = [];
-  }
+  // if (!pen.followers) {
+  //   pen.followers = [];
+  // }
 
   const id = s8();
   const p = {
     name: pen.free.type || "arc",
-    x: pen.free.x- pen.width / two,
+    x: pen.free.x - pen.width / two,
     y: pen.free.y,
     width: pen.width,
     height: pen.width,
     disableSize: true,
-    disableDelete: true,
     background:'#fff',
     id,
     anchors: [
@@ -70,14 +69,19 @@ function onAdd(pen: Pen) {
     ],
   };
   pen.calculative.canvas.makePen(p);
-  pen.followers.push(p.id);
+  // pen.followers.push(p.id);
   const toPen = pen.calculative.canvas.find(p.id)[0];
-  const p1 = pen.calculative.canvas.parent.connectLine(
+  const line = pen.calculative.canvas.parent.connectLine(
     pen,
     toPen,
     pen.calculative.worldAnchors[8],
     toPen.calculative.worldAnchors[0]);
-  p1.disableDelete = true;
+  line.partnerIds = [pen.id,p.id];
+  pen.partnerIds = [line.id,p.id];
+  for (let i = 0; i < line.calculative.worldAnchors.length; i++) {
+    const an = line.calculative.worldAnchors[i];
+    an.hidden = true;
+  }
 }
 export function needinterfaceAnchors(pen: Pen) {
   const points = [
@@ -116,14 +120,25 @@ export function needinterfaceAnchors(pen: Pen) {
     {
       x: 0.5,
       y: 0.13,
+      hidden: true,
     },
   ] as const;
-  pen.anchors = points.map(({ x, y }, index) => {
-    return {
-      id: `${index}`,
-      penId: pen.id,
-      x,
-      y,
-    };
+  pen.anchors = points.map(({ x, y,hidden }, index) => {
+    if(hidden){
+      return {
+        id: `${index}`,
+        penId: pen.id,
+        x,
+        y,
+        hidden,
+      };
+    }else{
+      return {
+        id: `${index}`,
+        penId: pen.id,
+        x,
+        y,
+      };
+    }
   });
 }

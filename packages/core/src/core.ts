@@ -94,6 +94,7 @@ import {
   getRect,
   Rect,
   rectInRect,
+  pointInSimpleRect
 } from './rect';
 import { deepClone } from './utils/clone';
 import { Event, EventAction, EventName, TriggerCondition } from './event';
@@ -2509,6 +2510,21 @@ export class Meta2d {
           });
         }
         this.onSizeUpdate();
+        // 刚添加的元素，需要判断是否在其它container图元内部
+        console.log('add', e);
+        const { x, y, ex, ey } = e[0].calculative.worldRect;
+        for (let i = 0; i < this.store.data.pens.length; i++) {
+          const p = this.store.data.pens[i];
+          if (p.container) {
+            const lHit = pointInSimpleRect({ x, y }, p.calculative.worldRect);
+            const rHit = pointInSimpleRect({ x: ex, y: ey }, p.calculative.worldRect);
+            console.log('hit', lHit, rHit,e[0].id);
+            // if(!p.followers){
+            //   p.followers = [];
+            // }
+            // p.followers.push(e[0].id);
+          }
+        }
         break;
       case 'enter':
         e && e.onMouseEnter && e.onMouseEnter(e, this.canvas.mousePos);

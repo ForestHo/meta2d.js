@@ -700,6 +700,7 @@ export class Canvas {
         break;
       case 'Alt':
         if (!e.ctrlKey && !e.shiftKey && this.drawingLine) {
+          console.log('drawingLine', this.drawingLine);
           const to = getToAnchor(this.drawingLine);
           if (to !== this.drawingLine.calculative.activeAnchor) {
             deleteTempAnchor(this.drawingLine);
@@ -1699,7 +1700,8 @@ export class Canvas {
     if (e.buttons === MouseButtonType.RIGHT && !this.drawingLine) {
       this.mouseRight = MouseRight.Down;
     }
-    this.hideInput();
+    // 这里避免在blur事件之前，就hide了，导致拿不到penId
+    // this.hideInput();
     if (
       this.store.data.locked === LockState.Disable ||
       (e.buttons !== MouseButtonType.LEFT && e.buttons !== MouseButtonType.RIGHT)
@@ -1990,7 +1992,6 @@ export class Canvas {
       this.hoverType = HoverType.None;
       return;
     }
-
     // 防止异常情况导致mouseup事件没有触发
     if (
       this.mouseDown &&
@@ -2001,7 +2002,6 @@ export class Canvas {
       this.onMouseUp(e);
       return;
     }
-
     // 避免鼠标点击和移动一起触发，误抖动
     if (this.lastMouseTime) {
       const now = performance.now();
@@ -2011,7 +2011,6 @@ export class Canvas {
       }
       this.lastMouseTime = 0;
     }
-
     this.calibrateMouse(e);
     this.mousePos.x = e.x;
     this.mousePos.y = e.y;
@@ -2019,7 +2018,6 @@ export class Canvas {
       this.render();
       return;
     }
-
     if (this.mouseDown && !this.store.options.disableTranslate) {
       // 画布平移前提
       if (this.mouseRight === MouseRight.Down) {
@@ -2043,7 +2041,7 @@ export class Canvas {
         this.translate(x, y);
         return;
       }
-
+      
       if (this.store.data.locked) {
         return;
       }
@@ -2083,7 +2081,6 @@ export class Canvas {
           this.drawline();
           return;
         }
-
         // 框选
         if (e.buttons === MouseButtonType.LEFT &&( e.ctrlKey || !this.hoverType && !this.hotkeyType)) {
           this.dragRect = {
@@ -2097,7 +2094,6 @@ export class Canvas {
           this.render();
           return;
         }
-
         // 移动节点锚点
         if (this.movingAnchor) {
           const x = e.x - this.movingAnchor.x;
@@ -2133,7 +2129,7 @@ export class Canvas {
             // console.log('moveLineAnchor 222',this.store.hover)
             return;
           }
-
+          
           // Move line anchor prev
           if (this.hoverType === HoverType.LineAnchorPrev) {
             this.moveLineAnchorPrev(e);
@@ -2146,19 +2142,16 @@ export class Canvas {
             return;
           }
         }
-
         // Rotate
         if (this.hoverType === HoverType.Rotate) {
           this.rotatePens({ x: e.x, y: e.y });
           return;
         }
-
         // Resize
         if (this.hoverType === HoverType.Resize) {
             this.resizePens(e);
           return;
         }
-
         // Move
         if (
           this.hoverType === HoverType.Node ||
@@ -2185,7 +2178,7 @@ export class Canvas {
               const p2 = { x: e.x, y: e.y };
               if(activePen.direction == 'vertical') {
                 if(activePen?.calculative.activeFunIndex >= 0 && activePen?.calculative.resizeBox == 'none') {
-                    console.log('resizeIndex', resizeIndex);
+                    // console.log('resizeIndex', resizeIndex);
                     // const p1 = { x: this.mouseDown.x, y: this.mouseDown.y };
                     // const p2 = { x: e.x, y: e.y };
                     // let x = p2.x - p1.x;
@@ -2913,6 +2906,7 @@ export class Canvas {
       if (e.altKey && !e.shiftKey) {
         this.copyMovedPens();
       } else {
+        // console.log('this.movingPens',this.movingPens);
         this.movedActivePens(e.ctrlKey && e.shiftKey);
         this.calculateView();
       }
@@ -2923,9 +2917,12 @@ export class Canvas {
     }
     // 检测是否有交集,找到最近有交集的图元
     if (this.store.active.length > 0) {
-      const {x,y,ex,ey} = this.store.active[0].calculative.worldRect;
+      const activePen = this.store.active[0];
+      const {x,y,ex,ey} = activePen.calculative.worldRect;
+      let changeFlag = false;
       for (let i = 0; i < this.store.data.pens.length; i++) {
         const pen = this.store.data.pens[i];
+        changeFlag = false;
         if(pen.container){
           const lHit = pointInRect({x,y},pen.calculative.worldRect);
           const rHit = pointInRect({x:ex,y:ey},pen.calculative.worldRect);
@@ -2944,10 +2941,14 @@ export class Canvas {
             //   y: y1,
             //   pen,
             // });
-            const index = pen.followers?.indexOf(this.store.active[0].id);
+            const index = pen.followers?.indexOf(activePen.id);
             if(index < 0){
-              pen.followers.push(this.store.active[0].id);
-              this.store.active[0].leader = pen.id;
+              pen.followers.push(activePen.id);
+              activePen.leader = pen.id;
+              this.store.emitter.emit('follow', {
+                container: pen,
+                follower: activePen,
+              });
             }
             const gap = calcRectDistRect({x,y,ex,ey},pen.calculative.worldRect);
             const safeGap = this.store.options.safeGap;
@@ -2960,6 +2961,7 @@ export class Canvas {
               pen.calculative.worldRect.width = fW;
               pen.width = fW;
               pen.calculative.width = fW;
+              changeFlag = true;
             }
             if(gap.top && gap.top < safeGap){
               const fY = y - safeGap;
@@ -2969,6 +2971,7 @@ export class Canvas {
               pen.calculative.worldRect.height = fH;
               pen.height = fH;
               pen.calculative.height = fH;
+              changeFlag = true;
             }
             if(gap.right && gap.right < safeGap){
               const fEx = ex + safeGap;
@@ -2976,6 +2979,7 @@ export class Canvas {
               pen.calculative.worldRect.ex = fEx;
               pen.calculative.worldRect.width = fW;
               pen.width = fW;
+              changeFlag = true;
             }
             if(gap.bottom && gap.bottom < safeGap){
               const fEy = ey + safeGap;
@@ -2983,12 +2987,13 @@ export class Canvas {
               pen.calculative.worldRect.ey = fEy;
               pen.calculative.worldRect.height = fH;
               pen.height = fH;
+              changeFlag = true;
             }
           }else{
             const gap = calcRectGapRect({x,y,ex,ey},pen.calculative.worldRect);
             // console.log('gap',gap);
             if(gap && !disableSize){
-              const {x:x1,y:y1,width: w1,height: h1,ex:ex1,ey:ey1} = this.store.active[0].calculative.worldRect;
+              const {x:x1,y:y1,width: w1,height: h1,ex:ex1,ey:ey1} = activePen.calculative.worldRect;
               const safeGap = this.store.options.safeGap;
               // 左侧边缘溢出
               if(gap.left && gap.left < safeGap){
@@ -3000,6 +3005,7 @@ export class Canvas {
                 pen.width = fW;
                 pen.calculative.width = fW;
                 pen.calculative.worldRect.ex = fX + fW;
+                changeFlag = true;
               }
               // 右侧边缘溢出
               if(gap.right && gap.right < safeGap){
@@ -3010,6 +3016,7 @@ export class Canvas {
                 pen.width = fW;
                 pen.ex = fEx;
                 pen.calculative.worldRect.x = fEx - fW;
+                changeFlag = true;
               }
               // 顶部边缘溢出
               if(gap.top && gap.top < safeGap){
@@ -3020,6 +3027,7 @@ export class Canvas {
                 pen.y = fY;
                 pen.height = fH;
                 pen.calculative.worldRect.ey = fY + fH;
+                changeFlag = true;
               }
               // 底部边缘溢出
               if(gap.bottom && gap.bottom < safeGap){
@@ -3030,12 +3038,13 @@ export class Canvas {
                 pen.height = fH;
                 pen.ey = fEy;
                 pen.calculative.worldRect.y = fEy - fH;
+                changeFlag = true;
               }
               calcWorldAnchors(pen);
             }
             if(!rHit && !lHit){
               // 移出就从followers中删除
-              const index = pen.followers?.indexOf(this.store.active[0].id);
+              const index = pen.followers?.indexOf(activePen.id);
               if(index >= 0){
                 pen.followers.splice(index,1);
               }
@@ -3046,6 +3055,10 @@ export class Canvas {
               //   pen,
               // });
             }
+          }
+          if(changeFlag){
+            // 一旦宽高发生变化，触发pen的onResize钩子
+            pen.onResize?.(pen);
           }
           if(lHit || rHit){
             this.store.emitter.emit('intersect', {
@@ -3293,57 +3306,94 @@ export class Canvas {
       const p = this.store.active[k];
       // this.moveLineAnchor({x:e.x,y:e.y}, e);
       // console.log('upup this.xxxxx',p);
-      if(p.type === PenType.Line && p.connectedLines && p.connectedLines.length > 0){
-        for (let q = 0; q < p.connectedLines.length; q++) {
-          const conn = p.connectedLines[q];
-          const otherL = this.store.data.pens.find(el=>el.id === conn.lineId);
-          const otherIndex = otherL.connectedLines.findIndex(el=>el.lineId === p.id);
-          const otherConn = otherL.connectedLines.find(el=>el.lineId === p.id);
-          const anIndex = otherL.calculative.worldAnchors.findIndex(el=>el.id === otherConn.anchor);
-          // console.log('upup this.movingPens4444',p,otherL,otherIndex,anIndex);
-          if(anIndex > -1){
-            otherL.calculative.worldAnchors[anIndex].connectTo = undefined;
-            otherL.calculative.worldAnchors[anIndex].anchorId = undefined;
-            otherL.anchors[anIndex].connectTo = undefined;
-            otherL.anchors[anIndex].anchorId = undefined;
+      if(p.partnerIds && p.partnerIds.length > 0) continue;
+      if(p.type === PenType.Line){
+        console.log('upup first');
+        if(p.connectedLines && p.connectedLines.length > 0){
+          for (let q = 0; q < p.connectedLines.length; q++) {
+            const conn = p.connectedLines[q];
+            const otherL = this.store.data.pens.find(el=>el.id === conn.lineId);
+            if(!otherL){
+              continue;
+            }
+            const otherIndex = otherL.connectedLines.findIndex(el=>el.lineId === p.id);
+            const otherConn = otherL.connectedLines.find(el=>el.lineId === p.id);
+            const anIndex = otherL.calculative.worldAnchors.findIndex(el=>el.id === otherConn.anchor);
+            // console.log('upup this.movingPens4444',p,otherL,otherIndex,anIndex);
+            if(anIndex > -1){
+              otherL.calculative.worldAnchors[anIndex].connectTo = undefined;
+              otherL.calculative.worldAnchors[anIndex].anchorId = undefined;
+              otherL.anchors[anIndex].connectTo = undefined;
+              otherL.anchors[anIndex].anchorId = undefined;
+            }
+            if(otherIndex > -1){
+              otherL.connectedLines.splice(otherIndex,1);
+              // console.log('upup this.movingPens2222222222',p,otherL,otherIndex);
+            }
           }
-          if(otherIndex > -1){
-            otherL.connectedLines.splice(otherIndex,1);
-            // console.log('upup this.movingPens2222222222',p,otherL,otherIndex);
+          p.calculative.worldAnchors.forEach((anchor) => {
+            anchor.connectTo = undefined;
+            anchor.anchorId = undefined;
+          });
+          p.anchors.forEach((anchor) => {
+            anchor.connectTo = undefined;
+            anchor.anchorId = undefined;
+          });
+          console.log('upup this.movingPens end',p);
+          p.connectedLines = [];
+          // const p1 = this.store.data.pens.find(el=>el.id === p.connectedLines[0].lineId);
+          // const pAnchor = getAnchor(p1, p.connectedLines[0].lineAnchor);
+          // const lAnchor = getAnchor(p, p.connectedLines[0].anchor);
+          // console.log('upup this.movingPens3333',p,p1,pAnchor,lAnchor);
+  
+          // const index = p1.connectedLines.findIndex(el=>el.lineId === p.id);
+          // console.log('upup this.movingPens44444444',index);
+          // if(index >= 0){
+          //   p1.connectedLines.splice(index,1);
+          // }
+          // const wIndex = p.calculative.worldAnchors.findIndex(el=>el.id === p.connectedLines[0].anchor);
+          // console.log('upup this.movingPens555555555',wIndex);
+          // if(wIndex >= 0){
+          //   p.calculative.worldAnchors[wIndex].anchorId = undefined;
+          //   p.calculative.worldAnchors[wIndex].connectTo = undefined;
+          // }
+          // disconnectLine(
+          //   p1,
+          //   pAnchor,
+          //   p,
+          //   lAnchor
+          // );
+        }else{
+          console.log('upup other');
+          for (let n = 0; n < p.calculative.worldAnchors.length; n++) {
+            const ana = p.calculative.worldAnchors[n];
+            // console.log('upup this.movingPens666666666',ana);
+            if(ana.connectTo){
+              const otherL = this.store.data.pens.find(el=>el.id === ana.connectTo);
+              if(!otherL){
+                continue;
+              }
+              const otherIndex = otherL.connectedLines?.findIndex(el=>el.lineId === p.id);
+              // console.log('upup this.movingPens777777777',otherL,otherIndex);
+              otherL.calculative.worldAnchors.forEach((anchor) => {
+                if(anchor.connectTo && anchor.connectTo === p.id){
+                  anchor.connectTo = undefined;
+                  anchor.anchorId = undefined;
+                }
+              });
+              otherL.anchors.forEach((anchor) => {
+                if(anchor.connectTo && anchor.connectTo === p.id){
+                  anchor.connectTo = undefined;
+                  anchor.anchorId = undefined;
+                }
+              });
+              if(otherIndex > -1){
+                otherL.connectedLines?.splice(otherIndex,1);
+              }
+            }
           }
         }
-        p.calculative.worldAnchors.forEach((anchor) => {
-          anchor.connectTo = undefined;
-          anchor.anchorId = undefined;
-        });
-        p.anchors.forEach((anchor) => {
-          anchor.connectTo = undefined;
-          anchor.anchorId = undefined;
-        });
-        // console.log('upup this.movingPens end',p);
-        p.connectedLines = [];
-        // const p1 = this.store.data.pens.find(el=>el.id === p.connectedLines[0].lineId);
-        // const pAnchor = getAnchor(p1, p.connectedLines[0].lineAnchor);
-        // const lAnchor = getAnchor(p, p.connectedLines[0].anchor);
-        // console.log('upup this.movingPens3333',p,p1,pAnchor,lAnchor);
-
-        // const index = p1.connectedLines.findIndex(el=>el.lineId === p.id);
-        // console.log('upup this.movingPens44444444',index);
-        // if(index >= 0){
-        //   p1.connectedLines.splice(index,1);
-        // }
-        // const wIndex = p.calculative.worldAnchors.findIndex(el=>el.id === p.connectedLines[0].anchor);
-        // console.log('upup this.movingPens555555555',wIndex);
-        // if(wIndex >= 0){
-        //   p.calculative.worldAnchors[wIndex].anchorId = undefined;
-        //   p.calculative.worldAnchors[wIndex].connectTo = undefined;
-        // }
-        // disconnectLine(
-        //   p1,
-        //   pAnchor,
-        //   p,
-        //   lAnchor
-        // );
+     
       }
     }
     this.store.emitter.emit('translatePens', pens);
@@ -3764,6 +3814,7 @@ export class Canvas {
       hoverType = HoverType.Node;
       this.externalElements.style.cursor = 'move';
     }
+    
     this.hoverType = hoverType;
     if (hoverType === HoverType.None) {
       if (this.drawingLineName || this.pencil) {
@@ -4040,7 +4091,8 @@ export class Canvas {
   inAnchor(pt: Point, pen: Pen, anchor: Point): HoverType {
     this.store.hoverAnchor = undefined;
     this.movingAnchor = undefined;
-    if (!anchor || anchor.locked > LockState.DisableEdit) {
+    // 新增anchor.hidden的判断，隐藏的锚点不可操作
+    if (!anchor || anchor.locked > LockState.DisableEdit || anchor.hidden) {
       return HoverType.None;
     }
 
@@ -5363,15 +5415,26 @@ export class Canvas {
             );
             ctx.restore();
           } else {
-            if(anchor.aType !== AnchorType.DYNAMIC && !anchor.hidden){
+            if(!anchor.hidden){
+              // 未连接的线条，开始和结束的锚点颜色变红
+              if(this.store.hover.type === PenType.Line && !anchor.connectTo && (anchor.start || anchor.end)){
+                ctx.strokeStyle = this.store.options.unConnectColor || "#f5222d";
+              }else{
+                ctx.strokeStyle = this.store.hover.anchorColor || this.store.options.anchorColor;
+              }
               ctx.arc(anchor.x, anchor.y, size, 0, Math.PI * 2);
             }
           }
           if (this.store.hover.type && this.store.hoverAnchor === anchor) {
             ctx.save();
-            ctx.strokeStyle =
+            if(this.store.hover.type === PenType.Line && !anchor.connectTo && (anchor.start || anchor.end)){
+              ctx.strokeStyle = this.store.options.unConnectColor || "#f5222d";
+              ctx.fillStyle = ctx.strokeStyle;
+            }else{
+              ctx.strokeStyle =
               this.store.hover.activeColor || this.store.options.activeColor;
-            ctx.fillStyle = ctx.strokeStyle;
+              ctx.fillStyle = ctx.strokeStyle;
+            }
           } else if (anchor.color || anchor.background) {
             ctx.save();
             ctx.strokeStyle = anchor.color;
@@ -5716,6 +5779,16 @@ export class Canvas {
   }
 
   resizePens(e: Point) {
+    // resize需要剔除active中follower的图元,避免container拉伸，follower的子图元也跟着拉伸
+    if(this.store.active.length > 1){
+      for (let i = 0; i < this.store.active.length; i++) {
+        const el = this.store.active[i];
+        if(el.leader){
+          this.store.active.splice(i, 1);
+          i--;
+        }
+      }
+    }
     if (!this.initPens) {
       this.initPens = deepClone(this.store.active, true);
     }
@@ -6043,6 +6116,7 @@ export class Canvas {
       x: rect.x - this.activeRect.x,
       y: rect.y - this.activeRect.y,
     };
+    // console.log('offset',offset);
     if (!this.store.options.disableDock && !vFlag) {
       this.clearDock();
       const moveDock = this.customMoveDock || calcMoveDock;
@@ -6252,7 +6326,6 @@ export class Canvas {
             offsetX = 0;
           }
         }else if(line.lineName === 'vline'){
-          // console.log('xline');
         }
       }
       translatePoint(this.store.activeAnchor, offsetX, offsetY);
@@ -6479,6 +6552,8 @@ export class Canvas {
    * @param pens 本次移动的全部图形，包含子节点
    */
   private checkDisconnect(line: Pen, pens: Pen[]) {
+    // Joseph Ho 20240820,如果移动的line图元是partner，则不需要检查是否断开连接
+    if(line.partnerIds && line.partnerIds.length > 0) return;
     if (line.id.indexOf(movingSuffix) > 0) {
       const id = line.id;
       line = this.store.pens[id.replace(movingSuffix, '')];
@@ -6497,7 +6572,6 @@ export class Canvas {
         if (!pen || pen.type) {
           return;
         }
-        // console.log('disconnectLine 333333333333');
         disconnectLine(pen, getAnchor(pen, anchor.anchorId), line, anchor);
       }
     });
@@ -6563,6 +6637,25 @@ export class Canvas {
             pen.calculative.x + pen.calculative.width;
           pen.calculative.initRect.ey =
             pen.calculative.y + pen.calculative.height;
+        }
+      }
+      // 让图元的partner也跟着移动
+      if(pen.partnerIds && pen.partnerIds.length > 0){
+        for (let k = 0; k < pen.partnerIds.length; k++) {
+          const id = pen.partnerIds[k];
+          const p = this.store.data.pens.find(p => p.id === id);
+          translateRect(p.calculative.worldRect, x, y);
+          this.updatePenRect(p, { worldRectIsReady: true });
+          p.calculative.x = p.x;
+          p.calculative.y = p.y;
+          if (p.calculative.initRect) {
+            p.calculative.initRect.x = p.calculative.x;
+            p.calculative.initRect.y = p.calculative.y;
+            p.calculative.initRect.ex =
+              p.calculative.x + p.calculative.width;
+            p.calculative.initRect.ey =
+              p.calculative.y + p.calculative.height;
+          }
         }
       }
       this.updateLines(pen);
@@ -7451,6 +7544,7 @@ export class Canvas {
     }
     const deletePens: Pen[] = [];
     this._del(pens, deletePens, canDelLocked);
+    if(deletePens.length === 0)return;
     this.initImageCanvas(deletePens);
     this.initTemplateCanvas(deletePens);
     this.inactive();
@@ -7471,7 +7565,22 @@ export class Canvas {
     if(pens.length === 1 && pens[0].disableDelete){
       return;
     }
-    pens.forEach((pen) => {
+    // 删除相应的partnerId的节点
+    const arr = pens, newArr = [];
+    for (let i = 0; i < arr.length; i++) {
+      const p = arr[i];
+      if(p.partnerIds && p.partnerIds.length > 0){
+        const partners = this.store.data.pens.filter(el=> p.partnerIds.includes(el.id));
+        newArr.push(...partners);
+      }
+    }
+    arr.concat(newArr).forEach(async(pen) => {
+      if(pen.beforeDelete){
+        const ret = pen.beforeDelete(pen);
+        if(!ret){
+          return;
+        }
+      }
       if (pen.type) {
         pen.lastConnected = {};
       }
@@ -7692,7 +7801,6 @@ export class Canvas {
     // console.log('show',rect);
     let style = `
       height:auto;
-      width:100%;
       outline:0;
       position:static;
       box-sizing:border-box;
@@ -7701,10 +7809,25 @@ export class Canvas {
       color:#000;
       border: 1px solid #ccc;
       line-height:${len}px;
-      min-width:${rect?rect.width:pen.width}px;
-      min-height:${rect?rect.minH:pen.height}px;
       font-size:${fontSize}px;
     `;
+    if(rect){
+      if(!rect.nowrap){
+        style += `min-width:${rect.width}px;`;
+      }else{
+        style += 'white-space:nowrap;';
+      }
+      if(rect.wAuto){
+        style += `width:auto;`;
+      }else{
+        style += `width:100%;`;
+      }
+      style += `min-height:${rect.minH}px;`;
+    }else{
+      style += `width:100%;`;
+      style += `min-width:${pen.width}px;`;
+      style += `min-height:${pen.height}px;`;
+    }
     // console.log('show',style);
     this.inputDiv.style = style;
     this.inputDiv.focus();
@@ -7963,6 +8086,7 @@ export class Canvas {
     this.inputDiv.contentEditable = 'false';
     this.inputRight.onmousedown = this.stopPropagation;
     this.dropdown.onmousedown = this.stopPropagation;
+    this.dropdown.style.display = 'none';
     this.inputRight.style.transform = 'rotate(135deg)';
 
     let sheet: any;
@@ -8002,6 +8126,7 @@ export class Canvas {
     this.inputDiv.onfocus = (e: any) => {
       this.inputDiv.dataset.height = this.inputDiv.offsetHeight;
       this.inputDiv.dataset.width = this.inputDiv.offsetWidth;
+      this.inputDiv.dataset.value = this.inputDiv.innerHTML;
       // console.log('focus',this.inputDiv.dataset.height)
       if (navigator.userAgent.includes('Firefox')) {
         if (!e.target.innerText) {
@@ -8029,14 +8154,17 @@ export class Canvas {
     };
     this.inputDiv.onblur = ()=>{
       setTimeout(()=> {
+        // 输入完成发送事件
+        this.store.emitter.emit('inputDone', { pen: this.store.pens[this.inputDiv.dataset.penId], text: this.inputDiv.dataset.value});
         this.hideInput()
       },300)
     }
     this.inputDiv.oninput = (e: any) => {
       this.inputDiv.dataset.height = this.inputDiv.offsetHeight;
       this.inputDiv.dataset.width = this.inputDiv.offsetWidth;
-      // console.log('input',this.inputDiv.dataset.height)
+      // console.log('input',this.inputDiv.dataset.width,this.inputDiv.dataset.height)
       const pen = this.store.pens[this.inputDiv.dataset.penId];
+     
       if(pen.inputType === 'number'){
         const value = e.target.innerText;
         const numericValue = value.replace(/[^0-9]/g, ''); // 移除非数字字符
@@ -8068,6 +8196,9 @@ export class Canvas {
         } else {
           this.inputDiv.style.paddingTop = '';
         }
+      }
+      if (pen.onInput) {
+        pen.onInput(pen, e.target.innerText,{h:this.inputDiv.dataset.height,w:this.inputDiv.dataset.width});
       }
     };
     this.inputDiv.onclick = (e) => {

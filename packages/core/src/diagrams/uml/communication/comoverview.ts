@@ -23,6 +23,7 @@ export function comoverview(ctx: CanvasRenderingContext2D, pen: Pen) {
     // pen.onMouseMove = mouseMove;
     pen.onMouseDown = onMouseDown;
     pen.onShowInput = onShowInput;
+    pen.onResize = onResize;
     // pen.onMouseUp = onMouseUp;
     pen.onInput = onInput;
     // pen.onClick = click;
@@ -77,7 +78,7 @@ export function comoverview(ctx: CanvasRenderingContext2D, pen: Pen) {
       }
       for (let k = 0; k < lines.length; k++) {
         const l = lines[k];
-        ctx.fillText(l, startX, tY, width);
+        ctx.fillText(l, startX, tY);
         tY += lineHeight;
       }
       pen.xylist.push({ x: x, y: currentY, ex: x + width, ey: currentY + h, width, height: h });
@@ -96,14 +97,14 @@ export function comoverview(ctx: CanvasRenderingContext2D, pen: Pen) {
       }
       for (let k = 0; k < lines.length; k++) {
         const l = lines[k];
-        ctx.fillText(l, startX, tY, width);
+        ctx.fillText(l, startX, tY);
         tY += lineHeight;
       }
       // 选中高亮某一个成员
-      if (i === pen.highLightIndex) {
-        ctx.strokeStyle = '#595959';
-        ctx.stroke();
-      }
+      // if (i === pen.highLightIndex) {
+      //   ctx.strokeStyle = '#595959';
+      //   ctx.stroke();
+      // }
       pen.xylist.push({ x: startX, y: currentY, ex: startX + currentW, ey: currentY + h, width: currentW, height: h });
       pen.tlist.push({ x: startX, y: currentY, ex: startX + item.tw, ey: currentY + item.th, width: item.tw, height: item.th, minH: item.minH, maxWidth: width });
       currentY = currentY + h;
@@ -122,6 +123,16 @@ export function comoverview(ctx: CanvasRenderingContext2D, pen: Pen) {
   calcWorldAnchors(pen);
 }
 function destory(pen: Pen) { }
+function onResize(pen: Pen) {
+  // console.log('onResize', pen);
+  // for (let i = 0; i < pen.list.length; i++) {
+  //   const item = pen.list[i];
+  //   // item.h = pen.height * item.per;
+  // }
+  const titleH = pen.list.find(el => el.name === 'title').th;
+  const cIndex = pen.list.findIndex(el => el.name === 'param');
+  pen.list[cIndex].ch = pen.height - titleH;
+}
 function onShowInput(pen: any, e: Point) {
   if (pen.highLightIndex > -1) {
     pen.calculative.tempText = pen.list[pen.highLightIndex].text || '';
@@ -207,7 +218,7 @@ function onShowInput(pen: any, e: Point) {
 
 //将输入的数据写入到对应的data中
 function onInput(pen: any, text: string, { h, w }) {
-  console.log('onInput', text, h, w);
+  // console.log('onInput', text, h, w);
   pen.list[pen.highLightIndex].text = text;
   pen.list[pen.highLightIndex].tw = parseInt(w);
   pen.list[pen.highLightIndex].th = parseInt(h);
@@ -259,7 +270,7 @@ function onMouseDown(pen: Pen, e: Point) {
             // 并清除高亮
             item.highLightIndex = -1;
             // 起锚
-            item.dropAnchor = false;
+            // item.dropAnchor = false;
           }
         });
       }
@@ -267,7 +278,7 @@ function onMouseDown(pen: Pen, e: Point) {
       pen.highLightIndex = i;
       if (!pen.list[pen.highLightIndex].fixed) {
         // 抛锚图元
-        pen.dropAnchor = true;
+        // pen.dropAnchor = true;
       }
       // 记录选中的图元id
       lastHighLightId = pen.id;

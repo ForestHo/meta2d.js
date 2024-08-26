@@ -16,6 +16,7 @@ export interface Options {
   hoverBackground?: string;
   anchorColor?: string;
   hoverAnchorColor?: string;
+  unConnectColor?: string;
   anchorRadius?: number;
   anchorBackground?: string;
   dockColor?: string;
@@ -127,7 +128,8 @@ export const defaultOptions: Options = {
   activeColor: '#278df8',
   hoverColor: 'rgba(39,141,248,0.50)',
   anchorColor: '#278DF8',
-  hoverAnchorColor: '#FF4101',
+  hoverAnchorColor: '#1890FF',
+  unConnectColor: '#f5222d',
   anchorRadius: 4,
   anchorBackground: '#fff',
   dockColor: 'rgba(39,141,248,0.50)',

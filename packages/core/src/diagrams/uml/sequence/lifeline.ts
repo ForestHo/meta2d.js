@@ -72,11 +72,12 @@ function onAdd(pen: Pen) {
     height: 300,
     name: 'line',
     lineName: 'dline',
+    anchorBaks: [],
     direction: 'vertical',
     type: 1,
     x:fromAnchor.x,
     y:fromAnchor.y,
-    lineStep: 40,
+    lineStep: 24,
     lineDash: [10, 10],
     lineWidth: 1,
     id,
@@ -96,10 +97,10 @@ function onAdd(pen: Pen) {
     ],
   };
   pen.calculative.canvas.addPens([line]);
-  line.disableDelete = true;
+  line.partnerIds = [pen.id];
   line.calculative.worldAnchors[0].connectTo = pen.id;
   line.calculative.worldAnchors[0].anchorId = "2";
-
+  pen.partnerIds = [id];
   const obj = {
     anchor:"2",
     lineAnchor:startId,

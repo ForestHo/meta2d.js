@@ -22,9 +22,9 @@ export function line(
     }
   }
   const worldAnchors = pen.calculative.worldAnchors;
-  // console.log('worldAnchors',JSON.stringify(worldAnchors),pen.height);
   // 计算dline的动态锚点
   if (pen.lineName === 'dline') {
+    // console.log('worldAnchors',JSON.stringify(worldAnchors));
     const step = pen.lineStep || 20;
     // 备份锚点的连接关系
     const anchorBaks = pen.anchorBaks || [];
@@ -57,6 +57,20 @@ export function line(
     }
     // 收集无效连接关系的锚点
     // 动态锚点的删除
+    for (let i = 0; i < worldAnchors.length; i++) {
+      const an = worldAnchors[i];
+      if(an.aType === AnchorType.DYNAMIC && an.connectTo){
+        const index = anchorBaks.findIndex(el=> el.id === an.id);
+        if(index === -1){
+          anchorBaks.push({
+            index: i,
+            connectTo: an.connectTo,
+            anchorId: an.anchorId,
+            id: an.id
+          });
+        }
+      }
+    }
     for (let i = 0; i < worldAnchors.length; i++) {
       const an = worldAnchors[i];
       if (an.aType === AnchorType.DYNAMIC) {
@@ -130,9 +144,9 @@ export function line(
         // 从备份的anchors中恢复连接关系
         for (let i = 0; i < anchorBaks.length; i++) {
           const ana = anchorBaks[i];
-          // console.log('ana',ana.index,worldAnchors.length,pen.height);
+          // console.log('anchorBaks',JSON.stringify(anchorBaks));
           if(ana.index < worldAnchors.length){
-            // console.log('worldAnchors[ana.index]',worldAnchors[ana.index]);
+            // console.log('worldAnchors[ana.index]',anchorBaks.length,i,ana.index);
             worldAnchors[ana.index].connectTo = ana.connectTo;
             worldAnchors[ana.index].anchorId = ana.anchorId;
             worldAnchors[ana.index].id = ana.id;
@@ -207,11 +221,19 @@ export function line(
   }
   if (worldAnchors.length > 1) {
     let from: Point; // 上一个点
-    worldAnchors.forEach((pt: Point) => {
+    worldAnchors.forEach((pt: Point,index: number) => {
       if (from) {
         draw(path, from, pt);
       } else {
         pt.start = true;
+      }
+      if(index === worldAnchors.length-1){
+        pt.end = true;
+      }else{
+        if(pt.end){
+          // 删除绘制连线中间产生的结束标志
+          delete pt.end;
+        }
       }
       from = pt;
     });

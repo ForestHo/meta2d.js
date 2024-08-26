@@ -162,6 +162,7 @@ export function substatus(ctx: CanvasRenderingContext2D, pen: Pen) {
     if (item.name === 'title') {
       ctx.fillStyle = "#fff";
       ctx.textBaseline = "middle";
+      ctx.textAlign = 'center';
       const lines = item.text.split(breakSymbol);
       let tY = currentY + lineHeight / 2;
       if (lines.length === 1) {
@@ -169,13 +170,14 @@ export function substatus(ctx: CanvasRenderingContext2D, pen: Pen) {
       }
       for (let k = 0; k < lines.length; k++) {
         const l = lines[k];
-        ctx.fillText(l, startX, tY, width);
+        ctx.fillText(l, x + width / 2, tY);
         tY += lineHeight;
       }
       pen.xylist.push({ x: x, y: currentY, ex: x + width, ey: currentY + h, width, height: h, minH: item.minH });
       currentY += h;
     } else if (item.name === 'content') {
       ctx.textBaseline = "middle";
+      ctx.textAlign = 'left';
       ctx.fillStyle = pen.color;
       const lines = item.text.split(breakSymbol);
       let tY = currentY + lineHeight / 2;
@@ -184,7 +186,7 @@ export function substatus(ctx: CanvasRenderingContext2D, pen: Pen) {
       }
       for (let k = 0; k < lines.length; k++) {
         const l = lines[k];
-        ctx.fillText(l, startX, tY, width);
+        ctx.fillText(l, startX, tY);
         tY += lineHeight;
       }
       if (i === pen.highLightIndex) {

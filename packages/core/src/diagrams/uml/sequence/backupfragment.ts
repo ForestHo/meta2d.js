@@ -77,7 +77,7 @@ export function backupfragment(ctx: CanvasRenderingContext2D, pen: Pen) {
       }
       for (let k = 0; k < lines.length; k++) {
         const l = lines[k];
-        ctx.fillText(l, startX, tY, width);
+        ctx.fillText(l, startX, tY);
         tY += lineHeight;
       }
       pen.xylist.push({ x: x, y: currentY, ex: x + width, ey: currentY + h, width, height: h });
@@ -96,7 +96,7 @@ export function backupfragment(ctx: CanvasRenderingContext2D, pen: Pen) {
       }
       for (let k = 0; k < lines.length; k++) {
         const l = lines[k];
-        ctx.fillText(l, startX, tY, width);
+        ctx.fillText(l, startX, tY);
         tY += lineHeight;
       }
       // 选中高亮某一个成员
@@ -207,7 +207,7 @@ function mouseMove(pen: Pen, e: any) {
 
 //将输入的数据写入到对应的data中
 function onInput(pen: any, text: string, { h, w }) {
-  console.log('onInput', text, h, w);
+  // console.log('onInput', text, h, w);
   pen.list[pen.highLightIndex].text = text;
   pen.list[pen.highLightIndex].tw = parseInt(w);
   pen.list[pen.highLightIndex].th = parseInt(h);
@@ -227,7 +227,7 @@ function intersect(pen: Pen, e: Point) {
   let isHit = false;
   if (pen.xylist.length > 0) {
     for (let i = 0; i < pen.xylist.length; i++) {
-      isHit = pointInSimpleRect({ x: e.x, y: e.y }, pen.xylist[i]);
+      isHit = pointInSimpleRect({ x: e.x, y: e.y } as Point, pen.xylist[i]);
       if (isHit) {
         pen.highLightIndex = i + 1;
         lastHighLightId = pen.id;
