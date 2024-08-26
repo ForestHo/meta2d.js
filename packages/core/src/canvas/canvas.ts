@@ -3411,7 +3411,7 @@ export class Canvas {
     if (hoverType === HoverType.None) {
       hoverType = this.inPens(pt, this.store.data.pens);
     }
-    if(this.store.hover && this.store.hover?.calculative?.resizeBox != 'none') {
+    if(this.store.hover?.calculative?.resizeBox && this.store.hover?.calculative?.resizeBox != 'none') {
       const {resizeBox, resizeIndex} = this.store.hover.calculative;
       if(this.store.hover.direction == 'vertical'){
         if((resizeBox === 'fun' && resizeIndex >= 0) || resizeBox == 'stage'){
@@ -7292,7 +7292,6 @@ export class Canvas {
     ) {
       return;
     }
-
     if (this.inputDiv.dataset.penId === pen.id) {
       this.inputDiv.dataset.isInput = 'true';
       this.inputDiv.contentEditable = 'true';
@@ -7363,7 +7362,7 @@ export class Canvas {
       position:static;
       box-sizing:border-box;
       background:#FFF;
-      padding:0 2px;
+      padding:5px;
       color:#000;
       border: 1px solid #ccc;
       line-height:${len}px;
