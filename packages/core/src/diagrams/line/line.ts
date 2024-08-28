@@ -6,7 +6,7 @@ import { getBezierPoint, getQuadraticPoint } from './curve';
 import { AnchorType } from '../../point/point';
 import { round } from '../../utils/math';
 import { s8 } from '../../utils/uuid';
-import { deepClone } from '../../utils';
+import { deepClone, distance, lineFromPoints } from '../../utils';
 
 export function line(
   pen: Pen,
@@ -57,20 +57,20 @@ export function line(
     }
     // 收集无效连接关系的锚点
     // 动态锚点的删除
-    for (let i = 0; i < worldAnchors.length; i++) {
-      const an = worldAnchors[i];
-      if(an.aType === AnchorType.DYNAMIC && an.connectTo){
-        const index = anchorBaks.findIndex(el=> el.id === an.id);
-        if(index === -1){
-          anchorBaks.push({
-            index: i,
-            connectTo: an.connectTo,
-            anchorId: an.anchorId,
-            id: an.id
-          });
-        }
-      }
-    }
+    // for (let i = 0; i < worldAnchors.length; i++) {
+    //   const an = worldAnchors[i];
+    //   if (an.aType === AnchorType.DYNAMIC && an.connectTo) {
+    //     const index = anchorBaks.findIndex(el=> el.id === an.id);
+    //     if(index === -1){
+    //       anchorBaks.push({
+    //         index: i,
+    //         connectTo: an.connectTo,
+    //         anchorId: an.anchorId,
+    //         id: an.id
+    //       });
+    //     }
+    //   }
+    // }
     for (let i = 0; i < worldAnchors.length; i++) {
       const an = worldAnchors[i];
       if (an.aType === AnchorType.DYNAMIC) {
@@ -86,10 +86,12 @@ export function line(
         let startX = worldAnchors[startIndex].x,endX = worldAnchors[endIndex].x,startY = worldAnchors[startIndex].y;
         const penId = worldAnchors[startIndex].penId;
         startX += step;
+        let index = startIndex+1;
         while (startX < endX) {
           dAnchors.push({
             x: startX, 
             y: startY,
+            index,
             penId,
             id: s8(),
             aType: AnchorType.DYNAMIC 
@@ -117,16 +119,19 @@ export function line(
         let startY = worldAnchors[startIndex].y,endY = worldAnchors[endIndex].y,startX = worldAnchors[startIndex].x;
         const penId = worldAnchors[startIndex].penId;
         startY += step;
+        let index = startIndex+1;
         while (startY < endY) {
           dAnchors.push({
             x: startX,
             y: startY,
             penId,
+            index,
             id: s8(),
             // hidden: true,
             aType: AnchorType.DYNAMIC
           });
           startY = startY + step;
+          index++;
         }
         const many = worldAnchors.length === 2?0:dAnchors.length
         worldAnchors.splice(startIndex+1,many,...dAnchors);
@@ -157,14 +162,16 @@ export function line(
             }
             // 恢复连到起点锚点的动态锚点的连接关系
             // console.log('ana.index <= worldAnchors.length-2',ana.index <= worldAnchors.length-2,pen.deltaH);
-            if(ana.index <= worldAnchors.length-2 && pen.deltaH > 0){
+            if(ana.index <= worldAnchors.length-2 && pen.deltaH >= 0){
               // console.log("backup anchors");
               pen.connectedLines[mIndex].anchor = worldAnchors[ana.index].id;
               const anaPen = pen.calculative.canvas.store.data.pens.find(el=> el.id === ana.connectTo);
-              const anaIndex = anaPen.calculative.worldAnchors.findIndex(el=> el.id === ana.anchorId);
-              // console.log('anaIndex',anaPen,anaIndex);
-              anaPen.calculative.worldAnchors[anaIndex].anchorId = worldAnchors[ana.index].id;
-              anaPen.anchors[anaIndex].anchorId = worldAnchors[ana.index].id;
+              if(anaPen){
+                const anaIndex = anaPen.calculative.worldAnchors.findIndex(el=> el.id === ana.anchorId);
+                // console.log('anaIndex',anaPen,anaIndex);
+                anaPen.calculative.worldAnchors[anaIndex].anchorId = worldAnchors[ana.index].id;
+                anaPen.anchors[anaIndex].anchorId = worldAnchors[ana.index].id;
+              }
               pen.calculative.canvas.updateLines(pen);
             }
           }
@@ -219,9 +226,197 @@ export function line(
       }
     }
   }
+  // 计算激活的动态锚点 activate
+  if(pen.lineName === 'activate'){
+    // console.log('worldAnchors',JSON.stringify(worldAnchors));
+    const step = pen.lineStep || 30;
+    // 备份锚点的连接关系
+    const anchorBaks = pen.anchorBaks || [];
+    for (let i = 0; i < worldAnchors.length; i++) {
+      const an = worldAnchors[i];
+      if (an.aType === AnchorType.DYNAMIC && an.connectTo) {
+        const index = anchorBaks.findIndex(el=> el.id === an.id);
+        console.log('an index',an);
+        if(index === -1){
+          anchorBaks.push({
+            index: i,
+            connectTo: an.connectTo,
+            anchorId: an.anchorId,
+            id: an.id
+          });
+        }
+      }
+    }
+    // 删除无效的动态锚点
+    for (let i = 0; i < anchorBaks.length; i++) {
+      const ana = anchorBaks[i];
+      const index = pen.connectedLines.findIndex(el=> el.lineId === ana.connectTo && el.lineAnchor === ana.anchorId);
+      if(index === -1){
+        anchorBaks.splice(i,1);
+        i--;
+      }
+    }
+    // 动态锚点的删除
+    for (let i = 0; i < worldAnchors.length; i++) {
+      const an = worldAnchors[i];
+      // 如果是动态锚点，并且是附属锚点
+      if (an.aType === AnchorType.DYNAMIC && an.appurtenant) {
+        worldAnchors.splice(i, 1);
+        i--;
+      }
+    }
+    const startIndex = worldAnchors.findIndex(el=> el.start);
+    const endIndex = worldAnchors.findIndex(el=> el.end);
+    if(startIndex > -1 && endIndex > -1){
+      const dAnchors = [];
+      let startY = worldAnchors[startIndex].y,startX = worldAnchors[startIndex].x,endX = worldAnchors[endIndex].x,endY = worldAnchors[endIndex].y;
+      const penId = worldAnchors[startIndex].penId;
+      const {lineWidth} = pen.calculative;
+      // 1.计算斜率和线的长度
+      const AB = round(distance(worldAnchors[startIndex],worldAnchors[endIndex]),0);
+      // console.log('AB',AB);
+      const { a, b, c } = lineFromPoints(worldAnchors[endIndex],worldAnchors[startIndex]);
+      const k = - (a / b);
+      // console.log('k',k,a);
+
+      let k1 = 1;
+      if (a !== 0) {
+        // 垂直相交线的斜率
+        k1 = b / a;
+      } else {
+        // a=0,则为平行于x轴的线
+        k1 = worldAnchors[startIndex].y;
+      }
+      const radius = lineWidth /2 ;
+      // 相对于起点的偏移量
+      const deltaX = (round(Math.sqrt((radius * radius) / (k1 * k1 + 1)),2));
+      const deltaY = (round(k1 * deltaX,2));
+      // console.log('k1',k1,startX,startY,deltaX,deltaY);
+      let index = 0;
+      // 一对起点坐标
+      const x1 = startX - deltaX, y1 = startY - deltaY;
+      const x2 = startX + deltaX, y2 = startY + deltaY;
+      const startPairs = [
+        {
+          x: x1,
+          y: y1,
+          penId,
+          radius: 2,
+          index,
+          appurtenant: true,
+          id: s8(),
+          // hidden: true,
+          aType: AnchorType.DYNAMIC
+        },
+        {
+          x: x2,
+          y: y2,
+          penId,
+          radius: 2,
+          index,
+          appurtenant: true,
+          id: s8(),
+          // hidden: true,
+          aType: AnchorType.DYNAMIC
+        }
+      ]
+      // 先push起点坐标
+      dAnchors.push(...startPairs);
+
+      let dX = Math.abs(round(Math.sqrt((step * step) / (k * k + 1)),2));
+      let dY = Math.abs(round(k * dX,2));
+      // console.log('startX startY',startX,startY);
+      // console.log('endX endY',endX,endY);
+      let x11 = x1, y11 = y1,x22 = x2, y22 = y2;
+      // console.log('dX dY',dX,dY);
+      if(isNaN(dY)){
+        dY = step;
+      }
+      index++;
+      for (let dis = step;dis <= AB;dis = dis + step,index++) {
+        if(startX < endX){
+          x11 = x11 + dX;
+          x22 = x22 + dX;
+        }else{
+          x11 = x11 - dX;
+          x22 = x22 - dX;
+        }
+        if(startY < endY){
+          y11 = y11 + dY;
+          y22 = y22 + dY;
+        }else{
+          y11 = y11 - dY;
+          y22 = y22 - dY;
+        }
+        const pairs = [
+          {
+            x: x11,
+            y: y11,
+            penId,
+            radius: 2,
+            index,
+            appurtenant: true,
+            id: s8(),
+            // hidden: true,
+            aType: AnchorType.DYNAMIC
+          },
+          {
+            x: x22,
+            y: y22,
+            penId,
+            radius: 2,
+            index,
+            appurtenant: true,
+            id: s8(),
+            // hidden: true,
+            aType: AnchorType.DYNAMIC
+          }
+        ]
+        dAnchors.push(...pairs);
+      }
+      // console.log('dAnchors',dAnchors);
+      const many = worldAnchors.length === 2?0:dAnchors.length
+      worldAnchors.splice(startIndex+1,many,...dAnchors);
+
+      // 给每个锚点加真实的顺序
+      for (let n = 0; n < worldAnchors.length; n++) {
+        const anc = worldAnchors[n];
+        anc.sortIndex = n;
+      }
+
+      // 从备份的anchors中恢复连接关系
+      for (let m = 0; m < anchorBaks.length; m++) {
+        const ana = anchorBaks[m];
+        // console.log('ana index',ana.index,worldAnchors.length,pen.deltaH);
+        if((ana.index < (worldAnchors.length-2)/2) && pen.deltaH >= 0){
+          // console.log('less',ana.index,worldAnchors.length)
+          const mIndex = pen.connectedLines.findIndex(el=> el.lineId === ana.connectTo);
+          pen.connectedLines[mIndex].anchor = worldAnchors[ana.sortIndex].id;
+          const anaPen = pen.calculative.canvas.store.data.pens.find(el=> el.id === ana.connectTo);
+          if(anaPen){
+            const anaIndex = anaPen.calculative.worldAnchors.findIndex(el=> el.id === ana.anchorId);
+            anaPen.calculative.worldAnchors[anaIndex].anchorId = worldAnchors[ana.sortIndex].id;
+            anaPen.anchors[anaIndex].anchorId = worldAnchors[ana.sortIndex].id;
+          }
+          pen.calculative.canvas.updateLines(pen);
+        }
+        if((ana.index >= (worldAnchors.length-2)/2) && pen.deltaH < 0){
+          // console.log('than',ana.index,worldAnchors.length)
+          anchorBaks.splice(m,1);
+          m--;
+        }
+      }
+    }
+    // console.log('anchorBaks',(anchorBaks));
+    if(anchorBaks.length > 0){
+      pen.anchorBaks = deepClone(anchorBaks)
+    }
+  }
   if (worldAnchors.length > 1) {
     let from: Point; // 上一个点
     worldAnchors.forEach((pt: Point,index: number) => {
+      // 附属锚点直接跳过，不参与绘制
+      if(pt.appurtenant) return;
       if (from) {
         draw(path, from, pt);
       } else {

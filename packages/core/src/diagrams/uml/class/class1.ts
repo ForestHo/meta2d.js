@@ -253,7 +253,8 @@ function mouseMove(pen: Pen, e: any) {
 
 //将输入的数据写入到对应的data中
 function onInput(pen: any, text: string, { h, w }) {
-  // console.log('onInput', text, h,w);
+  console.log('onInput', text, h,w,pen.highLightIndex);
+  if(pen.highLightIndex === -1) return;
   pen.list[pen.highLightIndex].text = text;
   pen.list[pen.highLightIndex].h = parseInt(h);
   pen.calculative.canvas.store.emitter.emit('valueUpdate', pen);

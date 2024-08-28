@@ -172,3 +172,15 @@ export function countCharacter(str, ch) {
     return count + (character === ch);
   }, 0);
 }
+/**
+ * @description 计算两点之间的距离，返回距离值，即两点之间的直线距离，即勾股定理，即两点之间的直线距离
+ * @author Joseph Ho
+ * @date 28/08/2024
+ * @export
+ * @param {*} p1
+ * @param {*} p2
+ * @returns {*}  
+ */
+export function distance(p1: any, p2: any){
+  return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2);
+}

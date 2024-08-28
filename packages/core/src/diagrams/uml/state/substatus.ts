@@ -1,10 +1,10 @@
-import { Pen, calcWorldAnchors } from '../../../pen';
+import { Pen, calcWorldAnchors, getWords, wrapLines,getFont } from '../../../pen';
 import { Point } from '../../../point'
 import { pointInSimpleRect } from '../../../rect'
 import { s8 } from '../../../utils'
 
 let lastHighLightId = ""; //上次内部选中高亮的pen的id
-const memberW = 160, padding = 7, lineHeight = 18, breakSymbol = '\n';
+const memberW = 160, padding = 7, lineHeight = 18, breakSymbol = '\n', textPadding = 5;
 export function substatus(ctx: CanvasRenderingContext2D, pen: Pen) {
   let wr = pen.calculative.borderRadius || 0,
     hr = wr;
@@ -33,7 +33,6 @@ export function substatus(ctx: CanvasRenderingContext2D, pen: Pen) {
     r = height / 2;
   }
   const titleH = pen.list.find(el => el.name === 'title').h;
-  // console.log('titleH', titleH);
   // 1.绘制下方区域
   ctx.beginPath();
   // 从右下角顺时针绘制，弧度从0到1/2PI  
@@ -154,6 +153,16 @@ export function substatus(ctx: CanvasRenderingContext2D, pen: Pen) {
   pen.xylist = [];
   ctx.beginPath();
   ctx.fillStyle = pen.color;
+  let { fontSize, lineHeight, fontStyle, fontWeight, fontFamily } =
+    pen.calculative;
+  const realLineHeight = lineHeight * fontSize;
+  ctx.font = getFont({
+    fontStyle,
+    fontWeight,
+    fontFamily: fontFamily || pen.calculative.canvas.store.options.fontFamily,
+    fontSize,
+    lineHeight,
+  });
   for (let i = 0; i < pen.list.length; i++) {
     const item = pen.list[i];
     let h = item.h;
@@ -163,16 +172,27 @@ export function substatus(ctx: CanvasRenderingContext2D, pen: Pen) {
       ctx.fillStyle = "#fff";
       ctx.textBaseline = "middle";
       ctx.textAlign = 'center';
-      const lines = item.text.split(breakSymbol);
-      let tY = currentY + lineHeight / 2;
-      if (lines.length === 1) {
-        tY = currentY + h / 2;
+      if (!item.lines) {
+        item.lines = calcTextLines(item.text, pen);
       }
-      for (let k = 0; k < lines.length; k++) {
-        const l = lines[k];
-        ctx.fillText(l, x + width / 2, tY);
-        tY += lineHeight;
-      }
+      const offsetY = (h - (item.lines.length-1) * realLineHeight)/2; 
+      drawText(ctx, item.lines, {
+        x: x + textPadding,
+        y: currentY + offsetY,
+        color: "#fff",
+        realLineHeight,
+        textAlign: 'left',
+      });
+      // const lines = item.text.split(breakSymbol);
+      // let tY = currentY + lineHeight / 2;
+      // if (lines.length === 1) {
+      //   tY = currentY + h / 2;
+      // }
+      // for (let k = 0; k < lines.length; k++) {
+      //   const l = lines[k];
+      //   ctx.fillText(l, x + width / 2, tY);
+      //   tY += lineHeight;
+      // }
       pen.xylist.push({ x: x, y: currentY, ex: x + width, ey: currentY + h, width, height: h, minH: item.minH });
       currentY += h;
     } else if (item.name === 'content') {
@@ -201,7 +221,6 @@ export function substatus(ctx: CanvasRenderingContext2D, pen: Pen) {
   ctx.closePath();
 }
 function onResize(pen: Pen) {
-  // console.log('onResize', pen);
   for (let i = 0; i < pen.list.length; i++) {
     const item = pen.list[i];
     item.h = pen.height * item.per;
@@ -209,16 +228,61 @@ function onResize(pen: Pen) {
 }
 function onShowInput(pen: any, e: Point) {
   if (pen.highLightIndex > -1) {
-    console.log('onShowInput', pen.xylist[pen.highLightIndex].height);
+    pen.calculative.worldTextRect.width = pen.xylist[pen.highLightIndex].width;
+    // console.log('pen.calculative.worldTextRect.width', pen.calculative.worldTextRect.width);
     pen.calculative.tempText = pen.list[pen.highLightIndex].text || '';
     pen.calculative.canvas.showInput(pen, pen.xylist[pen.highLightIndex], '#ffffff');
   }
 }
+function drawText(
+  ctx: CanvasRenderingContext2D,
+  lines: string[],
+  options: any
+) {
+  let {
+    x,
+    y,
+    textAlign,
+    textBaseline,
+    color,
+    realLineHeight,
+  } = options;
+  ctx.save();
+  if (textAlign) {
+    ctx.textAlign = textAlign;
+  }
+  if (textBaseline) {
+    ctx.textBaseline = textBaseline;
+  }
+  ctx.fillStyle = color;
+  lines.forEach((lineText) => {
+    ctx.fillText(lineText, x, y);
+    y += realLineHeight;
+  });
+  ctx.restore();
+}
+function calcTextLines(text: string, pen: Pen) {
+  pen.calculative.worldTextRect.width -= 2 * textPadding; // 边距
+  const lines = [];
+  const paragraphs = text.split(/[\n]/g);
+  for (const paragraph of paragraphs) {
+    const words = getWords(paragraph);
+    let items = wrapLines(words, pen);
+    console.log('items', items);
+    // 空行换行的情况
+    if (items.length === 0) items = [''];
+    lines.push(...items);
+  }
+  return lines;
+}
 //将输入的数据写入到对应的data中
 function onInput(pen: any, text: string, { h, w }) {
-  console.log('onInput', text, h);
   pen.list[pen.highLightIndex].text = text;
   pen.list[pen.highLightIndex].h = parseInt(h);
+
+  // 计算多行
+  const lines = calcTextLines(text, pen);
+  pen.list[pen.highLightIndex].lines = lines;
 
   const totalH = pen.list.reduce((accumulator, currentValue) => accumulator + currentValue.h, 0);
   pen.calculative.worldRect.height = totalH;

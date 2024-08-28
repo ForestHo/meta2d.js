@@ -124,6 +124,8 @@ function mouseUp(e: any) {
               const element = pen.connectedLines[v];
               let anchor = pen.anchors.find(anchor => anchor.id === element.anchor);
               if (anchor && anchor.penId) {
+                // 避免删除连线的起始锚点和终点锚点的连接关系
+                if(anchor.start || anchor.end) continue;
                 let line = (window as any).meta2d.findOne(element.lineId);
                 if (!line) {
                   continue;

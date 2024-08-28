@@ -51,6 +51,8 @@ export interface Point {
   curvePoints?: Point[];
   rotate?: number; //线锚点 [0,180)
   hidden?: boolean;
+  noConnectable: boolean; // 不可被连接的
+  appurtenant?: boolean; // 附属锚点，不决定线的走向
   locked?: number;
   flag?: number;
   // 临时绘制的点

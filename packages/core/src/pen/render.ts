@@ -2424,7 +2424,7 @@ export function connectLine(
   line: Pen,
   lineAnchor: Point
 ) {
-  // console.log('connectLine 1111111111');
+  // console.log('connectLine 1111111111',pen,anchor);
   if (
     !pen ||
     !anchor ||
@@ -2433,7 +2433,8 @@ export function connectLine(
     anchor.twoWay === TwoWay.DisableConnected ||
     anchor.twoWay === TwoWay.Disable ||
     lineAnchor.twoWay === TwoWay.DisableConnectTo ||
-    lineAnchor.twoWay === TwoWay.Disable
+    lineAnchor.twoWay === TwoWay.Disable||
+    anchor.noConnectable
   ) {
     return;
   }
@@ -2483,7 +2484,7 @@ export function connectLine(
       lineAnchor: lineAnchor.id,
       anchor: anchor.id,
     });
-    if(pen.lineName === 'dline'){
+    if(pen.lineName === 'dline' || pen.lineName === 'activate'){
       anchor.connectTo = line.id;
       anchor.anchorId = lineAnchor.id;
       
@@ -2491,12 +2492,19 @@ export function connectLine(
       const index = pen.anchorBaks.findIndex(el=> el.id === anchor.id);
       if(index === -1){
         const i = pen.calculative.worldAnchors.findIndex(el=>el.id === anchor.id);
+        // console.log('connectLine -----',pen.calculative.worldAnchors[i].sortIndex);
+        const lastIndex = pen.anchorBaks.findIndex(el=>el.connectTo === line.id && el.anchorId === lineAnchor.id);
+        if(lastIndex !== -1){
+          pen.anchorBaks.splice(lastIndex,1);
+        }
         pen.anchorBaks.push({
-          index: i,
+          index: pen.calculative.worldAnchors[i].index,
+          sortIndex: pen.calculative.worldAnchors[i].sortIndex,
           connectTo: anchor.connectTo,
           anchorId: anchor.anchorId,
           id: anchor.id
         });
+        // console.log('connectLine 9999999999999',lastIndex);
       }
     }
   }
@@ -2524,6 +2532,7 @@ export function connectLine(
   //     // }
   //   }
   // }
+  // console.log('connectLine 8888888888888',lineAnchor);
   lineAnchor.connectTo = pen.id;
   lineAnchor.anchorId = anchor.id;
   

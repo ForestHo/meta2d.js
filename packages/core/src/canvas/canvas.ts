@@ -2172,16 +2172,14 @@ export class Canvas {
             if (activePen.locked === undefined || activePen.locked < LockState.DisableMove) {
               activePen?.onMouseMove?.(activePen, this.mousePos);
             }
-              
-              if(activePen.calculative.focus){
-                //执行图元的操作
-                return;
-              }
-              if(!this.store.active[0]?.locked && !this.store.active[0]?.dropAnchor){
-                this.movePens(e);
-              }
+            if(activePen.calculative.focus){
+              //执行图元的操作
+              return;
             }
-            
+          }
+          if(!this.store.active[0]?.locked && !this.store.active[0]?.dropAnchor){
+            this.movePens(e);
+          }
           this.getContainerHover(e);
           return;
         }
@@ -2436,39 +2434,26 @@ export class Canvas {
               this.store.activeAnchor.x = this.store.hoverAnchor.x;
               this.store.activeAnchor.y = this.store.hoverAnchor.y;
             }
-            // console.log('connectLine22222222222', this.store.hover);
-            // console.log('connectLine3333222222222222', this.store.hoverAnchor);
-            // console.log('connectLine44425222222222222', line);
-            // console.log('connectLine555552222222222222', this.store.activeAnchor);
-            connectLine(
-              this.store.hover,
-              this.store.hoverAnchor,
-              line,
-              this.store.activeAnchor
-            );
-            // if(!this.store.hoverAnchor.connectTo){
-            //   connectLine(
-            //     this.store.hover,
-            //     this.store.hoverAnchor,
-            //     line,
-            //     this.store.activeAnchor
-            //   );
-            // }else{
-            //   const connectPen = this.store.data.pens.find(el=>el.id === this.store.hoverAnchor.connectTo);
-            //   // console.log(connectPen,'connectPen')
-            //   const hoverAnchor = connectPen.calculative.worldAnchors.find(el=>el.connectTo === this.store.hoverAnchor.penId);
-            //   // console.log(hoverAnchor,'hoverAnchor')
-            //   if(connectPen.lineName === 'dline'){
-            //     // console.log('dline')
-            //     connectLine(
-            //       connectPen,
-            //       hoverAnchor,
-            //       line,
-            //       this.store.activeAnchor
-            //     );
-            //   }
-            // }
-         
+            if(!this.store.hoverAnchor.noConnectable){
+              connectLine(
+                this.store.hover,
+                this.store.hoverAnchor,
+                line,
+                this.store.activeAnchor
+              );
+            }else{
+              // 如果当前锚点不可连接，那么就连接到当前锚点的连接点
+              const connectPen = this.store.data.pens.find(el=>el.id === this.store.hoverAnchor.connectTo);
+              const hoverAnchor = connectPen.calculative.worldAnchors.find(el=>el.id === this.store.hoverAnchor.anchorId);
+              if(connectPen && hoverAnchor){
+                connectLine(
+                  connectPen,
+                  hoverAnchor,
+                  line,
+                  this.store.activeAnchor
+                );
+              }
+            }         
           }
         }
         if (this[line.lineName] && line.lineName !== 'polyline') {
@@ -3020,10 +3005,12 @@ export class Canvas {
       if(p.type === PenType.Line){
         console.log('upup first');
         if(p.connectedLines && p.connectedLines.length > 0){
+          console.log('upup 1111');
+          const anchorList = [];
           for (let q = 0; q < p.connectedLines.length; q++) {
             const conn = p.connectedLines[q];
             const otherL = this.store.data.pens.find(el=>el.id === conn.lineId);
-            if(!otherL){
+            if(!otherL || !otherL.connectedLines || otherL.type === PenType.Line){
               continue;
             }
             const otherIndex = otherL.connectedLines.findIndex(el=>el.lineId === p.id);
@@ -3040,17 +3027,29 @@ export class Canvas {
               otherL.connectedLines.splice(otherIndex,1);
               // console.log('upup this.movingPens2222222222',p,otherL,otherIndex);
             }
+
+            // 删除p的锚点数据
+            const index = p.calculative.worldAnchors.findIndex(el=>el.id === conn.anchor);
+            if(index > -1){
+              p.calculative.worldAnchors[index].connectTo = undefined;
+              p.calculative.worldAnchors[index].anchorId = undefined;
+              p.anchors[index].connectTo = undefined;
+              p.anchors[index].anchorId = undefined;
+              anchorList.push(conn.anchor);
+            }
+            p.connectedLines.splice(q,1);
+            q--;
           }
-          p.calculative.worldAnchors.forEach((anchor) => {
-            anchor.connectTo = undefined;
-            anchor.anchorId = undefined;
-          });
-          p.anchors.forEach((anchor) => {
-            anchor.connectTo = undefined;
-            anchor.anchorId = undefined;
-          });
-          console.log('upup this.movingPens end',p);
-          p.connectedLines = [];
+          // p.calculative.worldAnchors.forEach((anchor) => {
+          //   anchor.connectTo = undefined;
+          //   anchor.anchorId = undefined;
+          // });
+          // p.anchors.forEach((anchor) => {
+          //   anchor.connectTo = undefined;
+          //   anchor.anchorId = undefined;
+          // });
+          // console.log('upup this.movingPens end',anchorList);
+          // p.connectedLines = [];
           // const p1 = this.store.data.pens.find(el=>el.id === p.connectedLines[0].lineId);
           // const pAnchor = getAnchor(p1, p.connectedLines[0].lineAnchor);
           // const lAnchor = getAnchor(p, p.connectedLines[0].anchor);
@@ -3085,6 +3084,7 @@ export class Canvas {
               }
               const otherIndex = otherL.connectedLines?.findIndex(el=>el.lineId === p.id);
               // console.log('upup this.movingPens777777777',otherL,otherIndex);
+              const anc = otherL.calculative.worldAnchors.find(el=>el.connectTo === p.id);
               otherL.calculative.worldAnchors.forEach((anchor) => {
                 if(anchor.connectTo && anchor.connectTo === p.id){
                   anchor.connectTo = undefined;
@@ -3100,6 +3100,12 @@ export class Canvas {
               if(otherIndex > -1){
                 otherL.connectedLines?.splice(otherIndex,1);
               }
+              this.store.emitter.emit('disconnectLine', {
+                line: p,
+                lineAnchor: ana,
+                pen: otherL,
+                anchor: anc,
+              })
             }
           }
         }
@@ -5027,7 +5033,8 @@ export class Canvas {
           this.store.hover.anchorBackground ||
           this.store.options.anchorBackground;
         anchors.forEach((anchor) => {
-          if (anchor.hidden && anchor.locked > LockState.DisableEdit) {
+          // 不可被连接的锚点不显示
+          if (anchor.noConnectable || (anchor.hidden && anchor.locked > LockState.DisableEdit)) {
             return;
           }
           if (anchor === this.store.hoverAnchor) {
@@ -6312,6 +6319,10 @@ export class Canvas {
           const p = this.store.data.pens.find(p => p.id === id);
           translateRect(p.calculative.worldRect, x, y);
           this.updatePenRect(p, { worldRectIsReady: true });
+          // 更新dline的连接关系
+          if(p.type === PenType.Line && p.lineName === 'dline'){
+            this.updateLines(p);
+          }
           p.calculative.x = p.x;
           p.calculative.y = p.y;
           if (p.calculative.initRect) {
@@ -7817,9 +7828,13 @@ export class Canvas {
         }
       }
     };
-    this.inputDiv.onblur = ()=>{
+    this.inputDiv.onblur = (e)=>{
       setTimeout(()=> {
         // 输入完成发送事件
+        const pen = this.store.pens[this.inputDiv.dataset.penId];
+        if(pen.onInputDone){
+          pen.onInputDone(pen,e)
+        }
         this.store.emitter.emit('inputDone', { pen: this.store.pens[this.inputDiv.dataset.penId], text: this.inputDiv.dataset.value});
         this.hideInput()
       },300)
