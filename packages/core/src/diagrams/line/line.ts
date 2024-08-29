@@ -7,14 +7,19 @@ import { AnchorType } from '../../point/point';
 import { round } from '../../utils/math';
 import { s8 } from '../../utils/uuid';
 import { deepClone, distance, lineFromPoints } from '../../utils';
-
+enum LINE_NAME{
+  LINE = 'line',
+  POLYLINE = 'polyline',
+  DLINE = 'dline',
+  ACTIVATE = 'activate'
+}
 export function line(
   pen: Pen,
   ctx?: CanvasRenderingContext2D | Path2D
 ): Path2D {
   // console.log('line',pen);
   const path = !ctx ? new Path2D() : ctx;
-  if (pen.lineName === 'line' || pen.lineName === 'polyline') {
+  if (pen.lineName === LINE_NAME.LINE || pen.lineName === LINE_NAME.POLYLINE) {
     if (pen.calculative.lineSmooth) {
       let _path = getGradientAnimatePath(pen);
       (path as Path2D).addPath(_path);
@@ -23,7 +28,7 @@ export function line(
   }
   const worldAnchors = pen.calculative.worldAnchors;
   // 计算dline的动态锚点
-  if (pen.lineName === 'dline') {
+  if (pen.lineName === LINE_NAME.DLINE) {
     // console.log('worldAnchors',JSON.stringify(worldAnchors));
     const step = pen.lineStep || 20;
     // 备份锚点的连接关系
@@ -31,7 +36,7 @@ export function line(
     for (let i = 0; i < worldAnchors.length; i++) {
       const an = worldAnchors[i];
       if (an.aType === AnchorType.DYNAMIC && an.connectTo) {
-        const index = anchorBaks.findIndex(el=> el.id === an.id);
+        const index = anchorBaks.findIndex(el=> el.connectTo === an.connectTo && el.anchorId === an.anchorId);
         if(index === -1){
           anchorBaks.push({
             index: i,
@@ -165,10 +170,12 @@ export function line(
             if(ana.index <= worldAnchors.length-2 && pen.deltaH >= 0){
               // console.log("backup anchors");
               pen.connectedLines[mIndex].anchor = worldAnchors[ana.index].id;
+              pen.calculative.worldAnchors[ana.index].connectTo = ana.connectTo;
+              pen.calculative.worldAnchors[ana.index].anchorId = ana.anchorId;
               const anaPen = pen.calculative.canvas.store.data.pens.find(el=> el.id === ana.connectTo);
               if(anaPen){
                 let anaIndex = -1;
-                if(anaPen.lineName !== 'activate'){
+                if(anaPen.lineName !== LINE_NAME.ACTIVATE){
                   anaIndex = anaPen.calculative.worldAnchors.findIndex(el=> el.id === ana.anchorId);
                 }else{
                   anaIndex = ana.connectIndex;
@@ -217,11 +224,13 @@ export function line(
             }else{
               // console.log('pen.deltaH',pen.deltaH);
               // 中间动态锚点练到起点锚点
-              if(pen.deltaH < 0){
+              if(pen.deltaH < 0 && ana.index <= pen.calculative.worldAnchors.length-1){
                 pen.connectedLines[mIndex].anchor = worldAnchors[startIndex].id;
+                pen.calculative.worldAnchors[ana.index].connectTo = ana.connectTo;
+                pen.calculative.worldAnchors[ana.index].anchorId = ana.anchorId;
                 const anaPen = pen.calculative.canvas.store.data.pens.find(el=> el.id === ana.connectTo);
                 let anaIndex = -1;
-                if(anaPen.lineName !== 'activate'){
+                if(anaPen.lineName !== LINE_NAME.ACTIVATE){
                   anaIndex = anaPen.calculative.worldAnchors.findIndex(el=> el.id === ana.anchorId);
                 }else{
                   anaIndex = ana.connectIndex;
@@ -239,7 +248,7 @@ export function line(
     }
   }
   // 计算激活的动态锚点 activate
-  if(pen.lineName === 'activate'){
+  if(pen.lineName === LINE_NAME.ACTIVATE){
     // console.log('worldAnchors',JSON.stringify(worldAnchors));
     const step = pen.lineStep || 30;
     // 备份锚点的连接关系
@@ -247,8 +256,7 @@ export function line(
     for (let i = 0; i < worldAnchors.length; i++) {
       const an = worldAnchors[i];
       if (an.aType === AnchorType.DYNAMIC && an.connectTo) {
-        const index = anchorBaks.findIndex(el=> el.id === an.id);
-        console.log('an index',an);
+        const index = anchorBaks.findIndex(el=> el.connectTo === an.connectTo && el.anchorId === an.anchorId);
         if(index === -1){
           anchorBaks.push({
             index: i,
@@ -403,10 +411,16 @@ export function line(
         if((ana.index < (worldAnchors.length-2)/2) && pen.deltaH >= 0){
           // console.log('less',ana.index,worldAnchors.length)
           const mIndex = pen.connectedLines.findIndex(el=> el.lineId === ana.connectTo);
+          // console.log('mIndex',mIndex,ana.sortIndex,ana);
           pen.connectedLines[mIndex].anchor = worldAnchors[ana.sortIndex].id;
+          pen.calculative.worldAnchors[ana.sortIndex].connectTo = ana.connectTo;
+          pen.calculative.worldAnchors[ana.sortIndex].anchorId = ana.anchorId;
+          
           const anaPen = pen.calculative.canvas.store.data.pens.find(el=> el.id === ana.connectTo);
+          // console.log('anaPen',anaPen);
           if(anaPen){
             const anaIndex = anaPen.calculative.worldAnchors.findIndex(el=> el.id === ana.anchorId);
+            // console.log('anaIndex',anaIndex);
             anaPen.calculative.worldAnchors[anaIndex].anchorId = worldAnchors[ana.sortIndex].id;
             anaPen.anchors[anaIndex].anchorId = worldAnchors[ana.sortIndex].id;
           }

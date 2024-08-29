@@ -2528,7 +2528,7 @@ export class Canvas {
       let endIndex = line.calculative.worldAnchors.length - 1,startIndex = 0;
       const deltaX = line.calculative.worldAnchors[startIndex].x - line.calculative.worldAnchors[endIndex].x;
       if(deltaX >= 0 && deltaX <= 10){
-        if(line.calculative.worldAnchors.length === 2 && line.anchorBaks.length > 0){
+        if(line.calculative.worldAnchors.length === 2 && line.anchorBaks?.length > 0){
           line.calculative.worldAnchors.splice(startIndex+1,0,...line.anchorBaks);
           endIndex = line.calculative.worldAnchors.length - 1;
           line.anchorBaks = [];
@@ -2537,7 +2537,7 @@ export class Canvas {
         line.calculative.worldAnchors[startIndex+2].x = line.calculative.worldAnchors[startIndex+1].x;
         line.calculative.worldAnchors[startIndex+2].y = line.calculative.worldAnchors[endIndex].y;
       }else if(deltaX < 0 && deltaX >= -10){
-          if(line.calculative.worldAnchors.length === 2 && line.anchorBaks.length > 0){
+          if(line.calculative.worldAnchors.length === 2 && line.anchorBaks?.length > 0){
           line.calculative.worldAnchors.splice(startIndex+1,0,...line.anchorBaks);
           endIndex = line.calculative.worldAnchors.length - 1;
           line.anchorBaks = [];

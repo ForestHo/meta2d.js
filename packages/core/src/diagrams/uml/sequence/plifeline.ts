@@ -118,6 +118,7 @@ function onAdd(pen: Pen) {
     anchorBaks: [],
     lineName: 'dline',
     direction: 'vertical',
+    disableInput: true,
     type: 1,
     x: fromAnchor.x,
     y: fromAnchor.y,
