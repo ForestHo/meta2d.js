@@ -2497,13 +2497,17 @@ export function connectLine(
         if(lastIndex !== -1){
           pen.anchorBaks.splice(lastIndex,1);
         }
-        pen.anchorBaks.push({
+        const obj = {
           index: pen.calculative.worldAnchors[i].index,
           sortIndex: pen.calculative.worldAnchors[i].sortIndex,
           connectTo: anchor.connectTo,
           anchorId: anchor.anchorId,
           id: anchor.id
-        });
+        }
+        if(lineAnchor.sortIndex !== undefined){
+          obj.connectIndex = lineAnchor.sortIndex;
+        }
+        pen.anchorBaks.push(obj);
         // console.log('connectLine 9999999999999',lastIndex);
       }
     }

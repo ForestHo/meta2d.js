@@ -151,6 +151,7 @@ export interface Pen extends Rect {
   hoverBackground?: string;
   activeColor?: string;
   activeBackground?: string;
+  lineType?: string;
   bkType?: Gradient;
   /**
    * @deprecated 改用 gradientColors

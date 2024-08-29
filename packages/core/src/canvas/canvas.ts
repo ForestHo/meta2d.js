@@ -146,9 +146,18 @@ import { CanvasTemplate } from './canvasTemplate';
 import { getLinePoints } from '../diagrams/line';
 
 export const movingSuffix = '-moving' as const;
+export enum State{
+  SELECT,
+  DRAW,
+  DRAWING,
+  MOVE,
+  DRAG,
+  NONE
+}
 export class Canvas {
   canvas = document.createElement('canvas');
   offscreen = createOffscreen() as HTMLCanvasElement;
+  private currentState: State;
 
   width: number;
   height: number;
@@ -211,12 +220,14 @@ export class Canvas {
   renderTimer: number;
 
   initPens?: Pen[];
+  lineTempData?: any; // 临时数据，在调用层赋值，用于绘制线段
 
   pointSize = 8 as const;
   pasteOffset: boolean = true;
   opening: boolean = false;
   maxZindex: number = 5;
   canMoveLine: boolean = false; //moveConnectedLine=false
+  lineType?: string = ''; // 当前绘制的线类型
   randomIdObj: object; //记录拖拽前后id变化
   keyOptions?:{
     shiftKey?: boolean;
@@ -301,7 +312,8 @@ export class Canvas {
     parentElement.style.position = 'relative';
     parentElement.appendChild(this.externalElements);
     this.createInput();
-
+    // 状态机的默认状态
+    this.currentState = State.NONE;
     this.tooltip = new Tooltip(parentElement, store);
     this.tooltip.box.onmouseleave = (e) => {
       this.patchFlags = true;
@@ -338,6 +350,34 @@ export class Canvas {
   polyline = polyline;
   mind = mind;
   line = lineSegment;
+
+  /**
+   * @description 设置状态模式
+   * @author Joseph Ho
+   * @date 29/01/2024
+   * @param {string} state
+   * @memberof Canvas
+   */
+  setState(state: string) {
+    this.currentState = State[state];
+    switch(state) {
+      case 'SELECT':
+        this.externalElements.style.cursor = 'default';
+        break;
+      case 'MOVE':
+        this.externalElements.style.cursor = 'default';
+        break;
+      case 'DRAG':
+        this.externalElements.style.cursor = 'pointer';
+        break;
+      case 'DRAW':
+        this.externalElements.style.cursor = 'crosshair';
+        break;
+      case 'DRAWING':
+        this.externalElements.style.cursor = 'crosshair';
+        break;
+    }
+  }
 
   listen() {
     // ios
@@ -1664,25 +1704,37 @@ export class Canvas {
     this.inactive();
     const { data, options } = this.store;
     const scale = data.scale;
-    const lineWidth = data.lineWidth || 1;
+    let lineWidth = data.lineWidth || 1;
     pt.penId = s8();
-    return {
+    // console.log('lineTempData', this.lineTempData,scale,pt);
+    const line = {
       id: pt.penId,
       name: 'line',
       lineName: this.drawingLineName,
       x: pt.x,
       y: pt.y,
+      calculative: null,
       type: PenType.Line,
-      calculative: {
-        canvas: this,
-        active: true,
-        worldAnchors: [pt],
-        lineWidth: lineWidth * scale,
-      },
+      lineType: this.lineType,
       fromArrow: data.fromArrow || options.fromArrow,
       toArrow: data.toArrow || options.toArrow,
       lineWidth,
     };
+    line.calculative = {
+      canvas: this,
+      active: true,
+      worldAnchors: [pt],
+      lineWidth: lineWidth * scale,
+    }
+    // 从临时数据中获取，并覆盖
+    if(this.lineTempData){
+      Object.assign(line, this.lineTempData);
+      line.calculative.lineWidth = this.lineTempData.lineWidth || lineWidth;
+      line.calculative.color = this.lineTempData.color || "#000";
+      line.calculative.lineDash = this.lineTempData.lineDash || [];
+    }
+    // console.log('line', line);
+    return line;
   }
 
   onMouseDown = (e: {
@@ -2321,7 +2373,7 @@ export class Canvas {
       }
     }
     this.mouseRight = MouseRight.None;
-
+    
     this.calibrateMouse(e);
     this.mousePos.x = e.x;
     this.mousePos.y = e.y;
@@ -6536,7 +6588,8 @@ export class Canvas {
       }
 
       const penAnchor = getAnchor(pen, item.anchor);
-      if (!penAnchor) {
+      // 这里加了一种情况，确保penAnchor的anchorId与lineAnchor的id是对应的
+      if (!penAnchor || penAnchor.anchorId !== lineAnchor.id) {
         return;
       }
       let rotate = pen.rotate;

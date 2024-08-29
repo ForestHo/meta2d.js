@@ -167,10 +167,16 @@ export function line(
               pen.connectedLines[mIndex].anchor = worldAnchors[ana.index].id;
               const anaPen = pen.calculative.canvas.store.data.pens.find(el=> el.id === ana.connectTo);
               if(anaPen){
-                const anaIndex = anaPen.calculative.worldAnchors.findIndex(el=> el.id === ana.anchorId);
-                // console.log('anaIndex',anaPen,anaIndex);
-                anaPen.calculative.worldAnchors[anaIndex].anchorId = worldAnchors[ana.index].id;
-                anaPen.anchors[anaIndex].anchorId = worldAnchors[ana.index].id;
+                let anaIndex = -1;
+                if(anaPen.lineName !== 'activate'){
+                  anaIndex = anaPen.calculative.worldAnchors.findIndex(el=> el.id === ana.anchorId);
+                }else{
+                  anaIndex = ana.connectIndex;
+                }
+                if(anaIndex <= anaPen.calculative.worldAnchors.length - 1){
+                  anaPen.calculative.worldAnchors[anaIndex].anchorId = worldAnchors[ana.index].id;
+                  anaPen.anchors[anaIndex].anchorId = worldAnchors[ana.index].id;
+                }
               }
               pen.calculative.canvas.updateLines(pen);
             }
@@ -214,10 +220,16 @@ export function line(
               if(pen.deltaH < 0){
                 pen.connectedLines[mIndex].anchor = worldAnchors[startIndex].id;
                 const anaPen = pen.calculative.canvas.store.data.pens.find(el=> el.id === ana.connectTo);
-                const anaIndex = anaPen.calculative.worldAnchors.findIndex(el=> el.id === ana.anchorId);
-                // console.log('anaIndex',anaPen,anaIndex);
-                anaPen.calculative.worldAnchors[anaIndex].anchorId = worldAnchors[startIndex].id;
-                anaPen.anchors[anaIndex].anchorId = worldAnchors[startIndex].id;
+                let anaIndex = -1;
+                if(anaPen.lineName !== 'activate'){
+                  anaIndex = anaPen.calculative.worldAnchors.findIndex(el=> el.id === ana.anchorId);
+                }else{
+                  anaIndex = ana.connectIndex;
+                }
+                if(anaIndex <= anaPen.calculative.worldAnchors.length - 1){
+                  anaPen.calculative.worldAnchors[anaIndex].anchorId = worldAnchors[startIndex].id;
+                  anaPen.anchors[anaIndex].anchorId = worldAnchors[startIndex].id;
+                }
                 pen.calculative.canvas.updateLines(pen);
               }
             }
@@ -250,7 +262,7 @@ export function line(
     // 删除无效的动态锚点
     for (let i = 0; i < anchorBaks.length; i++) {
       const ana = anchorBaks[i];
-      const index = pen.connectedLines.findIndex(el=> el.lineId === ana.connectTo && el.lineAnchor === ana.anchorId);
+      const index = pen.connectedLines?.findIndex(el=> el.lineId === ana.connectTo && el.lineAnchor === ana.anchorId);
       if(index === -1){
         anchorBaks.splice(i,1);
         i--;
