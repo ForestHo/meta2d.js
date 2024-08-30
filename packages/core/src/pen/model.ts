@@ -623,7 +623,7 @@ export interface Pen extends Rect {
   onIntersect?: (pen: Pen, e: Point) => void;
   onShowInput?: (pen: Pen, e: Point) => void;
   onInput?: (pen: Pen, text: string, hw?: any) => void;
-  onInputDone?: (pen: Pen, e: any) => void;
+  onInputDone?: (pen: Pen,text: string, hw?: any) => void;
   onChangeId?: (pen: Pen, oldId: string, newId: string) => void;
   onBinds?: (pen: Pen, values: IValue[], formItem: FormItem) => IValue;
   onStartVideo?: (pen: Pen) => void;

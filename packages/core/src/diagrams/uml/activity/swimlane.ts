@@ -1,6 +1,6 @@
-import { Pen, calcWorldRects, getWords, wrapLines  } from '../../../pen';
+import { Pen, calcWorldRects, getWords, wrapLines,getAllFollowers } from '../../../pen';
 import { Point } from '../../../point';
-import { resizeRect, Rect } from '../../../rect';
+import { resizeRect, Rect, rectInRect } from '../../../rect';
 import { deepClone, s8 } from '../../../utils';
 import { getFont } from '../../../pen';
 let textPadding = 5;
@@ -13,8 +13,8 @@ export function swimlane(ctx: CanvasRenderingContext2D, pen: Pen) {
     pen.onMouseMove = mouseMove;
     pen.onMouseUp = mouseUp;
     pen.onShowInput = showInput;
-    pen.onInput = onInput;
-    // pen.onMouseLeave = mouseLeave;
+    pen.onInputDone = onInputDone;
+    pen.onMouseLeave = mouseLeave;
     // pen.onMouseEnter = mouseEnter;
     // pen.onAdd = onAdd;
     onScale(pen, true);
@@ -280,16 +280,22 @@ function mouseMove(pen: Pen, e: Point) {
             pen.stageLen = targetStageLen;
             pen.calculative.lastX = e.x;
             needCalculateRect = 'width';
+            let followers = getAllFollowers(pen, pen.calculative.canvas.store);
+            pen.calculative.canvas.translatePens(followers,  offset, 0, false, true);
           } else if (pen.stageLen > minStageLen) {
             pen.width -= pen.stageLen - minStageLen;
             offset = -pen.stageLen + minStageLen;
             pen.stageLen = minStageLen;
             needCalculateRect = 'width';
+            let followers = getAllFollowers(pen, pen.calculative.canvas.store);
+            pen.calculative.canvas.translatePens(followers,  offset, 0, false, true);
           }
+          
         } else if (resizeIndex >= 0) {
           offset = e.x - lastX;
           const item = pen.data[resizeIndex];
           const targetWidth = item.len + offset;
+          const {x, y, ex, ey} = pen.calculative.worldRect;
           if (targetWidth >= 0) {
             pen.width += offset;
             item.len = targetWidth;
@@ -301,6 +307,11 @@ function mouseMove(pen: Pen, e: Point) {
             item.len = 0;
             needCalculateRect = 'width';
           }
+          let startX = pen.calculative.worldRect.x + pen.stageLen;
+          for(let i = 0; i <= resizeIndex; i++) {
+            startX += pen.data[i].len;
+          }
+          moveFollowers(pen, {x:startX, y:y + headHeight, ex, ey}, offset, 0);
         } else {
           offset = e.y - lastY;
           if (resizeBox == 'complete') {
@@ -360,16 +371,23 @@ function mouseMove(pen: Pen, e: Point) {
             pen.stageLen = targetStageHeight;
             pen.calculative.lastY = e.y;
             needCalculateRect = 'height';
+            let followers = getAllFollowers(pen, pen.calculative.canvas.store);
+            pen.calculative.canvas.translatePens(followers, 0, offset,false, true);
           } else if (stageLen > minStageHeight) {
             pen.height -= stageLen - minStageHeight;
             offset = -stageLen + minStageHeight;
             pen.stageLen = minStageHeight;
             needCalculateRect = 'height';
+            let followers = getAllFollowers(pen, pen.calculative.canvas.store);
+            pen.calculative.canvas.translatePens(followers, 0, offset,false, true);
           }
-        } else if (resizeIndex >= 0) {
+          // moveFollowers(pen, pen.calculative.worldRect, 0, offset);
+          this.activeRect = null;
+        } else if (resizeIndex >= 0) { // 移动子泳道的高度
           offset = e.y - lastY;
           const item = pen.data[resizeIndex];
           const targetHeight = item.len + offset;
+          const {x, y, ex, ey} = pen.calculative.worldRect;
           if (targetHeight >= 0) {
             pen.height += offset;
             item.len = targetHeight;
@@ -381,6 +399,11 @@ function mouseMove(pen: Pen, e: Point) {
             item.len = 0;
             needCalculateRect = 'height';
           }
+          let startY = pen.calculative.worldRect.y + pen.headHeight + pen.stageLen;
+          for(let i = 0; i <= resizeIndex; i++) {
+            startY += pen.data[i].len;
+          }
+          moveFollowers(pen, {x, y:startY, ex, ey}, 0, offset);
         } else {
           const { width } = pen.calculative.worldRect;
           offset = e.x - lastX;
@@ -411,9 +434,10 @@ function mouseMove(pen: Pen, e: Point) {
       }
     }
     if (needCalculateRect != 'none') {
-      needCalculateRect === 'width'
-        ? resizeRect(activeRect, offset, 0, 5)
-        : resizeRect(activeRect, 0, offset, 6);
+      // needCalculateRect === 'width'
+      //   ? resizeRect(activeRect, offset, 0, 5)
+      //   : resizeRect(activeRect, 0, offset, 6);
+      needCalculateRect === 'width' ? activeRect.width += offset : activeRect.height += offset;
       calcWorldRects(pen);
     }
     pen.calculative.canvas.render();
@@ -421,135 +445,243 @@ function mouseMove(pen: Pen, e: Point) {
 }
 function mouseUp(pen: Pen, e: Point) {
   pen.dropAnchor = false;
-  if (!pen.calculative.dragChild) return;
-  const {
-    store: { hoverContainer },
-    activeRect,
-  } = pen.calculative.canvas;
-  // this.delete(this.dragChild);
-  const { x, y, ex, ey } = pen.calculative.worldRect;
-  if (
-    //拖拽到另一个泳道合并
-    e.x < x ||
-    e.x > ex ||
-    e.y < y ||
-    e.y > ey
-  ) {
-    if (hoverContainer && hoverContainer.resizeChild) {
-      const { activeFunIndex } = pen.calculative;
-      const activeFun = pen.data[activeFunIndex];
-      let oldKey = 'height',
-        newKey = 'width',
-        start =
-          hoverContainer.calculative.worldRect.x + hoverContainer.stageLen,
-        eKey = 'x';
-      if (hoverContainer.direction == 'horizontal') {
-        oldKey = 'width';
-        newKey = 'height';
-        start =
-          hoverContainer.calculative.worldRect.y +
-          hoverContainer.stageLen +
-          hoverContainer.headHeight;
-        eKey = 'y';
-        // resizeRect(activeRect, -activeFun.len, 0, 5);
-      }
-      if(pen.direction == 'horizontal'){
-        updateRectWorH(activeRect, 'height', -activeFun.len);
-      }else{
-        updateRectWorH(activeRect, 'width', -activeFun.len);
-      }
-      for (let i = 0; i < hoverContainer.data.length; i++) {
-        const item = hoverContainer.data[i];
-        if (e[eKey] > start && e[eKey] < start + item.len) {
-          // hoverContainer[newKey] += activeFun.len;
-          updatenWidthOrHeight(hoverContainer, newKey, activeFun.len);
-          hoverContainer.data.splice(i, 0, activeFun);
-          hoverContainer.calculative.dataTextLines.splice(
-            i,
-            0,
-            pen.calculative.dataTextLines[activeFunIndex]
-          );
-          if (pen.data.length === 1) {
-            pen.calculative.canvas.parent.delete([pen]);
-          } else {
-            pen.data.splice(activeFunIndex, 1);
-            if (pen.direction === hoverContainer.direction) {
-              // pen[newKey] -= activeFun.len;
-              updatenWidthOrHeight(pen, newKey, -activeFun.len);
+  if (pen.calculative.dragChild) {
+    const {
+      store: { hoverContainer },
+      activeRect,
+    } = pen.calculative.canvas;
+    // this.delete(this.dragChild);
+    const { x, y, ex, ey } = pen.calculative.worldRect;
+    if (
+      //拖拽到另一个泳道合并
+      e.x < x ||
+      e.x > ex ||
+      e.y < y ||
+      e.y > ey
+    ) {
+      if (hoverContainer && hoverContainer.resizeChild) {
+        const { activeFunIndex, worldRect } = pen.calculative;
+        const { mouseDown } = pen.calculative.canvas;
+        const activeFun = pen.data[activeFunIndex];
+        let oldKey = 'height',
+          newKey = 'width',
+          start =
+            hoverContainer.calculative.worldRect.x + hoverContainer.stageLen,
+          eKey = 'x';
+        if (hoverContainer.direction == 'horizontal') {
+          oldKey = 'width';
+          newKey = 'height';
+          start =
+            hoverContainer.calculative.worldRect.y +
+            hoverContainer.stageLen +
+            hoverContainer.headHeight;
+          eKey = 'y';
+          // resizeRect(activeRect, -activeFun.len, 0, 5);
+        }
+        if (pen.direction == 'horizontal') {
+          updateRectWorH(activeRect, 'height', -activeFun.len);
+        } else {
+          updateRectWorH(activeRect, 'width', -activeFun.len);
+        }
+        for (let i = 0; i < hoverContainer.data.length; i++) {
+          const item = hoverContainer.data[i];
+          console.log('的方式', e[eKey] > start , e[eKey] < start + item.len);
+          
+          if (e[eKey] > start && e[eKey] < start + item.len) {
+            // hoverContainer[newKey] += activeFun.len;
+            updatenWidthOrHeight(hoverContainer, newKey, activeFun.len);
+            hoverContainer.data.splice(i, 0, activeFun);
+            hoverContainer.calculative.dataTextLines.splice(
+              i,
+              0,
+              pen.calculative.dataTextLines[activeFunIndex]
+            );
+            
+            
+            // 若原来的泳道有followers，则需要移动插入位置之后的followers
+            if(hoverContainer.direction == 'vertical') {
+              let flowPens = getActiveFunFollowers(hoverContainer, undefined, 'x', start);
+              pen.calculative.canvas.translatePens(flowPens, activeFun.len, 0, false, true);
             } else {
-              // pen[oldKey] -= activeFun.len;
-              updatenWidthOrHeight(pen, oldKey, -activeFun.len);
-              
+              let flowPens = getActiveFunFollowers(hoverContainer, undefined, 'y', start);
+              pen.calculative.canvas.translatePens(flowPens, 0, activeFun.len , false, true);
             }
-            // calcWorldRects(pen);
-            pen.calculative.activeFunIndex = -1;
+             // 若被合并的泳道有followers，则将followers添加到合并后的泳道中并移动
+            const rect1 = getActiveFunRect(pen, activeFunIndex);
+            const subx1 = mouseDown.x - rect1.x;
+            const suby1 = mouseDown.y - rect1.y;
+            
+            let flowPens = getActiveFunFollowers(pen, rect1);
+            if(flowPens.length > 0) {
+              const rect2 = getActiveFunRect(hoverContainer, i);
+              const subx2 = e.x - rect2.x;
+              const suby2 = e.y - rect2.y;
+              flowPens.forEach((flowPen) => {
+                hoverContainer.followers.push(flowPen.id);
+              });
+              let subx = e.x - mouseDown.x - subx2 + subx1;
+              let suby = e.y - mouseDown.y - suby2 + suby1;
+              pen.calculative.canvas.translatePens(flowPens, subx, suby, false, true);
+            }
+            console.log(111)
+            if(pen.direction == 'vertical') {
+              let distance = worldRect.x + pen.stageLen;
+              for(let i = 0; i < activeFunIndex; i++) {
+                distance += pen.data[i].len;
+              }
+              
+              moveFollowers(pen,{x:distance + activeFun.len, y:worldRect.y + pen.headHeight, ex:worldRect.ex, ey:worldRect.ey}, -activeFun.len, 0);
+              // let flowPens = getActiveFunFollowers(hoverContainer, undefined, 'x', start);
+              // pen.calculative.canvas.translatePens(flowPens, activeFun.len, 0, false, true);
+            } else {
+              let distance = worldRect.y + pen.headHeight + pen.stageLen;
+              for(let i = 0; i < activeFunIndex; i++) {
+                distance += pen.data[i].len;
+              }
+              moveFollowers(pen,{x:worldRect.x, y:worldRect.y + pen.headHeight + pen.stageLen, ex:worldRect.ex, ey:worldRect.ey}, 0,-activeFun.len);
+              // let flowPens = getActiveFunFollowers(hoverContainer, undefined, 'y', start);
+              // pen.calculative.canvas.translatePens(flowPens, 0, activeFun.len , false, true);
+            }
+            // calcWorldRects(hoverContainer);
+            // updatenWidthOrHeight(pen, 'width', activeFun.len);
+            if (pen.data.length === 1) {
+              pen.calculative.canvas.parent.delete([pen]);
+            } else {
+              pen.data.splice(activeFunIndex, 1);
+              if (pen.direction === hoverContainer.direction) {
+                
+                updatenWidthOrHeight(pen, newKey, -activeFun.len);
+              } else {
+                // pen[oldKey] -= activeFun.len;
+                updatenWidthOrHeight(pen, oldKey, -activeFun.len);
+              }
+              // calcWorldRects(pen);
+              pen.calculative.activeFunIndex = -1;
+            }
+            break;
           }
-          // calcWorldRects(hoverContainer);
-          // updatenWidthOrHeight(pen, 'width', activeFun.len);
+          start += item.len;
+        }
+      }  
+      // else  if(pen.data.length === 1){
+      //   //当只有一个子泳道且拖拽完毕没有拖到其他泳道
+      //   const { mouseDown } = pen.calculative.canvas;
+      //   pen.calculative.canvas.translatePens(
+      //     [pen],
+      //     e.x - mouseDown.x,
+      //     e.y - mouseDown.y
+      //   );
+      // }
+      else if (pen.data.length > 1) {
+        //当有多个子泳道且拖拽完毕没有拖到其他泳道
+        const {mouseDown} = pen.calculative.canvas;
+        const { activeFunIndex } = pen.calculative;
+        const newSwimlane = deepClone(pen);
+        const activeFun = pen.data[activeFunIndex];
+        // 计算点击的点位在子泳道距离起始点的偏移量
+        let rect = getActiveFunRect(pen, activeFunIndex);
+        let flowPens = getActiveFunFollowers(pen, rect);
+        newSwimlane.followers = [];
+        flowPens.forEach((flowPen) =>{
+          newSwimlane.followers.push(flowPen.id);
+        })
+        pen.followers = pen.followers.filter((follower) => !newSwimlane.followers.includes(follower));
+        let subx = e.x - mouseDown.x;
+        let suby = e.y - mouseDown.y;
+        let offsetX = 0, offsetY = 0;
+        pen.calculative.canvas.translatePens(flowPens, subx, suby, false, true);
+        if (pen.direction == 'vertical') {
+          offsetX = rect.x - pen.stageLen;
+          offsetY = rect.y - pen.headHeight;
+          newSwimlane.width = newSwimlane.stageLen + activeFun.len;
+          updatenWidthOrHeight(pen, 'width', -activeFun.len);
+          flowPens = getActiveFunFollowers(pen, undefined, 'x', rect.x + activeFun.len);
+          pen.calculative.canvas.translatePens(flowPens, -activeFun.len, 0, false, true);
+        } else {
+          newSwimlane.height =
+            newSwimlane.headHeight + newSwimlane.stageLen + activeFun.len;
+            offsetY = rect.y - pen.stageLen - pen.headHeight;
+            offsetX = rect.x;
+          updatenWidthOrHeight(pen, 'height', -activeFun.len);
+          flowPens = getActiveFunFollowers(pen, undefined, 'y', rect.y + activeFun.len);
+          pen.calculative.canvas.translatePens(flowPens, 0, -activeFun.len, false, true);
+        }
+        newSwimlane.id = s8();
+        newSwimlane.x = e.x - mouseDown.x + offsetX;
+        newSwimlane.y = e.y - mouseDown.y + offsetY;
+        newSwimlane.data = [activeFun];
+        pen.data.splice(activeFunIndex, 1);
+        pen.calculative.activeFunIndex = -1;
+        pen.calculative.canvas.parent.addPen(newSwimlane);
+        console.log('pen', newSwimlane);
+      }
+    } else {
+      // 拖拽移动子泳道顺序
+      const { activeFunIndex, worldRect } = pen.calculative;
+      const { stageLen, headHeight } = pen;
+      const activeFun = pen.data[activeFunIndex];
+      let distance = worldRect.x + stageLen;
+      let eKey = 'x',
+        start = worldRect.x + stageLen;
+      if (pen.direction == 'horizontal') {
+        eKey = 'y';
+        start = worldRect.y + headHeight + stageLen;
+        distance = worldRect.y + headHeight + stageLen;
+      }
+      
+      for(let i = 0; i < activeFunIndex; i++) {
+        distance += pen.data[i].len;
+      }
+      for (let i = 0; i < pen.data.length; i++) {
+        const item = pen.data[i];
+        if (
+          e[eKey] > start &&
+          e[eKey] < start + item.len &&
+          i != activeFunIndex
+        ) {
+          let temp = pen.data[i];
+          pen.data[i] = pen.data[activeFunIndex];
+          pen.data[activeFunIndex] = temp;
+          pen.calculative.activeFunIndex = i;
+          if(pen.direction == 'vertical') {
+            let flowPens = getActiveFunFollowers(pen, {x:distance, y:worldRect.y + headHeight, ex:distance + activeFun.len, ey:worldRect.ey});
+            if(start > distance) {
+              // flowPensTarget = getActiveFunFollowers(pen, {x:distance + activeFun.len, y:worldRect.y + headHeight, ex:start + item.len, ey:worldRect.ey});
+              moveFollowers(pen,{x:distance + activeFun.len, y:worldRect.y + headHeight, ex:start + item.len, ey:worldRect.ey}, -activeFun.len, 0);
+            } else {
+              // flowPensTarget = getActiveFunFollowers(pen, {x:start, y:worldRect.y + headHeight, ex:distance, ey:worldRect.ey});
+              moveFollowers(pen, {x:start, y:worldRect.y + headHeight, ex:distance, ey:worldRect.ey}, activeFun.len, 0);
+            }
+            pen.calculative.canvas.translatePens(flowPens, start - distance, 0, false, true);//移动选中的子泳道和在其范围内的follower到目标位置
+            // pen.calculative.canvas.translatePens(flowPensTarget,start - distance > 0 ? -activeFun.len : activeFun.len, 0);
+            // moveFollowers(pen,{x:distance, y:worldRect.y + headHeight, ex:distance + activeFun.len, ey:worldRect.ey}, start - distance, 0);
+          } else {
+            let flowPens = getActiveFunFollowers(pen, {x:worldRect.x, y:distance, ex:worldRect.ex, ey:distance + activeFun.len});
+            if(start > distance) {
+              // let flowPensTarget = getActiveFunFollowers(pen, );
+              // pen.calculative.canvas.translatePens(flowPensTarget, 0 , -activeFun.len);
+              moveFollowers(pen, {x:worldRect.x, y:distance + activeFun.len, ex:worldRect.ex, ey:start + item.len},0,-activeFun.len);
+            } else {
+              moveFollowers(pen, {x:worldRect.x, y:start, ex:worldRect.ex, ey:distance}, 0, activeFun.len);
+              // let flowPensTarget = getActiveFunFollowers(pen, {x:worldRect.x, y:start, ex:worldRect.ex, ey:distance});
+              // pen.calculative.canvas.translatePens(flowPensTarget, 0 , activeFun.len);
+            }
+            // moveFollowers(pen, {x:worldRect.x, y:distance, ex:worldRect.ex, ey:distance + activeFun.len}, 0, start - distance);
+            pen.calculative.canvas.translatePens(flowPens, 0 ,start - distance, false, true );
+          }
           break;
         }
         start += item.len;
       }
-    } else if (pen.data.length === 1) {
-      //当只有一个子泳道且拖拽完毕没有拖到其他泳道
-      const { mouseDown } = pen.calculative.canvas;
-      pen.calculative.canvas.translatePens(
-        [pen],
-        e.x - mouseDown.x,
-        e.y - mouseDown.y
-      );
-    } else {
-      //当有多个子泳道且拖拽完毕没有拖到其他泳道
-      const { activeFunIndex } = pen.calculative;
-      const newSwimlane = deepClone(pen);
-      const activeFun = pen.data[activeFunIndex];
-      newSwimlane.id = s8();
-      newSwimlane.x = e.x;
-      newSwimlane.y = e.y;
-      newSwimlane.data = [activeFun];
-      // this.addCaches = [newSwimlane];
-      if (pen.direction == 'vertical') {
-        newSwimlane.width = newSwimlane.stageLen + activeFun.len;
-        updatenWidthOrHeight(pen, 'width', -activeFun.len);
-      } else {
-        newSwimlane.height =
-          newSwimlane.headHeight + newSwimlane.stageLen + activeFun.len;
-        updatenWidthOrHeight(pen, 'height', -activeFun.len);
-      }
-      pen.data.splice(activeFunIndex, 1);
-      pen.calculative.activeFunIndex = -1;
-      pen.calculative.canvas.parent.addPen(newSwimlane);
-      // calcWorldRects(pen);
     }
+    pen.calculative.dragChild = false;
   } else {
-    // 拖拽移动子泳道顺序
-    const { activeFunIndex, worldRect } = pen.calculative;
-    const { stageLen, headHeight } = pen;
-    let key = 'width',
-      eKey = 'x',
-      start = worldRect.x + stageLen;
-    if (pen.direction == 'horizontal') {
-      key = 'height';
-      eKey = 'y';
-      start = worldRect.y + headHeight + stageLen;
-    }
-    for (let i = 0; i < pen.data.length; i++) {
-      const item = pen.data[i];
-      if (
-        e[eKey] > start &&
-        e[eKey] < start + item.len &&
-        i != activeFunIndex
-      ) {
-        let temp = pen.data[i];
-        pen.data[i] = pen.data[activeFunIndex];
-        pen.data[activeFunIndex] = temp;
-        pen.calculative.activeFunIndex = i;
-        break;
-      }
-      start += item.len;
-    }
+    const activePens = pen.calculative.canvas.store.active;
+    if (activePens.some((activePen) => activePen.id === pen.id)) return;
+    activePens.forEach((activePen) => {
+      !pen.followers.includes(activePen.id) && pen.followers.push(activePen.id);
+    });
   }
-
   // if (pen.calculative.dragChild) {
   //   this.delete([this.dragChild]);
   //   this.dragChild = undefined;
@@ -559,10 +691,9 @@ function mouseUp(pen: Pen, e: Point) {
       pen.data.splice(index, 1);
     }
   });
-
-  pen.calculative.dragChild = false;
 }
 function showInput(pen: Pen, e) {
+  pen.calculative.editeKey = undefined;
   const { x, y, width, height } = pen.calculative.worldRect;
   const { funTitleLen, stageLen, headHeight, data } = pen;
   const headEndY = y + headHeight;
@@ -646,11 +777,14 @@ function showInput(pen: Pen, e) {
       rect.minH = funTitleLen;
     }
   }
+  if(pen.calculative.editeKey === undefined) return;
   canvas.showInput(pen, rect);
   canvas.inputDiv.style.textAlign = textAlign;
 }
-function onInput(pen: Pen, text: string, { h }) {
+function onInputDone(pen: Pen, text: string, { h }) {
   const { editeKey } = pen.calculative;
+  console.log('editeKey', editeKey, text);
+  
   const { stageLen, funTitleLen, headHeight, direction } = pen;
   h = parseInt(h);
   if (editeKey === 'headText') {
@@ -690,7 +824,7 @@ function updatenWidthOrHeight(pen: Pen, key: string, offset: number) {
   pen[key] += offset;
   updateRectWorH(pen.calculative.worldRect, key, offset);
 }
-function updateRectWorH(rect:Rect, key: string, offset: number) {
+function updateRectWorH(rect: Rect, key: string, offset: number) {
   rect[key] += offset;
   rect[key === 'height' ? 'ey' : 'ex'] += offset;
 }
@@ -752,4 +886,61 @@ function pointAroundResizeLine(pen: Pen, pt: Point) {
     start -= l;
   }
   return false;
+}
+function getActiveFunFollowers(pen: Pen, rect:Rect, translateKey?:'x'|'y', translateStart?:number) {
+  return getAllFollowers(pen, pen.calculative.canvas.store).filter((flowPen) =>{
+    if(rect && rectInRect(flowPen.calculative.worldRect, rect, true)){
+      return true;
+    }
+    if(translateKey && flowPen.calculative.worldRect[translateKey] > translateStart){
+      return true;
+    }
+  })
+}
+function moveFollowers(pen: Pen, rect: Rect, distanceX: number, distanceY: number) {
+  let flowPens = getActiveFunFollowers(pen, rect);
+  console.log('flowPens',rect, flowPens,distanceX , distanceY,);
+  pen.calculative.canvas.translatePens(flowPens, distanceX , distanceY, false, true);
+}
+function getActiveFunRect(pen: Pen, activeFunIndex: number) {
+  const { worldRect:{x, y, ex, ey}} = pen.calculative;
+  const { stageLen, headHeight } = pen;
+  const activeFun = pen.data[activeFunIndex];
+  let rect: Rect;
+  if(pen.direction === 'vertical') {
+    let startX = x + stageLen;
+    const startY = y + headHeight;
+    for(let i = 0; i < activeFunIndex; i++){
+      startX += pen.data[i].len;
+    }
+    rect = {
+      x:startX,
+      y:startY,
+      ex: startX + activeFun.len,
+      ey
+    }
+  } else {
+    const startX = x;
+    let startY = y + headHeight + stageLen;
+    for(let i = 0; i < activeFunIndex; i++){
+      startY += pen.data[i].len;
+    }
+    rect = {
+      x:startX,
+      y:startY,
+      ex,
+      ey: startY + activeFun.len
+    }
+  }
+  return rect;
+}
+function mouseLeave(pen: Pen) {
+  const {
+    mouseDown,
+    store: { active },
+  } = pen.calculative.canvas;
+  if (!mouseDown || active.length === 0) return;
+  pen.followers = pen.followers.filter((follower) =>
+    active.every((activePen) => activePen.id !== follower)
+  );
 }

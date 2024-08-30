@@ -3164,6 +3164,11 @@ export class Canvas {
      
       }
     }
+    // 解决泳道拥有followers时，移动泳道会选中泳道及其followers的问题
+    const containers =  this.store.active.filter(p=>p.container);
+    containers.forEach((pen) => {
+      this.store.active = this.store.active.filter(p=>!pen.followers.includes(p.id))
+    });
     this.store.emitter.emit('translatePens', pens);
   }
 
@@ -6313,7 +6318,8 @@ export class Canvas {
     pens = this.store.active,
     x: number,
     y: number,
-    doing?: boolean
+    doing?: boolean,
+    notCalculateActiveRect = false //增加参数，用于判断是否计算activeRect
   ) {
     if (!pens || !pens.length) {
       return;
@@ -6325,8 +6331,9 @@ export class Canvas {
       return;
     }
     const initPens = !doing && deepClone(pens, true);
-    this.activeRect && translateRect(this.activeRect, x, y);
-
+    if(!notCalculateActiveRect){
+      this.activeRect && translateRect(this.activeRect, x, y);
+    }
     const containChildPens = this.getAllByPens(pens);
     pens.forEach((pen) => {
       if (pen.locked >= LockState.DisableMove) {
@@ -6987,6 +6994,7 @@ export class Canvas {
         //复制svgpath
         activePen.path = this.store.data.paths[activePen.pathId];
       }
+      activePen.followers = [];//复制时不复制跟随者
     });
     copyPens.sort((a: any, b: any) => {
       return a.copyIndex - b.copyIndex;
@@ -7771,6 +7779,8 @@ export class Canvas {
       );
       if (pen.onInput) {
         pen.onInput(pen, this.inputDiv.dataset.value,{h:this.inputDiv.dataset.height,w:this.inputDiv.dataset.width});
+      } else if(pen.onInputDone) {
+        pen.onInputDone(pen,this.inputDiv.dataset.value,{h:this.inputDiv.dataset.height,w:this.inputDiv.dataset.width})
       } else if (pen.text !== this.inputDiv.dataset.value) {
         const initPens = [deepClone(pen, true)];
         pen.text = this.inputDiv.dataset.value;
@@ -7885,9 +7895,9 @@ export class Canvas {
       setTimeout(()=> {
         // 输入完成发送事件
         const pen = this.store.pens[this.inputDiv.dataset.penId];
-        if(pen.onInputDone){
-          pen.onInputDone(pen,e)
-        }
+        // if(pen.onInputDone){
+        //   pen.onInputDone(pen,this.inputDiv.dataset.value,{h:this.inputDiv.dataset.height,w:this.inputDiv.dataset.width})
+        // }
         this.store.emitter.emit('inputDone', { pen: this.store.pens[this.inputDiv.dataset.penId], text: this.inputDiv.dataset.value});
         this.hideInput()
       },300)
