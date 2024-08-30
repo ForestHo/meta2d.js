@@ -2508,7 +2508,7 @@ export function connectLine(
           obj.connectIndex = lineAnchor.sortIndex;
         }
         pen.anchorBaks.push(obj);
-        // console.log('connectLine 9999999999999',lastIndex);
+        // console.log('connectLine 9999999999999',lineAnchor);
       }
     }
   }
@@ -2545,7 +2545,14 @@ export function connectLine(
   if (pen.type && pen.lineName !== 'dline') {
     connectLine(line, lineAnchor, pen, anchor);
   }
-
+  // 一条线上的start锚点和end锚点都连上同一条线，即为attach
+  const startAnc = line.calculative.worldAnchors.find(el=> el.start);
+  const endAnc = line.calculative.worldAnchors.find(el=> el.end);
+  if(startAnc && endAnc && startAnc.connectTo === endAnc.connectTo && 
+    startAnc.anchorId && endAnc.anchorId && 
+    startAnc.anchorId !== endAnc.anchorId){
+    line.attach = pen.id;
+  }
   pen.calculative.canvas.store.emitter.emit('connectLine', {
     line,
     lineAnchor,
@@ -2589,10 +2596,10 @@ export function disconnectLine(
       item.anchor === anchor.id
     ) {
       arr.splice(index, 1);
-      // console.log('disconnectLine',pen.lineName);
+      // console.log('disconnectLine 444444',pen.lineName);
     }
   });
-  console.log('disconnectLine 55555');
+  // console.log('disconnectLine 55555');
   lineAnchor.connectTo = undefined;
   lineAnchor.anchorId = undefined;
   // 如果两条连线相互关联，则都取消关联
@@ -2604,7 +2611,12 @@ export function disconnectLine(
     // console.log('disconnectLine 66666');
     disconnectLine(line, lineAnchor, pen, anchor);
   }
-
+  // 一条线上的start锚点和end锚点都连上同一条线，即为attach
+  const startAnc = line.calculative.worldAnchors.find(el=> el.start);
+  const endAnc = line.calculative.worldAnchors.find(el=> el.end);
+  if(startAnc && endAnc && startAnc.connectTo !== endAnc.connectTo){
+    line.attach = "";
+  }
   pen.calculative.canvas.store.emitter.emit('disconnectLine', {
     line,
     lineAnchor,

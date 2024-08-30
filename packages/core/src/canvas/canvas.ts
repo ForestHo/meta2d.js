@@ -3092,6 +3092,27 @@ export class Canvas {
             p.connectedLines.splice(q,1);
             q--;
           }
+          // 处理attach情况
+          if(p.attach){
+            for (let n = 0; n < p.calculative.worldAnchors.length; n++) {
+              const ana = p.calculative.worldAnchors[n];
+              if(ana.start || ana.end){
+                ana.connectTo = undefined;
+                ana.anchorId = undefined;
+              }
+            }
+            const otherL = this.store.data.pens.find(el=>el.id === p.attach);
+            if(otherL){
+              for (let m = 0; m < otherL.connectedLines.length; m++) {
+                const conn = otherL.connectedLines[m];
+                if(conn.lineId === p.id){
+                  otherL.connectedLines.splice(m,1);
+                  m--;
+                }
+              }
+            }
+            p.attach = '';
+          }
           // p.calculative.worldAnchors.forEach((anchor) => {
           //   anchor.connectTo = undefined;
           //   anchor.anchorId = undefined;
