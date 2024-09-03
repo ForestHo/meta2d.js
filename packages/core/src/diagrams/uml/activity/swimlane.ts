@@ -187,15 +187,18 @@ function onScale(pen: Pen, isInit: boolean = false) {
   const preScale = pen.calculative.scale || scale;
   const s = isInit ? scale : scale / preScale;
   pen.funTitleLen *= s;
+  pen.minFunTitleLen *= s;
+  pen.minStageLen *= s;
   pen.stageLen *= s;
   pen.headHeight *= s;
   pen.data.forEach((item: any) => {
     item.len *= s;
+    item.minLen *= s;
   });
   pen.calculative.scale = scale;
 }
 function mouseDown(pen: Pen, e: Point) {
-  if (pen.calculative.resizeBox != 'none') {
+  if (pen.calculative.resizeBox != 'none') { //不是拖拽调整子泳道大小
     pen.calculative.lastY = e.y;
     pen.calculative.lastX = e.x;
     pen.dropAnchor = true;
@@ -204,18 +207,18 @@ function mouseDown(pen: Pen, e: Point) {
   const { x, y } = pen.calculative.worldRect;
   const data = pen.data;
   const { stageLen, funTitleLen, headHeight } = pen;
+  const mouseDown = pen.calculative.canvas.mouseDown;
   pen.calculative.activeFunIndex = -1;
   if (pen.direction === 'horizontal') {
     let startY = y + headHeight + stageLen;
     for (let i = 0; i < data.length; i++) {
-      if (
-        e.x > x &&
-        e.x < x + funTitleLen &&
-        e.y > startY &&
-        e.y < startY + data[i].len
-      ) {
-        pen.calculative.activeFunIndex = i;
-        pen.dropAnchor = true;
+      if(e.y > startY && e.y < startY + data[i].len) {
+        if (e.x < x + funTitleLen &&e.x > x) {
+          pen.calculative.activeFunIndex = i;
+          pen.dropAnchor = true;
+          pen.calculative.distanceX = mouseDown.x - x;
+          pen.calculative.distanceY = mouseDown.y - startY + stageLen + headHeight;
+        }
         return;
       }
       startY += data[i].len;
@@ -225,14 +228,16 @@ function mouseDown(pen: Pen, e: Point) {
       endY = y + headHeight + funTitleLen,
       startY = y + headHeight;
     for (let i = 0; i < data.length; i++) {
-      if (
-        e.x > startX &&
-        e.x < startX + data[i].len &&
-        e.y < endY &&
-        e.y > startY
-      ) {
-        pen.calculative.activeFunIndex = i;
-        pen.dropAnchor = true;
+      if( e.x > startX &&e.x < startX + data[i].len) {
+        if (
+          e.y < endY &&
+          e.y > startY
+        ) {
+          pen.calculative.activeFunIndex = i;
+          pen.dropAnchor = true;
+          pen.calculative.distanceX = mouseDown.x - startX + stageLen;
+          pen.calculative.distanceY = mouseDown.y - y;
+        }
         return;
       }
       startX += data[i].len;
@@ -243,8 +248,7 @@ function mouseMove(pen: Pen, e: Point) {
   if (!pen.calculative.canvas.mouseDown) {
     pointAroundResizeLine(pen, e);
   } else if (pen.dropAnchor) {
-    const { resizeBox, resizeIndex, fontSize, lastX, lastY } = pen.calculative;
-    const { stageLen, funTitleLen, headHeight } = pen;
+    const { resizeBox, resizeIndex, lastX, lastY } = pen.calculative;
     const { activeRect } = pen.calculative.canvas;
     let offset = 0;
     let needCalculateRect = 'none';
@@ -252,85 +256,56 @@ function mouseMove(pen: Pen, e: Point) {
       const { height } = pen.calculative.worldRect;
       if (resizeBox == 'none') {
         pen.calculative.dragChild = true;
-        // let x = p2.x - p1.x;
-        // let offsetX = x - pen.calculative.lastOffsetX;
-        // let y = p2.y - p1.y;
-        // let offsetY = y - pen.calculative.lastOffsetY;
-        // pen.calculative.lastOffsetY = y;
-        // pen.calculative.lastOffsetX = x;
-        // if(!this.dragChild) {
-        //   this.dragChild = await this.addPen({
-        //     name:'rectangle',
-        //     x: pen.calculative.worldRect.x + pen.StageLen,
-        //     y: pen.calculative.worldRect.y + pen.headHeight,
-        //     width: pen.data[pen.calculative.activeFunIndex].width,
-        //     height: pen.height - pen.headHeight,
-        //   });
-        // } else {
-        //   this.translatePens(this.dragChild, offsetX, offsetY, true);
-        // }
-        // translateRect(activeRect, x, y);
       } else {
-        if (resizeBox == 'stage') {
+        if (resizeBox == 'stage') {//移动
+          const { stageLen, minStageLen } = pen;
           offset = e.x - lastX;
           const targetStageLen = stageLen + offset;
-          const minStageLen = fontSize + 10;
-          if (targetStageLen > minStageLen) {
-            pen.width += offset;
+          if (targetStageLen > minStageLen) { // stage变大
             pen.stageLen = targetStageLen;
             pen.calculative.lastX = e.x;
             needCalculateRect = 'width';
             let followers = getAllFollowers(pen, pen.calculative.canvas.store);
             pen.calculative.canvas.translatePens(followers,  offset, 0, false, true);
-          } else if (pen.stageLen > minStageLen) {
-            pen.width -= pen.stageLen - minStageLen;
-            offset = -pen.stageLen + minStageLen;
+          } else if (stageLen > minStageLen) { // stage临界将要小于最小值
+            offset = -stageLen + minStageLen;
             pen.stageLen = minStageLen;
             needCalculateRect = 'width';
             let followers = getAllFollowers(pen, pen.calculative.canvas.store);
             pen.calculative.canvas.translatePens(followers,  offset, 0, false, true);
           }
-          
         } else if (resizeIndex >= 0) {
           offset = e.x - lastX;
           const item = pen.data[resizeIndex];
-          const targetWidth = item.len + offset;
-          const {x, y, ex, ey} = pen.calculative.worldRect;
-          if (targetWidth >= 0) {
-            pen.width += offset;
-            item.len = targetWidth;
+          const targetLen = item.len + offset;
+          if (targetLen >= item.minLen) {
+            item.len = targetLen;
             pen.calculative.lastX = e.x;
             needCalculateRect = 'width';
-          } else {
-            pen.width -= item.len;
-            offset = -item.len;
-            item.len = 0;
+            moveFollowersAfterIndex(pen, resizeIndex + 1, pen.data.length, offset,0);
+          } else if(item.len > item.minLen){
+            offset = -item.len + item.minLen;
+            item.len = item.minLen;
             needCalculateRect = 'width';
+            moveFollowersAfterIndex(pen, resizeIndex + 1, pen.data.length, offset,0);
           }
-          let startX = pen.calculative.worldRect.x + pen.stageLen;
-          for(let i = 0; i <= resizeIndex; i++) {
-            startX += pen.data[i].len;
-          }
-          moveFollowers(pen, {x:startX, y:y + headHeight, ex, ey}, offset, 0);
         } else {
+          const {funTitleLen, headHeight, minFunTitleLen, maxFunTitleLen } = pen;
           offset = e.y - lastY;
-          if (resizeBox == 'complete') {
+          if(resizeBox == 'complete'){
             const targetHeight = height + offset;
             if (targetHeight > funTitleLen + headHeight) {
-              pen.height = targetHeight;
               pen.calculative.lastY = e.y;
               needCalculateRect = 'height';
-            } else {
+            } else if(height > funTitleLen + headHeight) {
               offset = funTitleLen + headHeight - height;
-              pen.height = funTitleLen + headHeight;
               needCalculateRect = 'height';
             }
           } else {
-            const scale = pen.calculative.scale || 1;
             const targetFunTitleLen = funTitleLen + offset;
             if (
-              targetFunTitleLen >= fontSize + 10 &&
-              targetFunTitleLen <= height - headHeight - 100 * scale
+              targetFunTitleLen >= minFunTitleLen &&
+              targetFunTitleLen <= maxFunTitleLen
             ) {
               pen.calculative.lastY = e.y;
               pen.funTitleLen = targetFunTitleLen;
@@ -364,67 +339,51 @@ function mouseMove(pen: Pen, e: Point) {
       } else {
         if (resizeBox == 'stage') {
           offset = e.y - lastY;
-          const targetStageHeight = stageLen + offset;
-          const minStageHeight = fontSize + 20;
-          if (targetStageHeight > minStageHeight) {
-            pen.height += offset;
-            pen.stageLen = targetStageHeight;
+          const {stageLen, minStageLen} = pen;
+          const targetStageLen = stageLen + offset;
+          if (targetStageLen > minStageLen) {
+            pen.stageLen = targetStageLen;
             pen.calculative.lastY = e.y;
             needCalculateRect = 'height';
-            let followers = getAllFollowers(pen, pen.calculative.canvas.store);
-            pen.calculative.canvas.translatePens(followers, 0, offset,false, true);
-          } else if (stageLen > minStageHeight) {
-            pen.height -= stageLen - minStageHeight;
-            offset = -stageLen + minStageHeight;
-            pen.stageLen = minStageHeight;
+          } else if (stageLen > minStageLen) {
+            offset = -stageLen + minStageLen;
+            pen.stageLen = minStageLen;
             needCalculateRect = 'height';
-            let followers = getAllFollowers(pen, pen.calculative.canvas.store);
-            pen.calculative.canvas.translatePens(followers, 0, offset,false, true);
           }
-          // moveFollowers(pen, pen.calculative.worldRect, 0, offset);
-          this.activeRect = null;
         } else if (resizeIndex >= 0) { // 移动子泳道的高度
           offset = e.y - lastY;
           const item = pen.data[resizeIndex];
           const targetHeight = item.len + offset;
-          const {x, y, ex, ey} = pen.calculative.worldRect;
-          if (targetHeight >= 0) {
-            pen.height += offset;
+          // const {x, y, ex, ey} = pen.calculative.worldRect;
+          if (targetHeight >= item.minLen) {
             item.len = targetHeight;
             pen.calculative.lastY = e.y;
             needCalculateRect = 'height';
-          } else {
-            pen.height -= item.len;
-            offset = -item.len;
-            item.len = 0;
+            moveFollowersAfterIndex(pen, resizeIndex + 1, pen.data.length, 0, offset);
+          } else if(item.len > item.minLen) {
+            offset = -item.len + item.minLen;
+            item.len = item.minLen;
             needCalculateRect = 'height';
+            moveFollowersAfterIndex(pen, resizeIndex + 1, pen.data.length, 0, offset);
           }
-          let startY = pen.calculative.worldRect.y + pen.headHeight + pen.stageLen;
-          for(let i = 0; i <= resizeIndex; i++) {
-            startY += pen.data[i].len;
-          }
-          moveFollowers(pen, {x, y:startY, ex, ey}, 0, offset);
-        } else {
+        } else{
           const { width } = pen.calculative.worldRect;
+          const {funTitleLen, minFunTitleLen, maxFunTitleLen} = pen;
           offset = e.x - lastX;
           if (resizeBox == 'complete') {
             const targetWidth = width + offset;
             if (targetWidth > funTitleLen) {
-              pen.width = targetWidth;
               pen.calculative.lastX = e.x;
               needCalculateRect = 'width';
             } else {
               offset = funTitleLen - width;
-              pen.width = funTitleLen;
               needCalculateRect = 'width';
             }
           } else {
-            let { fontSize } = pen.calculative;
             const targetFunHeight = funTitleLen + offset;
-            const scale = pen.calculative.scale;
             if (
-              targetFunHeight >= fontSize + 20 &&
-              targetFunHeight <= width - 100 * scale
+              targetFunHeight >= minFunTitleLen &&
+              targetFunHeight <= maxFunTitleLen
             ) {
               pen.calculative.lastX = e.x;
               pen.funTitleLen += offset;
@@ -434,17 +393,15 @@ function mouseMove(pen: Pen, e: Point) {
       }
     }
     if (needCalculateRect != 'none') {
-      // needCalculateRect === 'width'
-      //   ? resizeRect(activeRect, offset, 0, 5)
-      //   : resizeRect(activeRect, 0, offset, 6);
-      needCalculateRect === 'width' ? activeRect.width += offset : activeRect.height += offset;
-      calcWorldRects(pen);
+      activeRect[needCalculateRect] += offset;
+      updatenWidthOrHeight(pen, needCalculateRect, offset);
     }
     pen.calculative.canvas.render();
   }
 }
 function mouseUp(pen: Pen, e: Point) {
   pen.dropAnchor = false;
+  const activePens = pen.calculative.canvas.store.active;
   if (pen.calculative.dragChild) {
     const {
       store: { hoverContainer },
@@ -461,13 +418,19 @@ function mouseUp(pen: Pen, e: Point) {
     ) {
       if (hoverContainer && hoverContainer.resizeChild) {
         const { activeFunIndex, worldRect } = pen.calculative;
-        const { mouseDown } = pen.calculative.canvas;
         const activeFun = pen.data[activeFunIndex];
         let oldKey = 'height',
           newKey = 'width',
           start =
             hoverContainer.calculative.worldRect.x + hoverContainer.stageLen,
-          eKey = 'x';
+          eKey = 'x',
+          subY = hoverContainer.calculative.worldRect.y - pen.calculative.worldRect.y,
+          subX = 0,
+          activeFunX = worldRect.x + pen.stageLen,
+          activeFunY = 0;
+          for(let i = 0 ;i < activeFunIndex; i++) {
+            activeFunX += pen.data[i].len;
+          }
         if (hoverContainer.direction == 'horizontal') {
           oldKey = 'width';
           newKey = 'height';
@@ -476,144 +439,88 @@ function mouseUp(pen: Pen, e: Point) {
             hoverContainer.stageLen +
             hoverContainer.headHeight;
           eKey = 'y';
-          // resizeRect(activeRect, -activeFun.len, 0, 5);
+          activeFunY = worldRect.y + pen.headHeight + pen.stageLen;
+          for(let i = 0 ;i < activeFunIndex; i++) {
+            activeFunY += pen.data[i].len;
+          }
+          subX = hoverContainer.calculative.worldRect.x - pen.calculative.worldRect.x;
         }
-        if (pen.direction == 'horizontal') {
-          updateRectWorH(activeRect, 'height', -activeFun.len);
-        } else {
-          updateRectWorH(activeRect, 'width', -activeFun.len);
-        }
+        updateRectWorH(activeRect, pen.direction == 'horizontal' ?'height':'width', -activeFun.len);
         for (let i = 0; i < hoverContainer.data.length; i++) {
           const item = hoverContainer.data[i];
-          console.log('的方式', e[eKey] > start , e[eKey] < start + item.len);
-          
           if (e[eKey] > start && e[eKey] < start + item.len) {
-            // hoverContainer[newKey] += activeFun.len;
+            // 若原来的泳道有followers，则需要移动插入位置之后的followers,被合并子泳道的泳道移出位置之后的followers需要移动
             updatenWidthOrHeight(hoverContainer, newKey, activeFun.len);
+            if(hoverContainer.direction == 'vertical') {
+              moveFollowersAfterIndex(hoverContainer, i,hoverContainer.data.length, activeFun.len, 0);
+              moveFollowersAfterIndex(pen, activeFunIndex + 1, pen.data.length, -activeFun.len, 0);
+              subX = start - activeFunX;
+            } else {
+              moveFollowersAfterIndex(hoverContainer, i,hoverContainer.data.length, 0, activeFun.len);
+              moveFollowersAfterIndex(pen, activeFunIndex + 1, pen.data.length, 0, -activeFun.len);
+              subY = start - activeFunY;
+            }
             hoverContainer.data.splice(i, 0, activeFun);
             hoverContainer.calculative.dataTextLines.splice(
               i,
               0,
               pen.calculative.dataTextLines[activeFunIndex]
             );
-            
-            
-            // 若原来的泳道有followers，则需要移动插入位置之后的followers
-            if(hoverContainer.direction == 'vertical') {
-              let flowPens = getActiveFunFollowers(hoverContainer, undefined, 'x', start);
-              pen.calculative.canvas.translatePens(flowPens, activeFun.len, 0, false, true);
-            } else {
-              let flowPens = getActiveFunFollowers(hoverContainer, undefined, 'y', start);
-              pen.calculative.canvas.translatePens(flowPens, 0, activeFun.len , false, true);
+            // 若被合并的泳道有followers，则将followers添加到合并后的泳道中并移动
+            if(activeFun.followersId.length > 0) {
+              pen.followers = pen.followers.filter((follower) => !activeFun.followersId.includes(follower));
+              hoverContainer.followers.push(...activeFun.followersId);
+              moveFollowers(pen, activeFun.followersId, subX, subY);
             }
-             // 若被合并的泳道有followers，则将followers添加到合并后的泳道中并移动
-            const rect1 = getActiveFunRect(pen, activeFunIndex);
-            const subx1 = mouseDown.x - rect1.x;
-            const suby1 = mouseDown.y - rect1.y;
-            
-            let flowPens = getActiveFunFollowers(pen, rect1);
-            if(flowPens.length > 0) {
-              const rect2 = getActiveFunRect(hoverContainer, i);
-              const subx2 = e.x - rect2.x;
-              const suby2 = e.y - rect2.y;
-              flowPens.forEach((flowPen) => {
-                hoverContainer.followers.push(flowPen.id);
-              });
-              let subx = e.x - mouseDown.x - subx2 + subx1;
-              let suby = e.y - mouseDown.y - suby2 + suby1;
-              pen.calculative.canvas.translatePens(flowPens, subx, suby, false, true);
-            }
-            console.log(111)
-            if(pen.direction == 'vertical') {
-              let distance = worldRect.x + pen.stageLen;
-              for(let i = 0; i < activeFunIndex; i++) {
-                distance += pen.data[i].len;
-              }
-              
-              moveFollowers(pen,{x:distance + activeFun.len, y:worldRect.y + pen.headHeight, ex:worldRect.ex, ey:worldRect.ey}, -activeFun.len, 0);
-              // let flowPens = getActiveFunFollowers(hoverContainer, undefined, 'x', start);
-              // pen.calculative.canvas.translatePens(flowPens, activeFun.len, 0, false, true);
-            } else {
-              let distance = worldRect.y + pen.headHeight + pen.stageLen;
-              for(let i = 0; i < activeFunIndex; i++) {
-                distance += pen.data[i].len;
-              }
-              moveFollowers(pen,{x:worldRect.x, y:worldRect.y + pen.headHeight + pen.stageLen, ex:worldRect.ex, ey:worldRect.ey}, 0,-activeFun.len);
-              // let flowPens = getActiveFunFollowers(hoverContainer, undefined, 'y', start);
-              // pen.calculative.canvas.translatePens(flowPens, 0, activeFun.len , false, true);
-            }
-            // calcWorldRects(hoverContainer);
-            // updatenWidthOrHeight(pen, 'width', activeFun.len);
             if (pen.data.length === 1) {
               pen.calculative.canvas.parent.delete([pen]);
             } else {
               pen.data.splice(activeFunIndex, 1);
+              pen.calculative.dataTextLines.splice(activeFunIndex, 1);
               if (pen.direction === hoverContainer.direction) {
-                
                 updatenWidthOrHeight(pen, newKey, -activeFun.len);
               } else {
-                // pen[oldKey] -= activeFun.len;
                 updatenWidthOrHeight(pen, oldKey, -activeFun.len);
               }
-              // calcWorldRects(pen);
               pen.calculative.activeFunIndex = -1;
             }
             break;
           }
           start += item.len;
         }
-      }  
-      // else  if(pen.data.length === 1){
-      //   //当只有一个子泳道且拖拽完毕没有拖到其他泳道
-      //   const { mouseDown } = pen.calculative.canvas;
-      //   pen.calculative.canvas.translatePens(
-      //     [pen],
-      //     e.x - mouseDown.x,
-      //     e.y - mouseDown.y
-      //   );
-      // }
-      else if (pen.data.length > 1) {
+      }  else if (pen.data.length > 1) {
         //当有多个子泳道且拖拽完毕没有拖到其他泳道
         const {mouseDown} = pen.calculative.canvas;
         const { activeFunIndex } = pen.calculative;
+        const {stageLen, headHeight} = pen;
         const newSwimlane = deepClone(pen);
         const activeFun = pen.data[activeFunIndex];
-        // 计算点击的点位在子泳道距离起始点的偏移量
-        let rect = getActiveFunRect(pen, activeFunIndex);
-        let flowPens = getActiveFunFollowers(pen, rect);
-        newSwimlane.followers = [];
-        flowPens.forEach((flowPen) =>{
-          newSwimlane.followers.push(flowPen.id);
-        })
+        // 处理follows
+        newSwimlane.followers = [...activeFun.followersId];
         pen.followers = pen.followers.filter((follower) => !newSwimlane.followers.includes(follower));
+        // 计算点击的点位在子泳道距离起始点的偏移量
         let subx = e.x - mouseDown.x;
         let suby = e.y - mouseDown.y;
-        let offsetX = 0, offsetY = 0;
-        pen.calculative.canvas.translatePens(flowPens, subx, suby, false, true);
+        moveFollowers(pen, activeFun.followersId, subx, suby);
         if (pen.direction == 'vertical') {
-          offsetX = rect.x - pen.stageLen;
-          offsetY = rect.y - pen.headHeight;
-          newSwimlane.width = newSwimlane.stageLen + activeFun.len;
+          newSwimlane.width = stageLen + activeFun.len;
           updatenWidthOrHeight(pen, 'width', -activeFun.len);
-          flowPens = getActiveFunFollowers(pen, undefined, 'x', rect.x + activeFun.len);
-          pen.calculative.canvas.translatePens(flowPens, -activeFun.len, 0, false, true);
+          moveFollowersAfterIndex(pen, activeFunIndex + 1,pen.data.length, -activeFun.len, 0);
         } else {
-          newSwimlane.height =
-            newSwimlane.headHeight + newSwimlane.stageLen + activeFun.len;
-            offsetY = rect.y - pen.stageLen - pen.headHeight;
-            offsetX = rect.x;
+          newSwimlane.height = headHeight + stageLen + activeFun.len;
           updatenWidthOrHeight(pen, 'height', -activeFun.len);
-          flowPens = getActiveFunFollowers(pen, undefined, 'y', rect.y + activeFun.len);
-          pen.calculative.canvas.translatePens(flowPens, 0, -activeFun.len, false, true);
+          moveFollowersAfterIndex(pen, activeFunIndex + 1, pen.data.length,0, -activeFun.len);
         }
         newSwimlane.id = s8();
-        newSwimlane.x = e.x - mouseDown.x + offsetX;
-        newSwimlane.y = e.y - mouseDown.y + offsetY;
+        newSwimlane.x = e.x -  pen.calculative.distanceX;
+        newSwimlane.y = e.y -  pen.calculative.distanceY;
         newSwimlane.data = [activeFun];
         pen.data.splice(activeFunIndex, 1);
         pen.calculative.activeFunIndex = -1;
         pen.calculative.canvas.parent.addPen(newSwimlane);
-        console.log('pen', newSwimlane);
+        const store = pen.calculative.canvas.store;
+        store.data.pens.splice(0, 0, newSwimlane);
+        store.data.pens.pop();
       }
     } else {
       // 拖拽移动子泳道顺序
@@ -628,7 +535,6 @@ function mouseUp(pen: Pen, e: Point) {
         start = worldRect.y + headHeight + stageLen;
         distance = worldRect.y + headHeight + stageLen;
       }
-      
       for(let i = 0; i < activeFunIndex; i++) {
         distance += pen.data[i].len;
       }
@@ -639,48 +545,101 @@ function mouseUp(pen: Pen, e: Point) {
           e[eKey] < start + item.len &&
           i != activeFunIndex
         ) {
-          let temp = pen.data[i];
-          pen.data[i] = pen.data[activeFunIndex];
-          pen.data[activeFunIndex] = temp;
-          pen.calculative.activeFunIndex = i;
+          let followersId = [];
           if(pen.direction == 'vertical') {
-            let flowPens = getActiveFunFollowers(pen, {x:distance, y:worldRect.y + headHeight, ex:distance + activeFun.len, ey:worldRect.ey});
-            if(start > distance) {
-              // flowPensTarget = getActiveFunFollowers(pen, {x:distance + activeFun.len, y:worldRect.y + headHeight, ex:start + item.len, ey:worldRect.ey});
-              moveFollowers(pen,{x:distance + activeFun.len, y:worldRect.y + headHeight, ex:start + item.len, ey:worldRect.ey}, -activeFun.len, 0);
+            if(activeFunIndex < i) {
+              for(let j = activeFunIndex + 1; j <= i; j++) {
+                followersId = followersId.concat(pen.data[j].followersId);
+              }
+              moveFollowers(pen, followersId, -activeFun.len, 0);
+              moveFollowers(pen, activeFun.followersId, start + item.len - distance - activeFun.len, 0);
             } else {
-              // flowPensTarget = getActiveFunFollowers(pen, {x:start, y:worldRect.y + headHeight, ex:distance, ey:worldRect.ey});
-              moveFollowers(pen, {x:start, y:worldRect.y + headHeight, ex:distance, ey:worldRect.ey}, activeFun.len, 0);
+              for(let j = i; j < activeFunIndex; j++) {
+                followersId = followersId.concat(pen.data[j].followersId);
+              }
+              moveFollowers(pen, followersId, activeFun.len, 0);
+              moveFollowers(pen, activeFun.followersId, start - distance, 0);
             }
-            pen.calculative.canvas.translatePens(flowPens, start - distance, 0, false, true);//移动选中的子泳道和在其范围内的follower到目标位置
-            // pen.calculative.canvas.translatePens(flowPensTarget,start - distance > 0 ? -activeFun.len : activeFun.len, 0);
-            // moveFollowers(pen,{x:distance, y:worldRect.y + headHeight, ex:distance + activeFun.len, ey:worldRect.ey}, start - distance, 0);
           } else {
-            let flowPens = getActiveFunFollowers(pen, {x:worldRect.x, y:distance, ex:worldRect.ex, ey:distance + activeFun.len});
-            if(start > distance) {
-              // let flowPensTarget = getActiveFunFollowers(pen, );
-              // pen.calculative.canvas.translatePens(flowPensTarget, 0 , -activeFun.len);
-              moveFollowers(pen, {x:worldRect.x, y:distance + activeFun.len, ex:worldRect.ex, ey:start + item.len},0,-activeFun.len);
+            if(activeFunIndex < i) {
+              for(let j = activeFunIndex + 1; j <= i; j++) {
+                followersId = followersId.concat(pen.data[j].followersId);
+              }
+              moveFollowers(pen, followersId,0, -activeFun.len);
+              moveFollowers(pen, activeFun.followersId,0, start + item.len - distance - activeFun.len);
             } else {
-              moveFollowers(pen, {x:worldRect.x, y:start, ex:worldRect.ex, ey:distance}, 0, activeFun.len);
-              // let flowPensTarget = getActiveFunFollowers(pen, {x:worldRect.x, y:start, ex:worldRect.ex, ey:distance});
-              // pen.calculative.canvas.translatePens(flowPensTarget, 0 , activeFun.len);
+              for(let j = i; j < activeFunIndex; j++) {
+                followersId = followersId.concat(pen.data[j].followersId);
+              }
+              moveFollowers(pen, followersId,0, activeFun.len);
+              moveFollowers(pen, activeFun.followersId,0, start - distance);
             }
-            // moveFollowers(pen, {x:worldRect.x, y:distance, ex:worldRect.ex, ey:distance + activeFun.len}, 0, start - distance);
-            pen.calculative.canvas.translatePens(flowPens, 0 ,start - distance, false, true );
+            
           }
+          pen.data.splice(activeFunIndex, 1);
+          pen.data.splice(i, 0, activeFun);
+          const tempText = pen.calculative.dataTextLines[activeFunIndex];
+          pen.calculative.dataTextLines.splice(activeFunIndex, 1);
+          pen.calculative.dataTextLines.splice(i, 0, tempText);
+          pen.calculative.activeFunIndex = i;
           break;
         }
         start += item.len;
       }
     }
     pen.calculative.dragChild = false;
-  } else {
-    const activePens = pen.calculative.canvas.store.active;
-    if (activePens.some((activePen) => activePen.id === pen.id)) return;
-    activePens.forEach((activePen) => {
-      !pen.followers.includes(activePen.id) && pen.followers.push(activePen.id);
-    });
+  } else if(activePens.length > 0 && activePens.every((activePen) => activePen.id !== pen.id)) {
+    let start = pen.calculative.worldRect.y + pen.headHeight + pen.stageLen, key = 'y';
+    if(pen.direction == 'vertical') {
+      start =  pen.calculative.worldRect.x + pen.stageLen;
+      key = 'x';
+    } 
+    for(let i = 0; i < pen.data.length; i++) {
+      if(e[key] > start && e[key] < start + pen.data[i].len) {
+        
+        activePens.forEach((activePen) => {
+          if(pen.followers.includes(activePen.id)){
+            for(let j = 0; j < pen.data.length; j++) {
+              const index = pen.data[j].followersId.indexOf(activePen.id);
+              if(index != -1) {
+                pen.data[j].followersId.splice(index, 1);
+              }
+            }
+            pen.data[i].followersId.push(activePen.id);
+          } else {
+            if(!activePen.type) {
+              pen.followers.push(activePen.id);
+              pen.data[i].followersId.push(activePen.id);
+              if(pen.direction === 'vertical') {
+                setTimeout(() => {
+                  const {y, ex} = activePen.calculative.worldRect;
+                  pen.data[i].minLen = Math.max(pen.data[i].minLen, ex - start);
+                  pen.maxFunTitleLen = Math.min(pen.maxFunTitleLen,  y - pen.calculative.worldRect.y - pen.headHeight);
+                }, 0);
+              } else {
+                setTimeout(() => {
+                  const {x ,y, ex, ey} = activePen.calculative.worldRect;
+                  pen.data[i].minLen = Math.max(pen.data[i].minLen, ey - start);
+                  pen.maxFunTitleLen = Math.min(pen.maxFunTitleLen,  x - pen.calculative.worldRect.x);
+                }, 0);
+              }
+            }
+          }
+        });
+        for(let j = 0; j < pen.data.length; j++) { //移除原来的但是已经被删除了的 followers
+          for(let m = 0; m < pen.data[j].followersId.length; m++) {
+            const follower = pen.data[j].followersId[m];
+            const followerPen = pen.calculative.canvas.store.pens[follower];
+            if(!followerPen) {
+              pen.data[j].followersId.splice(m, 1);
+              m--;
+            }
+          }
+        }
+        break;
+      }
+      start += pen.data[i].len;
+    }
   }
   // if (pen.calculative.dragChild) {
   //   this.delete([this.dragChild]);
@@ -689,6 +648,7 @@ function mouseUp(pen: Pen, e: Point) {
   pen.data.forEach((item, index) => {
     if (item.len === 0) {
       pen.data.splice(index, 1);
+      pen.calculative.dataTextLines.splice(index, 1);
     }
   });
 }
@@ -783,8 +743,6 @@ function showInput(pen: Pen, e) {
 }
 function onInputDone(pen: Pen, text: string, { h }) {
   const { editeKey } = pen.calculative;
-  console.log('editeKey', editeKey, text);
-  
   const { stageLen, funTitleLen, headHeight, direction } = pen;
   h = parseInt(h);
   if (editeKey === 'headText') {
@@ -887,52 +845,25 @@ function pointAroundResizeLine(pen: Pen, pt: Point) {
   }
   return false;
 }
-function getActiveFunFollowers(pen: Pen, rect:Rect, translateKey?:'x'|'y', translateStart?:number) {
-  return getAllFollowers(pen, pen.calculative.canvas.store).filter((flowPen) =>{
-    if(rect && rectInRect(flowPen.calculative.worldRect, rect, true)){
-      return true;
-    }
-    if(translateKey && flowPen.calculative.worldRect[translateKey] > translateStart){
-      return true;
-    }
-  })
-}
-function moveFollowers(pen: Pen, rect: Rect, distanceX: number, distanceY: number) {
-  let flowPens = getActiveFunFollowers(pen, rect);
-  console.log('flowPens',rect, flowPens,distanceX , distanceY,);
-  pen.calculative.canvas.translatePens(flowPens, distanceX , distanceY, false, true);
-}
-function getActiveFunRect(pen: Pen, activeFunIndex: number) {
-  const { worldRect:{x, y, ex, ey}} = pen.calculative;
-  const { stageLen, headHeight } = pen;
-  const activeFun = pen.data[activeFunIndex];
-  let rect: Rect;
-  if(pen.direction === 'vertical') {
-    let startX = x + stageLen;
-    const startY = y + headHeight;
-    for(let i = 0; i < activeFunIndex; i++){
-      startX += pen.data[i].len;
-    }
-    rect = {
-      x:startX,
-      y:startY,
-      ex: startX + activeFun.len,
-      ey
-    }
-  } else {
-    const startX = x;
-    let startY = y + headHeight + stageLen;
-    for(let i = 0; i < activeFunIndex; i++){
-      startY += pen.data[i].len;
-    }
-    rect = {
-      x:startX,
-      y:startY,
-      ex,
-      ey: startY + activeFun.len
-    }
+// 拆分合并后移动原来图元中的followers
+function moveFollowersAfterIndex(pen: Pen, startindex: number,endIndex:number, distanceX: number, distanceY: number) {
+  let followersId = [];
+  for(let j = startindex; j < endIndex; j++) {
+    followersId = followersId.concat(pen.data[j].followersId);
   }
-  return rect;
+  moveFollowers(pen, followersId, distanceX, distanceY);
+}
+function moveFollowers(pen: Pen, flowersId:string[], distanceX: number, distanceY: number) {
+  const store = pen.calculative.canvas.store;
+  let followers = [];
+  flowersId.forEach((id) => {
+    const follower = store.pens[id];
+    if (follower&&!follower.parentId) {
+      followers.push(follower);
+      followers.push(...getAllFollowers(follower, store));
+    }
+  });
+  pen.calculative.canvas.translatePens(followers,  distanceX, distanceY, false, true);
 }
 function mouseLeave(pen: Pen) {
   const {
@@ -943,4 +874,9 @@ function mouseLeave(pen: Pen) {
   pen.followers = pen.followers.filter((follower) =>
     active.every((activePen) => activePen.id !== follower)
   );
+  pen.data.forEach((item) => {
+    item.followersId = item.followersId.filter((follower) =>
+      active.every((activePen) => activePen.id !== follower)
+    );
+  });
 }
