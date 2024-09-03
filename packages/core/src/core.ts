@@ -2517,15 +2517,21 @@ export class Meta2d {
           // 避免添加自身id的情况
           if(p.id === e[0].id) continue;
           if (p.container) {
-            const lHit = pointInSimpleRect({ x, y }, p.calculative.worldRect);
-            const rHit = pointInSimpleRect({ x: ex, y: ey }, p.calculative.worldRect);
-            console.log('hit', lHit, rHit,e[0].id);
-            if(!p.followers){
-              p.followers = [];
-            }
-            const index = p.followers.findIndex((id) => id === e[0].id);
-            if(index === -1 && (lHit && rHit)){
-              p.followers.push(e[0].id);
+            if(p.name == 'swimlane') {
+              setTimeout(() => {
+                p.onMouseUp && p.onMouseUp(p, e[0]);
+              });
+            } else {
+              const lHit = pointInSimpleRect({ x, y }, p.calculative.worldRect);
+              const rHit = pointInSimpleRect({ x: ex, y: ey }, p.calculative.worldRect);
+              console.log('hit', lHit, rHit,e[0].id);
+              if(!p.followers){
+                p.followers = [];
+              }
+              const index = p.followers.findIndex((id) => id === e[0].id);
+              if(index === -1 && (lHit && rHit)){
+                p.followers.push(e[0].id);
+              }
             }
           }
         }
