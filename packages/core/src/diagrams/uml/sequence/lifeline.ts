@@ -72,6 +72,7 @@ function onAdd(pen: Pen) {
     height: 300,
     name: 'line',
     lineName: 'dline',
+    disableInput: true,
     anchorBaks: [],
     direction: 'vertical',
     type: 1,

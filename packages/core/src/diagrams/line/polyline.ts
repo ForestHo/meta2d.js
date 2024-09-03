@@ -10,7 +10,7 @@ import { Point } from '../../point';
 import { Meta2dStore } from '../../store';
 import { s8 } from '../../utils';
 
-let faceSpace = 10;
+let faceSpace = 10, fixFace = true;
 export function polyline(store: Meta2dStore, pen: Pen, mousedwon?: Point) {
   if (!pen.calculative.worldAnchors) {
     pen.calculative.worldAnchors = [];
@@ -51,9 +51,18 @@ export function polyline(store: Meta2dStore, pen: Pen, mousedwon?: Point) {
 
   const fromPen = store.pens[from.connectTo];
   const toPen = store.pens[to.connectTo];
-
-  const fromFace = facePen(from, fromPen);
+  
+  let fromFace = facePen(from, fromPen);
   const toFace = facePen(to, toPen);
+  // 如果起点位置为空白
+  if(fromFace === -1){
+    if(to.x > from.x){
+      fromFace = Direction.Right;
+    }
+    if(to.x < from.x){
+      fromFace = Direction.Left;
+    }
+  }
 
   let a = getFacePoint(from, fromFace, faceSpace);
   if (a) {
@@ -99,10 +108,12 @@ export function polyline(store: Meta2dStore, pen: Pen, mousedwon?: Point) {
       pts.push(...getNextPoints(pen, from, to));
       break;
   }
-
+  // 丢掉第一个拐点
+  pts.shift();
   pts.forEach((anchor: Point) => {
     anchor.id = s8();
     anchor.penId = pen.id;
+    anchor.hidden = true;
     pen.calculative.worldAnchors.push(anchor);
   });
 
@@ -201,8 +212,13 @@ function getNextPointsOfUp(from: Point, to: Point, toFace: Direction) {
         x = from.x + (to.x - from.x) / 2;
         pts.push({ x, y: from.y }, { x, y: to.y });
       } else {
-        const centerY = (from.y + to.y + faceSpace) / 2;
-        pts.push({ x: from.x, y: centerY }, { x: to.x, y: centerY });
+        let y1;
+        if(fixFace){
+          y1 = from.y - faceSpace;
+        }else{
+          y1 = (from.y + to.y + faceSpace) / 2;
+        }
+        pts.push({ x: from.x, y: y1 }, { x: to.x, y: y1 });
       }
       break;
   }
@@ -261,8 +277,13 @@ function getNextPointsOfRight(from: Point, to: Point, toFace: Direction) {
       if (to.x < from.x + faceSpace) {
         pts.push({ x: from.x, y });
       } else {
-        const centerX = (from.x + to.x - faceSpace) / 2;
-        pts.push({ x: centerX, y: from.y }, { x: centerX, y });
+        let x1;
+        if(fixFace){
+          x1 = from.x  +  faceSpace;
+        }else{
+          x1 = (from.x + to.x - faceSpace) / 2;
+        }
+        pts.push({ x: x1, y: from.y }, { x: x1, y });
       }
       break;
   }
@@ -325,8 +346,13 @@ function getNextPointsOfBottom(from: Point, to: Point, toFace: Direction) {
         x = from.x + (to.x - from.x) / 2;
         pts.push({ x, y: from.y }, { x, y: to.y });
       } else {
-        const centerY = (from.y + to.y - faceSpace) / 2;
-        pts.push({ x, y: centerY }, { x: to.x, y: centerY });
+        let y1;
+        if(fixFace){
+          y1 = from.y + faceSpace;
+        }else{
+          y1 = (from.y + to.y - faceSpace) / 2;
+        }
+        pts.push({ x, y: y1 }, { x: to.x, y: y1 });
       }
       break;
   }
@@ -384,8 +410,13 @@ function getNextPointsOfLeft(from: Point, to: Point, toFace: Direction) {
       x = from.x;
       y = to.y;
       if (to.x < from.x - faceSpace) {
-        const centerX = (from.x + to.x + faceSpace) / 2;
-        pts.push({ x: centerX, y: from.y }, { x: centerX, y });
+        let x1;
+        if(fixFace){
+          x1 = from.x - faceSpace;
+        }else{
+          x1 = (from.x + to.x + faceSpace) / 2;
+        }
+        pts.push({ x: x1, y: from.y }, { x: x1, y });
       } else {
         pts.push({ x: from.x, y });
       }
@@ -422,14 +453,16 @@ function getNextPoints(pen: Pen, from: Point, to: Point) {
     to.isTemp = undefined;
     if (pen.calculative.drawlineH) {
       pts.push({ x: to.x, y: from.y });
-      if (Math.abs(to.y - from.y) < faceSpace) {
-        to.isTemp = true;
-      }
+      // if (Math.abs(to.y - from.y) < faceSpace) {
+      //   console.log('to.isTemp 111');
+      //   to.isTemp = true;
+      // }
     } else {
       pts.push({ x: from.x, y: to.y });
-      if (Math.abs(to.x - from.x) < faceSpace) {
-        to.isTemp = true;
-      }
+      // if (Math.abs(to.x - from.x) < faceSpace) {
+      //   console.log('to.isTemp 222');
+      //   to.isTemp = true;
+      // }
     }
   }
 

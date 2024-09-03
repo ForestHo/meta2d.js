@@ -282,6 +282,7 @@ export interface Pen extends Rect {
   undone?: any;//还未完成的图形
   partnerIds?: string[];//伙伴id列表
   anchorBaks?: any[];//备份的锚点连接关系
+  attach?: string;//附着在某条线的线条，即两端的端点都连接到某条线上
 
   // Cycle count. Infinite if == 0.
   animateCycle?: number;
