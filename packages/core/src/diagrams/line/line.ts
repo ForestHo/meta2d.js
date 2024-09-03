@@ -181,7 +181,7 @@ export function line(
                 }else{
                   anaIndex = ana.connectIndex;
                 }
-                if(anaIndex <= anaPen.calculative.worldAnchors.length - 1){
+                if(anaIndex !== -1 && anaIndex <= anaPen.calculative.worldAnchors.length - 1){
                   anaPen.calculative.worldAnchors[anaIndex].anchorId = worldAnchors[ana.index].id;
                   anaPen.anchors[anaIndex].anchorId = worldAnchors[ana.index].id;
                 }
@@ -236,7 +236,7 @@ export function line(
                 }else{
                   anaIndex = ana.connectIndex;
                 }
-                if(anaIndex <= anaPen.calculative.worldAnchors.length - 1){
+                if(anaIndex !== -1 && anaIndex <= anaPen.calculative.worldAnchors.length - 1){
                   anaPen.calculative.worldAnchors[anaIndex].anchorId = worldAnchors[startIndex].id;
                   anaPen.anchors[anaIndex].anchorId = worldAnchors[startIndex].id;
                 }

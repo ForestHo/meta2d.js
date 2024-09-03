@@ -53,7 +53,7 @@ export function polyline(store: Meta2dStore, pen: Pen, mousedwon?: Point) {
   const toPen = store.pens[to.connectTo];
   
   let fromFace = facePen(from, fromPen);
-  const toFace = facePen(to, toPen);
+  let toFace = facePen(to, toPen);
   // 如果起点位置为空白
   if(fromFace === -1){
     if(to.x > from.x){
@@ -63,7 +63,58 @@ export function polyline(store: Meta2dStore, pen: Pen, mousedwon?: Point) {
       fromFace = Direction.Left;
     }
   }
+  // 处理下dline的fromFace
+  // console.log(JSON.stringify(pen.calculative.worldAnchors));
+  const anchors = pen.calculative.worldAnchors;
+  if(anchors.length === 1){
+    if(anchors[0].start && anchors[0].connectTo){
+      // toFace = Direction.None;
+      fromFace = Direction.Right;
+      // console.log('case 1111',to.x);
+      if(to.x < anchors[0].x){
+        fromFace = Direction.Left;
+      }
+    }
+    if(anchors[0].start && !anchors[0].connectTo){
+      // console.log('case 3333',to.x);
+      toFace = Direction.None;
+    }
+    if(anchors[0].end && !anchors[0].connectTo){
+      // toFace = Direction.Left;
+      fromFace = Direction.Right;
+      // console.log('case 2222',to.x);
+      if(to.x < anchors[0].x){
+        toFace = Direction.Right;
+        fromFace = Direction.Left;
+      }else{
+        toFace = Direction.Left;
+        fromFace = Direction.Right;
+      }
+    }
+    if(anchors[0].end && anchors[0].connectTo){
+      // toFace = Direction.Left;
+      fromFace = Direction.Right;
+      // console.log('case 4444',to.x);
+      if(to.x < anchors[0].x){
+        toFace = Direction.Right;
+        fromFace = Direction.Left;
+      }else{
 
+      }
+    }
+    // if(anchors[0].start && anchors[0].connectTo){
+    //   toFace = Direction.Right;
+    //   fromFace = Direction.Left;
+    // }
+  }
+  // if(fromPen && fromPen.lineName === 'dline'){
+  //   if(from.x < to.x){
+  //     fromFace = Direction.Right;
+  //   }else if(from.x > to.x){
+  //     fromFace = Direction.Left;
+  //   }
+  // }
+  // console.log('fromFace toFace 11111',fromFace,toFace,from.x,to.x);
   let a = getFacePoint(from, fromFace, faceSpace);
   if (a) {
     from = a;
@@ -108,8 +159,10 @@ export function polyline(store: Meta2dStore, pen: Pen, mousedwon?: Point) {
       pts.push(...getNextPoints(pen, from, to));
       break;
   }
-  // 丢掉第一个拐点
-  pts.shift();
+  // 起点不存在，丢掉第一个拐点
+  if(!fromPen){
+    pts.shift();
+  }
   pts.forEach((anchor: Point) => {
     anchor.id = s8();
     anchor.penId = pen.id;
@@ -126,6 +179,7 @@ export function polyline(store: Meta2dStore, pen: Pen, mousedwon?: Point) {
   }
 
   if (dragFrom) {
+    // console.log('dragFrom');
     pen.calculative.worldAnchors.reverse();
   }
 

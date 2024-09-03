@@ -740,7 +740,7 @@ export class Canvas {
         break;
       case 'Alt':
         if (!e.ctrlKey && !e.shiftKey && this.drawingLine) {
-          console.log('drawingLine', this.drawingLine);
+          // console.log('drawingLine', this.drawingLine);
           const to = getToAnchor(this.drawingLine);
           if (to !== this.drawingLine.calculative.activeAnchor) {
             deleteTempAnchor(this.drawingLine);
@@ -1794,6 +1794,7 @@ export class Canvas {
           x: anchor.x,
           y: anchor.y,
         };
+        // console.log('createDrawingLine 1111');
         this.drawingLine = this.createDrawingLine(pt);
         let _pt = getFromAnchor(this.drawingLine);
         this.drawingLine.calculative.activeAnchor = _pt;
@@ -1907,12 +1908,13 @@ export class Canvas {
 
     // 单击在节点上，通过自动锚点连线
     if (this.drawingLineName) {
-      if (this.hoverType === HoverType.Node || this.hoverType === HoverType.LineConnectAnchor) {
+      if (this.hoverType === HoverType.Node ) {
         if (this.store.options.autoAnchor) {
           this.inactive(true);
           const anchor = nearestAnchor(this.store.hover, e);
           this.store.hoverAnchor = anchor;
           const pt: Point = { id: s8(), x: anchor.x, y: anchor.y };
+          // console.log('createDrawingLine 2222');
           this.drawingLine = this.createDrawingLine(pt);
           if(this.store.hover.type !== PenType.Line){
             this.drawingLine.autoFrom = true;
@@ -1930,6 +1932,7 @@ export class Canvas {
           x: this.store.hoverAnchor.x,
           y: this.store.hoverAnchor.y,
         };
+        // console.log('createDrawingLine 3333');
         this.drawingLine = this.createDrawingLine(pt);
         this.drawingLine.calculative.activeAnchor = pt;
         connectLine(
@@ -1943,8 +1946,15 @@ export class Canvas {
       } else if (!this.drawingLine && this.drawingLineName !== 'curve') {
         this.inactive(true);
         const pt: Point = { id: s8(), x: e.x, y: e.y };
+        // console.log('createDrawingLine 4444');
         this.drawingLine = this.createDrawingLine(pt);
         this.drawingLine.calculative.activeAnchor = pt;
+        connectLine(
+          this.store.hover,
+          this.store.hoverAnchor,
+          this.drawingLine,
+          pt
+        );
       }
     } else if (this.pencil) {
       this.inactive(true);
@@ -2102,41 +2112,43 @@ export class Canvas {
       }
 
       if (!this.drawingLine && !this.pencil) {
-        if (!this.drawingLineName && !this.movingAnchor) {
-          // 在锚点上开始连线
-          if (this.hoverType === HoverType.NodeAnchor || this.hoverType === HoverType.LineConnectAnchor) {
-            if(!this.store.hoverAnchor){
-              return;
-            }
-            this.drawingLineName = this.store.options.drawingLineName;
-            const pt: Point = {
-              id: s8(),
-              x: this.store.hoverAnchor.x,
-              y: this.store.hoverAnchor.y,
-              noConnectable: true,
-            };
-            this.drawingLine = this.createDrawingLine(pt);
-            this.drawingLine.calculative.activeAnchor = pt;
-            connectLine(
-              this.store.hover,
-              this.store.hoverAnchor,
-              this.drawingLine,
-              pt
-            );
+        // if (!this.drawingLineName && !this.movingAnchor) {
+        //   // 在锚点上开始连线
+        //   if (this.hoverType === HoverType.NodeAnchor || this.hoverType === HoverType.LineConnectAnchor) {
+        //     if(!this.store.hoverAnchor){
+        //       return;
+        //     }
+        //     this.drawingLineName = this.store.options.drawingLineName;
+        //     const pt: Point = {
+        //       id: s8(),
+        //       x: this.store.hoverAnchor.x,
+        //       y: this.store.hoverAnchor.y,
+        //       noConnectable: true,
+        //     };
+        //     console.log('createDrawingLine 5555');
+        //     this.drawingLine = this.createDrawingLine(pt);
+        //     this.drawingLine.calculative.activeAnchor = pt;
+        //     connectLine(
+        //       this.store.hover,
+        //       this.store.hoverAnchor,
+        //       this.drawingLine,
+        //       pt
+        //     );
 
-            this.drawline();
+        //     this.drawline();
 
-            return;
-          }
-        }
-        // 钢笔画线
-        else if (this.drawingLineName && this.hoverType === HoverType.None) {
-          const pt: Point = { id: s8(), x: e.x, y: e.y };
-          this.drawingLine = this.createDrawingLine(pt);
-          this.drawingLine.calculative.activeAnchor = pt;
-          this.drawline();
-          return;
-        }
+        //     return;
+        //   }
+        // }
+        // // 钢笔画线
+        // else if (this.drawingLineName && this.hoverType === HoverType.None) {
+        //   const pt: Point = { id: s8(), x: e.x, y: e.y };
+        //   console.log('createDrawingLine 6666');
+        //   this.drawingLine = this.createDrawingLine(pt);
+        //   this.drawingLine.calculative.activeAnchor = pt;
+        //   this.drawline();
+        //   return;
+        // }
         // 框选
         if (e.buttons === MouseButtonType.LEFT &&( e.ctrlKey || !this.hoverType && !this.hotkeyType)) {
           this.dragRect = {
@@ -3943,6 +3955,9 @@ export class Canvas {
           this.externalElements.style.cursor = 'pointer';
         }
         if(!anchor.noConnectable && !anchor.start && !anchor.end){
+          if(this.currentState !== State.DRAW && this.currentState !== State.DRAWING){
+            return HoverType.None;
+          }
           // 如果线上的锚点可连接,并且不是起始和末尾锚点，这里返回
           this.externalElements.style.cursor = 'crosshair';
           return HoverType.LineConnectAnchor;
@@ -3953,6 +3968,9 @@ export class Canvas {
       if (this.hotkeyType === HotkeyType.AddAnchor) {
         this.externalElements.style.cursor = 'vertical-text';
       } else {
+        if(this.currentState !== State.DRAW && this.currentState !== State.DRAWING){
+          return HoverType.None;
+        }
         this.externalElements.style.cursor = 'crosshair';
       }
 
@@ -4532,6 +4550,11 @@ export class Canvas {
     this.setState("DRAW");
     const from = getFromAnchor(this.drawingLine);
     let to = getToAnchor(this.drawingLine);
+    if(from.id === to.id) {
+      this.drawingLine = undefined;
+      this.render();
+      return;
+    }
     if (to.isTemp) {
       this.drawingLine.calculative.worldAnchors.pop();
       to = getToAnchor(this.drawingLine);
