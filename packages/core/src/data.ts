@@ -8,6 +8,7 @@ export enum HoverType {
   Rotate,
   LineAnchorPrev,
   LineAnchorNext,
+  LineConnectAnchor, //连线上可连接的锚点
 }
 
 export enum HotkeyType {

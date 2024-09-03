@@ -11,6 +11,7 @@ enum LINE_NAME{
   LINE = 'line',
   POLYLINE = 'polyline',
   DLINE = 'dline',
+  VLINE = 'vline',
   ACTIVATE = 'activate'
 }
 export function line(
@@ -246,9 +247,8 @@ export function line(
         }
       }
     }
-  }
-  // 计算激活的动态锚点 activate
-  if(pen.lineName === LINE_NAME.ACTIVATE){
+  }else if(pen.lineName === LINE_NAME.ACTIVATE){
+    // 计算激活的动态锚点 activate
     // console.log('worldAnchors',JSON.stringify(worldAnchors));
     const step = pen.lineStep || 30;
     // 备份锚点的连接关系
@@ -437,6 +437,65 @@ export function line(
     if(anchorBaks.length > 0){
       pen.anchorBaks = deepClone(anchorBaks)
     }
+  }else if(pen.lineName === LINE_NAME.VLINE){
+    if(pen.calculative.worldAnchors.length === 2){
+      if(!pen.anchorBaks){
+        pen.anchorBaks = [];
+      }
+      const ancs = [
+        {
+          id: s8(),
+          hidden: true,
+          x:pen.x,
+          y:pen.y,
+          penId:pen.id,
+          noConnectable: true,
+        },
+        {
+          id: s8(),
+          hidden: true,
+          x:pen.x,
+          y:pen.y,
+          penId:pen.id,
+          noConnectable: true,
+        }
+      ]
+      pen.calculative.worldAnchors.splice(1,0,...ancs);
+    }
+      // console.log(pen.calculative.worldAnchors.length,1111);
+      let endIndex = pen.calculative.worldAnchors.length - 1,startIndex = 0;
+      const deltaX = pen.calculative.worldAnchors[startIndex].x - pen.calculative.worldAnchors[endIndex].x;
+      // console.log('deltaX',deltaX);
+      if(deltaX >= 0 && deltaX <= 10){
+        if(pen.calculative.worldAnchors.length === 2 && pen.anchorBaks?.length > 0){
+          pen.calculative.worldAnchors.splice(startIndex+1,0,...pen.anchorBaks);
+          endIndex = pen.calculative.worldAnchors.length - 1;
+          pen.anchorBaks = [];
+        }
+        if(pen.calculative.worldAnchors.length === 4){
+          pen.calculative.worldAnchors[startIndex+1].y = pen.calculative.worldAnchors[startIndex].y;
+          pen.calculative.worldAnchors[startIndex+2].x = pen.calculative.worldAnchors[startIndex+1].x;
+          pen.calculative.worldAnchors[startIndex+2].y = pen.calculative.worldAnchors[endIndex].y;
+        }
+      }else if(deltaX < 0 && deltaX >= -10){
+        if(pen.calculative.worldAnchors.length === 2 && pen.anchorBaks?.length > 0){
+          pen.calculative.worldAnchors.splice(startIndex+1,0,...pen.anchorBaks);
+          endIndex = pen.calculative.worldAnchors.length - 1;
+          pen.anchorBaks = [];
+        }
+         if(pen.calculative.worldAnchors.length === 4){
+          pen.calculative.worldAnchors[startIndex+1].y = pen.calculative.worldAnchors[startIndex].y;
+          pen.calculative.worldAnchors[startIndex+2].x = pen.calculative.worldAnchors[endIndex].x + 20;
+          pen.calculative.worldAnchors[startIndex+1].x = pen.calculative.worldAnchors[startIndex+2].x;
+          pen.calculative.worldAnchors[startIndex+2].y = pen.calculative.worldAnchors[endIndex].y;
+         }
+      }else{
+        if(pen.calculative.worldAnchors.length === 4){
+          pen.anchorBaks = [];
+          pen.anchorBaks.push(...[pen.calculative.worldAnchors[startIndex+1],pen.calculative.worldAnchors[startIndex+2]]);
+          pen.calculative.worldAnchors.splice(startIndex+1,2);
+        }
+      }
   }
   if (worldAnchors.length > 1) {
     let from: Point; // 上一个点
