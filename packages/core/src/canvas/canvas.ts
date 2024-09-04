@@ -2057,6 +2057,9 @@ export class Canvas {
       this.hoverType = HoverType.None;
       return;
     }
+    if(this.mouseDown && this.hoverType === HoverType.LineAnchor){
+      this.setState("DRAW")
+    }
     // 防止异常情况导致mouseup事件没有触发
     if (
       this.mouseDown &&
@@ -2692,6 +2695,8 @@ export class Canvas {
       let changeFlag = false;
       for (let i = 0; i < this.store.data.pens.length; i++) {
         const pen = this.store.data.pens[i];
+        // 不能跟自己判断
+        if (pen.id === activePen.id) continue;
         changeFlag = false;
         if(pen.container){
           const lHit = pointInRect({x,y},pen.calculative.worldRect);
@@ -2836,6 +2841,39 @@ export class Canvas {
               y: y1,
               pen,
             });
+          }
+        }else{
+          // 判断一条线是否在另一条线上,并就近自动连接
+          if(pen.type === PenType.Line && activePen.type === PenType.Line){
+            const {x:x1,y:y1} = activePen.calculative.worldRect.center;
+            const {x:x2,y:y2} = pen.calculative.worldRect.center;
+            if(x1 === x2 || y1 === y2){
+              // 开始自动连接锚点
+              const startAnc = activePen.calculative.worldAnchors.find(el=>el.start);
+              const endAnc = activePen.calculative.worldAnchors.find(el=>el.end);
+              // 分别找到与线的起始点和结束点最近的锚点
+              const startPeer = nearestAnchor(pen,{x:startAnc.x,y:startAnc.y});
+              const endPeer = nearestAnchor(pen,{x:endAnc.x,y:endAnc.y});
+              if(startPeer){
+                connectLine(
+                  pen,
+                  startPeer,
+                  activePen,
+                  startAnc
+                );
+              }
+              if(endPeer){
+                connectLine(
+                  pen,
+                  endPeer,
+                  activePen,
+                  endAnc
+                );
+              }
+              if(startPeer || endPeer){
+                this.updateLines(pen);
+              }
+            }
           }
         }
       }
@@ -6638,7 +6676,8 @@ export class Canvas {
     pen.connectedLines.forEach((item) => {
       const line = this.store.pens[item.lineId];
       // 活动层的线不需要更新，会在活动层处理
-      if (!line || line.calculative.active) {
+      if (!line) {
+      // if (!line || line.calculative.active) {
         return;
       }
 
