@@ -40,7 +40,14 @@ export enum MouseButtonType{
   FOUR_BACK = 8,
   FIFTH_FORWARD = 16,
 }
-
+export enum State{
+  SELECT,
+  DRAW,
+  DRAWING,
+  MOVE,
+  DRAG,
+  NONE
+}
 export const defaultCursors = [
   'nw-resize',
   'ne-resize',

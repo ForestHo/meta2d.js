@@ -7,7 +7,7 @@ import {
   Pen,
 } from './model';
 import { drawArrow, getLineRect, getSplitAnchor } from '../diagrams';
-import { Direction, inheritanceProps } from '../data';
+import { Direction, inheritanceProps, State } from '../data';
 import {
   calcRotate,
   distance,
@@ -1960,6 +1960,9 @@ export function renderLineAnchors(ctx: CanvasRenderingContext2D, pen: Pen) {
   ctx.lineWidth = 1;
   ctx.fillStyle = pen.activeColor || store.options.activeColor;
   pen.calculative.worldAnchors.forEach((pt) => {
+    if(pen.calculative.canvas.currentState !== State.DRAW && pen.calculative.canvas.currentState !== State.DRAWING && !pt.noConnectable){
+      return;
+    }
     !pt.hidden && !pt.isTemp && renderAnchor(ctx, pt, pen);
   });
   ctx.restore();

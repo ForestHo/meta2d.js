@@ -118,6 +118,7 @@ import {
   MouseRight,
   rotatedCursors,
   MouseButtonType,
+  State,
 } from '../data';
 import { createOffscreen } from './offscreen';
 import {
@@ -146,18 +147,11 @@ import { CanvasTemplate } from './canvasTemplate';
 import { getLinePoints } from '../diagrams/line';
 
 export const movingSuffix = '-moving' as const;
-export enum State{
-  SELECT,
-  DRAW,
-  DRAWING,
-  MOVE,
-  DRAG,
-  NONE
-}
+
 export class Canvas {
   canvas = document.createElement('canvas');
   offscreen = createOffscreen() as HTMLCanvasElement;
-  private currentState: State;
+  currentState: State;
 
   width: number;
   height: number;
@@ -5168,7 +5162,7 @@ export class Canvas {
   };
 
   renderHoverPoint = () => {
-    if (this.store.data.locked) {
+    if (this.store.data.locked || (this.currentState !== State.DRAW && this.currentState !== State.DRAWING)) {
       return;
     }
     const ctx = this.offscreen.getContext('2d');
@@ -5257,6 +5251,7 @@ export class Canvas {
               }else{
                 ctx.strokeStyle = this.store.hover.anchorColor || this.store.options.anchorColor;
               }
+              console.log('anchor11111111111');
               ctx.arc(anchor.x, anchor.y, size, 0, Math.PI * 2);
             }
           }
