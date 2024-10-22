@@ -1,4 +1,4 @@
-import { commonAnchors, commonPens, cube } from './diagrams';
+import { commonAnchors, commonPens, cube,timeFilter,treeFilter,cascadeFilter } from './diagrams';
 import { EventType, Handler, WildcardHandler } from 'mitt';
 import { Canvas } from './canvas';
 import {Options, PenPlugin, PluginOptions} from './options';
