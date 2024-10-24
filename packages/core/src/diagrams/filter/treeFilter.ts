@@ -588,6 +588,11 @@ function renderData(data, dom, pen) {
       }`
     );
     sheet.insertRule(
+      `.l-tree{
+        max-height: 300px;
+      }`
+    );
+    sheet.insertRule(
       `.l-tree .l-visible{
         display: flex;
       }`
