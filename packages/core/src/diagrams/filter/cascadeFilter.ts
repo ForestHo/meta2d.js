@@ -4,13 +4,18 @@ import { Point } from '../../point';
 import { rectInRect } from '../../rect';
 import { deepClone, debounce } from '../../utils';
 
-const TAG_WRAPPER = 'tag_wrapper_';
-const TAG_PREFIX = 'tag_';
+const TAG_WRAPPER = 'ctag_wrapper_';
+const TAG_PREFIX = 'ctag_';
+const DROPMENU_PREFIX = 'l-cascade-dropdown-';
+const CASCADE_PREFIX = 'l-cascader-';
 
 export function cascadeFilter(pen: Pen): Path2D {
   if (!pen.onDestroy) {
     pen.onDestroy = onDestroy;
+    pen.onMouseUp = onMouseUp;
     pen.onResize = resize;
+    pen.onMouseEnter = onMouseEnter;
+    pen.onMouseLeave = onMouseLeave;
   }
   const { x, y, width, height } = pen.calculative.worldRect;
   if (!pen.calculative.singleton) {
@@ -44,18 +49,20 @@ export function cascadeFilter(pen: Pen): Path2D {
     dropMenu.style.background = 'rgba(255, 255, 255, 0.9)';
     dropMenu.style.border = '1px solid #ccc';
     dropMenu.style.borderRadius = '4px';
-    // dropMenu.className = DROPMENU_PREFIX + pen.id;
+    dropMenu.className = DROPMENU_PREFIX + pen.id;
     dropMenu.style.display = 'block';
     dropMenu.style.overflow = 'auto';
     // dropMenu.style.pointerEvents = 'initial';
     container.appendChild(dropMenu);
-
-    renderData(pen.data, dropMenu, pen)
+    
     div.appendChild(container);
     // 2.加载到div layer
     pen.calculative.canvas.externalElements?.parentElement.appendChild(div);
     setElemPosition(pen, div);
     pen.calculative.singleton.div = div;
+
+
+    renderData(pen.data, dropMenu, pen)
   }
   const path = new Path2D();
   return path;
@@ -147,32 +154,56 @@ function renderData(data, dom, pen) {
     sheet.insertRule(
       `
     .l-cascader-checkbox-former {
-      border: 0;
-      clip: rect(0 0 0 0);
-      height: 1px;
-      margin: -1px;
-      overflow: hidden;
-      padding: 0;
-      position: absolute;
-      width: 1px;
-      outline: 0;
-      appearance: none;
+    width:16px;
+    height:16px;
   }
     `
     )
     sheet.insertRule(
       `
-    .l-cascader-checkbox-input {
-      position: relative;
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      vertical-align: middle;
-      border: 1px solid #ddd;
-      border-radius: 3px;
-      background-color: #fff;
+    .l-cascader-checkbox {
       box-sizing: border-box;
-    `)
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: inline-flex;
+      align-items: center;
+      position: relative;
+      cursor: pointer;
+      color: rgba(0, 0, 0, 0.9);
+      white-space: nowrap;
+  }
+    `
+    )
+    //   sheet.insertRule(
+    //     `
+    //   .l-cascader-checkbox-former {
+    //     border: 0;
+    //     clip: rect(0 0 0 0);
+    //     height: 1px;
+    //     margin: -1px;
+    //     overflow: hidden;
+    //     padding: 0;
+    //     position: absolute;
+    //     width: 1px;
+    //     outline: 0;
+    //     appearance: none;
+    // }
+    //   `
+    //   )
+    // sheet.insertRule(
+    //   `
+    // .l-cascader-checkbox-input {
+    //   position: relative;
+    //   display: inline-block;
+    //   width: 16px;
+    //   height: 16px;
+    //   vertical-align: middle;
+    //   border: 1px solid #ddd;
+    //   border-radius: 3px;
+    //   background-color: #fff;
+    //   box-sizing: border-box;
+    // `)
 
     sheet.insertRule(`
     .l-cascader-checkbox-label {
@@ -187,6 +218,30 @@ function renderData(data, dom, pen) {
       color: #0052d9;
     }`)
 
+    sheet.insertRule(`
+    .l-cascader__item.l-is-selected {
+      color: #0052d9;
+      background: #f2f3ff;
+  }
+    `)
+    sheet.insertRule(`
+    .l-cascader__menu.l-cascader__menu--filter {
+      width: auto;
+      min-width: 148px;
+    }
+    `)
+
+    sheet.insertRule(`
+    .l-cascader-panel-empty {
+      width: 100%;
+      height: 28px;
+      line-height: 28px;
+      color: rgba(0, 0, 0, 0.26);
+      margin: 6px;
+      text-align: center;
+      padding-left: 0;
+    }
+    `)
     const lPanel = document.createElement('div');
     lPanel.className = 'l-cascader__panel l-cascader--normal';
     lPanel.style.display = 'flex';
@@ -194,14 +249,24 @@ function renderData(data, dom, pen) {
 
     const flowPath = [];
     getTreeFlowPathDefault(data, flowPath, item => item === 0);
-    const fragMent = generateDomByData(data, flowPath, { penId: pen.id });
+    const opt = {
+      penId: pen.id,
+      checked: pen.checked,
+    };
+    const fragMent = generateDomByData(data, flowPath, opt);
     lPanel.appendChild(fragMent);
     dom.appendChild(lPanel);
 
+   
     window.meta2d.setValue({
       id: pen.id,
       flowPath,
     })
+    for (let i = 0; i < pen.checked.length; i++) {
+      const ck = pen.checked[i];
+      updateTags(true, pen.checked, ck, pen.id, pen);
+    }
+    adjustHeight(pen);
   }
 }
 function getTreeFlowPathDefault(data, flowPath, fn) {
@@ -273,6 +338,17 @@ function onDestroy(pen: Pen) {
     delete pen.calculative.singleton.div;
   }
 }
+function onMouseEnter(pen: Pen, e: Point) {
+  const locked = pen.calculative.canvas.store.data.locked;
+  if (locked === 1 || locked === 2) {
+    pen.calculative.singleton.div.style.pointerEvents = 'initial';
+  } else if (locked === 0) {
+    pen.calculative.singleton.div.style.pointerEvents = 'none';
+  }
+}
+function onMouseLeave(pen: Pen, e: Point) {
+  pen.calculative.singleton.div.style.pointerEvents = 'none';
+}
 function resize(pen: any) {
   setElemPosition(pen, pen.calculative.singleton.div);
 }
@@ -300,7 +376,7 @@ function assembleInputBox(pen: Pen) {
   box.style.padding = '0 8px';
   box.style.border = '1px solid #ccc';
   box.style.borderRadius = '4px';
-  box.style.whiteSpace = 'nowrap';
+  // box.style.whiteSpace = 'nowrap';
   box.style.background = 'transparent';
 
   const input = document.createElement("input");
@@ -312,9 +388,9 @@ function assembleInputBox(pen: Pen) {
   // input.style.outline = 'none';
   // input.style.border = '1px solid #ccc';
   input.style.background = 'transparent';
-  input.className = `treefilter-${pen.id}`;
+  input.className = `${CASCADE_PREFIX}${pen.id}`;
   input.dataset.penId = pen.id;
-  // input.oninput = debounce(onInputchange, 1000)
+  input.oninput = debounce(onInputchange, 1000)
 
 
   const input_prefix = document.createElement("div");
@@ -335,13 +411,108 @@ function assembleInputBox(pen: Pen) {
   box.appendChild(input);
   return box;
 }
-function recursionFindTitle(data, key) {
+function onInputchange(e) {
+  console.log('onInputchange', e.target.value);
+  const { value } = e.target;
+  // 过滤树结构
+  const penId = e.target.dataset.penId;
+  const pen = window.meta2d.findOne(penId);
+  if (!pen) {
+    return;
+  }
+  const cascaderPanel = document.querySelector('.l-cascader__panel');
+  if (value) {
+    const paths = getAllPaths(pen.data);
+    const filterPaths = paths.filter(el => el.some(item => item.label.includes(value)));
+    updateDropdown(pen, cascaderPanel, filterPaths)
+  } else {
+    const flowPath = [];
+    getTreeFlowPathDefault(pen.data, flowPath, item => item === 0);
+    const opt = {
+      penId: pen.id,
+      checked: pen.checked,
+    };
+    const fragMent = generateDomByData(pen.data, flowPath, opt);
+    cascaderPanel.replaceChildren(fragMent);
+  }
+}
+function updateDropdown(pen, cascaderPanel, filterPaths) {
+  for (let k = 0; k < cascaderPanel.children.length; k++) {
+    if (k !== 0) {
+      cascaderPanel.children[k].remove();
+      k--;
+    }
+  }
+  // 更新当前层级的active,当前层级的dom肯定是存在的
+  const liFragWrapper = document.createDocumentFragment();
+  //  const liChilds = recursionFindItem([startNode], startIndex, flowPath);
+  if (filterPaths.length > 0) {
+    const opt = {
+      penId: pen.id,
+      checked: pen.checked,
+    }
+    for (let n = 0; n < filterPaths.length; n++) {
+      const item = filterPaths[n];
+      const obj = {
+        label: item.map(el => el.label).join('/'),
+        value: item[item.length - 1].value,
+      }
+      let level = item.length - 1;
+      const liDom = assembleLi(obj, level, opt);
+      //  if (liItem.value === flowPath[startIndex]) {
+      //    liDom.className += ' l-is-expanded';
+      //  }
+      liFragWrapper.appendChild(liDom);
+    }
+    if (cascaderPanel.children[0].className.indexOf('l-cascader__menu--filter') === -1) {
+      cascaderPanel.children[0].className += ' l-cascader__menu--filter';
+    }
+    cascaderPanel.children[0].replaceChildren(liFragWrapper);
+  } else {
+    const emptyDom = document.createElement('div');
+    emptyDom.style.textAlign = 'center';
+    emptyDom.style.padding = '8px';
+    emptyDom.className = 'l-cascader-panel-empty';
+    emptyDom.innerHTML = '暂无数据';
+    cascaderPanel.children[0].replaceChildren(emptyDom);
+  }
+
+}
+// 获取所有路径的函数
+function getAllPaths(nodes, currentPath = [], allPaths = []) {
+  nodes.forEach(node => {
+    const newPath = [...currentPath, { label: node.label, value: node.value }]; // 添加当前节点到路径
+
+    if (node.children && node.children.length > 0) {
+      // 如果有子节点，递归处理子节点
+      getAllPaths(node.children, newPath, allPaths);
+    } else {
+      // 如果没有子节点，说明这是一个叶子节点，将路径加入结果列表
+      allPaths.push(newPath);
+    }
+  });
+
+  return allPaths;
+}
+function getEveryBranchByTree(data, value, paths, level) {
+  level++;
   for (let i = 0; i < data.length; i++) {
-    if (data[i].key === key) {
+    const item = data[i];
+    paths.push(item.value);
+    if (item.children && item.children.length > 0) {
+      getEveryBranchByTree(item.children, value, paths, level);
+      console.log('level', item.value, paths.toString(), level);
+      paths.push("kk");
+    }
+  }
+}
+function recursionFindTitle(data, key, val) {
+  for (let i = 0; i < data.length; i++) {
+    if (data[i][key] === val) {
       return data[i].label;
     }
     if (data[i].children?.length > 0) {
-      const title = recursionFindTitle(data[i].children, key);
+      const title = recursionFindTitle(data[i].children, key, val);
       if (title) {
         return title;
       }
@@ -376,7 +547,7 @@ function assembleTag(key: string, title: string, penId: string) {
   svgDom.style.fill = 'none';
   svgDom.style.width = '1em';
   svgDom.style.height = '100%';
-  // svgDom.onclick = tagClose;
+  svgDom.onclick = tagClose;
 
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   path.dataset.key = _key;
@@ -397,37 +568,31 @@ function tagClose(e) {
   if (!pen) {
     return;
   }
-  // const checked = deepClone(pen.checked);
-  // const index = checked.indexOf(tagDom.dataset.key);
-  // if (index > -1) {
-  //   checked.splice(index, 1);
-  // }
-  // window.meta2d.setValue({
-  //   id: penId,
-  //   checked,
-  // })
-  // tagDom.remove();
+  const checked = deepClone(pen.checked);
+  const index = checked.indexOf(tagDom.dataset.key);
+  if (index > -1) {
+    checked.splice(index, 1);
+  }
+  window.meta2d.setValue({
+    id: penId,
+    checked,
+  })
+  tagDom.remove();
 
-  // 更新tree的checked
-  // const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-  // const lTreeList = dropMenu.querySelector('.l-tree-list');
-  // let len = lTreeList.children.length;
-  // for (let i = 0; i < len; i++) {
-  //   const item = lTreeList.children[i];
-  //   if (item.dataset.value === tagDom.dataset.key) {
-  //     const label = item.lastChild;
-  //     const classList = label.className.split(' ');
-  //     const index = classList.findIndex(el => el === 'to__checked');
-  //     if (index > -1) {
-  //       classList.splice(index, 1);
-  //       label.className = classList.join(' ');
-  //     }
-  //     label.firstChild.checked = false;
-  //   }
-  // }
+  // 更新cascader的checked
 
-  // // 更新高度
-  // adjustHeight(pen);
+  const flowPath = [];
+  getTreeFlowPathDefault(pen.data, flowPath, item => item === 0);
+  const opt = {
+    penId: pen.id,
+    checked: pen.checked,
+  };
+  const fragMent = generateDomByData(pen.data, flowPath, opt);
+  const cascaderPanel = document.querySelector('.l-cascader__panel');
+  cascaderPanel.replaceChildren(fragMent);
+
+  // 更新高度
+  adjustHeight(pen);
 }
 
 // 生成li
@@ -437,7 +602,6 @@ function assembleLi(item, level, opt) {
   li.dataset.value = item.value;
   li.dataset.penId = opt.penId;
   li.dataset.level = level;
-  li.innerHTML = level;
   li.onclick = liOnClick;
 
   const label = document.createElement('label');
@@ -446,6 +610,13 @@ function assembleLi(item, level, opt) {
   const inputDom = document.createElement('input');
   inputDom.type = 'checkbox';
   inputDom.className = 'l-cascader-checkbox-former';
+  inputDom.dataset.penId = opt.penId;
+  inputDom.dataset.value = item.value;
+  inputDom.dataset.level = level;
+  if (opt.checked && opt.checked.indexOf(item.value) > -1) {
+    inputDom.checked = true;
+  }
+  inputDom.onclick = checkboxClick;
   label.appendChild(inputDom);
 
   const span = document.createElement('span');
@@ -475,7 +646,75 @@ function assembleLi(item, level, opt) {
   }
   return li;
 }
+function checkboxClick(e) {
+  e.stopPropagation();
+  const { value, penId, level } = e.target.dataset;
+  const checkedVal = e.target.checked;
+  const pen = window.meta2d.findOne(penId);
+  if (!pen) {
+    return;
+  }
+  const checked = deepClone(pen.checked);
+  updateTags(checkedVal, checked, value, penId, pen);
+  window.meta2d.setValue({
+    id: penId,
+    checked,
+  })
+  adjustHeight(pen);
+}
+function adjustHeight(pen: Pen) {
+  if (pen.calculative.singleton.div) {
+    // 判断是否需要调整高度
+    const { offsetHeight: h1 } = pen.calculative.singleton.div;
+    const { offsetHeight: h2 } = document.getElementsByClassName(`${TAG_WRAPPER}${pen.id}`)[0];
+    if (h1 !== h2) {
+      pen.height = h2 + 16;
+      pen.calculative.canvas.updatePenRect(pen);
+    }
+  }
+}
+function updateTags(checkedVal, checked, value, penId, pen) {
+  if (checkedVal) {
+    if (!checked.includes(value)) {
+      checked.push(value);
+    }
+    const tagWrapper = document.getElementsByClassName(`${TAG_WRAPPER}${penId}`)[0];
+    const parents = [];
+    findNodeAndParentByValue(pen.data, value, parents);
+    const title = parents.map(el => el.label).join('/');
+    const tag = assembleTag(value, title, penId);
+    tagWrapper.appendChild(tag);
+  } else {
+    const index = checked.indexOf(value);
+    if (index > -1) {
+      checked.splice(index, 1);
+      // 删除tag
+      const tagDom = document.getElementsByClassName(`${TAG_PREFIX}${value}`)[0];
+      if (tagDom) {
+        tagDom.remove();
+      }
+    }
+  }
+}
+function findNodeAndParentByValue(tree, value, parents = []) {
+  for (let i = 0; i < tree.length; i++) {
+    const item = tree[i];
+    if (item.value === value) {
+      parents.unshift({ value: item.value, label: item.label });
+      return parents;
+    }
+    if (item.children) {
+      const result = findNodeAndParentByValue(item.children, value, parents);
+      if (result) {
+        parents.unshift({ item: item.value, label: item.label });
+        return parents;
+      }
+    }
+  }
+  return null;
+}
 function liOnClick(e) {
+  // console.log('liOnClick', e.target);
   const { value, penId, level } = e.target.dataset;
   if (!value || !penId) {
     return;
@@ -613,4 +852,8 @@ function patchCascadeMenu(pen, lv, level, flowPath, opt) {
     }
     cascaderPanel.appendChild(fragMent);
   }
+}
+function onMouseUp(pen: Pen, e: Point) {
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+  dropMenu.style.display = dropMenu.style.display === 'none' ? 'block' : 'none';
 }

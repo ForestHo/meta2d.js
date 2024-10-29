@@ -181,6 +181,7 @@ function onInputchange(e) {
     return;
   }
   onRecursionData(pen.data, e.target.value, paths);
+  console.log(paths,'paths');
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
   updateTree(pen.data, dropMenu, paths)
 }
