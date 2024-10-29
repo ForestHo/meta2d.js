@@ -16,6 +16,8 @@ export function cascadeFilter(pen: Pen): Path2D {
     pen.onResize = resize;
     pen.onMouseEnter = onMouseEnter;
     pen.onMouseLeave = onMouseLeave;
+    pen.onRenderPenRaw = renderPenRaw;
+
   }
   const { x, y, width, height } = pen.calculative.worldRect;
   if (!pen.calculative.singleton) {
@@ -54,7 +56,7 @@ export function cascadeFilter(pen: Pen): Path2D {
     dropMenu.style.overflow = 'auto';
     // dropMenu.style.pointerEvents = 'initial';
     container.appendChild(dropMenu);
-    
+
     div.appendChild(container);
     // 2.加载到div layer
     pen.calculative.canvas.externalElements?.parentElement.appendChild(div);
@@ -257,16 +259,18 @@ function renderData(data, dom, pen) {
     lPanel.appendChild(fragMent);
     dom.appendChild(lPanel);
 
-   
+
     window.meta2d.setValue({
       id: pen.id,
       flowPath,
     })
-    for (let i = 0; i < pen.checked.length; i++) {
-      const ck = pen.checked[i];
-      updateTags(true, pen.checked, ck, pen.id, pen);
+    if (pen.checked) {
+      for (let i = 0; i < pen.checked.length; i++) {
+        const ck = pen.checked[i];
+        updateTags(true, pen.checked, ck, pen.id, pen);
+      }
+      adjustHeight(pen);
     }
-    adjustHeight(pen);
   }
 }
 function getTreeFlowPathDefault(data, flowPath, fn) {
@@ -352,6 +356,17 @@ function onMouseLeave(pen: Pen, e: Point) {
 function resize(pen: any) {
   setElemPosition(pen, pen.calculative.singleton.div);
 }
+function renderPenRaw(pen: Pen, mkey: string, data: any) {
+  const flowPath = [];
+  getTreeFlowPathDefault(data, flowPath, item => item === 0);
+  const opt = {
+    penId: pen.id,
+    checked: pen.checked,
+  };
+  const fragMent = generateDomByData(data, flowPath, opt);
+  const cascaderPanel = document.querySelector('.l-cascader__panel');
+  cascaderPanel.appendChild(fragMent);
+}
 // 计算方法
 function getLevel(arr) {
   let maxLevel = 0;
@@ -412,7 +427,6 @@ function assembleInputBox(pen: Pen) {
   return box;
 }
 function onInputchange(e) {
-  console.log('onInputchange', e.target.value);
   const { value } = e.target;
   // 过滤树结构
   const penId = e.target.dataset.penId;
@@ -501,7 +515,6 @@ function getEveryBranchByTree(data, value, paths, level) {
     paths.push(item.value);
     if (item.children && item.children.length > 0) {
       getEveryBranchByTree(item.children, value, paths, level);
-      console.log('level', item.value, paths.toString(), level);
       paths.push("kk");
     }
   }
@@ -630,14 +643,19 @@ function assembleLi(item, level, opt) {
 
   li.appendChild(label);
 
-  if (item.children && item.children.length > 0) {
+  if (item.children) {
     const svgDom = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svgDom.setAttribute('viewBox', '0 0 24 24');
     svgDom.style.fill = 'none';
     svgDom.style.width = '1em';
+    svgDom.dataset.value = item.value;
+    svgDom.dataset.penId = opt.penId;
     svgDom.setAttribute("class", "l-icon l-cascader__item-icon");
+    svgDom.onclick = nextLevelClick;
 
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.dataset.value = item.value;
+    path.dataset.penId = opt.penId;
     path.setAttribute('fill', 'currentColor');
     path.setAttribute('d', 'M8.09 17.5l5.5-5.5-5.5-5.5L9.5 5.09 16.41 12 9.5 18.91 8.09 17.5z');
     svgDom.appendChild(path);
@@ -645,6 +663,34 @@ function assembleLi(item, level, opt) {
     li.appendChild(svgDom);
   }
   return li;
+}
+function recursionFindHasChild(data, key) {
+  for (let i = 0; i < data.length; i++) {
+    if (data[i].value === key) {
+      return data[i].children?.length > 0;
+    }
+    if (data[i].children?.length > 0) {
+      const flag = recursionFindHasChild(data[i].children, key);
+      if (flag) {
+        return true;
+      }
+    }
+  }
+}
+async function nextLevelClick(e) {
+  const { value, penId, level } = e.target.dataset;
+  const pen = window.meta2d.findOne(penId);
+  if (!pen) {
+    return;
+  }
+  const hasChild = recursionFindHasChild(pen.data, value);
+  if (!hasChild) {
+    // 加载数据
+    // pen.loadFn && pen.loadFn(pen, { level, key: value });
+    const ret = pen.loadFn && await pen.loadFn(pen, { level, key: value })
+  } else {
+
+  }
 }
 function checkboxClick(e) {
   e.stopPropagation();
@@ -714,7 +760,6 @@ function findNodeAndParentByValue(tree, value, parents = []) {
   return null;
 }
 function liOnClick(e) {
-  // console.log('liOnClick', e.target);
   const { value, penId, level } = e.target.dataset;
   if (!value || !penId) {
     return;
