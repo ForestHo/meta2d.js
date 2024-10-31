@@ -17,7 +17,7 @@ export * from './iframe';
 export * from './video';
 export * from './panel';
 export * from './filter/treeFilter';
-export * from './filter/timeFilter';
+export * from './filter/timeFilter/index';
 export * from './filter/cascadeFilter';
 
 import { rectangle, square } from './rectangle';
@@ -42,7 +42,7 @@ import { mindNode, mindNodeAnchors } from './mindNode';
 import { mindLine, mindLineAnchors } from './mindLine';
 import { panel } from './panel';
 import { treeFilter } from './filter/treeFilter';
-import { timeFilter } from './filter/timeFilter';
+import { timeFilter } from './filter/timeFilter/index';
 import { cascadeFilter } from './filter/cascadeFilter';
 
 export function commonPens() {

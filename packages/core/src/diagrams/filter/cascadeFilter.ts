@@ -256,6 +256,7 @@ function renderData(data, dom, pen) {
       checked: pen.checked,
     };
     const fragMent = generateDomByData(data, flowPath, opt);
+    console.log(fragMent.children.length)
     lPanel.appendChild(fragMent);
     dom.appendChild(lPanel);
 
