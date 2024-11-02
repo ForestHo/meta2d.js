@@ -531,7 +531,7 @@ function generateDomByData(data, pen) {
   for (let i = 0; i < panelComp[key].length; i++) {
     const type = panelComp[key][i];
     if (type === "date") {
-      const dateDom = generateDateDom(data, pen,i)
+      const dateDom = generateDateDom(data, pen, i)
       frag.appendChild(dateDom);
     } else if (type === "time") {
       const timeDom = generateTimeDom(data, pen)
@@ -546,7 +546,7 @@ function generateTimeDom(data, pen) {
   frag.appendChild(timeItem);
   return frag;
 }
-function generateDateDom(data, pen,index?) {
+function generateDateDom(data, pen, index?) {
   const frag = document.createDocumentFragment();
   const currentYear = dayjs().year();
   let currentMonth = dayjs().month() + 1;

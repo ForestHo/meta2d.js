@@ -60,6 +60,7 @@ export function datePicker(pen: Pen): Path2D {
   if (!pen.onDestroy) {
     pen.onDestroy = onDestroy;
     pen.onMouseUp = onMouseUp;
+    pen.onAdd = onAdd;
     pen.onResize = resize;
     pen.onMouseEnter = onMouseEnter;
     pen.onMouseLeave = onMouseLeave;
@@ -71,6 +72,19 @@ export function datePicker(pen: Pen): Path2D {
   }
   if (!pen.calculative.singleton.div) {
     // 校验修正参数
+
+    //格式化数据
+    let pickerTimes = deepClone(pen.pickerTimes);
+    if (!pickerTimes) {
+      pickerTimes = [];
+    }
+    if (pickerTimes.length > 0) {
+      pickerTimes = pen.pickerTimes.map(item => dayjs(item).format("YYYY-MM-DD"));
+    }
+    window.meta2d.setValue({
+      id: pen.id,
+      pickerTimes,
+    })
     //1.创建父容器，用于定位
     const div = document.createElement('div');
     div.style.position = 'absolute';
@@ -515,6 +529,8 @@ function renderData(data, dom, pen) {
     border-bottom-right-radius: 3px;
 }
   `)
+
+
   const lPanel = document.createElement('div');
   lPanel.className = 'l-date-range-picker__panel-content-wrapper';
   lPanel.style.display = 'flex';
@@ -600,6 +616,9 @@ function generateDomByType(data, pen, type, i) {
     frag.appendChild(content);
   }
   return frag;
+}
+function onAdd(pen: Pen) {
+  adjustHeight(pen);
 }
 function assembleTimeItem(data, pen) {
   const timeItem = document.createElement('div');
@@ -866,18 +885,18 @@ function assembleTable(data, pen, opt) {
   // tbody
   const tbody = document.createElement('tbody');
   tbody.dataset.index = opt.index + '';
-  const trs = assembleBodyTRs(data, pen.id, opt);
+  const trs = assembleBodyTRs(pen, opt);
   tbody.appendChild(trs);
   frag.appendChild(tbody);
   return frag;
 }
-function assembleBodyTRs(data, penId, opt: { year: number, month: number }, yyhhdd?) {
+function assembleBodyTRs(pen, opt: { year: number, month: number }) {
   const daylist = getTimeListByYearAndMonth(opt.year, opt.month);
   const frag = document.createDocumentFragment();
   for (let i = 0; i < daylist.length; i++) {
     const item = daylist[i];
     const tr = document.createElement('tr');
-    tr.dataset.penId = penId;
+    tr.dataset.penId = pen.id;
     tr.className = 'l-date-picker__table-date-row';
 
     for (let k = 0; k < item.children.length; k++) {
@@ -888,7 +907,7 @@ function assembleBodyTRs(data, penId, opt: { year: number, month: number }, yyhh
       td.dataset.rowIndex = i + '';
       td.dataset.colIndex = k + '';
       td.dataset.type = child.type;
-      if (yyhhdd && child.type === MonthType.CURRENT && yyhhdd === child.date) {
+      if (child.type === MonthType.CURRENT && pen.pickerTimes.indexOf(child.date) > -1) {
         td.classList.add('l-date-picker__cell--active');
       }
       td.addEventListener("click", tdClick);
@@ -942,25 +961,26 @@ function tdClick(e) {
   if (!pen) {
     return;
   }
-  if (!pen.multiple) {
-    // 清除上一个选中的
-    const { rowIndex, colIndex } = this.parentElement.parentElement.dataset;
-    if (rowIndex && colIndex) {
-      const _rowIndex = parseInt(rowIndex);
-      const _colIndex = parseInt(colIndex);
-      if (_rowIndex > -1 && _colIndex > -1) {
-        this.parentElement.parentElement.children[_rowIndex].children[_colIndex].classList.remove('l-date-picker__cell--active');
-      }
-    }
-  } else {
+  // if (!pen.multiple) {
+  //   // 清除上一个选中的
+  //   const { rowIndex, colIndex } = this.parentElement.parentElement.dataset;
+  //   if (rowIndex && colIndex) {
+  //     const _rowIndex = parseInt(rowIndex);
+  //     const _colIndex = parseInt(colIndex);
+  //     if (_rowIndex > -1 && _colIndex > -1) {
+  //       this.parentElement.parentElement.children[_rowIndex].children[_colIndex].classList.remove('l-date-picker__cell--active');
+  //     }
+  //   }
+  // } else {
 
-  }
+  // }
 
 
   // const { mode, currentMonth, currentYear } = this.parentElement.parentElement.parentElement.parentElement.dataset;
   const { value } = e.target.dataset;
   const pickerTimes = deepClone(pen.pickerTimes);
-  const yyhhdd = getYYHHDD(_currentYear, _currentMonth, value);
+  // const yyhhdd = getYYHHDD(_currentYear, _currentMonth, value);
+  const yyhhdd = dayjs().year(_currentYear).month(_currentMonth - 1).date(value).format("YYYY-MM-DD");
   updateTags(pickerTimes, yyhhdd, pen);
   window.meta2d.setValue({
     id: penId,
@@ -968,7 +988,7 @@ function tdClick(e) {
   })
   adjustHeight(pen);
 
-  this.parentElement.parentElement.dataset.lastdate = yyhhdd;
+  // this.parentElement.parentElement.dataset.lastdate = yyhhdd;
   this.parentElement.parentElement.dataset.rowIndex = this.dataset.rowIndex;
   this.parentElement.parentElement.dataset.colIndex = this.dataset.colIndex;
 
@@ -1313,8 +1333,8 @@ function updateBody(dom, penId) {
   const year = parseInt(dom.dataset.currentYear);
   const month = parseInt(dom.dataset.currentMonth);
   const tbody = dom.querySelector('tbody');
-  const { lastdate } = tbody.dataset;
-  const trs = assembleBodyTRs(null, penId, { year, month }, lastdate);
+  const pen = window.meta2d.findOne(penId);
+  const trs = assembleBodyTRs(pen, { year, month });
   tbody.replaceChildren(trs);
 }
 function assemblePagination(opt) {
@@ -1438,12 +1458,11 @@ function assembleInputBox(pen: Pen) {
   input_prefix.className = TAG_WRAPPER + pen.id;
 
   const frag = document.createDocumentFragment();
-  // for (let i = 0; i < pen.checked.length; i++) {
-  //   const key = pen.checked[i];
-  //   const title = recursionFindTitle(pen.data, key);
-  //   const e = assembleTag(key, title, pen.id);
-  //   frag.appendChild(e);
-  // }
+  for (let i = 0; i < pen.pickerTimes.length; i++) {
+    const yyhhdd = pen.pickerTimes[i];
+    const e = assembleTag(yyhhdd, yyhhdd, pen.id);
+    frag.appendChild(e);
+  }
   input_prefix.appendChild(frag);
   box.appendChild(input_prefix);
 
@@ -1456,6 +1475,11 @@ function updateTags(pickerTimes, value, pen) {
     const index = pickerTimes.findIndex(item => item === value);
     if (index > -1) {
       pickerTimes.splice(index, 1);
+      // 移除tag
+      const tagDom = document.getElementsByClassName(`${TAG_PREFIX}${value}`)[0];
+      if (tagDom) {
+        tagDom.remove();
+      }
     } else {
       pickerTimes.push(value);
 
@@ -1501,7 +1525,8 @@ function assembleTag(key: string, title: string, penId: string) {
   const svgDom = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svgDom.setAttribute('viewBox', '0 0 24 24');
   svgDom.style.marginLeft = '8px';
-  svgDom.dataset.key = _key;
+  svgDom.dataset.key = key;
+  svgDom.dataset.penId = penId;
   svgDom.style.fill = 'none';
   svgDom.style.width = '1em';
   svgDom.style.height = '100%';
@@ -1518,7 +1543,34 @@ function assembleTag(key: string, title: string, penId: string) {
   return tagDom;
 }
 function tagClose(e) {
+  e.stopPropagation();
+  e.cancelBubble = true;
 
+  // const tagDom = document.getElementsByClassName(`${e.target.dataset.key}`)[0];
+  const { penId, key } = this.dataset;
+  const pen = window.meta2d.findOne(penId);
+  if (!pen) {
+    return;
+  }
+  const pickerTimes = deepClone(pen.pickerTimes);
+  const index = pickerTimes.indexOf(key);
+  if (index > -1) {
+    pickerTimes.splice(index, 1);
+  }
+  window.meta2d.setValue({
+    id: penId,
+    pickerTimes,
+  })
+  this.parentElement.remove();
+
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
+  const list = dropMenu.querySelector('.l-date-picker__panel-date');
+
+  // 更新cascader的checked
+  updateBody(list, penId);
+
+  // 更新高度
+  adjustHeight(pen);
 }
 function onDestroy(pen: Pen) {
   if (pen.calculative.singleton && pen.calculative.singleton.div) {
