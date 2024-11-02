@@ -1,17 +1,29 @@
 import { movingSuffix } from '../../../canvas';
 import { Pen, setElemPosition } from '../../../pen';
-import { Point } from '../../../point';
+import { Point, distance } from '../../../point';
 import { rectInRect } from '../../../rect';
 import { deepClone, debounce } from '../../../utils';
-import './dayjs.min.js'
+import '../datePicker/dayjs.min.js'
 
 const TAG_WRAPPER = 'dtag_wrapper_';
 const TAG_PREFIX = 'dtag_';
 const DROPMENU_PREFIX = 'l-date-range-picker__panel_';
 const CASCADE_PREFIX = 'l-date-';
+const TIME_HEIGHT = 30;
+let isScrolling = false;
 enum DateSelectType {
   MONTH,
   YEAR
+}
+enum TimeCount {
+  HOUR = 24,
+  MINUTE = 60,
+  SECOND = 60
+}
+const panelComp = {
+  "date": ["date"],
+  "datetime": ["date", "time"],
+  "daterange": ["date", "date"],
 }
 enum SwitchMode {
   WEEK,
@@ -39,7 +51,7 @@ const svgMap = {
   "next": `M8.09 17.5l5.5-5.5-5.5-5.5L9.5 5.09 16.41 12 9.5 18.91 8.09 17.5z`
 }
 const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
-export function timeFilter(pen: Pen): Path2D {
+export function dateRangePicker(pen: Pen): Path2D {
   if (!pen.onDestroy) {
     pen.onDestroy = onDestroy;
     pen.onMouseUp = onMouseUp;
@@ -321,6 +333,183 @@ function renderData(data, dom, pen) {
     font-weight: 400;
 }
   `)
+
+  sheet.insertRule(`
+  .l-time-picker__panel-body-scroll {
+    flex: 1;
+    height: 100%;
+    overflow-y: scroll;
+    text-align: center;
+    position: relative;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+  `)
+  sheet.insertRule(`
+  .l-time-picker__panel-body {
+    width: 100%;
+    height: 216px;
+    position: relative;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+  `)
+  sheet.insertRule(`
+  ul, dl, ol {
+    margin: 0;
+    padding: 0 0 0 1.2em;
+    line-height: 22px;
+}
+  `)
+  sheet.insertRule(`
+  .l-time-picker__panel-body-scroll-item {
+    height: 24px;
+    line-height: 24px;
+    color: rgba(0, 0, 0, 0.6);
+    margin: 6px 4px;
+    border-radius: 3px;
+    text-align: center;
+    cursor: pointer;
+    transition: .2s linear;
+}
+  `)
+  sheet.insertRule(`
+  .l-time-picker__panel-body-active-mask{
+      position: absolute;
+      top: 50%;
+      height: 24px;
+      width: 100%;
+      display: flex;
+  }
+  `)
+  sheet.insertRule(`
+  .l-time-picker__panel-body-active-mask>div {
+    flex: 1;
+    transform: translateY(calc(0px -(calc(24px + 6px) / 2)));
+    height: 24px;
+    background-color: #f2f3ff;
+    margin: 6px 4px;
+    border-radius: 3px;
+}
+  `)
+  sheet.insertRule(`
+  .l-date-picker__panel .l-time-picker__panel, 
+  .l-date-range-picker__panel .l-time-picker__panel {
+    width: 216px;
+}
+  `)
+
+  sheet.insertRule(`
+  .l-time-picker__panel {
+    width: 280px;
+    background: transparent;
+    border-radius: 3px;
+    display: inline-block;
+    position: relative;
+    --timePickerPanelOffsetTop: 15;
+    --timePickerPanelOffsetBottom: 35;
+}
+  `)
+  sheet.insertRule(`
+  .l-date-picker__panel-time-viewer, 
+  .l-date-range-picker__panel-time-viewer {
+    display: flex;
+    height: 32px;
+    line-height: 22px;
+    align-items: center;
+    justify-content: center;
+    color: rgba(0, 0, 0, 0.9);
+}
+  `)
+  sheet.insertRule(`
+  .l-date-picker__panel-time, 
+  .l-date-range-picker__panel-time {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 8px;
+    border-left: 1px solid #e7e7e7;
+}
+  `)
+
+  sheet.insertRule(`
+  .l-time-picker__panel-body-scroll:after {
+    height: calc(50% - var(--timePickerPanelOffsetBottom, 0)* 1px);
+}
+  `)
+
+  sheet.insertRule(`
+  .l-time-picker__panel-body-scroll:after,
+  .l-time-picker__panel-body-scroll:before {
+    display: block;
+    height: 50%;
+    content: "";
+}
+  `)
+  sheet.insertRule(`
+  .l-time-picker__panel-body-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  `)
+  sheet.insertRule(`
+  .l-time-picker__panel-body-scroll:before {
+    height: calc(50% - var(--timePickerPanelOffsetTop, 0)* 1px);
+  }
+  `)
+  sheet.insertRule(`
+  .l-time-picker__panel-body-scroll-item.is-current {
+    color: #0052d9;
+  }
+  `)
+  sheet.insertRule(`
+  .l-date-picker__cell--active .l-date-picker__cell-inner {
+    color: #fff !important;
+    background-color: #0052d9 !important;
+}
+  `)
+
+  sheet.insertRule(`
+  .l-date-picker__cell--highlight:before {
+    opacity: 1;
+    background-color: #f2f3ff;
+}
+  `)
+  sheet.insertRule(`
+  .l-date-picker__cell:before,
+  .l-date-picker__cell:after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: -5%;
+    left: -5%;
+    z-index: 1;
+    opacity: 0;
+    border-radius: 3px;
+    height: 24px;
+    transform: translateY(-50%);
+    transition: opacity .2s cubic-bezier(0,0,.15,1);
+}
+  `)
+
+  sheet.insertRule(`
+  .l-date-picker__cell--active-start:before {
+    opacity: 1;
+    left: calc(calc(4px - 1px)* 2);
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+}
+  `)
+  sheet.insertRule(`
+  .l-date-picker__cell--active-end:before {
+    opacity: 1;
+    right: calc(calc(4px - 1px)* 2);
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+  `)
   const lPanel = document.createElement('div');
   lPanel.className = 'l-date-range-picker__panel-content-wrapper';
   lPanel.style.display = 'flex';
@@ -329,6 +518,60 @@ function renderData(data, dom, pen) {
   dom.appendChild(lPanel);
 }
 function generateDomByData(data, pen) {
+  let key = "daterange";
+  // 根据配置生成不同的面板
+  // if (pen.date) {
+  //   key = "date";
+  // } else if (pen.datetime) {
+  //   key = "datetime";
+  // } else if (pen.daterange) {
+  //   key = "daterange";
+  // }
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < panelComp[key].length; i++) {
+    const type = panelComp[key][i];
+    if (type === "date") {
+      const dateDom = generateDateDom(data, pen,i)
+      frag.appendChild(dateDom);
+    } else if (type === "time") {
+      const timeDom = generateTimeDom(data, pen)
+      frag.firstChild.appendChild(timeDom);
+    }
+  }
+  return frag;
+}
+function generateTimeDom(data, pen) {
+  const frag = document.createDocumentFragment();
+  const timeItem = assembleTimeItem(data, pen);
+  frag.appendChild(timeItem);
+  return frag;
+}
+function generateDateDom(data, pen,index?) {
+  const frag = document.createDocumentFragment();
+  const currentYear = dayjs().year();
+  let currentMonth = dayjs().month() + 1;
+  const content = document.createElement('div');
+  content.className = 'l-date-picker__panel-content';
+
+  const dateItem = assemleDateItem(data, pen, {
+    year: currentYear,
+    month: currentMonth,
+    index
+  });
+  dateItem.className = 'l-date-picker__panel-date';
+  dateItem.dataset.type = 'date';
+  dateItem.dataset.index = index + '';
+  dateItem.dataset.currentMonth = currentMonth + '';
+  dateItem.dataset.currentYear = currentYear + '';
+  dateItem.dataset.mode = SwitchMode.MONTH + '';
+  currentMonth++;
+
+  content.appendChild(dateItem);
+
+  frag.appendChild(content);
+  return frag;
+}
+function generateDomByType(data, pen, type, i) {
   const frag = document.createDocumentFragment();
   const currentYear = dayjs().year();
   let currentMonth = dayjs().month() + 1;
@@ -352,6 +595,255 @@ function generateDomByData(data, pen) {
     content.appendChild(dateItem);
 
     frag.appendChild(content);
+  }
+  return frag;
+}
+function assembleTimeItem(data, pen) {
+  const timeItem = document.createElement('div');
+  timeItem.className = 'l-date-picker__panel-time';
+  timeItem.dataset.hour = "00";
+  timeItem.dataset.minute = "00";
+  timeItem.dataset.second = "00";
+
+  const viewer = document.createElement('div');
+  viewer.className = 'l-date-picker__panel-time-viewer';
+  viewer.innerHTML = `${timeItem.dataset.hour}:${timeItem.dataset.minute}:${timeItem.dataset.second}`;
+  timeItem.appendChild(viewer);
+
+  const panel = document.createElement('div');
+  panel.className = 'l-time-picker__panel';
+
+  const sectionBody = document.createElement('div');
+  sectionBody.className = 'l-time-picker__panel-section-body';
+
+  const panelBody = document.createElement('div');
+  panelBody.className = 'l-time-picker__panel-body';
+
+  const mask = document.createElement('div');
+  mask.className = 'l-time-picker__panel-body-active-mask';
+  for (let i = 0; i < 3; i++) {
+    const div = document.createElement('div');
+    mask.appendChild(div);
+  }
+  panelBody.appendChild(mask);
+
+  const hour = document.createElement('ul');
+  hour.className = 'l-time-picker__panel-body-scroll';
+  hour.addEventListener('scroll', debounce((e) => hourScroll(e, pen.id), 200));
+  hour.addEventListener('click', (e) => { hourClick(e, pen.id) });
+  const hourFrag = assembleHour();
+  const hIndex = parseInt(timeItem.dataset.hour);
+  hourFrag.children[hIndex].classList.add('is-current');
+  hour.appendChild(hourFrag);
+
+  panelBody.appendChild(hour);
+
+  const minute = document.createElement('ul');
+  minute.className = 'l-time-picker__panel-body-scroll';
+  minute.addEventListener('scroll', debounce((e) => minuteScroll(e, pen.id), 200));
+  minute.addEventListener('click', (e) => { minuteClick(e, pen.id) });
+  const minuteFrag = assembleMinute();
+  const mIndex = parseInt(timeItem.dataset.minute);
+  minuteFrag.children[mIndex].classList.add('is-current');
+  minute.appendChild(minuteFrag);
+  panelBody.appendChild(minute);
+
+  const second = document.createElement('ul');
+  second.className = 'l-time-picker__panel-body-scroll';
+  second.addEventListener('scroll', debounce((e) => secondScroll(e, pen.id), 200));
+  second.addEventListener('click', (e) => { secondClick(e, pen.id) });
+  const secondFrag = assembleSecond();
+  const sIndex = parseInt(timeItem.dataset.second);
+  secondFrag.children[sIndex].classList.add('is-current');
+  second.appendChild(secondFrag);
+  panelBody.appendChild(second);
+
+  sectionBody.appendChild(panelBody);
+  panel.appendChild(sectionBody);
+  timeItem.appendChild(panel);
+  return timeItem;
+}
+function hourClick(e, penId) {
+  if (e.target.tagName !== 'LI') return;
+  console.log(e.target, 'hourClick')
+  const index = parseInt(e.target.dataset.value);
+  const distance = index * TIME_HEIGHT
+  e.target.parentElement.scrollTo?.({
+    top: distance,
+    behavior: 'smooth',
+  });
+  updateViewer(null, index, 'hour', penId);
+
+  // const panelTime = document.querySelector(`.${DROPMENU_PREFIX}${penId} .l-date-picker__panel-time`);
+  // const lastHour = parseInt(panelTime.dataset.hour)
+  // e.target.parentElement.children[lastHour].classList.remove('is-current');
+  // e.target.classList.add('is-current');
+  // panelTime.dataset.hour = index + '';
+
+  updateActiveTime(e.target, index, 'hour', penId);
+}
+function minuteClick(e, penId) {
+  if (e.target.tagName !== 'LI') return;
+  console.log(e.target.dataset, 'hourClick')
+  const index = parseInt(e.target.dataset.value);
+  const distance = index * TIME_HEIGHT
+  e.target.parentElement.scrollTo?.({
+    top: distance,
+    behavior: 'smooth',
+  });
+  updateViewer(null, index, 'minute', penId);
+
+  // const panelTime = document.querySelector(`.${DROPMENU_PREFIX}${penId} .l-date-picker__panel-time`);
+  // const lastMinute = parseInt(panelTime.dataset.minute)
+  // e.target.parentElement.children[lastMinute].classList.remove('is-current');
+  // e.target.classList.add('is-current');
+  // panelTime.dataset.minute = index + '';
+
+  updateActiveTime(e.target, index, 'minute', penId);
+}
+function secondClick(e, penId) {
+  if (e.target.tagName !== 'LI') return;
+  console.log(e.target.dataset, 'hourClick')
+  const index = parseInt(e.target.dataset.value);
+  const distance = index * TIME_HEIGHT
+  e.target.parentElement.scrollTo?.({
+    top: distance,
+    behavior: 'smooth',
+  });
+  updateViewer(null, index, 'second', penId);
+
+  // const panelTime = document.querySelector(`.${DROPMENU_PREFIX}${penId} .l-date-picker__panel-time`);
+  // const lastSecond = parseInt(panelTime.dataset.second)
+  // e.target.parentElement.children[lastSecond].classList.remove('is-current');
+  // e.target.classList.add('is-current');
+  // panelTime.dataset.second = index + '';
+
+  updateActiveTime(e.target, index, 'second', penId);
+}
+function updateActiveTime(target, index, key, penId) {
+  const panelTime = document.querySelector(`.${DROPMENU_PREFIX}${penId} .l-date-picker__panel-time`);
+  const lastIndex = parseInt(panelTime.dataset[key])
+  target.parentElement.children[lastIndex].classList.remove('is-current');
+  target.classList.add('is-current');
+  panelTime.dataset[key] = index + '';
+}
+function hourScroll(e, penId) {
+  console.log(e.target.scrollTop, 'hourScroll')
+  const index = Math.round(e.target.scrollTop / TIME_HEIGHT);
+  const distance = index * TIME_HEIGHT;
+  const scrollTop = e.target.scrollTop;
+  console.log(distance, scrollTop, 'hourWheel')
+  if (distance !== scrollTop) {
+    const scrollCtrl = e.target;
+
+    if (!scrollCtrl || scrollCtrl.scrollTop === distance) return;
+    scrollCtrl.scrollTo?.({
+      top: distance,
+      behavior: 'smooth',
+    });
+    updateViewer(e.target, index, 'hour', penId);
+    updateActiveTime(e.target.children[index], index, 'hour', penId);
+  }
+}
+function minuteScroll(e, penId) {
+  console.log(e, 'minuteScroll')
+  console.log(e.target.scrollTop, 'hourScroll')
+  const index = Math.round(e.target.scrollTop / TIME_HEIGHT);
+  const distance = index * TIME_HEIGHT;
+  const scrollTop = e.target.scrollTop;
+  console.log(distance, scrollTop, 'hourWheel')
+  if (distance !== scrollTop) {
+    const scrollCtrl = e.target;
+
+    if (!scrollCtrl || scrollCtrl.scrollTop === distance) return;
+    scrollCtrl.scrollTo?.({
+      top: distance,
+      behavior: 'smooth',
+    });
+    updateViewer(e.target, index, 'minute', penId);
+    updateActiveTime(e.target.children[index], index, 'minute', penId);
+  }
+}
+function secondScroll(e, penId) {
+  console.log(e, 'secondScroll')
+  console.log(e.target.scrollTop, 'hourScroll')
+  const index = Math.round(e.target.scrollTop / TIME_HEIGHT);
+  const distance = index * TIME_HEIGHT;
+  const scrollTop = e.target.scrollTop;
+  console.log(distance, scrollTop, 'hourWheel')
+  if (distance !== scrollTop) {
+    const scrollCtrl = e.target;
+
+    if (!scrollCtrl || scrollCtrl.scrollTop === distance) return;
+    scrollCtrl.scrollTo?.({
+      top: distance,
+      behavior: 'smooth',
+    });
+    updateViewer(e.target, index, 'second', penId);
+    updateActiveTime(e.target.children[index], index, 'second', penId);
+  }
+}
+function updateViewer(target, index, type, penId) {
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
+  const viewer = dropMenu.querySelector(`.${DROPMENU_PREFIX}${penId} .l-date-picker__panel-time .l-date-picker__panel-time-viewer`);
+  const times = viewer.innerHTML.split(':');
+  let value = '';
+  if (index < 10) {
+    value = '0' + index;
+  } else {
+    value = index + '';
+  }
+  if (type === 'hour') {
+    times[0] = value;
+  } else if (type === 'minute') {
+    times[1] = value;
+  } else {
+    times[2] = value;
+  }
+  viewer.innerHTML = times.join(':');
+}
+function assembleSecond() {
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < TimeCount.SECOND; i++) {
+    const li = document.createElement('li');
+    li.className = 'l-time-picker__panel-body-scroll-item';
+    li.dataset.value = i + '';
+    if (i < 10) {
+      li.innerHTML = '0' + i;
+    } else {
+      li.innerHTML = i + '';
+    }
+    frag.appendChild(li);
+  }
+  return frag;
+}
+function assembleMinute() {
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < TimeCount.MINUTE; i++) {
+    const li = document.createElement('li');
+    li.className = 'l-time-picker__panel-body-scroll-item';
+    li.dataset.value = i + '';
+    if (i < 10) {
+      li.innerHTML = '0' + i;
+    } else {
+      li.innerHTML = i + '';
+    }
+    frag.appendChild(li);
+  }
+  return frag;
+}
+function assembleHour() {
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < TimeCount.HOUR; i++) {
+    const li = document.createElement('li');
+    li.className = 'l-time-picker__panel-body-scroll-item';
+    li.dataset.value = i + '';
+    if (i < 10) {
+      li.innerHTML = '0' + i;
+    } else {
+      li.innerHTML = i + '';
+    }
+    frag.appendChild(li);
   }
   return frag;
 }
@@ -381,25 +873,32 @@ function assembleTable(data, pen, opt) {
 
   // tbody
   const tbody = document.createElement('tbody');
-  const trs = assembleBodyTRs(data, pen, opt);
+  const trs = assembleBodyTRs(data, pen.id, opt);
   tbody.appendChild(trs);
   frag.appendChild(tbody);
   return frag;
 }
-function assembleBodyTRs(data, pen, opt: { year: number, month: number }) {
+function assembleBodyTRs(data, penId, opt: { year: number, month: number }) {
   const daylist = getTimeListByYearAndMonth(opt.year, opt.month);
   const frag = document.createDocumentFragment();
   for (let i = 0; i < daylist.length; i++) {
     const item = daylist[i];
     const tr = document.createElement('tr');
+    tr.dataset.penId = penId;
     tr.className = 'l-date-picker__table-date-row';
 
     for (let k = 0; k < item.children.length; k++) {
       const child = item.children[k];
       const td = document.createElement('td');
       td.className = 'l-date-picker__cell';
+      td.dataset.value = child.label;
+      td.dataset.rowIndex = i + '';
+      td.dataset.colIndex = k + '';
+      td.addEventListener("click", tdClick);
+
       const inner = document.createElement('div');
       inner.className = 'l-date-picker__cell-inner';
+      inner.dataset.value = child.label;
       inner.innerHTML = child.label;
       if (child.isCurrent && child.active) {
         td.className += ' l-date-picker__cell--now';
@@ -414,6 +913,35 @@ function assembleBodyTRs(data, pen, opt: { year: number, month: number }) {
   }
 
   return frag;
+}
+function tdClick(e) {
+  e.stopPropagation();
+  console.log(e.target.dataset, this, e.target, 'e')
+
+  const penId = this.parentElement.dataset.penId
+  const pen = window.meta2d.findOne(penId);
+  if (!pen) {
+    return;
+  }
+  if (!pen.multiple) {
+    // 清除上一个选中的
+    const { rowIndex, colIndex } = this.parentElement.parentElement.dataset;
+    if (rowIndex && colIndex) {
+      const _rowIndex = parseInt(rowIndex);
+      const _colIndex = parseInt(colIndex);
+      if (_rowIndex > -1 && _colIndex > -1) {
+        console.log(this.parentElement.parentElement.children[_rowIndex].children[_colIndex], 'hello')
+        this.parentElement.parentElement.children[_rowIndex].children[_colIndex].classList.remove('l-date-picker__cell--active');
+      }
+    }
+  } else {
+
+  }
+  this.classList.add('l-date-picker__cell--active');
+
+  this.parentElement.parentElement.dataset.lastdate = e.target.dataset.value;
+  this.parentElement.parentElement.dataset.rowIndex = this.dataset.rowIndex;
+  this.parentElement.parentElement.dataset.colIndex = this.dataset.colIndex;
 }
 function assembleTR(data, pen) {
   const tr = document.createElement('tr');
@@ -657,7 +1185,7 @@ function onSelect(e) {
   updateHeader(list[_index], type, value);
 
   // 更新body
-  updateBody(list[_index]);
+  updateBody(list[_index], penId);
 }
 function updateHeader(dom: any, type: string, value) {
   const inputs = dom.querySelectorAll(".l-input__inner");
@@ -667,10 +1195,10 @@ function updateHeader(dom: any, type: string, value) {
     }
   }
 }
-function updateBody(dom) {
+function updateBody(dom, penId) {
   const year = dom.dataset.currentYear;
   const month = dom.dataset.currentMonth;
-  const trs = assembleBodyTRs(null, null, { year, month });
+  const trs = assembleBodyTRs(null, penId, { year, month });
   const tbody = dom.querySelector('tbody');
   tbody.replaceChildren(trs);
 }
@@ -732,7 +1260,7 @@ function btnClick(e) {
         updateHeader(list[_index], DateSelectType.YEAR + '', _currentYear + '');
       }
       // 更新body
-      updateBody(list[_index]);
+      updateBody(list[_index], penId);
     }
   } else if (key === 'next') {
     if (_currentMonth < 12) {
@@ -750,7 +1278,7 @@ function btnClick(e) {
       updateHeader(list[_index], DateSelectType.YEAR + '', _currentYear + '');
     }
     // 更新body
-    updateBody(list[_index]);
+    updateBody(list[_index], penId);
 
   } else if (key === 'current') {
     // 获取当前的年月
@@ -764,7 +1292,7 @@ function btnClick(e) {
     updateHeader(list[_index], DateSelectType.MONTH + '', currentMonth);
 
     // 更新body
-    updateBody(list[_index]);
+    updateBody(list[_index], penId);
   }
 }
 function assembleInputBox(pen: Pen) {
@@ -871,7 +1399,8 @@ const getTimeListByYearAndMonth = (year, month) => {
     for (let time = 0; time < 7; time++) {
       let day = dayjs(firstDay).add(i * 7 + time, "day")
       const date = day.format("YYYY-MM-DD")
-
+      // active 代表是不是当前月的日期
+      // isCurrent 代表是不是今天
       childrenList.push(
         {
           label: day.format("D"),
