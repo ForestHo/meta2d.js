@@ -20,6 +20,11 @@ enum TimeCount {
   MINUTE = 60,
   SECOND = 60
 }
+enum CTL_TYPE {
+  PREV = 'prev',
+  CURRENT = 'current',
+  NEXT = 'next'
+}
 enum MonthType {
   PREV = 'prev-month',
   CURRENT = 'current-month',
@@ -31,29 +36,122 @@ const panelComp = {
   "daterange": ["date", "date"],
 }
 enum SwitchMode {
-  WEEK,
-  MONTH,
-  QUARTER,
-  YEAR,
+  DATE = "date",
+  WEEK = "week",
+  MONTH = "month",
+  QUARTER = "quarter",
+  YEAR = "year",
 }
-const pagiMonth = [
+const pagiCtls = [
   {
-    label: '上个月',
-    key: 'prev'
+    label: CTL_TYPE.PREV,
+    key: CTL_TYPE.PREV
   },
   {
-    label: '当前',
-    key: 'current'
+    label: CTL_TYPE.CURRENT,
+    key: CTL_TYPE.CURRENT,
   },
   {
-    label: '下个月',
-    key: 'next'
+    label: CTL_TYPE.NEXT,
+    key: CTL_TYPE.NEXT,
   }
 ]
+const yearOptions = [
+  {
+    label: '2021',
+    value: '2021'
+  },
+  {
+    label: '2022',
+    value: '2022'
+  },
+  {
+    label: '2023',
+    value: '2023'
+  },
+  {
+    label: '2024',
+    value: '2024'
+  },
+  {
+    label: '2025',
+    value: '2025'
+  },
+  {
+    label: '2026',
+    value: '2026'
+  },
+  {
+    label: '2027',
+    value: '2027'
+  },
+  {
+    label: '2028',
+    value: '2028'
+  },
+  {
+    label: '2029',
+    value: '2029'
+  },
+  {
+    label: '2030',
+    value: '2030'
+  }
+];
+const monthOptions = [
+  {
+    label: '1',
+    value: '1'
+  },
+  {
+    label: '2',
+    value: '2'
+  },
+  {
+    label: '3',
+    value: '3'
+  },
+  {
+    label: '4',
+    value: '4'
+  },
+  {
+    label: '5',
+    value: '5'
+  },
+  {
+    label: '6',
+    value: '6'
+  },
+  {
+    label: '7',
+    value: '7'
+  },
+  {
+    label: '8',
+    value: '8'
+  },
+  {
+    label: '9',
+    value: '9'
+  },
+  {
+    label: '10',
+    value: '10'
+  },
+  {
+    label: '11',
+    value: '11'
+  },
+  {
+    label: '12',
+    value: '12'
+  }
+];
 const svgMap = {
-  "prev": `M15.91 17.5l-5.5-5.5 5.5-5.5-1.41-1.41L7.59 12l6.91 6.91 1.41-1.41z`,
-  "current": `M12 6a6 6 0 100 12 6 6 0 000-12zm-8 6a8 8 0 1116 0 8 8 0 01-16 0z`,
-  "next": `M8.09 17.5l5.5-5.5-5.5-5.5L9.5 5.09 16.41 12 9.5 18.91 8.09 17.5z`
+  [CTL_TYPE.PREV]: `M15.91 17.5l-5.5-5.5 5.5-5.5-1.41-1.41L7.59 12l6.91 6.91 1.41-1.41z`,
+  [CTL_TYPE.CURRENT]: `M12 6a6 6 0 100 12 6 6 0 000-12zm-8 6a8 8 0 1116 0 8 8 0 01-16 0z`,
+  [CTL_TYPE.NEXT]: `M8.09 17.5l5.5-5.5-5.5-5.5L9.5 5.09 16.41 12 9.5 18.91 8.09 17.5z`
 }
 const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
 export function datePicker(pen: Pen): Path2D {
@@ -138,7 +236,7 @@ function renderData(data, dom, pen) {
     `.l-date-picker__panel-content,
     .l-date-range-picker__panel-content-wrapper {
         display: flex;
-        height:300px;
+        // height:300px;
       }`
   );
 
@@ -530,6 +628,23 @@ function renderData(data, dom, pen) {
 }
   `)
 
+  sheet.insertRule(`
+  .l-date-picker__panel-year .l-date-picker__cell-inner, 
+  .l-date-picker__panel-month .l-date-picker__cell-inner, 
+  .l-date-picker__panel-quarter .l-date-picker__cell-inner {
+    width: 48px;
+}
+  `)
+
+  sheet.insertRule(`
+  .l-date-picker__panel-year .l-date-picker__table tbody tr,
+  .l-date-picker__panel-month .l-date-picker__table tbody tr, 
+  .l-date-picker__panel-quarter .l-date-picker__table tbody tr {
+    display: flex;
+    justify-content: space-between;
+}
+  `)
+
 
   const lPanel = document.createElement('div');
   lPanel.className = 'l-date-range-picker__panel-content-wrapper';
@@ -550,7 +665,18 @@ function generateDomByData(data, pen) {
   for (let i = 0; i < panelComp[key].length; i++) {
     const type = panelComp[key][i];
     if (type === "date") {
-      const dateDom = generateDateDom(data, pen, i)
+      let dateDom = null;
+      if (pen.mode === SwitchMode.DATE) {
+        dateDom = generateDateDom(data, pen, i)
+      } else if (pen.mode === SwitchMode.WEEK) {
+        dateDom = generateWeekDom(data, pen, i)
+      } else if (pen.mode === SwitchMode.MONTH) {
+        dateDom = generateMonthDom(data, pen, i)
+      } else if (pen.mode === SwitchMode.QUARTER) {
+        dateDom = generateQuarterDom(data, pen, i)
+      } else if (pen.mode === SwitchMode.YEAR) {
+        dateDom = generateYearDom(data, pen, i)
+      }
       frag.appendChild(dateDom);
     } else if (type === "time") {
       const timeDom = generateTimeDom(data, pen)
@@ -558,6 +684,40 @@ function generateDomByData(data, pen) {
     }
   }
   return frag;
+}
+function generateWeekDom(data, pen, index) {
+
+}
+function generateMonthDom(data, pen, index) {
+  const frag = document.createDocumentFragment();
+  const currentYear = dayjs().year();
+  let currentMonth = dayjs().month() + 1;
+  const content = document.createElement('div');
+  content.className = 'l-date-picker__panel-content';
+
+  const dateItem = assemleMonthItem(data, pen, {
+    year: currentYear,
+    month: currentMonth,
+    index
+  });
+  dateItem.className = 'l-date-picker__panel-month';
+  dateItem.dataset.type = 'month';
+  dateItem.dataset.index = index + '';
+  dateItem.dataset.currentMonth = currentMonth + '';
+  dateItem.dataset.currentYear = currentYear + '';
+  dateItem.dataset.mode = SwitchMode.MONTH;
+  // currentMonth++;
+
+  content.appendChild(dateItem);
+
+  frag.appendChild(content);
+  return frag;
+}
+function generateQuarterDom(data, pen, index) {
+
+}
+function generateYearDom(data, pen, index) {
+
 }
 function generateTimeDom(data, pen) {
   const frag = document.createDocumentFragment();
@@ -582,7 +742,7 @@ function generateDateDom(data, pen, index?) {
   dateItem.dataset.index = index + '';
   dateItem.dataset.currentMonth = currentMonth + '';
   dateItem.dataset.currentYear = currentYear + '';
-  dateItem.dataset.mode = SwitchMode.MONTH + '';
+  dateItem.dataset.mode = SwitchMode.DATE;
   currentMonth++;
 
   content.appendChild(dateItem);
@@ -862,19 +1022,35 @@ function assemleDateItem(data, pen, opt) {
   const dateItem = document.createElement('div');
   const header = document.createElement('div');
   header.className = 'l-date-picker__header';
-  const headerFrag = assembleHeader(data, pen, opt);
+  const headerFrag = assembleHeader(data, pen, opt, SwitchMode.DATE);
   header.appendChild(headerFrag);
   dateItem.appendChild(header);
 
   const tableItem = document.createElement('table');
   tableItem.className = 'l-date-picker__table';
-  const tableFrag = assembleTable(data, pen, opt);
+  const tableFrag = assembleDateTable(data, pen, opt);
   tableItem.appendChild(tableFrag);
   dateItem.appendChild(tableItem);
 
   return dateItem;
 }
-function assembleTable(data, pen, opt) {
+function assemleMonthItem(data, pen, opt) {
+  const dateItem = document.createElement('div');
+  const header = document.createElement('div');
+  header.className = 'l-date-picker__header';
+  const headerFrag = assembleHeader(data, pen, opt, SwitchMode.MONTH);
+  header.appendChild(headerFrag);
+  dateItem.appendChild(header);
+
+  const tableItem = document.createElement('table');
+  tableItem.className = 'l-date-picker__table';
+  const tableFrag = assembleMonthTable(data, pen, opt);
+  tableItem.appendChild(tableFrag);
+  dateItem.appendChild(tableItem);
+
+  return dateItem;
+}
+function assembleDateTable(data, pen, opt) {
   const frag = document.createDocumentFragment();
   // thead
   const thead = document.createElement('thead');
@@ -885,12 +1061,118 @@ function assembleTable(data, pen, opt) {
   // tbody
   const tbody = document.createElement('tbody');
   tbody.dataset.index = opt.index + '';
-  const trs = assembleBodyTRs(pen, opt);
+  const trs = assembleDateBodyTRs(pen, opt);
   tbody.appendChild(trs);
   frag.appendChild(tbody);
   return frag;
 }
-function assembleBodyTRs(pen, opt: { year: number, month: number }) {
+function assembleMonthTable(data, pen, opt) {
+  const frag = document.createDocumentFragment();
+  // thead
+  // const thead = document.createElement('thead');
+  // const tr = assembleTR(data, pen);
+  // thead.appendChild(tr);
+  // frag.appendChild(thead);
+
+  // tbody
+  const tbody = document.createElement('tbody');
+  tbody.dataset.index = opt.index + '';
+  const trs = assembleMonthBodyTRs(pen, opt);
+  tbody.appendChild(trs);
+  frag.appendChild(tbody);
+  return frag;
+}
+function getMonthList(year) {
+  const list = [];
+  console.log(year, 111)
+  for (let i = 1; i <= 12; i++) {
+    let value = dayjs().year(year).month(i - 1).format('YYYY-MM');
+    const month = {
+      value,
+      label: i,
+    };
+    list.push(month);
+  }
+  return list;
+}
+/**
+ * @description 生成月选择器的tbody的tr列表
+ * @author Joseph Ho
+ * @date 02/11/2024
+ * @param {*} pen
+ * @param {{ year: number, month: number }} opt
+ */
+function assembleMonthBodyTRs(pen, opt: { year: number, month: number }) {
+  const monthList = getMonthList(opt.year);
+  const frag = document.createDocumentFragment();
+  const month_suffix = '月';
+  let currentMonth = dayjs().year(year).month(month).format('YYYY-MM');
+  for (let i = 0; i < 4; i++) {
+    const tr = document.createElement('tr');
+    tr.className = 'l-date-picker__table-month-row';
+    tr.dataset.penId = pen.id;
+
+    for (let k = 0; k < 3; k++) {
+      const item = monthList[i * 3 + k];
+      const td = document.createElement('td');
+      td.className = 'l-date-picker__cell';
+      const val = item.value
+      const label = item.label;
+
+      td.addEventListener("click", tdMonthClick);
+      if (val === currentMonth) {
+        td.className += ' l-date-picker__cell--now';
+      }
+      if (pen.pickerTimes.indexOf(item.value) > -1) {
+        td.classList.add('l-date-picker__cell--active');
+      }
+
+      const inner = document.createElement('div');
+      inner.className = 'l-date-picker__cell-inner';
+      inner.dataset.value = val + '';
+      inner.innerHTML = label + month_suffix;
+
+      td.appendChild(inner);
+      tr.appendChild(td);
+    }
+    frag.appendChild(tr);
+  }
+  return frag;
+}
+function tdMonthClick(e) {
+  e.stopPropagation();
+  const { mode, currentMonth, currentYear } = this.parentElement.parentElement.parentElement.parentElement.dataset;
+  console.log(mode, currentMonth, currentYear)
+  let _currentMonth = parseInt(currentMonth);
+  let _currentYear = parseInt(currentYear);
+  console.log(_currentMonth, _currentYear)
+  const { value } = e.target.dataset;
+  const penId = this.parentElement.dataset.penId
+  const pen = window.meta2d.findOne(penId);
+  if (!pen) {
+    return;
+  }
+  console.log(pen, value, '222')
+  const pickerTimes = deepClone(pen.pickerTimes);
+  updateTags(pickerTimes, value, pen);
+  window.meta2d.setValue({
+    id: penId,
+    pickerTimes,
+  })
+  adjustHeight(pen);
+
+  // 更新body
+  updateBody(this.parentElement.parentElement.parentElement.parentElement, penId);
+}
+/**
+ * @description 生成日期选择器的tbody的tr列表
+ * @author Joseph Ho
+ * @date 02/11/2024
+ * @param {*} pen
+ * @param {{ year: number, month: number }} opt
+ * @returns {*}  
+ */
+function assembleDateBodyTRs(pen, opt: { year: number, month: number }) {
   const daylist = getTimeListByYearAndMonth(opt.year, opt.month);
   const frag = document.createDocumentFragment();
   for (let i = 0; i < daylist.length; i++) {
@@ -1087,133 +1369,68 @@ function assembleTR(data, pen) {
   }
   return tr;
 }
-function assembleHeader(data, pen, opt) {
+/**
+ * @description 根据不同的类型组装header
+ * @author Joseph Ho
+ * @date 02/11/2024
+ * @param {*} data
+ * @param {*} pen
+ * @param {*} opt
+ * @param {*} type
+ * @returns {*}  
+ */
+function assembleHeader(data, pen, opt, type) {
   const frag = document.createDocumentFragment();
   const controller = document.createElement('div');
   controller.className = 'l-date-picker__header-controller';
   const month = document.createElement('div');
   month.className = 'l-select__wrap l-date-picker__header-controller-month';
-  const monthOptions = [
-    {
-      label: '1',
-      value: '1'
-    },
-    {
-      label: '2',
-      value: '2'
-    },
-    {
-      label: '3',
-      value: '3'
-    },
-    {
-      label: '4',
-      value: '4'
-    },
-    {
-      label: '5',
-      value: '5'
-    },
-    {
-      label: '6',
-      value: '6'
-    },
-    {
-      label: '7',
-      value: '7'
-    },
-    {
-      label: '8',
-      value: '8'
-    },
-    {
-      label: '9',
-      value: '9'
-    },
-    {
-      label: '10',
-      value: '10'
-    },
-    {
-      label: '11',
-      value: '11'
-    },
-    {
-      label: '12',
-      value: '12'
-    }
-  ];
-  const monthSelect = assembleSelect({
-    type: DateSelectType.MONTH,
-    selectVal: opt.month,
-    index: opt.index,
-    penId: pen.id
-  }, monthOptions);
-  month.appendChild(monthSelect);
-  controller.appendChild(month);
 
-  const year = document.createElement('div');
-  year.className = 'l-select__wrap l-date-picker__header-controller-year';
-  const yearOptions = [
-    {
-      label: '2021',
-      value: '2021'
-    },
-    {
-      label: '2022',
-      value: '2022'
-    },
-    {
-      label: '2023',
-      value: '2023'
-    },
-    {
-      label: '2024',
-      value: '2024'
-    },
-    {
-      label: '2025',
-      value: '2025'
-    },
-    {
-      label: '2026',
-      value: '2026'
-    },
-    {
-      label: '2027',
-      value: '2027'
-    },
-    {
-      label: '2028',
-      value: '2028'
-    },
-    {
-      label: '2029',
-      value: '2029'
-    },
-    {
-      label: '2030',
-      value: '2030'
-    }
-  ];
-  const yearSelect = assembleSelect({
-    type: DateSelectType.YEAR,
-    selectVal: opt.year,
-    index: opt.index,
-    penId: pen.id
-  }, yearOptions);
-  year.appendChild(yearSelect);
-  controller.appendChild(year);
+  if (type === SwitchMode.DATE) {
+    // 组装日期选择的select
+    const monthSelect = assembleSelect({
+      type: DateSelectType.MONTH,
+      selectVal: opt.month,
+      index: opt.index,
+      penId: pen.id,
+      mode: SwitchMode.DATE
+    }, monthOptions);
+    month.appendChild(monthSelect);
+    controller.appendChild(month);
 
-
-
+    const year = document.createElement('div');
+    year.className = 'l-select__wrap l-date-picker__header-controller-year';
+    const yearSelect = assembleSelect({
+      type: DateSelectType.YEAR,
+      selectVal: opt.year,
+      index: opt.index,
+      penId: pen.id,
+      mode: SwitchMode.DATE
+    }, yearOptions);
+    year.appendChild(yearSelect);
+    controller.appendChild(year);
+  } else if (type === SwitchMode.MONTH) {
+    // 组装月份选择的select
+    const year = document.createElement('div');
+    year.className = 'l-select__wrap l-date-picker__header-controller-year';
+    const yearSelect = assembleSelect({
+      type: DateSelectType.YEAR,
+      selectVal: opt.year,
+      index: opt.index,
+      penId: pen.id,
+      mode: SwitchMode.MONTH
+    }, yearOptions);
+    year.appendChild(yearSelect);
+    controller.appendChild(year);
+  }
   frag.appendChild(controller);
 
   const pagination = document.createElement('div');
   pagination.className = 'l-pagination-mini';
   const pageFrag = assemblePagination({
     index: opt.index,
-    penId: pen.id
+    penId: pen.id,
+    type,
   });
   pagination.appendChild(pageFrag);
 
@@ -1224,7 +1441,7 @@ function selectClick(e) {
   e.stopPropagation();
   this.lastChild.firstChild.style.display = this.lastChild.firstChild.style.display === 'none' ? 'block' : 'none';
 }
-function assembleSelect(opt: { type, selectVal, index, penId }, options) {
+function assembleSelect(opt: { type, selectVal, index, penId, mode }, options) {
   const select = document.createElement('div');
   select.className = 'l-select-input l-select';
   select.addEventListener('click', selectClick);
@@ -1273,6 +1490,7 @@ function assembleSelect(opt: { type, selectVal, index, penId }, options) {
   const ul = document.createElement('ul');
   ul.className = 'l-select__list';
   ul.addEventListener('click', onSelect);
+  console.log(opt)
   for (let i = 0; i < options.length; i++) {
     const item = options[i];
     const li = document.createElement('li');
@@ -1281,6 +1499,7 @@ function assembleSelect(opt: { type, selectVal, index, penId }, options) {
     li.dataset.type = opt.type;
     li.dataset.index = opt.index;
     li.dataset.penId = opt.penId;
+    li.dataset.mode = opt.mode;
 
     const span = document.createElement('span');
     span.innerHTML = item.label;
@@ -1288,6 +1507,7 @@ function assembleSelect(opt: { type, selectVal, index, penId }, options) {
     span.dataset.type = opt.type;
     span.dataset.index = opt.index;
     span.dataset.penId = opt.penId;
+    span.dataset.mode = opt.mode;
 
     li.appendChild(span);
     ul.appendChild(li);
@@ -1303,11 +1523,18 @@ function assembleSelect(opt: { type, selectVal, index, penId }, options) {
 }
 function onSelect(e) {
   // e.stopPropagation();
-  const { type, index, penId, value } = e.target.dataset;
+  const { type, index, penId, value, mode } = e.target.dataset;
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
   const _type = parseInt(type);
   const _index = parseInt(index);
-  const list = dropMenu.querySelectorAll('.l-date-picker__panel-date');
+  let selector = ''
+  console.log(type, index, penId, value)
+  if (mode === SwitchMode.DATE) {
+    selector = '.l-date-picker__panel-date';
+  } else if (mode === SwitchMode.MONTH) {
+    selector = '.l-date-picker__panel-month';
+  }
+  const list = dropMenu.querySelectorAll(selector);
   // 更新content的数据，存储下来
   if (_type === DateSelectType.MONTH) {
     list[_index].dataset.currentMonth = value;
@@ -1334,19 +1561,25 @@ function updateBody(dom, penId) {
   const month = parseInt(dom.dataset.currentMonth);
   const tbody = dom.querySelector('tbody');
   const pen = window.meta2d.findOne(penId);
-  const trs = assembleBodyTRs(pen, { year, month });
+  let trs = null
+  if (pen.mode === SwitchMode.DATE) {
+    trs = assembleDateBodyTRs(pen, { year, month });
+  } else if (pen.mode === SwitchMode.MONTH) {
+    trs = assembleMonthBodyTRs(pen, { year, month });
+  }
   tbody.replaceChildren(trs);
 }
 function assemblePagination(opt) {
   const frag = document.createDocumentFragment();
-  for (let i = 0; i < pagiMonth.length; i++) {
-    const item = pagiMonth[i];
+  for (let i = 0; i < pagiCtls.length; i++) {
+    const item = pagiCtls[i];
     const btn = document.createElement('button');
     btn.className = 'l-button';
     btn.title = item.label;
     btn.dataset.key = item.key;
     btn.dataset.index = opt.index;
     btn.dataset.penId = opt.penId;
+    btn.dataset.type = opt.type;
     btn.onclick = btnClick;
 
     const svgDom = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -1368,24 +1601,43 @@ function assemblePagination(opt) {
   return frag;
 }
 function btnClick(e) {
-  const { key, index, penId } = this.dataset;
-  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
-  const list = dropMenu.querySelectorAll('.l-date-picker__panel-date');
-  const _index = parseInt(index);
-  const { mode, currentMonth, currentYear } = list[_index].dataset;
-  const _mode = parseInt(mode);
-  let _currentMonth = parseInt(currentMonth);
-  let _currentYear = parseInt(currentYear);
-  if (key === 'prev') {
-    if (_mode === SwitchMode.MONTH) {
-      if (_currentMonth > 1) {
-        _currentMonth--;
+  const { key, index, penId, type } = this.dataset;
+  if (type === SwitchMode.DATE) {
+    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
+    const list = dropMenu.querySelectorAll('.l-date-picker__panel-date');
+    const _index = parseInt(index);
+    const { mode, currentMonth, currentYear } = list[_index].dataset;
+    let _currentMonth = parseInt(currentMonth);
+    let _currentYear = parseInt(currentYear);
+    if (key === CTL_TYPE.PREV) {
+      // ?? 这里是否需要判断当前的mode
+      if (mode === SwitchMode.DATE) {
+        if (_currentMonth > 1) {
+          _currentMonth--;
+          list[_index].dataset.currentMonth = _currentMonth;
+          // 更新header
+          updateHeader(list[_index], DateSelectType.MONTH + '', _currentMonth + '');
+        } else if (_currentMonth === 1) {
+          _currentMonth = 12;
+          _currentYear--;
+          list[_index].dataset.currentMonth = _currentMonth;
+          list[_index].dataset.currentYear = _currentYear;
+          // 更新header
+          updateHeader(list[_index], DateSelectType.MONTH + '', _currentMonth + '');
+          updateHeader(list[_index], DateSelectType.YEAR + '', _currentYear + '');
+        }
+        // 更新body
+        updateBody(list[_index], penId);
+      }
+    } else if (key === CTL_TYPE.NEXT) {
+      if (_currentMonth < 12) {
+        _currentMonth++;
         list[_index].dataset.currentMonth = _currentMonth;
         // 更新header
         updateHeader(list[_index], DateSelectType.MONTH + '', _currentMonth + '');
-      } else if (_currentMonth === 1) {
-        _currentMonth = 12;
-        _currentYear--;
+      } else if (_currentMonth === 12) {
+        _currentMonth = 1;
+        _currentYear++;
         list[_index].dataset.currentMonth = _currentMonth;
         list[_index].dataset.currentYear = _currentYear;
         // 更新header
@@ -1394,39 +1646,49 @@ function btnClick(e) {
       }
       // 更新body
       updateBody(list[_index], penId);
-    }
-  } else if (key === 'next') {
-    if (_currentMonth < 12) {
-      _currentMonth++;
-      list[_index].dataset.currentMonth = _currentMonth;
+
+    } else if (key === CTL_TYPE.CURRENT) {
+      // 获取当前的年月
+      const currentYear = dayjs().year();
+      const currentMonth = dayjs().month() + 1;
+      // 更新content的数据，存储下来
+      list[_index].dataset.currentYear = currentYear;
+      list[_index].dataset.currentMonth = currentMonth;
       // 更新header
-      updateHeader(list[_index], DateSelectType.MONTH + '', _currentMonth + '');
-    } else if (_currentMonth === 12) {
-      _currentMonth = 1;
+      updateHeader(list[_index], DateSelectType.YEAR + '', currentYear);
+      updateHeader(list[_index], DateSelectType.MONTH + '', currentMonth);
+
+      // 更新body
+      updateBody(list[_index], penId);
+    }
+  } else if (type === SwitchMode.WEEK) {
+
+  } else if (type === SwitchMode.MONTH) {
+    const { currentMonth, currentYear, mode, index } = this.parentElement.parentElement.parentElement.dataset
+    let _currentYear = parseInt(currentYear);
+    if (key === CTL_TYPE.PREV) {
+      _currentYear--;
+      this.parentElement.parentElement.parentElement.dataset.currentYear = _currentYear;
+      updateHeader(this.parentElement.parentElement.parentElement,
+        DateSelectType.YEAR + '', _currentYear);
+    } else if (key === CTL_TYPE.NEXT) {
       _currentYear++;
-      list[_index].dataset.currentMonth = _currentMonth;
-      list[_index].dataset.currentYear = _currentYear;
-      // 更新header
-      updateHeader(list[_index], DateSelectType.MONTH + '', _currentMonth + '');
-      updateHeader(list[_index], DateSelectType.YEAR + '', _currentYear + '');
+      this.parentElement.parentElement.parentElement.dataset.currentYear = _currentYear;
+      updateHeader(this.parentElement.parentElement.parentElement,
+        DateSelectType.YEAR + '', _currentYear);
+    } else if (key === CTL_TYPE.CURRENT) {
+      // 获取当前的年月
+      const currentYear = dayjs().year();
+      this.parentElement.parentElement.parentElement.dataset.currentYear = currentYear;
+      updateHeader(this.parentElement.parentElement.parentElement,
+        DateSelectType.YEAR + '', currentYear);
     }
     // 更新body
-    updateBody(list[_index], penId);
+    updateBody(this.parentElement.parentElement.parentElement, penId);
+  } else if (type === SwitchMode.YEAR) {
 
-  } else if (key === 'current') {
-    // 获取当前的年月
-    const currentYear = dayjs().year();
-    const currentMonth = dayjs().month() + 1;
-    // 更新content的数据，存储下来
-    list[_index].dataset.currentYear = currentYear;
-    list[_index].dataset.currentMonth = currentMonth;
-    // 更新header
-    updateHeader(list[_index], DateSelectType.YEAR + '', currentYear);
-    updateHeader(list[_index], DateSelectType.MONTH + '', currentMonth);
-
-    // 更新body
-    updateBody(list[_index], penId);
   }
+
 }
 function assembleInputBox(pen: Pen) {
   const box = document.createElement("div");
@@ -1564,7 +1826,13 @@ function tagClose(e) {
   this.parentElement.remove();
 
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
-  const list = dropMenu.querySelector('.l-date-picker__panel-date');
+  let selector = ''
+  if (pen.mode === SwitchMode.DATE) {
+    selector = '.l-date-picker__panel-date';
+  } else if (pen.mode === SwitchMode.MONTH) {
+    selector = '.l-date-picker__panel-month';
+  }
+  const list = dropMenu.querySelector(selector);
 
   // 更新cascader的checked
   updateBody(list, penId);
