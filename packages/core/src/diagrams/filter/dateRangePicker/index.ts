@@ -1468,51 +1468,51 @@ const getTimeListByYearAndMonth = (year, month) => {
 // const dates = getDates()
 // console.log(dates, 'dates');
 
-function generateMonthCalendar(year, month) {
-  // 创建一个新的 Day.js 对象，设置为指定年份和月份的第一天
-  const firstDayOfMonth = dayjs().year(year).month(month - 1).date(1);
-  // 获取当月第一天是星期几 (0-6, 0 表示星期日)
-  const startDayOfWeek = firstDayOfMonth.day();
-  console.log(startDayOfWeek, 'startDayOfWeek');
-  // 获取该月总天数
-  const daysInMonth = firstDayOfMonth.daysInMonth();
+// function generateMonthCalendar(year, month) {
+//   // 创建一个新的 Day.js 对象，设置为指定年份和月份的第一天
+//   const firstDayOfMonth = dayjs().year(year).month(month - 1).date(1);
+//   // 获取当月第一天是星期几 (0-6, 0 表示星期日)
+//   const startDayOfWeek = firstDayOfMonth.day();
+//   console.log(startDayOfWeek, 'startDayOfWeek');
+//   // 获取该月总天数
+//   const daysInMonth = firstDayOfMonth.daysInMonth();
 
-  // 初始化一个空的二维数组来存放每周的数据
-  let calendar = [];
-  // 当前处理的日期
-  let currentDate = 1;
-  // 循环直到所有的天数都被添加到calendar中
-  for (let week = 0; ; week++) {
-    // 每周开始时初始化一个新的数组
-    calendar[week] = [];
+//   // 初始化一个空的二维数组来存放每周的数据
+//   let calendar = [];
+//   // 当前处理的日期
+//   let currentDate = 1;
+//   // 循环直到所有的天数都被添加到calendar中
+//   for (let week = 0; ; week++) {
+//     // 每周开始时初始化一个新的数组
+//     calendar[week] = [];
 
-    // 遍历一周中的每一天
-    for (let day = 0; day < 7; day++) {
-      // 如果当前天是本月的第一天之前，则填充空值
-      if (week === 0 && day < startDayOfWeek) {
-        calendar[week].push(null);
-      } else if (currentDate > daysInMonth) {
-        // 如果已经超过了这个月的天数，退出循环
-        break;
-      } else {
-        // 否则，添加当天的日期
-        calendar[week].push(currentDate++);
-      }
-    }
+//     // 遍历一周中的每一天
+//     for (let day = 0; day < 7; day++) {
+//       // 如果当前天是本月的第一天之前，则填充空值
+//       if (week === 0 && day < startDayOfWeek) {
+//         calendar[week].push(null);
+//       } else if (currentDate > daysInMonth) {
+//         // 如果已经超过了这个月的天数，退出循环
+//         break;
+//       } else {
+//         // 否则，添加当天的日期
+//         calendar[week].push(currentDate++);
+//       }
+//     }
 
-    // 如果已经填满了整个月份的天数，退出循环
-    if (currentDate > daysInMonth) {
-      break;
-    }
-  }
+//     // 如果已经填满了整个月份的天数，退出循环
+//     if (currentDate > daysInMonth) {
+//       break;
+//     }
+//   }
 
-  return calendar;
-}
+//   return calendar;
+// }
 
-// 使用示例
-const year = 2024;  // 可以替换为你想要查询的年份
-const month = 10;   // 可以替换为你想要查询的月份
-const calendarData = generateMonthCalendar(year, month);
+// // 使用示例
+// const year = 2024;  // 可以替换为你想要查询的年份
+// const month = 10;   // 可以替换为你想要查询的月份
+// const calendarData = generateMonthCalendar(year, month);
 
-// 打印出月份的日历数据
-console.log(calendarData);
+// // 打印出月份的日历数据
+// console.log(calendarData);
