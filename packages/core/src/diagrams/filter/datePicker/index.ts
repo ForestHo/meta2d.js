@@ -6,10 +6,25 @@ import { deepClone, debounce } from '../../../utils';
 import './dayjs.min.js'
 import './isoWeek.min.js'
 import './weekOfYear.min.js'
+import './isoWeeksInYear.min.js'
+import './isLeapYear.min.js'
+import './localeData.min.js'
+import './weekday.min.js'
 dayjs.extend(window.dayjs_plugin_isoWeek)
 dayjs.extend(window.dayjs_plugin_weekOfYear)
+// dayjs.extend(window.dayjs_plugin_localeData)
+// dayjs.extend(window.dayjs_plugin_weekday)
+dayjs.extend(window.dayjs_plugin_isLeapYear)
+dayjs.extend(window.dayjs_plugin_isoWeeksInYear)
 
 
+// 设置一周从周一开始
+// dayjs.locale('en', {
+//   weekStart: 1 // 1 表示周一，0 表示周日
+// });
+// const day1 = dayjs("2021-12-31").startOf('week').format("YYYY-MM-DD dddd")
+// const day2 = dayjs("2021-12-31").startOf('isoWeek').format("YYYY-MM-DD dddd")
+// console.log(day1, day2)
 const TAG_WRAPPER = 'dtag_wrapper_';
 const TAG_PREFIX = 'dtag_';
 const DROPMENU_PREFIX = 'l-date-range-picker__panel_';
@@ -46,6 +61,10 @@ enum SwitchMode {
   MONTH = "month",
   QUARTER = "quarter",
   YEAR = "year",
+}
+enum More_Ctl {
+  PREV = 'prev',
+  NEXT = 'next',
 }
 const pagiCtls = [
   {
@@ -377,53 +396,157 @@ function assembleWeekTable(data, pen, opt) {
   frag.appendChild(tbody);
   return frag;
 }
-function getWeekMonthOfYear(year: number, month: number, startWeek: number, endWeek: number) {
-  const weekList = [];
-  for (let i = startWeek; i <= endWeek; i++) {
-    // The first monday of the first week includes at least one day of the year
-    let firstMondayOfYear = dayjs().year(year).isoWeek(i).day(1);
-    // console.log("Monday 1:", firstMondayOfYear.format("YYYY-MM-DD"));
+const getChunks = (array, chunkSize) => {
+  return array.reduce((resultArray, item, index) => {
+    const chunkIndex = Math.floor(index / chunkSize);
 
-    // Now make sure it really is the first monday of the year
-    if (firstMondayOfYear.year() !== year) {
-      firstMondayOfYear = firstMondayOfYear.add(7, "days");
+    if (!resultArray[chunkIndex]) {
+      resultArray[chunkIndex] = [];
     }
-    // console.log("Monday 2:", firstMondayOfYear.format("YYYY-MM-DD"));
 
-    // return the week for that "real" first monday of the year
-    const list = new Array(7)
-      .fill(firstMondayOfYear)
-      .map((day, idx) => {
-        const _day = day.add(idx, "day");
-        const _month = Number(_day.format("M"));
-        const date = _day.format("YYYY-MM-DD");
+    resultArray[chunkIndex].push(item);
 
-        let type = MonthType.CURRENT;
-        const deltaMonth = _month - month;
-        if (deltaMonth === -1) {
-          type = MonthType.PREV;
-        } else if (deltaMonth === 1) {
-          type = MonthType.NEXT;
-        } else {
-          if (deltaMonth < -1) {
-            type = MonthType.NEXT;
-          } else if (deltaMonth > 1) {
-            type = MonthType.PREV;
-          }
-        }
-        return {
-          label: _day.format("D"),
-          date: date,
-          week: day.isoWeek(),
-          type,
-          active: _month == month,
-          isCurrent: date === dayjs().format("YYYY-MM-DD")
-        }
-      });
-    weekList.push(list);
+    return resultArray;
+  }, []);
+};
+const getDaysOfMonth = (startOfMonth, endOfMonth) => {
+  let results = [];
+  let current = startOfMonth;
+
+  while (
+    current.isSame(endOfMonth, "day") ||
+    current.isBefore(endOfMonth, "day")
+  ) {
+    results.push(current);
+    current = current.add(1, "day");
   }
+  return results;
+};
+function getWeekMonthOfYear(year: number, month: number) {
+  const startOfMonth = dayjs().year(year).month(month - 1).startOf("month").startOf("isoWeek");
+  const endOfMonth = dayjs().year(year).month(month - 1).endOf("month").endOf("isoWeek");
+  const results = getChunks(getDaysOfMonth(startOfMonth, endOfMonth), 7)
+  const weekList = results.map(el => {
+    return el.map(day => {
+      const date = day.format("YYYY-MM-DD");
+      let type = MonthType.CURRENT;
+      const _month = day.month();
+      const deltaMonth = _month - month;
+      if (deltaMonth === -1) {
+        type = MonthType.PREV;
+      } else if (deltaMonth === 1) {
+        type = MonthType.NEXT;
+      } else {
+        if (deltaMonth < -1) {
+          type = MonthType.NEXT;
+        } else if (deltaMonth > 1) {
+          type = MonthType.PREV;
+        }
+      }
+      return {
+        label: day.format("D"),
+        date: date,
+        week: day.isoWeek(),
+        type,
+        active: day.month() == month - 1,
+        isCurrent: dayjs().isSame(day, "day")
+      }
+    })
+  })
   return weekList;
 }
+// function getWeekMonthOfYear(year: number, month: number, startWeek: number, endWeek: number) {
+
+//   const startOfMonth = dayjs().year(year).month(month - 1).startOf("month").startOf("isoWeek");
+//   const endOfMonth = dayjs().year(year).month(month - 1).endOf("month").endOf("isoWeek");
+//   const dayOne = dayjs().year(year).month(month - 1).date(1);
+//   console.log("Start of month:", startOfMonth.format("YYYY-MM-DD"));
+//   console.log("End of month:", endOfMonth.format("YYYY-MM-DD"));
+//   const weekList = [];
+//   for (let i = startWeek; i <= endWeek; i++) {
+//     // The first monday of the first week includes at least one day of the year
+//     let firstMondayOfYear = dayjs().year(year).isoWeek(i).day(1);
+//     console.log("Monday 1:", firstMondayOfYear.format("YYYY-MM-DD"));
+
+//     if (i === startWeek && firstMondayOfYear.isAfter(dayOne)) {
+//       console.log("get before", firstMondayOfYear.format("YYYY-MM-DD"));
+//       const _firstMondayOfYear = firstMondayOfYear.subtract(7, "days");
+//       const list = new Array(7)
+//         .fill(_firstMondayOfYear)
+//         .map((day, idx) => {
+//           const _day = day.add(idx, "day");
+//           const _month = Number(_day.format("M"));
+//           const date = _day.format("YYYY-MM-DD");
+
+//           let type = MonthType.CURRENT;
+//           const deltaMonth = _month - month;
+//           if (deltaMonth === -1) {
+//             type = MonthType.PREV;
+//           } else if (deltaMonth === 1) {
+//             type = MonthType.NEXT;
+//           } else {
+//             if (deltaMonth < -1) {
+//               type = MonthType.NEXT;
+//             } else if (deltaMonth > 1) {
+//               type = MonthType.PREV;
+//             }
+//           }
+//           return {
+//             label: _day.format("D"),
+//             date: date,
+//             week: day.isoWeek(),
+//             type,
+//             active: _month == month,
+//             isCurrent: date === dayjs().format("YYYY-MM-DD")
+//           }
+//         });
+//       weekList.push(list);
+//     }
+
+//     if (firstMondayOfYear.isAfter(endOfMonth)) {
+//       console.log("get after", firstMondayOfYear.format("YYYY-MM-DD"));
+//       continue;
+//     }
+//     // Now make sure it really is the first monday of the year
+//     // if (firstMondayOfYear.year() !== year) {
+//     //   firstMondayOfYear = firstMondayOfYear.add(7, "days");
+//     // }
+//     // console.log("Monday 2:", firstMondayOfYear.format("YYYY-MM-DD"));
+
+//     // return the week for that "real" first monday of the year
+//     const list = new Array(7)
+//       .fill(firstMondayOfYear)
+//       .map((day, idx) => {
+//         const _day = day.add(idx, "day");
+//         const _month = Number(_day.format("M"));
+//         const date = _day.format("YYYY-MM-DD");
+
+//         let type = MonthType.CURRENT;
+//         const deltaMonth = _month - month;
+//         if (deltaMonth === -1) {
+//           type = MonthType.PREV;
+//         } else if (deltaMonth === 1) {
+//           type = MonthType.NEXT;
+//         } else {
+//           if (deltaMonth < -1) {
+//             type = MonthType.NEXT;
+//           } else if (deltaMonth > 1) {
+//             type = MonthType.PREV;
+//           }
+//         }
+//         return {
+//           label: _day.format("D"),
+//           date: date,
+//           week: day.isoWeek(),
+//           type,
+//           active: _month == month,
+//           isCurrent: date === dayjs().format("YYYY-MM-DD")
+//         }
+//       });
+//     weekList.push(list);
+//   }
+//   return weekList;
+// }
 function trWeekClick(e) {
   const { mode, currentMonth, currentYear } = this.parentElement.parentElement.parentElement.dataset;
   // l-date-picker__table-week-row--active
@@ -456,10 +579,11 @@ function trWeekClick(e) {
   updateBody(this.parentElement.parentElement.parentElement, penId);
 }
 function assembleWeekBodyTRs(pen, opt: { year: number, month: number }) {
-  const startWeek = dayjs().year(opt.year).month(opt.month - 1).startOf('month').week();
+  // const startWeek = dayjs().year(opt.year).month(opt.month - 1).startOf('month').week();
   // const endWeek = dayjs().year(opt.year).month(opt.month - 1).endOf('month').week();
-  const endWeek = startWeek + 5;
-  const weeklist = getWeekMonthOfYear(opt.year, opt.month, startWeek, endWeek);
+  // const endWeek = startWeek + 5;
+  const weeklist = getWeekMonthOfYear(opt.year, opt.month);
+  // console.log('week list', weeklist, opt.year, opt.month)
   const frag = document.createDocumentFragment();
   for (let i = 0; i < weeklist.length; i++) {
     const everyWeek = weeklist[i];
@@ -554,7 +678,7 @@ function generateYearDom(data, pen, index) {
   if (curYear % 10 !== 0) {
     curYear = curYear - curYear % 10;
   }
-  yeartoYearOptions = getYeartoYearOptions(curYear, 50, 10);
+  yeartoYearOptions = getYeartoYearOptions(curYear - 30, curYear + 20, 10);
   const yOpt = yeartoYearOptions.find(el => currentYear >= el.value[0] && currentYear <= el.value[1]);
   const dateItem = assemleYearItem(data, pen, {
     year: yOpt.value[0],
@@ -1457,7 +1581,6 @@ function assembleHeader(data, pen, opt, type) {
   controller.className = 'l-date-picker__header-controller';
   const month = document.createElement('div');
   month.className = 'l-select__wrap l-date-picker__header-controller-month';
-
   if (type === SwitchMode.DATE) {
     // 组装日期选择的select
     const monthSelect = assembleSelect({
@@ -1518,12 +1641,14 @@ function assembleHeader(data, pen, opt, type) {
     year.appendChild(yearSelect);
     controller.appendChild(year);
   } else if (type === SwitchMode.YEAR) {
+    console.log('opt111', opt);
+    const item = yeartoYearOptions.find(el => el.value[0] <= opt.year && el.value[1] >= opt.year);
     const year = document.createElement('div');
-    year.className = 'l-select__wrap l-date-picker__header-controller-year';
+    year.className = 'l-select__wrap l-date-picker__header-controller-range-year';
     // 调用函数，生成从1920年起，前后各100年的年份选项，每10年一个选项
     const yearSelect = assembleSelect({
       type: DateSelectType.YEAR_RANGE,
-      selectVal: opt.year,
+      selectVal: item ? item.label : opt.year,
       index: opt.index,
       penId: pen.id,
       mode: SwitchMode.YEAR
@@ -1545,15 +1670,10 @@ function assembleHeader(data, pen, opt, type) {
   frag.appendChild(pagination);
   return frag;
 }
-function getYeartoYearOptions(baseYear, range, step = 10) {
+function getYeartoYearOptions(startYear, endYear, step = 10) {
   // 定义一个函数来生成年份选项
   const options = [];
-  // 计算起始年份
-  const startYear = baseYear - range;
-  // 计算结束年份
-  const endYear = baseYear + range;
-
-  for (let year = startYear; year <= endYear; year += step) {
+  for (let year = startYear; year < endYear; year += step) {
     const obj = {
       label: year + ' - ' + (year + step - 1),
       value: [year, (year + step - 1)]
@@ -1595,7 +1715,7 @@ function assembleSelect(opt: { type, selectVal, index, penId, mode }, options) {
   const dropDown = document.createElement('div');
   dropDown.style.position = 'absolute';
   dropDown.style.left = '0';
-  dropDown.style.top = '0';
+  dropDown.style.top = '32px';
   dropDown.style.width = '100%';
 
   const popParent = document.createElement('div');
@@ -1608,7 +1728,11 @@ function assembleSelect(opt: { type, selectVal, index, penId, mode }, options) {
 
   const popContent = document.createElement('div');
   popContent.className = 'l-popup__content';
-  popContent.style.width = '80px';
+  popContent.dataset.type = opt.type + '';
+  popContent.dataset.penId = opt.penId;
+  popContent.dataset.index = opt.index;
+  popContent.dataset.mode = opt.mode;
+  popContent.addEventListener("scroll", selectScroll);
 
   const dropdownInner = document.createElement('div');
   dropdownInner.className = 'l-select__dropdown-inner';
@@ -1616,6 +1740,44 @@ function assembleSelect(opt: { type, selectVal, index, penId, mode }, options) {
   const ul = document.createElement('ul');
   ul.className = 'l-select__list';
   ul.addEventListener('click', onSelect);
+  const liFrag = generateOptDom(options, opt);
+  ul.appendChild(liFrag);
+  dropdownInner.appendChild(ul);
+  popContent.appendChild(dropdownInner);
+
+  if (opt.type === DateSelectType.YEAR || opt.type === DateSelectType.YEAR_RANGE) {
+    const topMoreDom = document.createElement('div');
+    topMoreDom.className = 'l-select-option';
+    topMoreDom.innerHTML = '...';
+    topMoreDom.dataset.type = opt.type + '';
+    topMoreDom.dataset.penId = opt.penId;
+    topMoreDom.dataset.index = opt.index;
+    topMoreDom.dataset.mode = opt.mode;
+    topMoreDom.dataset.ctl = More_Ctl.PREV;
+    topMoreDom.addEventListener('click', getMoreOptions);
+    popContent.insertBefore(topMoreDom, popContent.firstChild);
+
+    const bottomMoreDom = document.createElement('div');
+    bottomMoreDom.className = 'l-select-option';
+    bottomMoreDom.innerHTML = '...';
+    bottomMoreDom.dataset.type = opt.type + '';
+    bottomMoreDom.dataset.penId = opt.penId;
+    bottomMoreDom.dataset.index = opt.index;
+    bottomMoreDom.dataset.mode = opt.mode;
+    bottomMoreDom.dataset.ctl = More_Ctl.NEXT
+    bottomMoreDom.addEventListener('click', getMoreOptions);
+    popContent.appendChild(bottomMoreDom);
+  }
+
+
+  popParent.appendChild(popContent);
+  dropDown.appendChild(popParent);
+
+  select.appendChild(dropDown);
+  return select;
+}
+function generateOptDom(options, opt) {
+  const frag = document.createDocumentFragment();
   for (let i = 0; i < options.length; i++) {
     const item = options[i];
     const li = document.createElement('li');
@@ -1635,16 +1797,149 @@ function assembleSelect(opt: { type, selectVal, index, penId, mode }, options) {
     span.dataset.mode = opt.mode;
 
     li.appendChild(span);
-    ul.appendChild(li);
+    frag.appendChild(li);
   }
-  dropdownInner.appendChild(ul);
-  popContent.appendChild(dropdownInner);
+  return frag;
+}
+function generateYearOptions(baseYear, range) {
+  const options = [];
+  for (let i = baseYear; i < baseYear + range; i++) {
+    options.push({
+      label: i + '',
+      value: i + ''
+    })
+  }
+  return options;
+}
+function getMoreOptions(e) {
+  e.stopPropagation();
+  const { type, ctl, mode, penId, index } = this.dataset;
+  if (ctl === More_Ctl.PREV) {
+    changeOption(this.nextElementSibling.firstChild, null, ctl, type, penId, index, mode);
+  } else if (ctl === More_Ctl.NEXT) {
+    changeOption(null, this.previousElementSibling.firstChild, ctl, type, penId, index, mode);
+  }
+  // const _type = parseInt(type);
+  // if (ctl === More_Ctl.PREV) {
+  //   if (_type === DateSelectType.YEAR) {
+  //     const startYear = parseInt(yearOptions[0].value);
+  //     const moreOpt = generateYearOptions(startYear - 10, 10);
+  //     yearOptions.unshift(...moreOpt);
+  //     const liFrag = generateOptDom(moreOpt, { index, penId, type, mode });
+  //     this.nextElementSibling.firstChild.prepend(liFrag);
+  //   } else if (_type === DateSelectType.YEAR_RANGE) {
+  //     console.log('prev year range')
+  //     const startYear = parseInt(yeartoYearOptions[0].value[0]);
+  //     const moreOpt = getYeartoYearOptions(startYear - 50, 40);
+  //     console.log(moreOpt, 'moreOpt 11')
+  //     yeartoYearOptions.unshift(...moreOpt);
+  //     const liFrag = generateOptDom(moreOpt, { index, penId, type, mode });
+  //     this.nextElementSibling.firstChild.prepend(liFrag);
+  //   }
+  // } else if (ctl === More_Ctl.NEXT) {
+  //   if (_type === DateSelectType.YEAR) {
+  //     const startYear = parseInt(yearOptions[yearOptions.length - 1].value);
+  //     const moreOpt = generateYearOptions(startYear + 1, 10);
+  //     yearOptions.push(...moreOpt);
+  //     const liFrag = generateOptDom(moreOpt, { index, penId, type, mode });
+  //     this.previousElementSibling.firstChild.appendChild(liFrag);
+  //   } else if (_type === DateSelectType.YEAR_RANGE) {
+  //     console.log('next year range')
+  //     const startYear = parseInt(yeartoYearOptions[yeartoYearOptions.length - 1].value[0]);
+  //     const moreOpt = getYeartoYearOptions(startYear + 10, 40);
+  //     console.log(moreOpt, 'moreOpt 22')
+  //     yeartoYearOptions.push(...moreOpt);
+  //     const liFrag = generateOptDom(moreOpt, { index, penId, type, mode });
+  //     this.previousElementSibling.firstChild.appendChild(liFrag);
+  //   }
+  // }
+}
+function changeOption(prevDom, nextDom, ctl, type, penId, index, mode) {
+  const _type = parseInt(type);
+  if (ctl === More_Ctl.PREV) {
+    if (_type === DateSelectType.YEAR) {
+      const startYear = parseInt(yearOptions[0].value);
+      const moreOpt = generateYearOptions(startYear - 10, 10);
+      console.log(moreOpt, 'moreOpt 00')
+      yearOptions.unshift(...moreOpt);
+      const liFrag = generateOptDom(moreOpt, { index, penId, type, mode });
+      prevDom.prepend(liFrag);
+    } else if (_type === DateSelectType.YEAR_RANGE) {
+      console.log('prev year range')
+      const startYear = parseInt(yeartoYearOptions[0].value[0]);
+      const moreOpt = getYeartoYearOptions(startYear - 50, startYear);
+      console.log(moreOpt, 'moreOpt 11')
+      yeartoYearOptions.unshift(...moreOpt);
+      const liFrag = generateOptDom(moreOpt, { index, penId, type, mode });
+      prevDom.prepend(liFrag);
+    }
+  } else if (ctl === More_Ctl.NEXT) {
+    if (_type === DateSelectType.YEAR) {
+      const startYear = parseInt(yearOptions[yearOptions.length - 1].value);
+      const moreOpt = generateYearOptions(startYear + 1, 10);
+      yearOptions.push(...moreOpt);
+      const liFrag = generateOptDom(moreOpt, { index, penId, type, mode });
+      nextDom.appendChild(liFrag);
+    } else if (_type === DateSelectType.YEAR_RANGE) {
+      console.log('next year range')
+      const startYear = parseInt(yeartoYearOptions[yeartoYearOptions.length - 1].value[0]);
+      const moreOpt = getYeartoYearOptions(startYear + 10, startYear + 50);
+      console.log(moreOpt, 'moreOpt 22')
+      yeartoYearOptions.push(...moreOpt);
+      const liFrag = generateOptDom(moreOpt, { index, penId, type, mode });
+      nextDom.appendChild(liFrag);
+    }
+  }
+}
+function selectScroll(e) {
+  console.log('scroll')
+  const { type, mode, penId, index } = this.dataset;
+  const _type = parseInt(type);
+  const isAtTop = this.scrollTop === 0;
+  // 判断是否滚动到底部
+  const isAtBottom = this.scrollTop + this.clientHeight >= this.scrollHeight;
 
-  popParent.appendChild(popContent);
-  dropDown.appendChild(popParent);
+  if (isAtTop) {
+    // if (_type === DateSelectType.YEAR) {
+    //   const startYear = parseInt(yearOptions[0].value);
+    //   const moreOpt = generateYearOptions(startYear - 10, 10);
+    //   yearOptions.unshift(...moreOpt);
+    //   const liFrag = generateOptDom(moreOpt, { type, mode, index, penId });
+    //   this.firstChild.nextElementSibling.firstChild.prepend(liFrag);
+    // } else if (_type === DateSelectType.YEAR_RANGE) {
+    //   console.log('prev year range')
+    //   const startYear = parseInt(yeartoYearOptions[0].value[0]);
+    //   const moreOpt = getYeartoYearOptions(startYear - 50, 40);
+    //   console.log(moreOpt, 'moreOpt 11')
+    //   yeartoYearOptions.unshift(...moreOpt);
+    //   const liFrag = generateOptDom(moreOpt, { index, penId, type, mode });
+    //   this.firstChild.nextElementSibling.firstChild.prepend(liFrag);
+    // }
+    changeOption(this.firstChild.nextElementSibling.firstChild, null,
+      More_Ctl.PREV, type, penId, index, mode);
+  }
+  if (isAtBottom) {
+    // if (_type === DateSelectType.YEAR) {
+    //   const startYear = parseInt(yearOptions[yearOptions.length - 1].value);
+    //   const moreOpt = generateYearOptions(startYear + 1, 10);
+    //   yearOptions.push(...moreOpt);
+    //   const liFrag = generateOptDom(moreOpt, { type, mode, index, penId });
+    //   this.firstChild.nextElementSibling.firstChild.appendChild(liFrag);
+    // } else if (_type === DateSelectType.YEAR_RANGE) {
+    //   console.log('next year range')
+    //   const startYear = parseInt(yeartoYearOptions[yeartoYearOptions.length - 1].value[0]);
+    //   const moreOpt = getYeartoYearOptions(startYear + 10, 40);
+    //   console.log(moreOpt, 'moreOpt 22')
+    //   yeartoYearOptions.push(...moreOpt);
+    //   const liFrag = generateOptDom(moreOpt, { index, penId, type, mode });
+    //   this.firstChild.nextElementSibling.firstChild.appendChild(liFrag);
+    // }
+    changeOption(null, this.firstChild.nextElementSibling.firstChild, More_Ctl.NEXT, type, penId, index, mode);
+  }
 
-  select.appendChild(dropDown);
-  return select;
+  console.log(`Scroll Position: ${this.scrollTop}`);
+  console.log(`Is at top: ${isAtTop}`);
+  console.log(`Is at bottom: ${isAtBottom}`);
 }
 function onSelect(e) {
   // e.stopPropagation();
@@ -1652,7 +1947,8 @@ function onSelect(e) {
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
   const _type = parseInt(type);
   const _index = parseInt(index);
-  let selector = ''
+  let selector = '';
+  let _value = value;
   if (mode === SwitchMode.DATE) {
     selector = '.l-date-picker__panel-date';
   } else if (mode === SwitchMode.MONTH) {
@@ -1665,15 +1961,17 @@ function onSelect(e) {
   const list = dropMenu.querySelectorAll(selector);
   // 更新content的数据，存储下来
   if (_type === DateSelectType.MONTH) {
-    list[_index].dataset.currentMonth = value;
+    list[_index].dataset.currentMonth = _value;
   } else if (_type === DateSelectType.YEAR) {
-    list[_index].dataset.currentYear = value;
+    list[_index].dataset.currentYear = _value;
   } else if (_type === DateSelectType.YEAR_RANGE) {
-    list[_index].dataset.yearRange = value;
-    list[_index].dataset.currentYear = value.split(',')[0];
+    list[_index].dataset.yearRange = _value;
+    const _list = _value.split(',');
+    list[_index].dataset.currentYear = _list[0];
+    _value = _list.join(' - ');
   }
   // 更新header
-  updateHeader(list[_index], type, value);
+  updateHeader(list[_index], type, _value);
 
 
   // 更新body
@@ -2208,6 +2506,13 @@ function generateStyle() {
   sheet.insertRule(`
   .l-date-picker__header-controller .l-date-picker__header-controller-year {
     width: 78px;
+    display: flex;
+    position: relative;
+}
+  `)
+  sheet.insertRule(`
+  .l-date-picker__header-controller .l-date-picker__header-controller-range-year {
+    width: 130px;
     display: flex;
     position: relative;
 }
