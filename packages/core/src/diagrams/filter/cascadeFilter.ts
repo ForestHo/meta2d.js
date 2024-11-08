@@ -71,179 +71,7 @@ export function cascadeFilter(pen: Pen): Path2D {
 }
 function renderData(data, dom, pen) {
   if (Object.prototype.toString.call(data) === '[object Array]') {
-    let style = document.createElement('style');
-    style.type = 'text/css';
-    document.head.appendChild(style);
-    let sheet = style.sheet;
-    sheet.insertRule(
-      `.l-cascader__panel {
-        display: flex;
-      }`
-    );
-    sheet.insertRule(
-      `.l-cascader__panel.l-cascader--normal {
-        height: 200px;
-      }`
-    );
-    sheet.insertRule(
-      `.l-cascader__menu {
-        width: 148px;
-        overflow: auto;
-        box-sizing: content-box;
-        padding: 6px;
-        background: #fff;
-      }`
-    );
-    sheet.insertRule(
-      `.l-cascader__menu--segment {
-          border-right: 1px solid #e8e8e8;
-      }`
-    );
-
-    sheet.insertRule(
-      `
-      .l-cascader__item-icon.l-icon {
-        position: absolute;
-        height: 100%;
-        right: 0;
-        top: 0;
-        background: transparent;
-        margin: 0 8px;
-        font-size: 16px;
-        color: rgba(0, 0, 0, 0.4);
-    }
-      `
-    )
-    sheet.insertRule(
-      `
-      .l-icon {
-        display: inline-block;
-        vertical-align: middle;
-        width: 1em;
-    }
-      `
-    )
-    sheet.insertRule(
-      `
-      .l-cascader__item {
-        position: relative;
-        display: flex;
-        align-items: center;
-        height: 28px;
-        color: rgba(0, 0, 0, 0.9);
-        padding: 0 8px;
-        border-radius: 3px;
-        margin-top: 2px;
-        transition: background-color 0.2s cubic-bezier(0.82, 0, 1, 0.9);
-        list-style: none;
-    }
-      `
-    )
-    sheet.insertRule(
-      `
-    .l-checkbox {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      display: inline-flex;
-      align-items: center;
-      position: relative;
-      cursor: pointer;
-      color: rgba(0, 0, 0, 0.9);
-    `
-    )
-    sheet.insertRule(
-      `
-    .l-cascader-checkbox-former {
-    width:16px;
-    height:16px;
-  }
-    `
-    )
-    sheet.insertRule(
-      `
-    .l-cascader-checkbox {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      display: inline-flex;
-      align-items: center;
-      position: relative;
-      cursor: pointer;
-      color: rgba(0, 0, 0, 0.9);
-      white-space: nowrap;
-  }
-    `
-    )
-    //   sheet.insertRule(
-    //     `
-    //   .l-cascader-checkbox-former {
-    //     border: 0;
-    //     clip: rect(0 0 0 0);
-    //     height: 1px;
-    //     margin: -1px;
-    //     overflow: hidden;
-    //     padding: 0;
-    //     position: absolute;
-    //     width: 1px;
-    //     outline: 0;
-    //     appearance: none;
-    // }
-    //   `
-    //   )
-    // sheet.insertRule(
-    //   `
-    // .l-cascader-checkbox-input {
-    //   position: relative;
-    //   display: inline-block;
-    //   width: 16px;
-    //   height: 16px;
-    //   vertical-align: middle;
-    //   border: 1px solid #ddd;
-    //   border-radius: 3px;
-    //   background-color: #fff;
-    //   box-sizing: border-box;
-    // `)
-
-    sheet.insertRule(`
-    .l-cascader-checkbox-label {
-      display: inline-block;
-      margin-left: 8px;
-      vertical-align: middle;
-    }`)
-
-    sheet.insertRule(`
-    .l-cascader__item.l-is-expanded {
-      background: #f2f3ff;
-      color: #0052d9;
-    }`)
-
-    sheet.insertRule(`
-    .l-cascader__item.l-is-selected {
-      color: #0052d9;
-      background: #f2f3ff;
-  }
-    `)
-    sheet.insertRule(`
-    .l-cascader__menu.l-cascader__menu--filter {
-      width: auto;
-      min-width: 148px;
-    }
-    `)
-
-    sheet.insertRule(`
-    .l-cascader-panel-empty {
-      width: 100%;
-      height: 28px;
-      line-height: 28px;
-      color: rgba(0, 0, 0, 0.26);
-      margin: 6px;
-      text-align: center;
-      padding-left: 0;
-    }
-    `)
+    generateStyle(pen);
     const lPanel = document.createElement('div');
     lPanel.className = 'l-cascader__panel l-cascader--normal';
     lPanel.style.display = 'flex';
@@ -902,4 +730,217 @@ function patchCascadeMenu(pen, lv, level, flowPath, opt) {
 function onMouseUp(pen: Pen, e: Point) {
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
   dropMenu.style.display = dropMenu.style.display === 'none' ? 'block' : 'none';
+}
+// 判断特定样式表中是否存在某条 CSS 规则
+function hasCSSRuleInSheet(sheet, ruleText) {
+  try {
+    const rules = sheet.cssRules || sheet.rules;
+    for (let i = 0; i < rules.length; i++) {
+      if (rules[i].cssText === ruleText) {
+        return true;
+      }
+    }
+  } catch (e) {
+    // 忽略跨域样式表的错误
+    console.error('Error accessing style sheet:', e);
+  }
+  return false;
+}
+// 插入新的 CSS 规则到特定样式表
+function insertCSSRuleInSheet(sheet, ruleText) {
+  sheet.insertRule(ruleText, sheet.cssRules.length);
+}
+const style_prefix = 'style_';
+function generateStyle(pen) {
+  let extraStyle = document.createElement('style');
+  extraStyle.type = 'text/css';
+  extraStyle.id = style_prefix+pen.id;
+  document.head.appendChild(extraStyle);
+  let sheet1 = extraStyle.sheet;
+  if (pen.styles && pen.styles.length > 0) {
+    pen.styles.forEach((rule) => {
+      // sheet.insertRule(rule + '}', sheet.cssRules.length);
+      const ruleToCheck = rule + '}';
+      if (!hasCSSRuleInSheet(sheet1, ruleToCheck)) {
+        insertCSSRuleInSheet(sheet1, ruleToCheck);
+        console.log(`The rule "${ruleToCheck}" was inserted.`);
+      } else {
+        console.log(`The rule "${ruleToCheck}" already exists.`);
+      }
+    });
+  }
+
+  let style = document.createElement('style');
+  style.type = 'text/css';
+  document.head.appendChild(style);
+  let sheet = style.sheet;
+  sheet.insertRule(
+    `.l-cascader__panel {
+      display: flex;
+    }`
+  );
+  sheet.insertRule(
+    `.l-cascader__panel.l-cascader--normal {
+      height: 200px;
+    }`
+  );
+  sheet.insertRule(
+    `.l-cascader__menu {
+      width: 148px;
+      overflow: auto;
+      box-sizing: content-box;
+      padding: 6px;
+      background: #fff;
+    }`
+  );
+  sheet.insertRule(
+    `.l-cascader__menu--segment {
+        border-right: 1px solid #e8e8e8;
+    }`
+  );
+
+  sheet.insertRule(
+    `
+    .l-cascader__item-icon.l-icon {
+      position: absolute;
+      height: 100%;
+      right: 0;
+      top: 0;
+      background: transparent;
+      margin: 0 8px;
+      font-size: 16px;
+      color: rgba(0, 0, 0, 0.4);
+  }
+    `
+  )
+  sheet.insertRule(
+    `
+    .l-icon {
+      display: inline-block;
+      vertical-align: middle;
+      width: 1em;
+  }
+    `
+  )
+  sheet.insertRule(
+    `
+    .l-cascader__item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      height: 28px;
+      color: rgba(0, 0, 0, 0.9);
+      padding: 0 8px;
+      border-radius: 3px;
+      margin-top: 2px;
+      transition: background-color 0.2s cubic-bezier(0.82, 0, 1, 0.9);
+      list-style: none;
+  }
+    `
+  )
+  sheet.insertRule(
+    `
+  .l-checkbox {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    color: rgba(0, 0, 0, 0.9);
+  `
+  )
+  sheet.insertRule(
+    `
+  .l-cascader-checkbox-former {
+  width:16px;
+  height:16px;
+}
+  `
+  )
+  sheet.insertRule(
+    `
+  .l-cascader-checkbox {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    color: rgba(0, 0, 0, 0.9);
+    white-space: nowrap;
+}
+  `
+  )
+  //   sheet.insertRule(
+  //     `
+  //   .l-cascader-checkbox-former {
+  //     border: 0;
+  //     clip: rect(0 0 0 0);
+  //     height: 1px;
+  //     margin: -1px;
+  //     overflow: hidden;
+  //     padding: 0;
+  //     position: absolute;
+  //     width: 1px;
+  //     outline: 0;
+  //     appearance: none;
+  // }
+  //   `
+  //   )
+  // sheet.insertRule(
+  //   `
+  // .l-cascader-checkbox-input {
+  //   position: relative;
+  //   display: inline-block;
+  //   width: 16px;
+  //   height: 16px;
+  //   vertical-align: middle;
+  //   border: 1px solid #ddd;
+  //   border-radius: 3px;
+  //   background-color: #fff;
+  //   box-sizing: border-box;
+  // `)
+
+  sheet.insertRule(`
+  .l-cascader-checkbox-label {
+    display: inline-block;
+    margin-left: 8px;
+    vertical-align: middle;
+  }`)
+
+  sheet.insertRule(`
+  .l-cascader__item.l-is-expanded {
+    background: #f2f3ff;
+    color: #0052d9;
+  }`)
+
+  sheet.insertRule(`
+  .l-cascader__item.l-is-selected {
+    color: #0052d9;
+    background: #f2f3ff;
+}
+  `)
+  sheet.insertRule(`
+  .l-cascader__menu.l-cascader__menu--filter {
+    width: auto;
+    min-width: 148px;
+  }
+  `)
+
+  sheet.insertRule(`
+  .l-cascader-panel-empty {
+    width: 100%;
+    height: 28px;
+    line-height: 28px;
+    color: rgba(0, 0, 0, 0.26);
+    margin: 6px;
+    text-align: center;
+    padding-left: 0;
+  }
+  `)
 }

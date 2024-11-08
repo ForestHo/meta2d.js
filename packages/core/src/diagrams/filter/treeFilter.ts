@@ -364,7 +364,7 @@ function treeIconClick(e) {
       }
     }
   }
-  if(!child){
+  if (!child) {
     return;
   }
   let flag = Direction.None;
@@ -426,7 +426,7 @@ function treeIconClick(e) {
 
   const showIds = collectExpandShowIds(pen.data, pen);
   const frag = generateDomByData(pen.data, null, pen, null, showIds, generateDomByData);
-  console.log(frag,lTreeList, 'frag');
+  console.log(frag, lTreeList, 'frag');
   lTreeList.replaceChildren(frag);
 }
 function recursionTreeFindAllIds(data, ids) {
@@ -609,69 +609,7 @@ function lableClick(e) {
 }
 function renderData(data, dom, pen) {
   if (Object.prototype.toString.call(data) === '[object Array]') {
-    let style = document.createElement('style');
-    style.type = 'text/css';
-    document.head.appendChild(style);
-    let sheet = style.sheet;
-    sheet.insertRule(
-      `div[class^="to__subItem"].to__show {
-        display: block !important;
-      }`
-    );
-    sheet.insertRule(
-      `.l-tree{
-        max-height: 300px;
-      }`
-    );
-    sheet.insertRule(
-      `.l-tree .l-visible{
-        display: flex;
-      }`
-    );
-    sheet.insertRule(
-      `.l-tree .l-hidden{
-        max-height: 0;
-        overflow: hidden;
-      }`
-    );
-    sheet.insertRule(
-      `.to__downList .icon{
-        transform: rotate(-90deg);
-      }`
-    );
-    sheet.insertRule(
-      `.l-tree-item.l-item-open .to__downList .icon{
-        transform: rotate(0deg);
-      }`
-    );
-    sheet.insertRule(
-      `
-      .to__item_wrapper.to__checked{
-        background-color: #f2f3ff;
-      }
-      `
-    )
-    sheet.insertRule(
-      `
-      .to__item_wrapper.to__hidden{
-        max-height: 0;
-      }
-      `
-    )
-    sheet.insertRule(
-      `
-      .to__item_wrapper.to__visible{
-        max-height: auto;
-      }
-      `
-    )
-    sheet.insertRule(
-      `
-      .to__item.to__hidden{
-        overflow: hidden;
-      }
-      `
-    )
+    generateStyle(pen);
     const lTree = document.createElement('div');
     lTree.className = 'l-tree';
     lTree.style.padding = '6px';
@@ -683,7 +621,7 @@ function renderData(data, dom, pen) {
     // const siblings = recursionFindSiblings(data, "10");
     // console.log(siblings, 'siblings');
     const frag = generateDomByData(data, null, pen, null, showIds, generateDomByData);
-    console.log(frag,lTreeList, 'frag');
+    console.log(frag, lTreeList, 'frag');
     lTreeList.appendChild(frag);
 
     lTree.appendChild(lTreeList);
@@ -918,4 +856,108 @@ function collectExpandShowIds(data, pen) {
     }
   }
   return expandList;
+}
+// 判断特定样式表中是否存在某条 CSS 规则
+function hasCSSRuleInSheet(sheet, ruleText) {
+  try {
+    const rules = sheet.cssRules || sheet.rules;
+    for (let i = 0; i < rules.length; i++) {
+      if (rules[i].cssText === ruleText) {
+        return true;
+      }
+    }
+  } catch (e) {
+    // 忽略跨域样式表的错误
+    console.error('Error accessing style sheet:', e);
+  }
+  return false;
+}
+// 插入新的 CSS 规则到特定样式表
+function insertCSSRuleInSheet(sheet, ruleText) {
+  sheet.insertRule(ruleText, sheet.cssRules.length);
+}
+const style_prefix = 'style_';
+function generateStyle(pen) {
+  let extraStyle = document.createElement('style');
+  extraStyle.type = 'text/css';
+  extraStyle.id = style_prefix+pen.id;
+  document.head.appendChild(extraStyle);
+  let sheet1 = extraStyle.sheet;
+  if (pen.styles && pen.styles.length > 0) {
+    pen.styles.forEach((rule) => {
+      // sheet.insertRule(rule + '}', sheet.cssRules.length);
+      const ruleToCheck = rule + '}';
+      if (!hasCSSRuleInSheet(sheet1, ruleToCheck)) {
+        insertCSSRuleInSheet(sheet1, ruleToCheck);
+        console.log(`The rule "${ruleToCheck}" was inserted.`);
+      } else {
+        console.log(`The rule "${ruleToCheck}" already exists.`);
+      }
+    });
+  }
+
+
+  let style = document.createElement('style');
+  style.type = 'text/css';
+  document.head.appendChild(style);
+  let sheet = style.sheet;
+  sheet.insertRule(
+    `div[class^="to__subItem"].to__show {
+      display: block !important;
+    }`
+  );
+  sheet.insertRule(
+    `.l-tree{
+      max-height: 300px;
+    }`
+  );
+  sheet.insertRule(
+    `.l-tree .l-visible{
+      display: flex;
+    }`
+  );
+  sheet.insertRule(
+    `.l-tree .l-hidden{
+      max-height: 0;
+      overflow: hidden;
+    }`
+  );
+  sheet.insertRule(
+    `.to__downList .icon{
+      transform: rotate(-90deg);
+    }`
+  );
+  sheet.insertRule(
+    `.l-tree-item.l-item-open .to__downList .icon{
+      transform: rotate(0deg);
+    }`
+  );
+  sheet.insertRule(
+    `
+    .to__item_wrapper.to__checked{
+      background-color: #f2f3ff;
+    }
+    `
+  )
+  sheet.insertRule(
+    `
+    .to__item_wrapper.to__hidden{
+      max-height: 0;
+    }
+    `
+  )
+  sheet.insertRule(
+    `
+    .to__item_wrapper.to__visible{
+      max-height: auto;
+    }
+    `
+  )
+  sheet.insertRule(
+    `
+    .to__item.to__hidden{
+      overflow: hidden;
+    }
+    `
+  )
 }

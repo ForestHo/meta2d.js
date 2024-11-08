@@ -239,6 +239,7 @@ export function dateRangePicker(pen: Pen): Path2D {
     div.style.top = '-9999px';
     div.style.width = width + 'px';
     div.style.height = height + 'px';
+    div.id = pen.id;
 
     // 创建容器
     const container = document.createElement("div");
@@ -3576,16 +3577,61 @@ const getTimeListByYearAndMonth = (year: number, month: number) => {
 
   return dayList
 }
+// 判断特定样式表中是否存在某条 CSS 规则
+function hasCSSRuleInSheet(sheet, ruleText) {
+  try {
+    const rules = sheet.cssRules || sheet.rules;
+    for (let i = 0; i < rules.length; i++) {
+      if (rules[i].cssText === ruleText) {
+        return true;
+      }
+    }
+  } catch (e) {
+    // 忽略跨域样式表的错误
+    console.error('Error accessing style sheet:', e);
+  }
+  return false;
+}
+// 插入新的 CSS 规则到特定样式表
+function insertCSSRuleInSheet(sheet, ruleText) {
+  sheet.insertRule(ruleText, sheet.cssRules.length);
+}
+const style_prefix = 'style_';
 function generateStyle(pen: Pen) {
+  let extraStyle = document.createElement('style');
+  extraStyle.type = 'text/css';
+  extraStyle.id = style_prefix + pen.id;
+  document.head.appendChild(extraStyle);
+  let sheet1 = extraStyle.sheet;
+  if (pen.styles && pen.styles.length > 0) {
+    pen.styles.forEach((rule) => {
+      // sheet.insertRule(rule + '}', sheet.cssRules.length);
+      const ruleToCheck = rule + '}';
+      if (!hasCSSRuleInSheet(sheet1, ruleToCheck)) {
+        insertCSSRuleInSheet(sheet1, ruleToCheck);
+        console.log(`The rule "${ruleToCheck}" was inserted.`);
+      } else {
+        console.log(`The rule "${ruleToCheck}" already exists.`);
+      }
+    });
+  }
   let style = document.createElement('style');
   style.type = 'text/css';
-  style.id = pen.id;
+  // style.id = pen.id;
   document.head.appendChild(style);
   let sheet = style.sheet;
+  sheet.insertRule(`
+  [class^="l-date-range-picker__panel_"]{
+    width: 560px;
+    height:300px;
+  }
+  `)
   sheet.insertRule(
     `.l-date-picker__panel-content,
     .l-date-range-picker__panel-content-wrapper {
         display: flex;
+        width: 100%;
+        height: 100%;
         // height:300px;
       }`
   );
