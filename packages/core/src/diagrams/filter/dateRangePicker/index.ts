@@ -225,9 +225,10 @@ export function dateRangePicker(pen: Pen): Path2D {
         }
         pickerTimes = pen.pickerTimes.map(item => dayjs(item).format(format));
       }
+      const times = adjustPickertimes(pen.mode, pickerTimes);
       window.meta2d.setValue({
         id: pen.id,
-        pickerTimes,
+        pickerTimes: times,
       })
     }
     //1.创建父容器，用于定位
@@ -270,13 +271,19 @@ export function dateRangePicker(pen: Pen): Path2D {
     pen.calculative.singleton.div = div;
 
     renderData(pen.data, dropMenu, pen)
+
+    if (pen.pickerTimes.length >= 1) {
+      console.log(pen.pickerTimes, 'pick done')
+      // update input
+      updateInput(dropMenu.previousElementSibling, pen.pickerTimes);
+    }
   }
   const path = new Path2D();
   return path;
 }
 
 function renderData(data, dom, pen) {
-  generateStyle()
+  generateStyle(pen)
 
   const lPanel = document.createElement('div');
   lPanel.className = 'l-date-range-picker__panel-content-wrapper';
@@ -344,11 +351,42 @@ function generateFooter(data, pen) {
   return frag;
 }
 function onOk(e) {
+  const { penId } = this.dataset;
   // const content = this.parentElement.previousElementSibling
   // console.log(content)
-  updateTagsWithDate(this.dataset.penId, 0, '');
+  const pen = window.meta2d.findOne(penId);
+  if (!pen) {
+    return;
+  }
+  let focusIndex = pen.focusIndex;
+  if (focusIndex === 0) {
+    focusIndex = 1;
+  } else if (focusIndex === 1) {
+    focusIndex = 0;
+  }
+  window.meta2d.setValue({
+    id: penId,
+    focusIndex,
+  })
+  if (pen.pickerTimes.length === 1 || (pen.pickerTimes.length === 2 && !dayjs(pen.pickerTimes[0]).isValid())) {
+    this.classList.add('l-is-disabled');
+  }
+  focusNextInput(penId, focusIndex);
+  // resetDateTimePanel(penId);
+  // updateTagsWithDate(penId, 0, '');
   // 隐藏下拉框
-  this.parentElement.parentElement.parentElement.style.display = 'none';
+  if (pen.pickerTimes.length === 2 && pen.pickerTimes.every(el => dayjs(el).isValid())) {
+    this.parentElement.parentElement.parentElement.style.display = 'none';
+  }
+}
+/**
+ * @description reset面板
+ * @author Joseph Ho
+ * @date 08/11/2024
+ * @param {*} penId
+ */
+function resetDateTimePanel(penId) {
+
 }
 function generateWeekDom(data, pen, index) {
   const frag = document.createDocumentFragment();
@@ -568,9 +606,10 @@ function trWeekClick(e) {
     // focus下一个
     focusIndex = 0;
   }
+  const times = adjustPickertimes(pen.mode, pickerTimes);
   window.meta2d.setValue({
     id: penId,
-    pickerTimes,
+    pickerTimes: times,
     focusIndex,
   })
 
@@ -592,7 +631,7 @@ function trWeekClick(e) {
 
 
   //update input
-  if (pickerTimes.length === 2 && pickerTimes.every(el => isValidYearWeek(el))) {
+  if (pickerTimes.length >= 1) {
     console.log(pickerTimes, 'pick done')
     // update input
     updateInput(dropMenu.previousElementSibling, pickerTimes);
@@ -621,10 +660,14 @@ function isValidYearWeek(str) {
 function judgeWeekIsBefore(yyww, yyww2) {
   const [year, week] = yyww.split('-');
   const [year2, week2] = yyww2.split('-');
-  if (year < year2) {
+  const _year = parseInt(year);
+  const _week = parseInt(week);
+  const _year2 = parseInt(year2);
+  const _week2 = parseInt(week2);
+  if (_year < _year2) {
     return true;
   }
-  if (year === year2 && week < week2) {
+  if (_year === _year2 && _week < _week2) {
     return true;
   }
   return false;
@@ -632,10 +675,14 @@ function judgeWeekIsBefore(yyww, yyww2) {
 function judgeWeekIsAfter(yyww, yyww2) {
   const [year, week] = yyww.split('-');
   const [year2, week2] = yyww2.split('-');
-  if (year > year2) {
+  const _year = parseInt(year);
+  const _week = parseInt(week);
+  const _year2 = parseInt(year2);
+  const _week2 = parseInt(week2);
+  if (_year > _year2) {
     return true;
   }
-  if (year === year2 && week > week2) {
+  if (_year === _year2 && _week > _week2) {
     return true;
   }
   return false;
@@ -1209,6 +1256,27 @@ function updateViewer(target, index, type, penId) {
   }
   viewer.innerHTML = times.join(':');
 }
+function adjustPickertimes(mode, times) {
+  if (times.length === 2) {
+    if (mode !== SwitchMode.WEEK) {
+      if (dayjs(times[0]).isAfter(dayjs(times[1]))) {
+        return [times[1], times[0]]
+      }
+      if (dayjs(times[0]).isSame(dayjs(times[1])) || dayjs(times[0]).isBefore(dayjs(times[1]))) {
+        return times
+      }
+    } else {
+      if (judgeWeekIsAfter(times[0], times[1])) {
+        return [times[1], times[0]]
+      }
+      if (judgeWeekIsBefore(times[0], times[1]) || !judgeWeekIsBefore(times[0], times[1])) {
+        return times
+      }
+    }
+  } else {
+    return times;
+  }
+}
 function updateTagsWithDate(penId, index, key) {
   const panelTime = document.querySelector(`.${DROPMENU_PREFIX}${penId} .l-date-picker__panel-time`);
   const { hour, minute, second } = panelTime.dataset;
@@ -1228,24 +1296,64 @@ function updateTagsWithDate(penId, index, key) {
   if (!pen) {
     return;
   }
+  console.log(val, 'val')
+
   const pickerTimes = deepClone(pen.pickerTimes);
-  updateTags(pickerTimes, val, pen);
+  pickerTimes.splice(pen.focusIndex, 1, val);
+  const times = adjustPickertimes(pen.mode, pickerTimes);
   window.meta2d.setValue({
     id: penId,
-    pickerTimes,
+    pickerTimes: times,
   })
-  adjustHeight(pen);
+  // const len = pickerTimes.length;
+  // let focusIndex = pen.focusIndex;
+  // if (focusIndex === 0) {
+  //   if (len === 0) {
+  //     pickerTimes.push(val);
+  //   } else if (len >= 1) {
+  //     pickerTimes.splice(0, 1, val);
+  //   }
+  //   // focus下一个
+  //   focusIndex = 1;
+  //   // focus下一个input
+  //   focusNextInput(penId, focusIndex);
+  // } else if (focusIndex === 1) {
+  //   if (len === 0) {
+  //     pickerTimes.push(...["", val]);
+  //   } else if (len === 1) {
+  //     pickerTimes.push(val);
+  //   } else if (len >= 2) {
+  //     pickerTimes.splice(1, 1, val);
+  //   }
+  //   // focus下一个
+  //   focusIndex = 0;
+  // }
+
+  // const pickerTimes = deepClone(pen.pickerTimes);
+  // updateTags(pickerTimes, val, pen);
+  // window.meta2d.setValue({
+  //   id: penId,
+  //   pickerTimes,
+  // })
+  // adjustHeight(pen);
 
   // 更新footer
-  if (pen.enableTimePicker) {
-    const button = panelTime.parentElement.nextElementSibling.lastChild;
-    if (button.classList.contains('l-is-disabled')) {
-      button.classList.remove('l-is-disabled');
-    }
-  }
+  // if (pen.enableTimePicker) {
+  //   const button = panelTime.parentElement.nextElementSibling.lastChild;
+  //   if (button.classList.contains('l-is-disabled')) {
+  //     button.classList.remove('l-is-disabled');
+  //   }
+  // }
 
   // 更新body
   flag && updateBody(dateDom, penId);
+
+  if (pickerTimes.length >= 1) {
+    console.log(pickerTimes, 'pick done')
+    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
+    // update input
+    updateInput(dropMenu.previousElementSibling, pickerTimes);
+  }
 }
 function assembleSecond() {
   const frag = document.createDocumentFragment();
@@ -1605,9 +1713,10 @@ function tdYearClick(e) {
     // focus下一个
     focusIndex = 0;
   }
+  const times = adjustPickertimes(pen.mode, pickerTimes);
   window.meta2d.setValue({
     id: penId,
-    pickerTimes,
+    pickerTimes: times,
     focusIndex,
   })
 
@@ -1628,7 +1737,7 @@ function tdYearClick(e) {
   // this.parentElement.parentElement.parentElement.parentElement.dataset.currentYear = value;
 
   //update input
-  if (pickerTimes.length === 2 && pickerTimes.every(el => dayjs(el).isValid())) {
+  if (pickerTimes.length >= 1) {
     console.log(pickerTimes, 'pick done')
     // update input
     updateInput(dropMenu.previousElementSibling, pickerTimes);
@@ -1680,9 +1789,10 @@ function tdMonthClick(e) {
     // focus下一个
     focusIndex = 0;
   }
+  const times = adjustPickertimes(pen.mode, pickerTimes);
   window.meta2d.setValue({
     id: penId,
-    pickerTimes,
+    pickerTimes: times,
     focusIndex,
   })
   // this.parentElement.parentElement.parentElement.parentElement.dataset.currentMonth = value.split('-')[1];
@@ -1712,7 +1822,7 @@ function tdMonthClick(e) {
 
 
   //update input
-  if (pickerTimes.length === 2 && pickerTimes.every(el => dayjs(el).isValid())) {
+  if (pickerTimes.length >= 1) {
     console.log(pickerTimes, 'pick done')
     // update input
     updateInput(dropMenu.previousElementSibling, pickerTimes);
@@ -1790,7 +1900,11 @@ function assembleDateBodyTRs(pen, opt: { year: number, month: number }) {
       } else if (index === 1) {
         td.classList.add('l-date-picker__cell--active-end', 'l-date-picker__cell--active');
       }
-      td.addEventListener("click", tdDateClick);
+      if (pen.mode === SwitchMode.DATE) {
+        td.addEventListener("click", tdDateClick);
+      } else if (pen.mode === SwitchMode.TIME) {
+        td.addEventListener("click", tdDateTimeClick);
+      }
       td.addEventListener("mouseenter", tdMouseEnter);
 
       const inner = document.createElement('div');
@@ -1920,9 +2034,9 @@ function tdDateClick(e) {
 
   const { value } = this.dataset;
   let yyhhdd = '';
-  if (!pen.enableTimePicker) {
+  if (pen.mode === SwitchMode.DATE) {
     yyhhdd = dayjs().year(_currentYear).month(_currentMonth - 1).date(value).format("YYYY-MM-DD");
-  } else {
+  } else if (pen.mode === SwitchMode.TIME) {
     const { hour, minute, second } = this.parentElement.parentElement.parentElement.parentElement.nextElementSibling.dataset;
     yyhhdd = dayjs().year(_currentYear).month(_currentMonth - 1).date(value).hour(hour).minute(minute).second(second).format("YYYY-MM-DD HH:mm:ss");
   }
@@ -1951,9 +2065,10 @@ function tdDateClick(e) {
     // focus下一个
     focusIndex = 0;
   }
+  const times = adjustPickertimes(pen.mode, pickerTimes);
   window.meta2d.setValue({
     id: penId,
-    pickerTimes,
+    pickerTimes: times,
     focusIndex,
   })
 
@@ -1967,7 +2082,7 @@ function tdDateClick(e) {
   // adjustHeight(pen);
 
   // 更新footer
-  if (pen.enableTimePicker) {
+  if (pen.mode === SwitchMode.TIME && pen.enableTimePicker) {
     const button = this.parentElement.parentElement.parentElement.parentElement.parentElement.nextElementSibling.lastChild;
     if (button.classList.contains('l-is-disabled')) {
       button.classList.remove('l-is-disabled');
@@ -2008,8 +2123,15 @@ function tdDateClick(e) {
   }
 
   list[_index].dataset.currentDay = value;
-  updateBody(list[0], penId);
-  updateBody(list[1], penId);
+  if (pen.mode === SwitchMode.DATE) {
+    updateBody(list[0], penId);
+    updateBody(list[1], penId);
+  } else if (pen.mode === SwitchMode.TIME) {
+    console.log('time', list[0])
+    // 更新body
+    updateBody(list[0], penId);
+  }
+
   // if (mode === SwitchMode.DATE) {
   //   updateBody(list[0], penId);
   //   updateBody(list[1], penId);
@@ -2028,7 +2150,223 @@ function tdDateClick(e) {
   // }
 
   //update input
-  if (pickerTimes.length === 2 && pickerTimes.every(el => dayjs(el).isValid())) {
+  if (pickerTimes.length >= 1) {
+    console.log(pickerTimes, 'pick done')
+    // update input
+    updateInput(dropMenu.previousElementSibling, pickerTimes);
+  }
+
+  // this.parentElement.parentElement.children[this.dataset.rowIndex].children[this.dataset.colIndex].classList.add('l-date-picker__cell--active');
+  // if (this.dataset.type === MonthType.PREV) {
+  //   if (_mode === SwitchMode.MONTH) {
+  //     if (_currentMonth >= 1 && _currentMonth < 12) {
+  //       // _currentMonth--;
+  //       list[_index].dataset.currentMonth = _currentMonth;
+  //       // 更新header
+  //       updateHeader(list[_index], DateSelectType.MONTH + '', _currentMonth + '');
+  //     } else if (_currentMonth === 12) {
+  //       // _currentMonth = 12;
+  //       // _currentYear--;
+  //       list[_index].dataset.currentMonth = _currentMonth;
+  //       list[_index].dataset.currentYear = _currentYear;
+  //       // 更新header
+  //       updateHeader(list[_index], DateSelectType.MONTH + '', _currentMonth + '');
+  //       updateHeader(list[_index], DateSelectType.YEAR + '', _currentYear + '');
+  //     }
+  //     // 更新body
+  //     updateBody(list[_index], penId);
+  //   }
+  // } else if (this.dataset.type === MonthType.NEXT) {
+  //   if (currentMonth > 1 && _currentMonth <= 12) {
+  //     // _currentMonth++;
+  //     list[_index].dataset.currentMonth = _currentMonth;
+  //     // 更新header
+  //     updateHeader(list[_index], DateSelectType.MONTH + '', _currentMonth + '');
+  //   } else if (_currentMonth === 1) {
+  //     // _currentMonth = 1;
+  //     // _currentYear++;
+  //     list[_index].dataset.currentMonth = _currentMonth;
+  //     list[_index].dataset.currentYear = _currentYear;
+  //     // 更新header
+  //     updateHeader(list[_index], DateSelectType.MONTH + '', _currentMonth + '');
+  //     updateHeader(list[_index], DateSelectType.YEAR + '', _currentYear + '');
+  //   }
+  //   // 更新body
+  //   updateBody(list[_index], penId);
+  // }
+}
+function tdDateTimeClick(e) {
+  console.log('tdDateTimeClick')
+  e.stopPropagation();
+  const { mode, currentMonth, currentYear } = this.parentElement.parentElement.parentElement.parentElement.dataset;
+  const _mode = parseInt(mode);
+  let _currentMonth = parseInt(currentMonth);
+  let _currentYear = parseInt(currentYear);
+  let flag = -1;// -1: 不需要更新，1: 需要更新月份，2: 需要更新年份和月份 
+  if (this.dataset.type === MonthType.PREV) {
+    if (_currentMonth > 1) {
+      // _currentMonth--;
+      _currentMonth = minusMonth(_currentMonth, 1);
+      flag = 1;
+    } else if (_currentMonth === 1) {
+      _currentMonth = 12;
+      // _currentYear--;
+      _currentYear = minusYear(_currentYear, 1);
+      flag = 2;
+    }
+  } else if (this.dataset.type === MonthType.NEXT) {
+    if (_currentMonth < 12) {
+      // _currentMonth++;
+      _currentMonth = addMonth(_currentMonth, 1);
+      flag = 1;
+    } else if (_currentMonth === 12) {
+      _currentMonth = 1;
+      // _currentYear++;
+      _currentYear = addYear(_currentYear, 1);
+      flag = 2;
+    }
+  }
+  const penId = this.parentElement.dataset.penId
+  const pen = window.meta2d.findOne(penId);
+  if (!pen) {
+    return;
+  }
+  // if (!pen.multiple) {
+  //   // 清除上一个选中的
+  //   const { rowIndex, colIndex } = this.parentElement.parentElement.dataset;
+  //   if (rowIndex && colIndex) {
+  //     const _rowIndex = parseInt(rowIndex);
+  //     const _colIndex = parseInt(colIndex);
+  //     if (_rowIndex > -1 && _colIndex > -1) {
+  //       this.parentElement.parentElement.children[_rowIndex].children[_colIndex].classList.remove('l-date-picker__cell--active');
+  //     }
+  //   }
+  // } else {
+
+  // }
+
+
+  // const { mode, currentMonth, currentYear } = this.parentElement.parentElement.parentElement.parentElement.dataset;
+
+  const { value } = this.dataset;
+  let yyhhdd = '';
+  if (pen.mode === SwitchMode.DATE) {
+    yyhhdd = dayjs().year(_currentYear).month(_currentMonth - 1).date(value).format("YYYY-MM-DD");
+  } else if (pen.mode === SwitchMode.TIME) {
+    const { hour, minute, second } = this.parentElement.parentElement.parentElement.parentElement.nextElementSibling.dataset;
+    yyhhdd = dayjs().year(_currentYear).month(_currentMonth - 1).date(value).hour(hour).minute(minute).second(second).format("YYYY-MM-DD HH:mm:ss");
+  }
+  console.log(yyhhdd, 'yyhhdd')
+  const pickerTimes = deepClone(pen.pickerTimes);
+  const len = pickerTimes.length;
+  let focusIndex = pen.focusIndex;
+  if (focusIndex === 0) {
+    if (len === 0) {
+      pickerTimes.push(yyhhdd);
+    } else if (len >= 1) {
+      pickerTimes.splice(0, 1, yyhhdd);
+    }
+    // focus下一个
+    // focusIndex = 1;
+    // focus下一个input
+    focusNextInput(penId, focusIndex);
+  } else if (focusIndex === 1) {
+    if (len === 0) {
+      pickerTimes.push(...["", yyhhdd]);
+    } else if (len === 1) {
+      pickerTimes.push(yyhhdd);
+    } else if (len >= 2) {
+      pickerTimes.splice(1, 1, yyhhdd);
+    }
+    // focus下一个
+    // focusIndex = 0;
+  }
+  const times = adjustPickertimes(pen.mode, pickerTimes);
+  window.meta2d.setValue({
+    id: penId,
+    pickerTimes: times,
+    // focusIndex,
+  })
+
+
+
+  // updateTags(pickerTimes, yyhhdd, pen);
+  // window.meta2d.setValue({
+  //   id: penId,
+  //   pickerTimes,
+  // })
+  // adjustHeight(pen);
+
+  // 更新footer
+  // if (pen.mode === SwitchMode.TIME && pen.enableTimePicker) {
+  const button = this.parentElement.parentElement.parentElement.parentElement.parentElement.nextElementSibling.lastChild;
+  if (button.classList.contains('l-is-disabled')) {
+    button.classList.remove('l-is-disabled');
+  }
+  // }
+  // this.parentElement.parentElement.dataset.lastdate = yyhhdd;
+  this.parentElement.parentElement.dataset.rowIndex = this.dataset.rowIndex;
+  this.parentElement.parentElement.dataset.colIndex = this.dataset.colIndex;
+
+  // 最后去更新header和body
+  const { index } = this.parentElement.parentElement.dataset;
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
+  let selector = '.l-date-picker__panel-date'
+  // if (pen.mode === SwitchMode.DATE) {
+  //   selector = '.l-date-picker__panel-date';
+  // } else if (pen.mode === SwitchMode.MONTH) {
+  //   selector = '.l-date-picker__panel-month';
+  // } else if (pen.mode === SwitchMode.WEEK) {
+  //   selector = '.l-date-picker__panel-week';
+  // } else if (pen.mode === SwitchMode.YEAR) {
+  //   selector = '.l-date-picker__panel-year';
+  // }
+  // console.log(selector, 'selector')
+  const list = dropMenu.querySelectorAll(selector);
+  // console.log(list, 'list')
+  const _index = parseInt(index);
+  // 如果不是当前月份的日期，更新月份，
+  if (flag === 1) {
+    list[_index].dataset.currentMonth = _currentMonth;
+    // 更新header
+    updateHeader(list[_index], DateSelectType.MONTH + '', _currentMonth + '');
+  } else if (flag === 2) {
+    list[_index].dataset.currentMonth = _currentMonth;
+    list[_index].dataset.currentYear = _currentYear;
+    // 更新header
+    updateHeader(list[_index], DateSelectType.MONTH + '', _currentMonth + '');
+    updateHeader(list[_index], DateSelectType.YEAR + '', _currentYear + '');
+  }
+
+  list[_index].dataset.currentDay = value;
+  if (pen.mode === SwitchMode.DATE) {
+    updateBody(list[0], penId);
+    updateBody(list[1], penId);
+  } else if (pen.mode === SwitchMode.TIME) {
+    console.log('time', list[0])
+    // 更新body
+    updateBody(list[0], penId);
+  }
+
+  // if (mode === SwitchMode.DATE) {
+  //   updateBody(list[0], penId);
+  //   updateBody(list[1], penId);
+  // } else if (mode === SwitchMode.WEEK) {
+  //   updateBody(list[0], penId);
+  //   updateBody(list[1], penId);
+  // } else if (mode === SwitchMode.MONTH) {
+  //   updateBody(list[0], penId);
+  //   updateBody(list[1], penId);
+  // } else if (mode === SwitchMode.YEAR) {
+  //   updateBody(list[0], penId);
+  //   updateBody(list[1], penId);
+  // } else if (mode === SwitchMode.TIME) {
+  //   // 更新body
+  //   updateBody(list[_index], penId);
+  // }
+
+  //update input
+  if (pickerTimes.length >= 1) {
     console.log(pickerTimes, 'pick done')
     // update input
     updateInput(dropMenu.previousElementSibling, pickerTimes);
@@ -2510,6 +2848,8 @@ function onSelect(e) {
     selector = '.l-date-picker__panel-week';
   } else if (mode === SwitchMode.YEAR) {
     selector = '.l-date-picker__panel-year';
+  } else if (mode === SwitchMode.TIME) {
+    selector = '.l-date-picker__panel-date';
   }
   const list = dropMenu.querySelectorAll(selector);
   // 更新content的数据，存储下来
@@ -2552,6 +2892,8 @@ function updateBody(dom, penId) {
     trs = assembleWeekBodyTRs(pen, { year, month });
   } else if (pen.mode === SwitchMode.YEAR) {
     trs = assembleYearBodyTRs(pen, { year });
+  } else if (pen.mode === SwitchMode.TIME) {
+    trs = assembleDateBodyTRs(pen, { year, month });
   }
   tbody.replaceChildren(trs);
 }
@@ -2586,6 +2928,11 @@ function assemblePagination(opt) {
   }
   return frag;
 }
+// 处理年的边界情况，补充数据
+function patchYearOptions(yearOptions, startYear, endYear) {
+
+}
+
 function btnClick(e) {
   const { key, index, penId, type } = this.dataset;
   if (type === SwitchMode.DATE) {
@@ -2923,6 +3270,8 @@ function onSuffixClick(e) {
       selector = '.l-date-picker__panel-week';
     } else if (pen.mode === SwitchMode.YEAR) {
       selector = '.l-date-picker__panel-year';
+    } else if (pen.mode === SwitchMode.TIME) {
+      selector = '.l-date-picker__panel-date';
     }
     // console.log(selector, 'selector')
     const list = dropMenu.querySelectorAll(selector);
@@ -3004,10 +3353,15 @@ function inputFocus(e) {
   })
 }
 function updateInput(dom, pickerTimes) {
-  const leftInput = dom.querySelector('.l-input__inner[data-index="0"]');
-  leftInput.value = pickerTimes[0];
-  const rightInput = dom.querySelector('.l-input__inner[data-index="1"]');
-  rightInput.value = pickerTimes[1];
+  if (pickerTimes.length === 1) {
+    const leftInput = dom.querySelector('.l-input__inner[data-index="0"]');
+    leftInput.value = pickerTimes[0];
+  } else if (pickerTimes.length === 2) {
+    const leftInput = dom.querySelector('.l-input__inner[data-index="0"]');
+    leftInput.value = pickerTimes[0];
+    const rightInput = dom.querySelector('.l-input__inner[data-index="1"]');
+    rightInput.value = pickerTimes[1];
+  }
 }
 function updateTags(pickerTimes, value, pen) {
   if (pen.multiple) {
@@ -3113,6 +3467,8 @@ function tagClose(e) {
     selector = '.l-date-picker__panel-week';
   } else if (pen.mode === SwitchMode.YEAR) {
     selector = '.l-date-picker__panel-year';
+  } else if (pen.mode === SwitchMode.TIME) {
+    selector = '.l-date-picker__panel-date';
   }
   const list = dropMenu.querySelectorAll(selector);
 
@@ -3120,7 +3476,7 @@ function tagClose(e) {
   updateBody(list[0], penId);
 
   // 更新高度
-  adjustHeight(pen);
+  // adjustHeight(pen);
 }
 function onDestroy(pen: Pen) {
   if (pen.calculative.singleton && pen.calculative.singleton.div) {
@@ -3220,9 +3576,10 @@ const getTimeListByYearAndMonth = (year: number, month: number) => {
 
   return dayList
 }
-function generateStyle() {
+function generateStyle(pen: Pen) {
   let style = document.createElement('style');
   style.type = 'text/css';
+  style.id = pen.id;
   document.head.appendChild(style);
   let sheet = style.sheet;
   sheet.insertRule(

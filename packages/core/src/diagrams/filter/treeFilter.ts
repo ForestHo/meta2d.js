@@ -72,7 +72,8 @@ export function treeFilter(pen: Pen): Path2D {
 function renderPenRaw(pen: Pen, mkey: string, data: any) {
   const lTreeList = document.querySelector('.l-tree-list');
   const { index: insertIndex, level } = getChildIndex(lTreeList, mkey);
-  generateDomByData(data, lTreeList, pen, { index: insertIndex + 1, level: level + 1 });
+  const showIds = collectExpandShowIds(data, pen);
+  generateDomByData(data, lTreeList, pen, { index: insertIndex + 1, level: level + 1 }, showIds, null);
 }
 function getChildIndex(dom, key: string) {
   var childNodes = dom.childNodes;
@@ -181,7 +182,7 @@ function onInputchange(e) {
     return;
   }
   onRecursionData(pen.data, e.target.value, paths);
-  console.log(paths,'paths');
+  console.log(paths, 'paths');
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
   updateTree(pen.data, dropMenu, paths)
 }
@@ -348,7 +349,7 @@ enum Direction {
   Right,
   Down
 }
-let level = 0
+// let level = 0
 function treeIconClick(e) {
   const key = e.target.dataset.key;
   const lTreeList = document.querySelector('.l-tree-list');
@@ -356,11 +357,15 @@ function treeIconClick(e) {
   let child = null;
   for (let i = 0; i < len; i++) {
     if (lTreeList.children[i].nodeName === DIV) {
+      console.log(lTreeList.children[i].dataset.value, key, 'key');
       if (lTreeList.children[i].dataset.value === key) {
         child = lTreeList.children[i];
         break;
       }
     }
+  }
+  if(!child){
+    return;
   }
   let flag = Direction.None;
   const classList = child.className.split(' ');
@@ -383,26 +388,32 @@ function treeIconClick(e) {
   }
   const expanded = deepClone(pen.expanded);
   const _key = key;
+
+  const newExpands = handleToggleExpand(pen.accordion, pen.data, expanded, _key);
+  console.log(expanded, newExpands, _key, 'expanded');
+
   if (flag === Direction.Down) {
     // 展开
-    if (!expanded.includes(_key)) {
-      expanded.push(_key)
+    if (!newExpands.includes(_key)) {
+      newExpands.push(_key)
     }
   } else {
     // 收起
-    if (expanded.includes(_key)) {
-      const index = expanded.indexOf(_key);
-      expanded.splice(index, 1);
+    if (newExpands.includes(_key)) {
+      const index = newExpands.indexOf(_key);
+      newExpands.splice(index, 1);
     }
   }
+
   window.meta2d.setValue({
     id: penId,
-    expanded
+    expanded: newExpands
   })
   // 递归判断树结构的某个节点是否有children
   const hasChild = recursionFindHasChild(pen.data, _key);
   if (!hasChild) {
     // 加载数据
+    const { level } = this.parentElement.dataset;
     pen.loadFn && pen.loadFn(pen, { level, key: _key, title: key });
   } else {
     // 获取树的某个节点
@@ -412,6 +423,11 @@ function treeIconClick(e) {
     const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
     showHideChild(dropMenu, ids, flag);
   }
+
+  const showIds = collectExpandShowIds(pen.data, pen);
+  const frag = generateDomByData(pen.data, null, pen, null, showIds, generateDomByData);
+  console.log(frag,lTreeList, 'frag');
+  lTreeList.replaceChildren(frag);
 }
 function recursionTreeFindAllIds(data, ids) {
   for (let i = 0; i < data.length; i++) {
@@ -431,6 +447,20 @@ function recursionTreeFindItem(data, key) {
       const result = recursionTreeFindItem(item.children, key);
       if (result) {
         return result;
+      }
+    }
+  }
+}
+function recursionFindSiblings(data, key,) {
+  for (let i = 0; i < data.length; i++) {
+    const item = data[i];
+    if (item.children && item.children.findIndex(el => el.key === key) > -1) {
+      return item.children.filter(el => el.key !== key).map(el => el.key);
+    }
+    if (item.children && item.children.length > 0) {
+      const ret = recursionFindSiblings(item.children, key,);
+      if (ret) {
+        return ret;
       }
     }
   }
@@ -648,17 +678,37 @@ function renderData(data, dom, pen) {
 
     const lTreeList = document.createElement('div');
     lTreeList.className = 'l-tree-list';
+    const showIds = collectExpandShowIds(data, pen);
+    addLevelToTree(data);
+    // const siblings = recursionFindSiblings(data, "10");
+    // console.log(siblings, 'siblings');
+    const frag = generateDomByData(data, null, pen, null, showIds, generateDomByData);
+    console.log(frag,lTreeList, 'frag');
+    lTreeList.appendChild(frag);
 
-    generateDomByData(data, lTreeList, pen, null, generateDomByData);
     lTree.appendChild(lTreeList);
     dom.appendChild(lTree);
   }
 }
-function generateDomByData(data, lTreeList, pen, opt, fn?) {
+function generateDomByData(data, lTreeList, pen, opt, showIds, fn?) {
+  const frag = document.createDocumentFragment();
   for (let i = 0; i < data.length; i++) {
     // 添加标题
     const lTreeItem = document.createElement('div')
-    lTreeItem.className = 'l-tree-item l-visible'
+    lTreeItem.className = 'l-tree-item';
+    // 控制层级的显示与隐藏
+    if (data[i].level === 0 || showIds.includes(data[i].key)) {
+      // 默认显示第一级
+      lTreeItem.classList.add('l-visible')
+    } else {
+      // 超过第一级的都隐藏
+      lTreeItem.classList.add('l-hidden')
+    }
+    // 控制展开与收起
+    if (pen.expanded.includes(data[i].key)) {
+      lTreeItem.classList.add('l-item-open')
+    }
+
     lTreeItem.dataset.penId = pen.id;
     lTreeItem.style.display = 'flex';
     lTreeItem.style.flexWrap = 'nowrap';
@@ -666,8 +716,8 @@ function generateDomByData(data, lTreeList, pen, opt, fn?) {
     lTreeItem.style.padding = `0 0 0 calc(24px * var(--level))`;
     lTreeItem.dataset.value = data[i].value;
     if (!opt) {
-      lTreeItem.dataset.level = level + '';
-      lTreeItem.style.setProperty("--level", level + '');
+      lTreeItem.dataset.level = data[i].level + '';
+      lTreeItem.style.setProperty("--level", data[i].level + '');
     } else {
       lTreeItem.dataset.level = opt.level + '';
       lTreeItem.style.setProperty("--level", opt.level + '');
@@ -745,7 +795,7 @@ function generateDomByData(data, lTreeList, pen, opt, fn?) {
     labelDom.style.lineHeight = '40px';
     labelDom.style.width = 'calc(100% - 18px)';
     labelDom.style.marginLeft = '6px';
-    labelDom.innerHTML = data[i].label;
+    labelDom.innerHTML = data[i].label + '-' + data[i].level;
     labelDom.dataset.key = data[i].key;
     labelDom.dataset.penId = pen.id;
     labelDom.onclick = lableClick;
@@ -754,9 +804,11 @@ function generateDomByData(data, lTreeList, pen, opt, fn?) {
 
     lTreeItem.appendChild(lTreeLable)
     if (!opt) {
-      lTreeList.appendChild(lTreeItem)
+      // lTreeList.appendChild(lTreeItem)
+      frag.appendChild(lTreeItem);
     } else {
-      lTreeList.insertBefore(lTreeItem, lTreeList.children[opt.index + i])
+      // lTreeList.insertBefore(lTreeItem, lTreeList.children[opt.index + i])
+      frag.insertBefore(lTreeItem, frag.children[opt.index + i]);
     }
     // const toItemDom = document.createElement("div");
     // toItemDom.style.marginLeft = '-80px';
@@ -789,13 +841,81 @@ function generateDomByData(data, lTreeList, pen, opt, fn?) {
     // 递归
     if (fn) {
       if (data[i].children?.length > 0) {
-        level++
-        fn(data[i].children, lTreeList, pen, null, fn)
+        // console.log(data[i].label, level, 'ooooooooo');
+        // level++
+        const childFrag = fn(data[i].children, lTreeList, pen, null, showIds, fn)
+        frag.appendChild(childFrag);
       } else {
         if (i == data.length - 1) {
-          level = 0
+          // console.log(data[i].label, level, 'data[i].label');
+          // level = 0
         }
       }
     }
   }
+  return frag;
+}
+function addLevelToTree(tree, level = 0) {
+  // 遍历当前层级的节点
+  tree.forEach(item => {
+    // 为当前节点添加 level 属性
+    item.level = level;
+
+    // 如果当前节点有子节点，递归处理子节点
+    if (item.children && item.children.length > 0) {
+      addLevelToTree(item.children, level + 1);
+    }
+  });
+}
+/**
+ * @description 手风琴模式下，展开节点时，关闭兄弟节点的展开状态
+ * @author Joseph Ho
+ * @date 07/11/2024
+ * @param {*} id
+ */
+function handleToggleExpand(accordion, data, expandedKeys, key) {
+  // 展开节点
+  if (!expandedKeys.includes(key)) {
+    // 手风琴模式
+    if (accordion) {
+      console.log('accordion');
+      // 所有兄弟节点id
+      const siblings = recursionFindSiblings(data, key);
+      console.log(siblings, 'siblings');
+      console.log(expandedKeys.filter(
+        key => !siblings.includes(key),
+      ), 'expandedKeys');
+      // const siblings = Object.values(this.treeNodesMap)
+      //   .filter(
+      //     node => node.parentId === treeNode.parentId && node.id !== id,
+      //   )
+      //   .map(node => node.id);
+      // 剔除兄弟节点
+      return expandedKeys.filter(
+        key => !siblings.includes(key),
+      );
+    }
+  }
+  return expandedKeys;
+}
+/** 
+ * @description 收集要展开显示的子节点的id
+ * @author Joseph Ho
+ * @date 07/11/2024
+ * @param {*} data
+ * @param {*} pen
+ * @returns {*}  
+ */
+function collectExpandShowIds(data, pen) {
+  const expandList = [];
+  if (pen.expanded && pen.expanded.length > 0) {
+    for (let i = 0; i < pen.expanded.length; i++) {
+      const id = pen.expanded[i];
+      const item = recursionTreeFindItem(data, id);
+      if (item) {
+        expandList.push(...item.children.map(el => el.key));
+      }
+    }
+  }
+  return expandList;
 }
