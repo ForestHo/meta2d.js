@@ -276,7 +276,7 @@ function validateData(pen: Pen) {
     id: pen.id,
   }
   // 校验multiply与checked
-  if (!pen.multiply && pen.checked.length > 0) {
+  if (!pen.multiple && pen.checked.length > 0) {
     Object.assign(obj, {
       checked: [pen.checked[0]]
     })
@@ -532,7 +532,7 @@ function generateDomByData(data, dom, pen, fn?) {
     rightDom.style.borderRadius = '4px';
     rightDom.onclick = domClick;
     rightDom.className = 'to__item_wrapper'
-    if (pen.multiply && pen.checked.includes(data[i].key)) {
+    if (pen.multiple && pen.checked.includes(data[i].key)) {
       rightDom.className += ' to__checked'
     } else {
       if (pen.checked.length > 0 && pen.checked[0] === data[i].key) {
@@ -541,7 +541,7 @@ function generateDomByData(data, dom, pen, fn?) {
     }
 
     // checkboxDom
-    if (pen.multiply) {
+    if (pen.multiple) {
       const checkboxDom = document.createElement("input");
       checkboxDom.type = "checkbox";
       checkboxDom.name = "cName";

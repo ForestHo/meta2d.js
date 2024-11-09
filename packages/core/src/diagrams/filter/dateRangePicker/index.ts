@@ -78,48 +78,60 @@ const pagiCtls = [
     key: CTL_TYPE.NEXT,
   }
 ]
-const yearOptions = [
-  {
-    label: '2021',
-    value: '2021'
-  },
-  {
-    label: '2022',
-    value: '2022'
-  },
-  {
-    label: '2023',
-    value: '2023'
-  },
-  {
-    label: '2024',
-    value: '2024'
-  },
-  {
-    label: '2025',
-    value: '2025'
-  },
-  {
-    label: '2026',
-    value: '2026'
-  },
-  {
-    label: '2027',
-    value: '2027'
-  },
-  {
-    label: '2028',
-    value: '2028'
-  },
-  {
-    label: '2029',
-    value: '2029'
-  },
-  {
-    label: '2030',
-    value: '2030'
+// 生成最近一半年的数据
+function getYearOptions(start, end, step = 1) {
+  const options = [];
+  for (let i = start; i <= end; i += step) {
+    options.push({
+      label: i + '',
+      value: i + ''
+    })
   }
-];
+  return options;
+}
+let yearOptions = getYearOptions(1900, 2100);
+// const yearOptions = [
+//   {
+//     label: '2021',
+//     value: '2021'
+//   },
+//   {
+//     label: '2022',
+//     value: '2022'
+//   },
+//   {
+//     label: '2023',
+//     value: '2023'
+//   },
+//   {
+//     label: '2024',
+//     value: '2024'
+//   },
+//   {
+//     label: '2025',
+//     value: '2025'
+//   },
+//   {
+//     label: '2026',
+//     value: '2026'
+//   },
+//   {
+//     label: '2027',
+//     value: '2027'
+//   },
+//   {
+//     label: '2028',
+//     value: '2028'
+//   },
+//   {
+//     label: '2029',
+//     value: '2029'
+//   },
+//   {
+//     label: '2030',
+//     value: '2030'
+//   }
+// ];
 let yeartoYearOptions = [];
 const monthOptions = [
   {
@@ -855,7 +867,7 @@ function generateYearDom(data, pen, index) {
   if (curYear % 10 !== 0) {
     curYear = curYear - curYear % 10;
   }
-  yeartoYearOptions = getYeartoYearOptions(curYear - 30, curYear + 20, 10);
+  yeartoYearOptions = getYeartoYearOptions(curYear - 80, curYear + 70, 10);
   console.log(yeartoYearOptions)
   const yOpt = yeartoYearOptions.find(el => currentYear >= el.value[0] && currentYear <= el.value[1]);
   console.log(currentYear, curYear, yOpt)

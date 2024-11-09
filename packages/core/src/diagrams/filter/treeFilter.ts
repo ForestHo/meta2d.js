@@ -18,6 +18,7 @@ export function treeFilter(pen: Pen): Path2D {
     pen.onResize = resize;
     pen.onAdd = onAdd;
     pen.onRenderPenRaw = renderPenRaw;
+    pen.onRenderPenRaw2 = renderPenRaw2;
   }
   const { x, y, width, height } = pen.calculative.worldRect;
   if (!pen.calculative.singleton) {
@@ -38,8 +39,8 @@ export function treeFilter(pen: Pen): Path2D {
     // 创建容器
     const container = document.createElement("div");
     container.style.position = 'relative';
-    container.style.width = '100%';
-    container.style.height = '100%';
+    // container.style.width = '100%';
+    // container.style.height = '100%';
     // 输入框
     const input = assembleInputBox(pen);
     container.appendChild(input);
@@ -74,6 +75,14 @@ function renderPenRaw(pen: Pen, mkey: string, data: any) {
   const { index: insertIndex, level } = getChildIndex(lTreeList, mkey);
   const showIds = collectExpandShowIds(data, pen);
   generateDomByData(data, lTreeList, pen, { index: insertIndex + 1, level: level + 1 }, showIds, null);
+}
+function renderPenRaw2(pen: Pen, data: any) {
+  const lTreeList = document.querySelector('.l-tree-list');
+  const showIds = collectExpandShowIds(data, pen);
+  console.log(showIds, data, 'renderPenRaw2');
+  addLevelToTree(data);
+  const frag = generateDomByData(data, null, pen, null, showIds, generateDomByData);
+  lTreeList.replaceChildren(frag);
 }
 function getChildIndex(dom, key: string) {
   var childNodes = dom.childNodes;
@@ -121,25 +130,26 @@ function treeFindPath(data, func, field, path = []) {
   return [];
 }
 function adjustHeight(pen: Pen) {
-  if (pen.calculative.singleton.div) {
-    // 判断是否需要调整高度
-    const { offsetHeight: h1 } = pen.calculative.singleton.div;
-    const { offsetHeight: h2 } = document.getElementsByClassName(`${TAG_WRAPPER}${pen.id}`)[0];
-    if (h1 !== h2) {
-      pen.height = h2 + 16;
-      pen.calculative.canvas.updatePenRect(pen);
-    }
-  }
+  // if (pen.calculative.singleton.div) {
+  //   // 判断是否需要调整高度
+  //   const { offsetHeight: h1 } = pen.calculative.singleton.div;
+  //   const { offsetHeight: h2 } = document.getElementsByClassName(`${TAG_WRAPPER}${pen.id}`)[0];
+  //   if (h1 !== h2) {
+  //     pen.height = h2 + 16;
+  //     pen.calculative.canvas.updatePenRect(pen);
+  //   }
+  // }
 }
 function assembleInputBox(pen: Pen) {
   const box = document.createElement("div");
-  box.style.width = '100%';
-  box.style.height = '100%';
-  box.style.padding = '0 8px';
-  box.style.border = '1px solid #ccc';
-  box.style.borderRadius = '4px';
-  box.style.whiteSpace = 'nowrap';
-  box.style.background = 'transparent';
+  box.className = 'l-tree__input';
+  // box.style.width = '100%';
+  // box.style.height = '100%';
+  // box.style.padding = '0 8px';
+  // box.style.border = '1px solid #ccc';
+  // box.style.borderRadius = '4px';
+  // box.style.whiteSpace = 'nowrap';
+  // box.style.background = 'transparent';
 
   const input = document.createElement("input");
   input.type = "text";
@@ -178,7 +188,7 @@ function onInputchange(e) {
   const paths = [];
   const penId = e.target.dataset.penId;
   const pen = window.meta2d.findOne(penId);
-  if (!pen) {
+  if (!pen || !pen.filterable) {
     return;
   }
   onRecursionData(pen.data, e.target.value, paths);
@@ -302,16 +312,58 @@ function assembleTag(key: string, title: string, penId: string) {
 
   return tagDom;
 }
+// 递归收集tree的所有父亲节点的id，
+function collectExpandIds(data, ids = []) {
+  for (let i = 0; i < data.length; i++) {
+    const item = data[i];
+    if (item.children?.length > 0) {
+      ids.push(item.key);
+    }
+    if (data[i].children?.length > 0) {
+      collectExpandIds(data[i].children, ids);
+    }
+  }
+}
 function validateData(pen: Pen) {
   const obj = {
     id: pen.id,
   }
   // 校验multiply与checked
-  if (!pen.multiply && pen.checked.length > 0) {
+  if (!pen.multiple && pen.checked.length > 0) {
     Object.assign(obj, {
       checked: [pen.checked[0]]
     })
   }
+
+  // 校验checked
+  if (pen.checked.length > 0) {
+    let list = [];
+    for (let i = 0; i < pen.checked.length; i++) {
+      const ck = pen.checked[i];
+      // 找到哪一个节点
+      const item = recursionTreeFindItem(pen.data, ck);
+      if(item){
+        const ids = [];
+        recursionTreeFindAllIds(item.children, ids);
+        list = list.concat(ids);
+      }
+    }
+    list = list.concat(pen.checked);
+    console.log(list, 'list');
+    Object.assign(obj, {
+      checked: list
+    })
+  }
+
+
+  if (pen.expandAll) {
+    const ids = []
+    collectExpandIds(pen.data, ids)
+    Object.assign(obj, {
+      expanded: ids
+    })
+  }
+
   window.meta2d.setValue(obj, { render: false });
 }
 function onDestroy(pen: Pen) {
@@ -351,6 +403,8 @@ enum Direction {
 }
 // let level = 0
 function treeIconClick(e) {
+  const { level } = this.dataset;
+  const _level = parseInt(level);
   const key = e.target.dataset.key;
   const lTreeList = document.querySelector('.l-tree-list');
   let len = lTreeList.children.length;
@@ -389,8 +443,15 @@ function treeIconClick(e) {
   const expanded = deepClone(pen.expanded);
   const _key = key;
 
-  const newExpands = handleToggleExpand(pen.accordion, pen.data, expanded, _key);
-  console.log(expanded, newExpands, _key, 'expanded');
+  let d = null;
+  if (level > 0) {
+    d = pen.data
+  } else {
+    d = [{ children: pen.data }]
+  }
+
+  const newExpands = handleToggleExpand(pen.accordion, d, expanded, _key);
+  // console.log(expanded, newExpands, _key, 'expanded');
 
   if (flag === Direction.Down) {
     // 展开
@@ -454,10 +515,10 @@ function recursionTreeFindItem(data, key) {
 function recursionFindSiblings(data, key,) {
   for (let i = 0; i < data.length; i++) {
     const item = data[i];
-    if (item.children && item.children.findIndex(el => el.key === key) > -1) {
+    if (Array.isArray(item.children) && item.children.findIndex(el => el.key === key) > -1) {
       return item.children.filter(el => el.key !== key).map(el => el.key);
     }
-    if (item.children && item.children.length > 0) {
+    if (Array.isArray(item.children) && item.children.length > 0) {
       const ret = recursionFindSiblings(item.children, key,);
       if (ret) {
         return ret;
@@ -538,33 +599,56 @@ function checkboxClick(e) {
   const checked = deepClone(pen.checked);
   updateTags(checkedVal, checked, val, penId, pen);
 
+
+
+  // 收集当前节点的所有儿子节点的id
+  const currentItem = recursionTreeFindItem(pen.data, val);
+  let ids = [val];
+  currentItem?.children && recursionTreeFindAllIds(currentItem.children, ids);
+  if(checkedVal){
+    ids = ids.concat(checked);
+  }else{
+    // 移除当前节点的所有儿子节点的id
+    ids = checked.filter(el => !ids.includes(el)); 
+  }
+  
   window.meta2d.setValue({
     id: penId,
-    checked,
+    checked:ids,
   })
   adjustHeight(pen);
+  renderPenRaw2(pen, pen.data);
 }
 function updateTags(checkedVal, checked, val, penId, pen) {
-  if (checkedVal) {
-    if (!checked.includes(val)) {
-      checked.push(val);
+  if (pen.multiple) {
+    if (checkedVal) {
+      if (!checked.includes(val)) {
+        checked.push(val);
 
-      // 添加tag
-      const tagWrapper = document.getElementsByClassName(`${TAG_WRAPPER}${penId}`)[0];
-      const title = recursionFindTitle(pen.data, val);
-      const tag = assembleTag(val, title, penId);
-      tagWrapper.appendChild(tag);
-    }
-  } else {
-    const index = checked.indexOf(val);
-    if (index > -1) {
-      checked.splice(index, 1);
-      // 移除tag
-      const tagDom = document.getElementsByClassName(`${TAG_PREFIX}${val}`)[0];
-      if (tagDom) {
-        tagDom.remove();
+        // 添加tag
+        const tagWrapper = document.getElementsByClassName(`${TAG_WRAPPER}${penId}`)[0];
+        const title = recursionFindTitle(pen.data, val);
+        const tag = assembleTag(val, title, penId);
+        tagWrapper.appendChild(tag);
+      }
+    } else {
+      const index = checked.indexOf(val);
+      if (index > -1) {
+        checked.splice(index, 1);
+        // 移除tag
+        const tagDom = document.getElementsByClassName(`${TAG_PREFIX}${val}`)[0];
+        if (tagDom) {
+          tagDom.remove();
+        }
       }
     }
+  } else {
+    // 单选
+    checked.splice(0, checked.length, val);
+    const tagWrapper = document.getElementsByClassName(`${TAG_WRAPPER}${penId}`)[0];
+    const title = recursionFindTitle(pen.data, val);
+    const tag = assembleTag(val, title, penId);
+    tagWrapper.replaceChildren(tag);
   }
 }
 function lableClick(e) {
@@ -619,7 +703,7 @@ function renderData(data, dom, pen) {
     const showIds = collectExpandShowIds(data, pen);
     addLevelToTree(data);
     // const siblings = recursionFindSiblings(data, "10");
-    // console.log(siblings, 'siblings');
+    console.log(showIds, 'showIds');
     const frag = generateDomByData(data, null, pen, null, showIds, generateDomByData);
     console.log(frag, lTreeList, 'frag');
     lTreeList.appendChild(frag);
@@ -674,6 +758,7 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, fn?) {
       lTreeIcon.dataset.key = key;
       lTreeIcon.id = key;
       lTreeIcon.dataset.penId = pen.id;
+      lTreeIcon.dataset.level = data[i].level + '';
       lTreeIcon.onclick = treeIconClick;
     }
     lTreeItem.appendChild(lTreeIcon)
@@ -689,7 +774,7 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, fn?) {
     lTreeLable.style.paddingLeft = '6px';
     lTreeLable.style.borderRadius = '4px';
     lTreeLable.className = 'l_tree_lable';
-    // if (pen.multiply && pen.checked.includes(data[i].key)) {
+    // if (pen.multiple && pen.checked.includes(data[i].key)) {
     //   lTreeLable.className += ' to__checked'
     // } else {
     //   if (pen.checked.length > 0 && pen.checked[0] === data[i].key) {
@@ -698,7 +783,7 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, fn?) {
     // }
 
     // checkboxDom
-    if (pen.multiply) {
+    if (pen.multiple) {
       const checkboxDom = document.createElement("input");
       checkboxDom.type = "checkbox";
       checkboxDom.name = "cName";
@@ -850,7 +935,7 @@ function collectExpandShowIds(data, pen) {
     for (let i = 0; i < pen.expanded.length; i++) {
       const id = pen.expanded[i];
       const item = recursionTreeFindItem(data, id);
-      if (item) {
+      if (item && Array.isArray(item.children) && item.children.length > 0) {
         expandList.push(...item.children.map(el => el.key));
       }
     }
@@ -880,7 +965,7 @@ const style_prefix = 'style_';
 function generateStyle(pen) {
   let extraStyle = document.createElement('style');
   extraStyle.type = 'text/css';
-  extraStyle.id = style_prefix+pen.id;
+  extraStyle.id = style_prefix + pen.id;
   document.head.appendChild(extraStyle);
   let sheet1 = extraStyle.sheet;
   if (pen.styles && pen.styles.length > 0) {
@@ -960,4 +1045,16 @@ function generateStyle(pen) {
     }
     `
   )
+  sheet.insertRule(`
+  .l-tree__input{
+    width: 100%;
+    height: ${pen.height}px;
+    overflow: auto;
+    padding: 0 8px;
+    border: 1px solid #ccc;
+    borderRadius: 4px;
+    // whiteSpace: nowrap;
+    background: transparent;
+  }
+  `)
 }
