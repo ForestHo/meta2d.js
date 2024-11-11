@@ -83,9 +83,9 @@ function renderPenRaw(pen: Pen, mkey: string, data: any) {
 function renderPenRaw2(pen: Pen, data: any) {
   const lTreeList = document.querySelector('.l-tree-list');
   const showIds = collectExpandShowIds(data, pen);
-  console.log(showIds, data, 'renderPenRaw2');
+  // console.log(showIds, data, 'renderPenRaw2');
   addLevelToTree(data);
-  const frag = generateDomByData(data, null, pen, null, showIds, generateDomByData);
+  const frag = generateDomByData(data, null, pen, null, showIds, [], generateDomByData);
   lTreeList.replaceChildren(frag);
   window.meta2d.setValue({
     id: pen.id,
@@ -482,25 +482,104 @@ function treeIconClick(e) {
     id: penId,
     expanded: list
   })
-  // 递归判断树结构的某个节点是否有children
-  const hasChild = recursionFindHasChild(pen.data, _key);
-  if (!hasChild) {
-    // 加载数据
-    const { level } = this.parentElement.dataset;
-    pen.loadFn && pen.loadFn(pen, { level, key: _key, title: key });
+  if (!pen.accordion) {
+    // 非手风琴
+    // 递归判断树结构的某个节点是否有children
+    const hasChild = recursionFindHasChild(pen.data, _key);
+    if (!hasChild) {
+      // 加载数据
+      const { level } = this.parentElement.dataset;
+      pen.loadFn && pen.loadFn(pen, { level, key: _key, title: key });
+    } else {
+      // 获取树的某个节点
+      // const currentItem = recursionTreeFindItem(pen.data, _key);
+      // const ids = [];
+      // recursionTreeFindAllIds(currentItem.children, ids);
+      // const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+      // showHideChild(dropMenu, ids, flag);
+    }
+
+    const showIds = collectExpandShowIds(pen.data, pen);
+    // console.log(showIds, 'showIds');
+
+    // 这里打补丁
+    let newShowIds = [];
+    if (flag === Direction.Down) {
+      // console.log('展开');
+      const currentItem = recursionTreeFindItem(pen.data, _key);
+      const childs = currentItem.children.map(el => el.key);
+      // recursionTreeFindFirstIds(currentItem.children, childs);
+      newShowIds = showIds.concat(childs);
+    } else if (flag === Direction.Right) {
+      // console.log('收起');
+      const currentItem = recursionTreeFindItem(pen.data, _key);
+      const childs = [];
+      recursionTreeFindAllIds(currentItem.children, childs);
+      // console.log(childs, 'childs');
+      newShowIds = showIds.filter(el => !childs.includes(el));
+    }
+
+    // console.log(newShowIds, 'newShowIds finall');
+    const frag = generateDomByData(pen.data, null, pen, null, newShowIds, [], generateDomByData);
+    // console.log(frag, lTreeList, 'frag');
+    lTreeList.replaceChildren(frag);
   } else {
-    // 获取树的某个节点
-    const currentItem = recursionTreeFindItem(pen.data, _key);
-    const ids = [];
-    recursionTreeFindAllIds(currentItem.children, ids);
-    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-    showHideChild(dropMenu, ids, flag);
+    // 手风琴
+    // 递归判断树结构的某个节点是否有children
+    const hasChild = recursionFindHasChild(pen.data, _key);
+    if (!hasChild) {
+      // 加载数据
+      const { level } = this.parentElement.dataset;
+      pen.loadFn && pen.loadFn(pen, { level, key: _key, title: key });
+    } else {
+      // 获取树的某个节点
+      const currentItem = recursionTreeFindItem(pen.data, _key);
+      const ids = [];
+      recursionTreeFindAllIds(currentItem.children, ids);
+      const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+      showHideChild(dropMenu, ids, flag);
+    }
+
+    const showIds = collectExpandShowIds(pen.data, pen);
+    // console.log(showIds, 'showIds');
+
+    // 这里打补丁
+    let newShowIds = [];
+    if (flag === Direction.Down) {
+      // console.log('手风琴 展开');
+      const currentItem = recursionTreeFindItem(pen.data, _key);
+      const childs = currentItem.children.map(el => el.key);
+      // recursionTreeFindFirstIds(currentItem.children, childs);
+      newShowIds = showIds.concat(childs);
+      const siblingIds = [];
+      for (let k = 0; k < siblings.length; k++) {
+        const sib = siblings[k];
+        const currentItem = recursionTreeFindItem(pen.data, sib);
+        const childs = [];
+        recursionTreeFindAllIds(currentItem.children, childs);
+        siblingIds.push(...childs);
+      }
+      // console.log(siblingIds, 'siblingIds');
+      newShowIds = newShowIds.filter(el => !siblingIds.includes(el));
+    } else if (flag === Direction.Right) {
+      // console.log('手风琴 收起');
+      const currentItem = recursionTreeFindItem(pen.data, _key);
+      const childs = [];
+      recursionTreeFindAllIds(currentItem.children, childs);
+      // console.log(childs, 'childs');
+      newShowIds = showIds.filter(el => !childs.includes(el));
+    }
+
+
+    const frag = generateDomByData(pen.data, null, pen, null, newShowIds, [], generateDomByData);
+    // console.log(frag, lTreeList, 'frag');
+    lTreeList.replaceChildren(frag);
+    window.meta2d.setValue({
+      id: penId,
+      showIds: newShowIds
+    })
   }
 
-  const showIds = collectExpandShowIds(pen.data, pen);
-  const frag = generateDomByData(pen.data, null, pen, null, showIds, generateDomByData);
-  console.log(frag, lTreeList, 'frag');
-  lTreeList.replaceChildren(frag);
 }
 function recursionTreeFindAllIds(data, ids) {
   for (let i = 0; i < data.length; i++) {
@@ -949,7 +1028,6 @@ function collectExpandShowIds(data, pen) {
   if (pen.expanded && pen.expanded.length > 0) {
     for (let i = 0; i < pen.expanded.length; i++) {
       const id = pen.expanded[i];
-      console.log(JSON.stringify(pen.expanded), JSON.stringify(pen.showIds), ' pen.expanded');
       const item = recursionTreeFindItem(data, id);
       if (item && Array.isArray(item.children) && item.children.length > 0) {
         expandList.push(...item.children.map(el => el.key));
