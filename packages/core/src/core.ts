@@ -79,7 +79,7 @@ import { Scroll } from './scroll';
 import { getter } from './utils/object';
 import { queryURLParams } from './utils/url';
 import { HotkeyType } from './data';
-
+import { LDialog, registerDialogStyle } from './dialog';
 export class Meta2d {
   store: Meta2dStore;
   canvas: Canvas;
@@ -118,6 +118,7 @@ export class Meta2d {
     globalThis.meta2d = this;
     this.initEventFns();
     this.store.emitter.on('*', this.onEvent);
+    registerDialogStyle()//注册弹窗样式
   }
 
   facePen = facePen;
@@ -457,21 +458,8 @@ export class Meta2d {
       }
     };
     this.events[EventAction.Dialog] = (pen: Pen, e: Event) => {
-      if (
-        e.params &&
-        typeof e.params === 'string'
-      ) {
-        let url = e.params;
-        if (e.params.includes('${')) {
-          let keys = e.params.match(/(?<=\$\{).*?(?=\})/g);
-          if (keys) {
-            keys?.forEach((key) => {
-              url = url.replace(`\${${key}}`, pen[key]);
-            })
-          }
-        }
-        this.canvas.dialog.show(e.value as any, url, e.extend);
-      }
+      if (pen.calculative.dialog) return;
+      new LDialog(pen,e);
     };
     this.events[EventAction.SendData] = (pen: Pen, e: Event) => {
       if (e.list?.length) {
@@ -2247,6 +2235,56 @@ export class Meta2d {
               this.store.emitter.emit('error', { type: 'websocket', error });
             };
             websocketIndex += 1;
+          } else if (net.protocol === 'http') {
+            https.push({
+              url: net.url,
+              interval: net.interval,
+              headers: net.headers || undefined,
+              method: net.method,
+              body: net.body,
+            });
+          }else if(net.protocol === 'iot'){
+            const token = await this.getIotToken(net.devices);
+            //物联网设备
+            if(net.method === 'mqtt'){
+              net.index = mqttIndex;
+              this.mqttClients[mqttIndex] = mqtt.connect(net.url);
+              this.mqttClients[mqttIndex].on('message', (topic: string, message: Buffer) => {
+                this.socketCallback(message.toString(), {
+                  topic:`le5le-iot/properties/${token}`,
+                  type: 'iot',
+                  url: net.url,
+                  method: 'mqtt'
+                });
+              })
+              this.mqttClients[mqttIndex].on('error', (error) => {
+                this.store.emitter.emit('error', { type: 'mqtt', error });
+              });
+              this.mqttClients[mqttIndex].subscribe(`le5le-iot/properties/${token}`);
+              mqttIndex += 1;
+            }else if(net.method === 'websocket'){
+              net.index = websocketIndex;
+              this.websockets[websocketIndex] = new WebSocket(
+                `${location.protocol === 'https:'?'wss':'ws'}://${location.host}/api/ws/iot/properties`,
+                token
+              );
+              this.websockets[websocketIndex].onmessage = (e) => {
+                this.socketCallback(e.data, { type: 'iot', method: 'websocket' });
+              };
+              this.websockets[websocketIndex].onerror = (error) => {
+                this.store.emitter.emit('error', { type: 'websocket', error });
+              };
+              websocketIndex += 1;
+            }
+          }else if(net.protocol === 'sql'){
+            await this.doSqlCode('list',net.dbId,net.sql);
+            if(net.interval){
+              net.index = sqlIndex;
+              this.sqlTimerList[sqlIndex] = setInterval(async () => {
+                await this.doSqlCode('list',net.dbId,net.sql);
+              }, net.interval);
+              sqlIndex += 1;
+            }
           }
         } else if (net.protocol === 'sql') {
           await this.doSqlCode('list', net.dbId, net.sql);
@@ -2264,8 +2302,8 @@ export class Meta2d {
     this.onNetworkConnect(https);
   }
 
-  connectNetWebSocket(net: Network) {
-    if (this.websockets[net.index]) {
+  connectNetWebSocket(net:Network){
+    if(this.websockets[net.index]){
       this.websockets[net.index].onclose = undefined;
       this.websockets[net.index]?.close();
       this.websockets[net.index] = undefined;
@@ -2310,8 +2348,8 @@ export class Meta2d {
   }
 
 
-  async doSqlCode(type: string, dbid: string, sql: string) {
-    const res: Response = await fetch(`/api/iot/data/sql/${type}`, {
+  async doSqlCode(type:string, dbid:string,sql:string){
+    const res: Response = await fetch( `/api/iot/data/sql/${type}`, {
       method: 'POST',
       body: JSON.stringify({ dbid, sql, }),
     });
@@ -2334,7 +2372,7 @@ export class Meta2d {
     return n;
   }
 
-  mockValue(data) {
+  mockValue(data){
     let value = undefined;
     if (data.enableMock && data.mock !== undefined) {
       if (data.type === 'float') {
@@ -3175,7 +3213,7 @@ export class Meta2d {
       });
     }
 
-    if (eventName === 'valueUpdate') {
+    if(eventName === 'valueUpdate'){
       pen.realTimes?.forEach((realTime) => {
         let indexArr = [];
         realTime.triggers?.forEach((trigger, index) => {
@@ -3777,10 +3815,10 @@ export class Meta2d {
           } else {
             right = 0;
           }
-          let ratio = (this.canvas.width - left - right) / (rect.width - left - right);
-          pens.forEach((pen) => {
-            if (pen.image && pen.imageRatio) {
-              if (pen.calculative.worldRect.width / this.canvas.width > 0.1) {
+          let ratio = (this.canvas.width - left - right)/(rect.width- left - right);
+          pens.forEach((pen)=>{
+            if(pen.image && pen.imageRatio){
+              if(pen.calculative.worldRect.width/this.canvas.width>0.1){
                 pen.imageRatio = false;
               }
             }
@@ -3797,14 +3835,14 @@ export class Meta2d {
             }
           });
 
-        } else if (fit.left) {
+        }else if(fit.left){
           //左移
           r = -r
           if (fit.leftValue) {
             r += (Math.abs(fit.leftValue) < 1 ? fit.leftValue * this.canvas.width : fit.leftValue);
           }
           this.translatePens(pens, r, 0);
-        } else if (fit.right) {
+        }else if(fit.right){
           //右移
           if (fit.rightValue) {
             r = r - (Math.abs(fit.rightValue) < 1 ? fit.rightValue * this.canvas.width : fit.rightValue);
@@ -3857,10 +3895,10 @@ export class Meta2d {
             bottom = 0;
           }
 
-          let ratio = (this.canvas.height - top - bottom) / (rect.height - top - bottom);
-          pens.forEach((pen) => {
-            if (pen.image && pen.imageRatio) {
-              if (pen.calculative.worldRect.height / this.canvas.height > 0.1) {
+          let ratio = (this.canvas.height - top - bottom)/(rect.height- top - bottom);
+          pens.forEach((pen)=>{
+            if(pen.image && pen.imageRatio){
+              if(pen.calculative.worldRect.height/this.canvas.height>0.1){
                 pen.imageRatio = false;
               }
             }
@@ -3877,15 +3915,15 @@ export class Meta2d {
             }
           });
 
-        } else if (fit.top) {
+        }else if(fit.top){
           r = -r
           if (fit.topValue) {
             r += (Math.abs(fit.topValue) < 1 ? fit.topValue * this.canvas.height : fit.topValue);
           }
           this.translatePens(pens, 0, r);
-        } else if (fit.bottom) {
-          if (fit.bottomValue) {
-            r = r - (Math.abs(fit.bottomValue) < 1 ? fit.bottomValue * this.canvas.height : fit.bottomValue);
+        }else if(fit.bottom){
+          if(fit.bottomValue){
+            r = r - (Math.abs(fit.bottomValue)<1?fit.bottomValue*this.canvas.height:fit.bottomValue);
           }
           this.translatePens(pens, 0, r);
         }
@@ -4270,9 +4308,9 @@ export class Meta2d {
       formatAttrs.forEach((attr) => {
         attrs[attr] =
           firstPen[attr] !== undefined ? firstPen[attr] :
-            (this.store.options.defaultFormat[attr] ||
-              this.store.data[attr] ||
-              this.store.options[attr]);
+          (this.store.options.defaultFormat[attr] ||
+          this.store.data[attr] ||
+          this.store.options[attr]);
       });
     } else {
       //默认值

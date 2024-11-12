@@ -261,7 +261,7 @@ export class Canvas {
   canvasImage: CanvasImage;
   canvasImageBottom: CanvasImage;
   magnifierCanvas: MagnifierCanvas;
-  dialog: Dialog;
+  // dialog: Dialog;
   autoPolylineFlag: boolean = false; //标记open不自动计算
 
   stopPropagation = (e: MouseEvent) => {
@@ -310,7 +310,7 @@ export class Canvas {
       setHover(hover, false);
     };
 
-    this.dialog = new Dialog(parentElement);
+    // this.dialog = new Dialog(parentElement);
     this.title = new Title(parentElement);
 
     if (this.store.options.scroll) {
@@ -538,7 +538,7 @@ export class Canvas {
   };
 
   onMessage = (e: MessageEvent) => {
-    /* 
+    /*
       接收到特定消息之后跟新变量树中的变量内容
 
     */
@@ -2026,7 +2026,7 @@ export class Canvas {
             } else if (e.ctrlKey && e.shiftKey && this.store.hover.parentId) {
               this.active([this.store.hover]);
             } else {
-              if (!(this.activeRect && pointInRect({ x: e.x, y: e.y }, this.activeRect)) || this.store.active.length == 1) {
+              if(!(this.activeRect && pointInRect({x:e.x,y:e.y},this.activeRect)) || this.store.active.length == 1){
                 if (!pen.calculative.active) {
                   this.active([pen]);
                   if (this.store.options.resizeMode) {
@@ -7432,8 +7432,8 @@ export class Canvas {
         const numericValue = value.replace(/[^0-9]/g, ''); // 移除非数字字符
         // 如果输入的值不是纯数字，则替换为纯数字
         if (value !== numericValue) {
-          e.preventDefault();
-          e.target.innerText = numericValue;
+            e.preventDefault();
+            e.target.innerText = numericValue;
         }
       }
       // //无文本时，光标确保居中
@@ -8309,26 +8309,26 @@ export class Canvas {
     }
     const fit = this.canvasImage.activeFit;
     // if (pointInRect(point, { x:fit.x-0.01, y:0, width, height })) {
-    this.externalElements.style.cursor = 'default';
-    if (point.y > height * fit.y - 10 && point.y < height * fit.y + 10) {
-      current = 'top';
-      this.externalElements.style.cursor = 'row-resize';
-    }
-    if (point.y > height * (fit.y + fit.height) - 10 && point.y < height * (fit.y + fit.height) + 10) {
-      current = 'bottom';
-      this.externalElements.style.cursor = 'row-resize';
+      this.externalElements.style.cursor = 'default';
+      if (point.y > height * fit.y - 10 && point.y < height * fit.y + 10) {
+        current = 'top';
+        this.externalElements.style.cursor = 'row-resize';
+      }
+      if (point.y > height * (fit.y + fit.height) - 10 && point.y < height * (fit.y + fit.height) + 10) {
+        current = 'bottom';
+        this.externalElements.style.cursor = 'row-resize';
 
-    }
-    if (point.x > width * fit.x - 10 && point.x < width * fit.x) {
-      current = 'left';
-      this.externalElements.style.cursor = 'col-resize';
+      }
+      if (point.x > width * fit.x - 10 && point.x < width * fit.x) {
+        current = 'left';
+        this.externalElements.style.cursor = 'col-resize';
 
-    }
-    if (point.x > width * (fit.x + fit.width) - 10 && point.x < width * (fit.x + fit.width) + 10) {
-      current = 'right';
-      this.externalElements.style.cursor = 'col-resize';
+      }
+      if (point.x > width * (fit.x + fit.width) - 10 && point.x < width * (fit.x + fit.width) + 10) {
+        current = 'right';
+        this.externalElements.style.cursor = 'col-resize';
 
-    }
+      }
     // }
     this.canvasImage.currentFit = current;
   }
@@ -8361,7 +8361,7 @@ export class Canvas {
     //将所有当前框选的图元设置到该容器中
     const pens = this.store.data.pens.filter((pen) => {
       if (
-        // pen.locked >= LockState.DisableMove || 
+        // pen.locked >= LockState.DisableMove ||
         pen.parentId || pen.isRuleLine
       ) {
         return false;
@@ -8515,7 +8515,7 @@ export class Canvas {
       calcRightBottom(rect);
       const pens = this.store.data.pens.filter((pen) => {
         if (
-          // pen.locked >= LockState.DisableMove || 
+          // pen.locked >= LockState.DisableMove ||
           pen.parentId || pen.isRuleLine
         ) {
           return false;
@@ -8686,7 +8686,7 @@ export class Canvas {
   destroy() {
     this.scroll && this.scroll.destroy();
     this.tooltip?.destroy();
-    this.dialog?.destroy();
+    // this.dialog?.destroy();
     this.title?.destroy();
 
     // ios
