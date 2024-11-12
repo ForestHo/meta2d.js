@@ -43,6 +43,10 @@ export interface Event {
     value?: EventValue; 
   }[] //多个图元对象
   timeout?: number; //延时执行
+  //中能定制化参数
+  iframeId?:string; //iframe组件的ID
+  contents?:string|any;//iframe接受的消息内容
+  info?:string;//iframe接收的消息名称
 }
 
 export enum EventAction {
@@ -64,6 +68,8 @@ export enum EventAction {
   SendData, //数据源选择
   PostMessage, //发送场景数据
   PostMessageToParent, //向父窗口发送消息
+  PostMessageZn,//中能项目定制事件 像iframe传递消息 内容
+  PostMessageToParentZn//中能项目定制事件 像父类窗口传递消息 内容
 }
 
 export interface Where {
