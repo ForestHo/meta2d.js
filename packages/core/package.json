@@ -28,6 +28,8 @@
     "@types/offscreencanvas": "latest"
   },
   "dependencies": {
+    "@types/hammerjs": "^2.0.46",
+    "hammerjs": "^2.0.8",
     "mitt": "^2.1.0",
     "mqtt": "^4.2.6"
   },

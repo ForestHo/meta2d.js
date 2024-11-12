@@ -261,7 +261,7 @@ export class Canvas {
   canvasImage: CanvasImage;
   canvasImageBottom: CanvasImage;
   magnifierCanvas: MagnifierCanvas;
-  dialog: Dialog;
+  // dialog: Dialog;
   autoPolylineFlag: boolean = false; //标记open不自动计算
 
   stopPropagation = (e: MouseEvent) => {
@@ -288,7 +288,7 @@ export class Canvas {
     this.canvasImage.canvas.style.zIndex = '4';
 
     this.magnifierCanvas = new MagnifierCanvas(this, parentElement, store);
-    this.magnifierCanvas.canvas.style.zIndex = '5'; 
+    this.magnifierCanvas.canvas.style.zIndex = '5';
 
     this.externalElements.style.position = 'absolute';
     this.externalElements.style.left = '0';
@@ -310,7 +310,7 @@ export class Canvas {
       setHover(hover, false);
     };
 
-    this.dialog = new Dialog(parentElement);
+    // this.dialog = new Dialog(parentElement);
     this.title = new Title(parentElement);
 
     if (this.store.options.scroll) {
@@ -2008,7 +2008,7 @@ export class Canvas {
             } else if (e.ctrlKey && e.shiftKey && this.store.hover.parentId) {
               this.active([this.store.hover]);
             } else {
-              if(!(this.activeRect && pointInRect({x:e.x,y:e.y},this.activeRect)) || this.store.active.length == 1){ 
+              if(!(this.activeRect && pointInRect({x:e.x,y:e.y},this.activeRect)) || this.store.active.length == 1){
                 if (!pen.calculative.active) {
                   this.active([pen]);
                   if (this.store.options.resizeMode) {
@@ -2645,7 +2645,7 @@ export class Canvas {
           y: e.y,
           pen: this.store.hover,
         });
-      } 
+      }
       this.store.emitter.emit('mouseup', {
         x: e.x,
         y: e.y,
@@ -6696,7 +6696,7 @@ export class Canvas {
       }
     }
   }
-  
+
 
   /**
    *
@@ -7423,7 +7423,7 @@ export class Canvas {
         if (value !== numericValue) {
             e.preventDefault();
             e.target.innerText = numericValue;
-        } 
+        }
       }
       // //无文本时，光标确保居中
       if (navigator.userAgent.includes('Firefox')) {
@@ -7810,7 +7810,7 @@ export class Canvas {
       } else if (pen.canvasLayer === CanvasLayer.CanvasImage) {
         this.canvasImage.init();
       }
-    } 
+    }
     // else {
     //   this.initImageCanvas([pen]);
     // }
@@ -8088,7 +8088,7 @@ export class Canvas {
     const scale = (maxWidth || rect.width) / rect.width;
     rect.width *= scale;
     rect.height *= scale;
-    
+
     const canvas = document.createElement('canvas');
     canvas.width = rect.width;
     canvas.height = rect.height;
@@ -8118,7 +8118,7 @@ export class Canvas {
         0,
         0,
         oldRect.width + (p[3] + p[1]),
-        oldRect.height + (p[0] + p[2]) 
+        oldRect.height + (p[0] + p[2])
       );
       ctx.restore();
     }
@@ -8288,7 +8288,7 @@ export class Canvas {
     this.externalElements.style.cursor = 'default';
     this.render();
   }
-  
+
   private inFitBorder = (pt: Point) => {
     let current = undefined;
     const width = (this.store.data.width || this.store.options.width);
@@ -8307,17 +8307,17 @@ export class Canvas {
       if (point.y > height * (fit.y + fit.height) - 10 && point.y < height * (fit.y + fit.height) + 10) {
         current = 'bottom';
         this.externalElements.style.cursor = 'row-resize';
-  
+
       }
       if (point.x > width * fit.x - 10 && point.x < width * fit.x) {
         current = 'left';
         this.externalElements.style.cursor = 'col-resize';
-  
+
       }
       if (point.x > width * (fit.x + fit.width) - 10 && point.x < width * (fit.x + fit.width) + 10) {
         current = 'right';
         this.externalElements.style.cursor = 'col-resize';
-  
+
       }
     // }
     this.canvasImage.currentFit = current;
@@ -8351,7 +8351,7 @@ export class Canvas {
     //将所有当前框选的图元设置到该容器中
     const pens = this.store.data.pens.filter((pen)=>{
       if (
-        // pen.locked >= LockState.DisableMove || 
+        // pen.locked >= LockState.DisableMove ||
         pen.parentId || pen.isRuleLine
       ) {
         return false;
@@ -8495,7 +8495,7 @@ export class Canvas {
         if (fit.width <= 0.01) {
           fit.width = 0.01;
         }
-      }    
+      }
       let rect = {
         x:fit.x * width * scale + this.store.data.origin.x,
         y:fit.y * height * scale + this.store.data.origin.y,
@@ -8505,7 +8505,7 @@ export class Canvas {
       calcRightBottom(rect);
       const pens = this.store.data.pens.filter((pen)=>{
         if (
-          // pen.locked >= LockState.DisableMove || 
+          // pen.locked >= LockState.DisableMove ||
           pen.parentId || pen.isRuleLine
         ) {
           return false;
@@ -8612,7 +8612,7 @@ export class Canvas {
       }else{
         fit.height = 1 - fit.y;
       }
-    } 
+    }
     this.canvasImage.init();
     this.canvasImage.render();
   }
@@ -8635,7 +8635,7 @@ export class Canvas {
     const height = this.store.data.height || this.store.options.height;
     let downX = (this.mouseDown.x - this.store.data.origin.x) / this.store.data.scale / width;
     let downY = (this.mouseDown.y - this.store.data.origin.y) / this.store.data.scale / height;
-   
+
     let idx = -1;
     let lastActiveIdx = -1;
     this.store.data.fits?.forEach((fit,index)=>{
@@ -8676,7 +8676,7 @@ export class Canvas {
   destroy() {
     this.scroll && this.scroll.destroy();
     this.tooltip?.destroy();
-    this.dialog?.destroy();
+    // this.dialog?.destroy();
     this.title?.destroy();
 
     // ios

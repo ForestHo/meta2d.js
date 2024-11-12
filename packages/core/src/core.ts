@@ -79,7 +79,7 @@ import { Scroll } from './scroll';
 import { getter } from './utils/object';
 import { queryURLParams } from './utils/url';
 import { HotkeyType } from './data';
-
+import { LDialog, registerDialogStyle } from './dialog';
 export class Meta2d {
   store: Meta2dStore;
   canvas: Canvas;
@@ -118,6 +118,7 @@ export class Meta2d {
     globalThis.meta2d = this;
     this.initEventFns();
     this.store.emitter.on('*', this.onEvent);
+    registerDialogStyle()//注册弹窗样式
   }
 
   facePen = facePen;
@@ -457,21 +458,8 @@ export class Meta2d {
       }
     };
     this.events[EventAction.Dialog] = (pen: Pen, e: Event) => {
-      if (
-        e.params &&
-        typeof e.params === 'string'
-      ) {
-        let url = e.params;
-        if(e.params.includes('${')){
-          let keys = e.params.match(/(?<=\$\{).*?(?=\})/g);
-          if(keys){
-            keys?.forEach((key)=>{
-              url = url.replace(`\${${key}}`,pen[key]);
-            })
-          }
-        }
-        this.canvas.dialog.show(e.value as any, url, e.extend);
-      }
+      if (pen.calculative.dialog) return;
+      new LDialog(pen,e);
     };
     this.events[EventAction.SendData] = (pen: Pen, e: Event) => {
       if(e.list?.length){
@@ -1218,7 +1206,7 @@ export class Meta2d {
     sessionStorage.removeItem('page');
     this.store.clipboard = undefined;
 
-  
+
     if (!this.store.sameTemplate) {
       this.canvas.canvasTemplate.bgPatchFlags = true;
     }
@@ -1965,7 +1953,7 @@ export class Meta2d {
             url: this.store.data.mqtt,
           });
         });
-        
+
         this.mqttClient.on('error', (error) => {
           this.store.emitter.emit('error', { type: 'mqtt', error });
         });
@@ -2205,7 +2193,7 @@ export class Meta2d {
                 token
               );
               this.websockets[websocketIndex].onmessage = (e) => {
-                this.socketCallback(e.data, { type: 'iot', method: 'websocket' });   
+                this.socketCallback(e.data, { type: 'iot', method: 'websocket' });
               };
               this.websockets[websocketIndex].onerror = (error) => {
                 this.store.emitter.emit('error', { type: 'websocket', error });
@@ -2227,7 +2215,7 @@ export class Meta2d {
     }
     this.onNetworkConnect(https);
   }
-  
+
   connectNetWebSocket(net:Network){
     if(this.websockets[net.index]){
       this.websockets[net.index].onclose = undefined;
@@ -2273,7 +2261,7 @@ export class Meta2d {
     }
   }
 
-    
+
   async doSqlCode(type:string, dbid:string,sql:string){
     const res: Response = await fetch( `/api/iot/data/sql/${type}`, {
       method: 'POST',
@@ -2285,7 +2273,7 @@ export class Meta2d {
         this.socketCallback(data, { type: 'sql', url: `/api/iot/data/sql/${type}` });
       }
     }
-  }  
+  }
 
   randomString(e: number) {
     e = e || 32;
@@ -2297,7 +2285,7 @@ export class Meta2d {
     }
     return n;
   }
-  
+
   mockValue(data){
     let value = undefined;
     if (data.enableMock && data.mock !== undefined) {
@@ -2519,7 +2507,7 @@ export class Meta2d {
     // if( enable ){
     //   this.updateTimer = setInterval(() => {
     //     //模拟数据
-      
+
     //     this.store.data.pens.forEach((pen) => {
     //       this.penMock(pen);
     //     });
@@ -2972,7 +2960,7 @@ export class Meta2d {
         break;
       case 'mouseup':
         e.pen &&
-          e.pen.onMouseUp && (!e.pen.disabled) && 
+          e.pen.onMouseUp && (!e.pen.disabled) &&
           e.pen.onMouseUp(e.pen, this.canvas.mousePos);
         this.store.data.locked && e.pen && (!e.pen.disabled) && this.doEvent(e.pen, eventName);
         break;
@@ -3109,7 +3097,7 @@ export class Meta2d {
         }
       }
     });
-    
+
     //所有的条件判断后，再统一执行条件成立的事件
     if(old){
       pen.events?.forEach((event,index) => {
@@ -3138,7 +3126,7 @@ export class Meta2d {
         }
       });
     }
-    
+
     if(eventName === 'valueUpdate'){
       pen.realTimes?.forEach((realTime) => {
         let indexArr = [];
@@ -3742,7 +3730,7 @@ export class Meta2d {
             right = 0;
           }
           let ratio = (this.canvas.width - left - right)/(rect.width- left - right);
-          pens.forEach((pen)=>{  
+          pens.forEach((pen)=>{
             if(pen.image && pen.imageRatio){
               if(pen.calculative.worldRect.width/this.canvas.width>0.1){
                 pen.imageRatio = false;
@@ -3760,20 +3748,20 @@ export class Meta2d {
               pen.onResize?.(pen);
             }
           });
-        
+
         }else if(fit.left){
           //左移
           r = -r
           if(fit.leftValue){
             r += (Math.abs(fit.leftValue)<1?fit.leftValue*this.canvas.width:fit.leftValue);
           }
-          this.translatePens(pens, r, 0); 
+          this.translatePens(pens, r, 0);
         }else if(fit.right){
           //右移
           if(fit.rightValue){
             r = r - (Math.abs(fit.rightValue)<1?fit.rightValue*this.canvas.width:fit.rightValue);
           }
-          this.translatePens(pens, r, 0); 
+          this.translatePens(pens, r, 0);
         }
       });
       const iframePens = this.store.data.pens.filter((pen) => pen.name === 'iframe');
@@ -3822,7 +3810,7 @@ export class Meta2d {
           }
 
           let ratio = (this.canvas.height - top - bottom)/(rect.height- top - bottom);
-          pens.forEach((pen)=>{  
+          pens.forEach((pen)=>{
             if(pen.image && pen.imageRatio){
               if(pen.calculative.worldRect.height/this.canvas.height>0.1){
                 pen.imageRatio = false;
@@ -3840,18 +3828,18 @@ export class Meta2d {
               pen.onResize?.(pen);
             }
           });
-        
+
         }else if(fit.top){
           r = -r
           if(fit.topValue){
             r += (Math.abs(fit.topValue)<1?fit.topValue*this.canvas.height:fit.topValue);
           }
-          this.translatePens(pens, 0, r); 
+          this.translatePens(pens, 0, r);
         }else if(fit.bottom){
           if(fit.bottomValue){
             r = r - (Math.abs(fit.bottomValue)<1?fit.bottomValue*this.canvas.height:fit.bottomValue);
           }
-          this.translatePens(pens, 0, r); 
+          this.translatePens(pens, 0, r);
         }
       });
       const iframePens = this.store.data.pens.filter((pen) => pen.name === 'iframe');
@@ -4234,7 +4222,7 @@ export class Meta2d {
       formatAttrs.forEach((attr) => {
         attrs[attr] =
           firstPen[attr] !== undefined ? firstPen[attr] :
-          (this.store.options.defaultFormat[attr] || 
+          (this.store.options.defaultFormat[attr] ||
           this.store.data[attr] ||
           this.store.options[attr]);
       });
