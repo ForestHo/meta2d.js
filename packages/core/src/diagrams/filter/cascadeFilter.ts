@@ -40,6 +40,9 @@ export function cascadeFilter(pen: Pen): Path2D {
     // 创建容器
     const container = document.createElement("div");
     container.style.position = 'relative';
+    container.dataset.penId = pen.id;
+    container.addEventListener("mouseleave", containerMouseLeave);
+    container.addEventListener("mouseenter", containerMouseEnter);
     // container.style.width = '100%';
     // container.style.height = '100%';
     // 输入框
@@ -49,14 +52,19 @@ export function cascadeFilter(pen: Pen): Path2D {
     const dropMenu = document.createElement("div");
     dropMenu.style.position = 'absolute';
     dropMenu.style.left = '0';
-    dropMenu.style.top = 'calc(100% + 6px)';
+    dropMenu.style.top = 'calc(100% - 0px)';
     // dropMenu.style.width = '100%';
     dropMenu.style.background = 'rgba(255, 255, 255, 0.9)';
     dropMenu.style.border = '1px solid #ccc';
     dropMenu.style.borderRadius = '4px';
     dropMenu.className = DROPMENU_PREFIX + pen.id;
+    if (pen.autoDropdown) {
+      dropMenu.classList.add("l-is-hidden")
+    }
     dropMenu.style.display = 'block';
     dropMenu.style.overflow = 'auto';
+    dropMenu.dataset.penId = pen.id;
+    // dropMenu.addEventListener("mouseenter",containerMouseEnter);
     // dropMenu.style.pointerEvents = 'initial';
     container.appendChild(dropMenu);
 
@@ -73,7 +81,7 @@ export function cascadeFilter(pen: Pen): Path2D {
   return path;
 }
 function renderData(data, dom, pen) {
-  if (Object.prototype.toString.call(data) === '[object Array]') {
+  if (Array.isArray(data)) {
     generateStyle(pen);
     const lPanel = document.createElement('div');
     lPanel.className = 'l-cascader__panel l-cascader--normal';
@@ -103,6 +111,30 @@ function renderData(data, dom, pen) {
       }
       adjustHeight(pen);
     }
+  }
+}
+function containerMouseEnter(e) {
+  // console.log('inputMouseLeave',e);
+  const { penId } = this.dataset;
+  const pen = window.meta2d.findOne(penId);
+  if (!pen) {
+    return;
+  }
+  if (pen.autoDropdown) {
+    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+    dropMenu.classList.remove("l-is-hidden");
+  }
+}
+function containerMouseLeave(e) {
+  // console.log('inputMouseLeave',e);
+  const { penId } = this.dataset;
+  const pen = window.meta2d.findOne(penId);
+  if (!pen) {
+    return;
+  }
+  if (pen.autoDropdown) {
+    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+    dropMenu.classList.add("l-is-hidden");
   }
 }
 function recursionTreeFindItem(data, key) {
@@ -248,9 +280,17 @@ function onMouseEnter(pen: Pen, e: Point) {
   } else if (locked === 0) {
     pen.calculative.singleton.div.style.pointerEvents = 'none';
   }
+  if (pen.autoDropdown) {
+    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+    dropMenu.classList.remove("l-is-hidden");
+  }
 }
 function onMouseLeave(pen: Pen, e: Point) {
   pen.calculative.singleton.div.style.pointerEvents = 'none';
+  if (pen.autoDropdown) {
+    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+    dropMenu.classList.add("l-is-hidden");
+  }
 }
 function resize(pen: any) {
   setElemPosition(pen, pen.calculative.singleton.div);
@@ -259,20 +299,27 @@ function renderPenRaw(pen: Pen, mkey: string, data: any, params) {
   const { level } = params;
   const _level = parseInt(level);
   const nextLevel = _level + 1;
-  // console.log('renderPenRaw', params)
-  const flowPath = [];
+  const flowPath = deepClone(pen.flowPath);
   getTreeFlowPathDefault(data, flowPath, item => item === 0);
+  window.meta2d.setValue({
+    id: pen.id,
+    flowPath,
+  })
   const opt = {
     penId: pen.id,
     checked: pen.checked,
   };
   const fragMent = generateDomByData(pen, data, flowPath, opt);
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
   const cascaderPanel = document.querySelector('.l-cascader__panel');
   if (cascaderPanel.children[nextLevel]) {
     cascaderPanel.replaceChild(fragMent, cascaderPanel.children[nextLevel]);
   } else {
     cascaderPanel.appendChild(fragMent);
   }
+
+ 
+  reviewPanelFlowPath(cascaderPanel, flowPath);
 }
 function renderPenRaw2(pen: Pen, data: any) {
   let flowPath = [];
@@ -281,6 +328,11 @@ function renderPenRaw2(pen: Pen, data: any) {
   } else {
     getTreeFlowPathDefault(data, flowPath, item => item === 0);
   }
+  // console.log('renderPenRaw2', flowPath)
+  window.meta2d.setValue({
+    id: pen.id,
+    flowPath,
+  })
   const opt = {
     penId: pen.id,
     checked: pen.checked,
@@ -388,6 +440,23 @@ function onInputchange(e) {
       // reviewChecked(cascaderPanel, pen, pen.data, checkedIds);
       reviewPanel(pen, cascaderPanel, checkedIds, halfIds);
     }, 20)
+  }
+}
+function reviewPanelFlowPath(cascaderPanel, flowPath) {
+  const list = cascaderPanel.querySelectorAll('.l-cascader__item')
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    if (item.classList.contains('l-is-expanded')) {
+      item.classList.remove('l-is-expanded');
+    }
+  }
+
+  for (let i = 0; i < flowPath.length; i++) {
+    const fl = flowPath[i];
+    const item = cascaderPanel.querySelector(`.l-cascader__item[data-value="${fl}"]`);
+    if (item) {
+      item.classList.add('l-is-expanded');
+    }
   }
 }
 function reviewPanel(pen, cascaderPanel, checkedIds, halfIds) {
@@ -608,61 +677,74 @@ function tagClose(e) {
   if (index > -1) {
     checkedList.splice(index, 1);
   }
-  window.meta2d.setValue({
-    id: penId,
-    checked: checkedList,
-  })
+  // window.meta2d.setValue({
+  //   id: penId,
+  //   checked: checkedList,
+  // })
   // tagDom.remove();
 
   // 更新cascader的checked状态
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
   const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
   const curItem = cascaderPanel.querySelector(`.l-cascader__item[data-value="${value}"]`);
-  // console.log(curItem, 'curItem');
-  if (!curItem) {
-    this.parentElement.remove();
-    // 根据最新的tag去更新checked
-    const halfIds = [];
-    recursionDownTree(pen.data, pen.checked, halfIds);
-    // console.log('tagClose', JSON.stringify(checkedList), JSON.stringify(halfIds));
-    // reviewChecked(cascaderPanel, pen, pen.data, checkedIds);
-    reviewPanel(pen, cascaderPanel, checkedList, halfIds);
-    return;
+  let pid = "";
+  if (curItem) {
+    pid = curItem.dataset.pid;
   }
-  const { pid } = curItem.dataset;
-  curItem.classList.remove('l-is-checked');
-  // console.log(pid, value, 'checkedList');
-  let checkedIds = deepClone(pen.checked);
-  let halfCheckedIds = deepClone(pen.halfChecked);
-  {
-    //取消勾选
-    const currentItem = recursionTreeFindItem(pen.data, value);
-    if (currentItem && currentItem.children?.length > 0) {
-      const ids = [];
-      recursionTreeFindAllIds(currentItem.children, ids);
-      checkedIds = checkedIds.filter(el => !ids.includes(el));
-      for (let i = 0; i < ids.length; i++) {
-        const id = ids[i];
-        if (checkedIds.includes(id)) {
-          const index = checkedIds.findIndex(el => el === id);
-          if (index > -1) {
-            checkedIds.splice(checkedIds.findIndex(el => el === id), 1);
+  let checkedIds = deepClone(checkedList);
+  // let halfCheckedIds = deepClone(pen.halfChecked);
+
+  // console.log(curItem, 'curItem');
+  if (!pen.checkStrictly) {
+    if (!curItem) {
+      this.parentElement.remove();
+      // 根据最新的tag去更新checked
+      const halfIds = [];
+      recursionDownTree(pen.data, pen.checked, halfIds);
+      // console.log('tagClose', JSON.stringify(checkedList), JSON.stringify(halfIds));
+      // reviewChecked(cascaderPanel, pen, pen.data, checkedIds);
+      reviewPanel(pen, cascaderPanel, checkedList, halfIds);
+      return;
+    }
+    curItem.firstChild.classList.remove('l-is-checked');
+    curItem.firstChild.classList.remove('l-is-indeterminate');
+    // console.log(pid, value, 'checkedList');
+
+    {
+      //取消勾选
+      const currentItem = recursionTreeFindItem(pen.data, value);
+      if (currentItem && currentItem.children?.length > 0) {
+        const ids = [];
+        recursionTreeFindAllIds(currentItem.children, ids);
+        checkedIds = checkedIds.filter(el => !ids.includes(el));
+        for (let i = 0; i < ids.length; i++) {
+          const id = ids[i];
+          if (checkedIds.includes(id)) {
+            const index = checkedIds.findIndex(el => el === id);
+            if (index > -1) {
+              checkedIds.splice(checkedIds.findIndex(el => el === id), 1);
+            }
           }
         }
       }
-    }
-    const index = checkedIds.findIndex(el => el === value);
-    if (index > -1) {
-      checkedIds.splice(index, 1);
-    }
-    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-    checkChild(dropMenu, checkedIds);
+      const index = checkedIds.findIndex(el => el === value);
+      if (index > -1) {
+        checkedIds.splice(index, 1);
+      }
+      const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+      checkChild(dropMenu, checkedIds);
 
-    // 收集半选中的节点
-    const halfIds = [];
-    // const lTreeList = dropMenu.querySelector('.l-tree-list');
-    recursionUpTree(cascaderPanel, pen.data, checkedIds, pid, value, false, halfIds, penId);
+      // 收集半选中的节点
+      const halfIds = [];
+      // const lTreeList = dropMenu.querySelector('.l-tree-list');
+      recursionUpTree(cascaderPanel, pen.data, checkedIds, pid, value, false, halfIds, penId);
+    }
+  } else {
+    console.log('checkStrictly', curItem);
+    curItem.firstChild.classList.remove('l-is-checked');
+    curItem.firstChild.classList.remove('l-is-indeterminate');
   }
+
   //根据最新的checked情况，更新checked数据
   // const list = [];
   // const checkedItems = lTreeList.querySelectorAll('.l_tree_lable.l-is-checked');
@@ -716,7 +798,7 @@ function assembleLi(pen, item, level, opt) {
   li.dataset.value = item.value;
   li.dataset.penId = opt.penId;
   li.dataset.level = level;
-  li.onclick = liOnClick;
+  // li.onclick = liOnClick;
 
   const parent = recursionFindParentByChildKey(pen.data, item.value);
   if (parent) {
@@ -816,87 +898,103 @@ function checkboxNewClick(e) {
     return;
   }
   let checkedIds = deepClone(pen.checked);
-  let halfCheckedIds = deepClone(pen.halfChecked);
+  // let halfCheckedIds = deepClone(pen.halfChecked);
 
-
-  // console.log(checkedIds, checked, 'iddddd')
-  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-  const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
-  if (checked) {
-    //勾选
-    const currentItem = recursionTreeFindItem(pen.data, value);
-    // console.log(222222)
-    if (currentItem && currentItem.children?.length > 0) {
-      const ids = [];
-      recursionTreeFindAllIds(currentItem.children, ids);
-      // console.log(value, JSON.stringify(ids), 'check on ids');
-      for (let k = 0; k < ids.length; k++) {
-        const id = ids[k];
-        if (!checkedIds.includes(id)) {
-          checkedIds.push(id);
-        }
-      }
-    }
-    checkedIds.push(value);
-    // console.log('check on 0000', JSON.stringify(checkedIds));
-    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-    checkChild(dropMenu, checkedIds);
-
-
-    const halfIds = [];
-    // const lTreeList = dropMenu.querySelector('.l-tree-list');
-    // console.log('check on', JSON.stringify(checkedIds));
-    recursionUpTree(cascaderPanel, pen.data, checkedIds, pid, value, checked, halfIds, penId);
-    // console.log('check on recursionUpTree after', JSON.stringify(checkedIds));
-  } else {
-    //取消勾选
-    const currentItem = recursionTreeFindItem(pen.data, value);
-    if (currentItem && currentItem.children?.length > 0) {
-      const ids = [];
-      recursionTreeFindAllIds(currentItem.children, ids);
-      checkedIds = checkedIds.filter(el => !ids.includes(el));
-      for (let i = 0; i < ids.length; i++) {
-        const id = ids[i];
-        if (checkedIds.includes(id)) {
-          const index = checkedIds.findIndex(el => el === id);
-          if (index > -1) {
-            checkedIds.splice(checkedIds.findIndex(el => el === id), 1);
+  if (!pen.checkStrictly) {
+    {// console.log(checkedIds, checked, 'iddddd')
+      const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+      const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
+      if (checked) {
+        //勾选
+        const currentItem = recursionTreeFindItem(pen.data, value);
+        // console.log(222222)
+        if (currentItem && currentItem.children?.length > 0) {
+          const ids = [];
+          recursionTreeFindAllIds(currentItem.children, ids);
+          // console.log(value, JSON.stringify(ids), 'check on ids');
+          for (let k = 0; k < ids.length; k++) {
+            const id = ids[k];
+            if (!checkedIds.includes(id)) {
+              checkedIds.push(id);
+            }
           }
         }
+        checkedIds.push(value);
+        // console.log('check on 0000', JSON.stringify(checkedIds));
+        const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+        checkChild(dropMenu, checkedIds);
+
+
+        const halfIds = [];
+        // const lTreeList = dropMenu.querySelector('.l-tree-list');
+        // console.log('check on', JSON.stringify(checkedIds));
+        recursionUpTree(cascaderPanel, pen.data, checkedIds, pid, value, checked, halfIds, penId);
+        // console.log('check on recursionUpTree after', JSON.stringify(checkedIds));
+      } else {
+        //取消勾选
+        const currentItem = recursionTreeFindItem(pen.data, value);
+        if (currentItem && currentItem.children?.length > 0) {
+          const ids = [];
+          recursionTreeFindAllIds(currentItem.children, ids);
+          checkedIds = checkedIds.filter(el => !ids.includes(el));
+          for (let i = 0; i < ids.length; i++) {
+            const id = ids[i];
+            if (checkedIds.includes(id)) {
+              const index = checkedIds.findIndex(el => el === id);
+              if (index > -1) {
+                checkedIds.splice(checkedIds.findIndex(el => el === id), 1);
+              }
+            }
+          }
+        }
+        const index = checkedIds.findIndex(el => el === value);
+        if (index > -1) {
+          checkedIds.splice(index, 1);
+        }
+        // console.log(checkedIds, 'checkedIds del');
+        // const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+        checkChild(dropMenu, checkedIds);
+
+        // 收集半选中的节点
+        const halfIds = [];
+        // const lTreeList = dropMenu.querySelector('.l-tree-list');
+        // console.log('1111111111111111', lTreeList);
+        recursionUpTree(cascaderPanel, pen.data, checkedIds, pid, value, checked, halfIds, penId);
+      }
+      //根据最新的checked情况，更新checked数据
+      // const list = [];
+      // const cascaderList = cascaderPanel.querySelectorAll('.l-cascader-checkbox.l-is-checked');
+      // for (let i = 0; i < cascaderList.length; i++) {
+      //   const ck = cascaderList[i];
+      //   list.push(ck.parentElement.dataset.value);
+      // }
+
+      // 如果是搜索模式，还需要更新搜索模式下的checked
+      if (pen.filterable) {
+        const tagWrapper = document.querySelector(`.${TAG_WRAPPER}${pen.id}`);
+        const text = tagWrapper.nextElementSibling.value;
+        // console.log(text, JSON.stringify(checkedIds), 'text');
+        if (text) {
+          // 这种情况的勾选，更新checkedIds
+          recursionAllTree(pen.data, checkedIds);
+        }
       }
     }
-    const index = checkedIds.findIndex(el => el === value);
-    if (index > -1) {
-      checkedIds.splice(index, 1);
-    }
-    // console.log(checkedIds, 'checkedIds del');
-    // const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-    checkChild(dropMenu, checkedIds);
-
-    // 收集半选中的节点
-    const halfIds = [];
-    // const lTreeList = dropMenu.querySelector('.l-tree-list');
-    // console.log('1111111111111111', lTreeList);
-    recursionUpTree(cascaderPanel, pen.data, checkedIds, pid, value, checked, halfIds, penId);
-  }
-  //根据最新的checked情况，更新checked数据
-  // const list = [];
-  // const cascaderList = cascaderPanel.querySelectorAll('.l-cascader-checkbox.l-is-checked');
-  // for (let i = 0; i < cascaderList.length; i++) {
-  //   const ck = cascaderList[i];
-  //   list.push(ck.parentElement.dataset.value);
-  // }
-
-  // 如果是搜索模式，还需要更新搜索模式下的checked
-  if (pen.filterable) {
-    const tagWrapper = document.querySelector(`.${TAG_WRAPPER}${pen.id}`);
-    const text = tagWrapper.nextElementSibling.value;
-    // console.log(text, JSON.stringify(checkedIds), 'text');
-    if (text) {
-      // 这种情况的勾选，更新checkedIds
-      recursionAllTree(pen.data, checkedIds);
+  } else {
+    //父子勾选不关联
+    if (checked) {
+      const index = checkedIds.findIndex(el => el === value);
+      if (index === -1) {
+        checkedIds.push(value);
+      }
+    } else {
+      const index = checkedIds.findIndex(el => el === value);
+      if (index > -1) {
+        checkedIds.splice(index, 1);
+      }
     }
   }
+
 
   // console.log(JSON.stringify(checkedIds), 'checkedIds end');
   window.meta2d.setValue({
@@ -1082,7 +1180,7 @@ function checkChild(dropMenu, ids) {
   }
 }
 function labelClick(e) {
-  // console.log('labelClick')
+  console.log('labelClick')
   e.stopPropagation();
   const { value, penId, level } = this.dataset;
   // const checkedVal = e.target.checked;
@@ -1090,13 +1188,62 @@ function labelClick(e) {
   if (!pen) {
     return;
   }
-  const checked = deepClone(pen.checked);
-  updateTags(true, checked, value, penId, pen);
-  window.meta2d.setValue({
-    id: penId,
-    checked,
-  })
-  adjustHeight(pen);
+
+  if (pen.filterable) {
+    const tagWrapper = document.querySelector(`.${TAG_WRAPPER}${pen.id}`);
+    const text = tagWrapper.nextElementSibling.value;
+    if (text) {
+      return;
+    }
+  }
+
+  {
+    patchLeftMenu(value, parseInt(level), pen)
+
+    if (!pen.checkStrictly) {
+      // 向下去更新半选状态
+      const currentItem = recursionTreeFindItem(pen.data, value);
+      // console.log(currentItem, 'currentItem')
+      if (currentItem && currentItem.children?.length > 0) {
+        const halfIds = [];
+        // console.log('pen.checked 11', JSON.stringify(pen.checked))
+        recursionDownTree(currentItem.children, pen.checked, halfIds);
+        // console.log('halfIds', JSON.stringify(halfIds))
+        const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+        const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
+        for (let i = 0; i < halfIds.length; i++) {
+          const elem = halfIds[i];
+          const item = cascaderPanel.querySelector(`.l-cascader__item[data-value="${elem}"]`);
+          if (item) {
+            item.firstChild.classList.remove('l-is-checked');
+            item.firstChild.classList.add('l-is-indeterminate');
+          }
+        }
+      }
+    } else {
+
+    }
+
+    if (!pen.multiple) {
+      const flowPath = deepClone(pen.flowPath);
+      const checked = deepClone(pen.checked);
+      const isLeaf = isLeafNode(pen.data, value)
+      if (isLeaf) {
+        updateTags(true, checked, value, penId, pen);
+      } else {
+        updateTags(true, checked, flowPath[flowPath.length - 1], penId, pen);
+      }
+      window.meta2d.setValue({
+        id: penId,
+        checked,
+      })
+    }
+  }
+
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+  const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
+  const flowPath = deepClone(pen.flowPath);
+  reviewPanelFlowPath(cascaderPanel, flowPath);
 }
 function recursionFindHasChild(data, key) {
   for (let i = 0; i < data.length; i++) {
@@ -1124,13 +1271,42 @@ async function nextLevelClick(e) {
     return;
   }
   const hasChild = recursionFindHasChild(pen.data, value)
-  // console.log('hasChild', hasChild)
+  console.log('hasChild', hasChild)
   if (!hasChild) {
+    const flowPath = deepClone(pen.flowPath);
+    const _level = parseInt(level);
+    flowPath.splice(_level, 1,value);
+    console.log('flowPath', JSON.stringify(flowPath))
+    window.meta2d.setValue({
+      id: penId,
+      flowPath,
+    })
     // 加载数据
     // pen.loadFn && pen.loadFn(pen, { level, key: value });
     const ret = pen.loadFn && await pen.loadFn(pen, { level, key: value })
   } else {
+    patchLeftMenu(value, parseInt(level), pen)
 
+    if (!pen.multiple) {
+      const flowPath = deepClone(pen.flowPath);
+      const checked = deepClone(pen.checked);
+      const isLeaf = isLeafNode(pen.data, value)
+      if (isLeaf) {
+        updateTags(true, checked, value, penId, pen);
+      } else {
+        updateTags(true, checked, flowPath[flowPath.length - 1], penId, pen);
+      }
+      window.meta2d.setValue({
+        id: penId,
+        checked,
+      })
+    }
+    console.log('flowPath', JSON.stringify(pen.flowPath))
+
+    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+    const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
+    const flowPath = deepClone(pen.flowPath);
+    reviewPanelFlowPath(cascaderPanel, flowPath);
   }
 }
 function checkboxClick(e) {
@@ -1242,6 +1418,7 @@ function findNodeAndParentByValue(tree, value, parents = []) {
   return null;
 }
 function liOnClick(e) {
+  console.log('liOnClick')
   const { value, penId, level } = e.target.dataset;
   if (!value || !penId) {
     return;
@@ -1316,14 +1493,13 @@ function patchLeftMenu(value, level, pen) {
     flowPath.splice(level, flowPath.length - level, item.value);
   }
   const _level = getLevel([item]);
-  // console.log('flowPath', JSON.stringify(pen.data))
-  // 根据最新的flowPath去patch
-  patchCascadeMenu(pen, level, _level, flowPath, { penId: pen.id });
-
   window.meta2d.setValue({
     id: pen.id,
     flowPath,
   })
+  // console.log('flowPath', JSON.stringify(pen.data))
+  // 根据最新的flowPath去patch
+  patchCascadeMenu(pen, level, _level, flowPath, { penId: pen.id });
 }
 function findItemByValue(data, value) {
   for (let i = 0; i < data.length; i++) {
@@ -1370,20 +1546,23 @@ function patchCascadeMenu(pen, lv, level, flowPath, opt) {
         const liFragWrapper = document.createDocumentFragment();
         const liChilds = recursionFindItem([startNode], startIndex, flowPath);
         // console.log('liChilds', JSON.stringify(startNode), liChilds)
-        for (let n = 0; n < liChilds.length; n++) {
-          const liItem = liChilds[n];
-          const liDom = assembleLi(pen, liItem, startIndex, opt);
-          if (liItem.value === flowPath[startIndex]) {
-            liDom.className += ' l-is-expanded';
+        if (Array.isArray(liChilds) && liChilds.length > 0) {
+          for (let n = 0; n < liChilds.length; n++) {
+            const liItem = liChilds[n];
+            const liDom = assembleLi(pen, liItem, startIndex, opt);
+            if (liItem.value === flowPath[startIndex]) {
+              liDom.className += ' l-is-expanded';
+            }
+            liFragWrapper.appendChild(liDom);
           }
-          liFragWrapper.appendChild(liDom);
         }
+
         cascaderPanel.children[j].replaceChildren(liFragWrapper);
       } else {
       }
     }
   }
-  // console.log('ddddddd', cascaderPanel.children.length, pen.flowPath.length, flowPath.length)
+  console.log('ddddddd', JSON.stringify(pen.flowPath),JSON.stringify(flowPath),cascaderPanel.children.length, pen.flowPath.length, flowPath.length)
   if (cascaderPanel.children.length > flowPath.length) {
     // 删除多余的层级
     const len = cascaderPanel.children.length;
@@ -1397,9 +1576,10 @@ function patchCascadeMenu(pen, lv, level, flowPath, opt) {
       cascaderPanel.children[flowPath.length - 1].className = cascaderPanel.children[flowPath.length - 1].className.replace('l-cascader__menu--segment', '');
     }
   }
-  if (pen.flowPath.length > flowPath.length) {
+  const cascadeLen = cascaderPanel.children.length;
+  if (cascadeLen > flowPath.length) {
     // 删除多余的层级
-    for (let k = pen.flowPath.length - 1; k > flowPath.length - 1; k--) {
+    for (let k = cascadeLen - 1; k > flowPath.length - 1; k--) {
       if (cascaderPanel.children[k]) {
         cascaderPanel.children[k].remove();
       }
@@ -1408,18 +1588,18 @@ function patchCascadeMenu(pen, lv, level, flowPath, opt) {
     if (cascaderPanel.children[flowPath.length - 1].className.indexOf('l-cascader__menu--segment') > -1) {
       cascaderPanel.children[flowPath.length - 1].className = cascaderPanel.children[flowPath.length - 1].className.replace('l-cascader__menu--segment', '');
     }
-  } else if (pen.flowPath.length < flowPath.length) {
+  } else if (cascadeLen < flowPath.length) {
     // 增加新的层级
     const fragMent = document.createDocumentFragment();
-    const currentLi = flowPath[pen.flowPath.length - 1];
+    const currentLi = flowPath[cascadeLen - 1];
     const currentItem = findItemByValue(pen.data, currentLi);
     if (!currentItem) {
       return;
     }
     let i = 0;
-    const leftFlowPath = flowPath.slice(pen.flowPath.length);
+    const leftFlowPath = flowPath.slice(cascadeLen);
     let len = cascaderPanel.children.length;
-    for (let k = pen.flowPath.length - 1; k < flowPath.length - 1; k++) {
+    for (let k = cascadeLen - 1; k < flowPath.length - 1; k++) {
       const cascaderMenu = document.createElement('ul');
       cascaderMenu.className = 'l-cascader__menu';
       // 生成li
@@ -1495,6 +1675,11 @@ function generateStyle(pen) {
       display: flex;
     }`
   );
+  sheet.insertRule(`
+  .l-is-hidden[class^="l-cascade-dropdown-"]{
+    visibility: hidden; 
+  }
+  `)
   sheet.insertRule(
     `.l-cascader__panel.l-cascader--normal {
       height: 200px;
@@ -1541,6 +1726,7 @@ function generateStyle(pen) {
   sheet.insertRule(
     `
     .l-cascader__item {
+      width: 100%;
       position: relative;
       display: flex;
       align-items: center;
@@ -1554,20 +1740,21 @@ function generateStyle(pen) {
   }
     `
   )
-  sheet.insertRule(
-    `
-  .l-cascader-checkbox {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: inline-flex;
-    align-items: center;
-    position: relative;
-    cursor: pointer;
-    color: rgba(0, 0, 0, 0.9);
-  `
-  )
+  // sheet.insertRule(
+  //   `
+  // .l-cascader-checkbox {
+  //   display: inline-block;
+  //   box-sizing: border-box;
+  //   margin: 0;
+  //   padding: 0;
+  //   list-style: none;
+  //   display: inline-flex;
+  //   align-items: center;
+  //   position: relative;
+  //   cursor: pointer;
+  //   color: rgba(0, 0, 0, 0.9);
+  // `
+  // )
   sheet.insertRule(
     `
   .l-cascader-checkbox-former {
@@ -1588,6 +1775,9 @@ function generateStyle(pen) {
     `
   .l-cascader-checkbox {
     max-width: 100%;
+    flex: 1;
+    height: 100%;
+    // display: inline-block;
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -1667,6 +1857,9 @@ function generateStyle(pen) {
 
   sheet.insertRule(`
   .l-cascader-checkbox-label {
+    // width: 100%;
+    flex: 1;
+    height: 100%;
     display: inline-block;
     margin-left: 8px;
     vertical-align: middle;

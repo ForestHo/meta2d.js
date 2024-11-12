@@ -278,7 +278,7 @@ export function datePicker(pen: Pen): Path2D {
 }
 
 function renderData(data, dom, pen) {
-  generateStyle()
+  generateStyle(pen)
 
   const lPanel = document.createElement('div');
   lPanel.className = 'l-date-picker__panel';
