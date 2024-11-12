@@ -74,23 +74,15 @@ function renderPenRaw(pen: Pen, mkey: string, data: any) {
   const lTreeList = document.querySelector('.l-tree-list');
   const { index: insertIndex, level } = getChildIndex(lTreeList, mkey);
   const showIds = collectExpandShowIds(data, pen);
-  generateDomByData(data, lTreeList, pen, { index: insertIndex + 1, level: level + 1 }, showIds, [], null);
-  window.meta2d.setValue({
-    id: pen.id,
-    showIds: showIds
-  })
+  generateDomByData(data, lTreeList, pen, { index: insertIndex + 1, level: level + 1 }, showIds, null);
 }
 function renderPenRaw2(pen: Pen, data: any) {
   const lTreeList = document.querySelector('.l-tree-list');
   const showIds = collectExpandShowIds(data, pen);
-  // console.log(showIds, data, 'renderPenRaw2');
+  console.log(showIds, data, 'renderPenRaw2');
   addLevelToTree(data);
   const frag = generateDomByData(data, null, pen, null, showIds, generateDomByData);
   lTreeList.replaceChildren(frag);
-  window.meta2d.setValue({
-    id: pen.id,
-    showIds: showIds
-  })
 }
 function getChildIndex(dom, key: string) {
   var childNodes = dom.childNodes;
@@ -113,7 +105,7 @@ function onRecursionData(data, val, paths) {
   for (let i = 0; i < data.length; i++) {
     const item = data[i];
     if (item.label.indexOf(val) > -1) {
-      paths.push(item.value);
+      paths.push(item.key);
       // const pa = [];
       // treeFindPath(data, (item) => item.label.indexOf(val) !== -1, 'label',pa);
     }
@@ -200,57 +192,30 @@ function onInputchange(e) {
     return;
   }
   onRecursionData(pen.data, e.target.value, paths);
-  // console.log(paths, 'paths');
+  console.log(paths, 'paths');
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
   updateTree(pen.data, dropMenu, paths)
 }
-function expandedChild(dropMenu, ids, show) {
+function showHideChild(dropMenu, ids, showHide) {
   const lTreeList = dropMenu.querySelector('.l-tree-list');
   let len = lTreeList.children.length;
   for (let i = 0; i < len; i++) {
     if (lTreeList.children[i].nodeName === DIV) {
-      //收起
-      // console.log(ids, lTreeList.children[i].dataset.value, 'expandedChild');
-      if (ids.indexOf(lTreeList.children[i].dataset.value) !== -1) {
-        if (show) {
-          lTreeList.children[i].classList.add('l-item-open');
-        } else {
-          // console.log('remove l-item-open', lTreeList.children[i].dataset.value);
-          lTreeList.children[i].classList.remove('l-item-open');
-        }
-      }
-    }
-  }
-}
-function showHideChild(dropMenu, ids, hideIds, showHide) {
-  const lTreeList = dropMenu.querySelector('.l-tree-list');
-  let len = lTreeList.children.length;
-  for (let i = 0; i < len; i++) {
-    if (lTreeList.children[i].nodeName === DIV) {
-      // const classList = lTreeList.children[i].className.split(' ');
+      const classList = lTreeList.children[i].className.split(' ');
       if (ids.indexOf(lTreeList.children[i].dataset.value) !== -1) {
         if (showHide === Direction.Down) {
-          lTreeList.children[i].classList.remove('l-hidden');
-          lTreeList.children[i].classList.add('l-visible');
-          // const index = classList.findIndex((item) => item.indexOf('l-hidden') > -1);
-          // if (index > -1) {
-          //   classList.splice(index, 1, ['l-visible']);
-          //   lTreeList.children[i].className = classList.join(' ');
-          // }
+          const index = classList.findIndex((item) => item.indexOf('l-hidden') > -1);
+          if (index > -1) {
+            classList.splice(index, 1, ['l-visible']);
+            lTreeList.children[i].className = classList.join(' ');
+          }
         } else {
-          lTreeList.children[i].classList.remove('l-visible');
-          lTreeList.children[i].classList.add('l-hidden');
-          // const index = classList.findIndex((item) => item.indexOf('l-visible') > -1);
-          // if (index > -1) {
-          //   classList.splice(index, 1, ['l-hidden']);
-          //   lTreeList.children[i].className = classList.join(' ');
-          // }
+          const index = classList.findIndex((item) => item.indexOf('l-visible') > -1);
+          if (index > -1) {
+            classList.splice(index, 1, ['l-hidden']);
+            lTreeList.children[i].className = classList.join(' ');
+          }
         }
-      }
-      // console.log(hideIds, lTreeList.children[i].dataset.value, 'lTreeList.children[i].dataset.value');
-      if (hideIds.indexOf(lTreeList.children[i].dataset.value) !== -1) {
-        lTreeList.children[i].classList.remove('l-visible');
-        lTreeList.children[i].classList.add('l-hidden');
       }
     }
   }
@@ -296,7 +261,7 @@ function updateTree(data, dropMenu, paths) {
 
 function recursionFindTitle(data, key) {
   for (let i = 0; i < data.length; i++) {
-    if (data[i].value === key) {
+    if (data[i].key === key) {
       return data[i].label;
     }
     if (data[i].children?.length > 0) {
@@ -335,8 +300,6 @@ function assembleTag(key: string, title: string, penId: string) {
   svgDom.style.fill = 'none';
   svgDom.style.width = '1em';
   svgDom.style.height = '100%';
-  svgDom.dataset.penId = penId;
-  svgDom.dataset.value = key;
   svgDom.onclick = tagClose;
 
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -354,7 +317,7 @@ function collectExpandIds(data, ids = []) {
   for (let i = 0; i < data.length; i++) {
     const item = data[i];
     if (item.children?.length > 0) {
-      ids.push(item.value);
+      ids.push(item.key);
     }
     if (data[i].children?.length > 0) {
       collectExpandIds(data[i].children, ids);
@@ -364,11 +327,6 @@ function collectExpandIds(data, ids = []) {
 function validateData(pen: Pen) {
   const obj = {
     id: pen.id,
-  }
-  if (!pen.halfChecked) {
-    Object.assign(obj, {
-      halfChecked: []
-    })
   }
   // 校验multiply与checked
   if (!pen.multiple && pen.checked.length > 0) {
@@ -384,14 +342,14 @@ function validateData(pen: Pen) {
       const ck = pen.checked[i];
       // 找到哪一个节点
       const item = recursionTreeFindItem(pen.data, ck);
-      if (item) {
+      if(item){
         const ids = [];
         recursionTreeFindAllIds(item.children, ids);
         list = list.concat(ids);
       }
     }
     list = list.concat(pen.checked);
-    // console.log(list, 'list');
+    console.log(list, 'list');
     Object.assign(obj, {
       checked: list
     })
@@ -453,7 +411,7 @@ function treeIconClick(e) {
   let child = null;
   for (let i = 0; i < len; i++) {
     if (lTreeList.children[i].nodeName === DIV) {
-      // console.log(lTreeList.children[i].dataset.value, key, 'key');
+      console.log(lTreeList.children[i].dataset.value, key, 'key');
       if (lTreeList.children[i].dataset.value === key) {
         child = lTreeList.children[i];
         break;
@@ -492,126 +450,49 @@ function treeIconClick(e) {
     d = [{ children: pen.data }]
   }
 
-  const { list, siblings } = handleToggleExpand(pen.accordion, d, expanded, _key);
-  // console.log(expanded, list, _key, 'expanded');
+  const newExpands = handleToggleExpand(pen.accordion, d, expanded, _key);
+  // console.log(expanded, newExpands, _key, 'expanded');
 
   if (flag === Direction.Down) {
     // 展开
-    if (!list.includes(_key)) {
-      list.push(_key)
+    if (!newExpands.includes(_key)) {
+      newExpands.push(_key)
     }
   } else {
     // 收起
-    if (list.includes(_key)) {
-      const index = list.indexOf(_key);
-      list.splice(index, 1);
+    if (newExpands.includes(_key)) {
+      const index = newExpands.indexOf(_key);
+      newExpands.splice(index, 1);
     }
   }
 
   window.meta2d.setValue({
     id: penId,
-    expanded: list
+    expanded: newExpands
   })
   // 递归判断树结构的某个节点是否有children
   const hasChild = recursionFindHasChild(pen.data, _key);
-  console.log(hasChild, 'hasChild');
   if (!hasChild) {
     // 加载数据
     const { level } = this.parentElement.dataset;
     pen.loadFn && pen.loadFn(pen, { level, key: _key, title: key });
   } else {
-    const pen1 = window.meta2d.findOne(penId);
-    if (!pen1.accordion) {
-      // 获取树的某个节点
-      const currentItem = recursionTreeFindItem(pen.data, _key);
-      let ids = [];
-      // recursionTreeFindAllIds(currentItem.children, ids);
-
-      // 根据展开状态显示或隐藏子节点
-      if (flag === Direction.Down) {
-        //展开
-        //递归收集所有需要展开的节点
-        // console.log(currentItem.children, list,_key,'currentItem.children');
-        recursionCollectExpandIds([currentItem], list, ids);
-        // console.log(ids, 'ids');
-        // 直接子节点显示
-        // const firstChilds = currentItem.children.map(el => el.value);
-        // ids = ids.concat(firstChilds);
-      } else if (flag === Direction.Right) {
-        //收起
-        // 收集所有的子节点
-        recursionTreeFindAllIds(currentItem.children, ids);
-      }
-      // console.log(ids, 'ids');
-      const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-      showHideChild(dropMenu, ids, [], flag);
-    } else {
-      const currentItem = recursionTreeFindItem(pen.data, _key);
-      let ids = [];
-      // 找到所有兄弟节点
-      const siblings = recursionFindSiblings(d, key);
-      console.log(siblings, currentItem, 'siblings 收起');
-      if (flag === Direction.Down) {
-        // 收起兄弟节点,隐藏兄弟节点的所有子节点
-        let siblingChildIds = [];
-        for (let k = 0; k < siblings.length; k++) {
-          const sib = siblings[k];
-          const sibItem = recursionTreeFindItem(pen.data, sib);
-          let arr = [];
-          recursionTreeFindAllIds(sibItem.children, arr);
-          siblingChildIds = siblingChildIds.concat(arr);
-        }
-        // 收集当前需要展开的节点的所有子节点
-        recursionCollectExpandIds([currentItem], list, ids);
-        console.log(ids, JSON.stringify(list), '展开 ids');
-        const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-        // 隐藏兄弟节点的所有子节点
-        showHideChild(dropMenu, ids, siblingChildIds, flag);
-        // 收起兄弟节点
-        expandedChild(dropMenu, siblings, false);
-      } else if (flag === Direction.Right) {
-        recursionTreeFindAllIds(currentItem.children, ids);
-        console.log(ids, '收起 ids');
-        const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-        showHideChild(dropMenu, ids, [], flag);
-      }
-    }
+    // 获取树的某个节点
+    const currentItem = recursionTreeFindItem(pen.data, _key);
+    const ids = [];
+    recursionTreeFindAllIds(currentItem.children, ids);
+    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+    showHideChild(dropMenu, ids, flag);
   }
 
-  // const showIds = collectExpandShowIds(pen.data, pen);
-  // const frag = generateDomByData(pen.data, null, pen, null, showIds, generateDomByData);
-  // console.log(frag, lTreeList, 'frag');
-  // lTreeList.replaceChildren(frag);
-}
-function recursionCollectExpandIds(data, expanded, ids) {
-  for (let i = 0; i < data.length; i++) {
-    if (expanded.includes(data[i].value)) {
-      const list = data[i].children.map(el => el.value);
-      ids.push(...list);
-    } else {
-      // console.log(data[i].value,expanded.includes(data[i].value)  , 'data[i]'); 
-      // 这里递归返回，很重要
-      continue;
-      // return;
-      // if(data[i].children?.length > 0){
-      //   const arr = [];
-      //   recursionTreeFindAllIds(data[i].children, arr);
-      //   console.log(data[i],arr, 'data[i].value not expanded');
-      //   for (let k = 0; k < arr.length; k++) {
-      //     const el = arr[k];
-      //     const index = 
-      //     ids.splice(ids.findIndex(item => item === el), 1);
-      //   }
-      // }
-    }
-    if (data[i].children?.length > 0) {
-      recursionCollectExpandIds(data[i].children, expanded, ids);
-    }
-  }
+  const showIds = collectExpandShowIds(pen.data, pen);
+  const frag = generateDomByData(pen.data, null, pen, null, showIds, generateDomByData);
+  console.log(frag, lTreeList, 'frag');
+  lTreeList.replaceChildren(frag);
 }
 function recursionTreeFindAllIds(data, ids) {
   for (let i = 0; i < data.length; i++) {
-    ids.push(data[i].value);
+    ids.push(data[i].key);
     if (data[i].children?.length > 0) {
       recursionTreeFindAllIds(data[i].children, ids);
     }
@@ -620,7 +501,7 @@ function recursionTreeFindAllIds(data, ids) {
 function recursionTreeFindItem(data, key) {
   for (let i = 0; i < data.length; i++) {
     const item = data[i];
-    if (item.value === key) {
+    if (item.key === key) {
       return item;
     }
     if (item.children?.length > 0) {
@@ -634,8 +515,8 @@ function recursionTreeFindItem(data, key) {
 function recursionFindSiblings(data, key,) {
   for (let i = 0; i < data.length; i++) {
     const item = data[i];
-    if (Array.isArray(item.children) && item.children.findIndex(el => el.value === key) > -1) {
-      return item.children.filter(el => el.value !== key).map(el => el.value);
+    if (Array.isArray(item.children) && item.children.findIndex(el => el.key === key) > -1) {
+      return item.children.filter(el => el.key !== key).map(el => el.key);
     }
     if (Array.isArray(item.children) && item.children.length > 0) {
       const ret = recursionFindSiblings(item.children, key,);
@@ -647,7 +528,7 @@ function recursionFindSiblings(data, key,) {
 }
 function recursionFindHasChild(data, key) {
   for (let i = 0; i < data.length; i++) {
-    if (data[i].value === key) {
+    if (data[i].key === key) {
       return data[i].children?.length > 0;
     }
     if (data[i].children?.length > 0) {
@@ -660,444 +541,92 @@ function recursionFindHasChild(data, key) {
 }
 function tagClose(e) {
   e.stopPropagation();
-  const { penId, value } = this.dataset;
+  e.cancelBubble = true;
+  const tagDom = document.getElementsByClassName(`${e.target.dataset.key}`)[0];
+  const penId = tagDom.dataset.penId;
   const pen = window.meta2d.findOne(penId);
   if (!pen) {
     return;
   }
-  const checkedList = deepClone(pen.checked);
-  const index = checkedList.indexOf(value);
+  const checked = deepClone(pen.checked);
+  const index = checked.indexOf(tagDom.dataset.key);
   if (index > -1) {
-    checkedList.splice(index, 1);
+    checked.splice(index, 1);
   }
   window.meta2d.setValue({
     id: penId,
-    checked: checkedList,
+    checked,
   })
+  tagDom.remove();
 
-  // 更新树结构的checked状态
-  // const { penId, value } = this.parentElement.firstChild.dataset;
+  // 更新tree的checked
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-  const lTreeList = dropMenu.querySelector('.l-tree-list');
-  const curItem = lTreeList.querySelector(`.l-tree-item[data-value="${value}"]`);
-
-  const { pid } = curItem.dataset;
-  curItem.classList.remove('l-is-checked');
-  // console.log(pid, value, 'checkedList');
-  let checkedIds = deepClone(pen.checked);
-  let halfCheckedIds = deepClone(pen.halfChecked);
-  {
-    //取消勾选
-    const currentItem = recursionTreeFindItem(pen.data, value);
-    if (currentItem && currentItem.children?.length > 0) {
-      const ids = [];
-      recursionTreeFindAllIds(currentItem.children, ids);
-      checkedIds = checkedIds.filter(el => !ids.includes(el));
-      for (let i = 0; i < ids.length; i++) {
-        const id = ids[i];
-        if (checkedIds.includes(id)) {
-          const index = checkedIds.findIndex(el => el === id);
-          if (index > -1) {
-            checkedIds.splice(checkedIds.findIndex(el => el === id), 1);
-          }
-        }
-      }
-    }
-    const index = checkedIds.findIndex(el => el === value);
-    if (index > -1) {
-      checkedIds.splice(index, 1);
-    }
-    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-    checkChild(dropMenu, checkedIds);
-
-    // 收集半选中的节点
-    const halfIds = [];
-    const lTreeList = dropMenu.querySelector('.l-tree-list');
-    recursionUpTree(lTreeList, pen.data, checkedIds, pid, value, false, halfIds, penId);
-  }
-  //根据最新的checked情况，更新checked数据
-  const list = [];
-  const checkedItems = lTreeList.querySelectorAll('.l_tree_lable.l-is-checked');
-  for (let i = 0; i < checkedItems.length; i++) {
-    const ck = checkedItems[i];
-    list.push(ck.parentElement.dataset.value);
-  }
-
-  window.meta2d.setValue({
-    id: penId,
-    checked: list
-  })
-
-  // 根据最新的checked情况，更新checked的tag
-  replaceAlltags(penId, list);
-}
-function checkboxNewClick(e) {
-  e.stopPropagation();
-  // console.log(this,this.previousElementSibling, 'e.target');
-  const { penId, value } = this.parentElement.firstChild.dataset;
-  const { pid } = this.parentElement.parentElement.dataset;
-  // const checkDom = document.querySelector(`.l-checkbox__former[data-value="${value}"]`);
-  // console.log(11111,checkDom,checkDom.checked);
-  // checkDom.checked = !checkDom.checked;
-  // console.log(e.target.parentElement, 'penId, value');
-  const rawChecked = e.target.parentElement.classList.contains('l-is-checked');
-  // console.log(rawChecked, 'rawChecked');
-  if (rawChecked) {
-    e.target.parentElement.classList.remove('l-is-checked');
-  } else {
-    e.target.parentElement.classList.add('l-is-checked');
-
-  }
-  const checked = !rawChecked;
-  // console.log(checked, 'checked');
-  const pen = window.meta2d.findOne(penId);
-  if (!pen) {
-    return;
-  }
-  let checkedIds = deepClone(pen.checked);
-  let halfCheckedIds = deepClone(pen.halfChecked);
-  // console.log(checkedIds, checked, 'iddddd')
-  if (checked) {
-    //勾选
-    const currentItem = recursionTreeFindItem(pen.data, value);
-    // console.log(222222)
-    if (currentItem && currentItem.children?.length > 0) {
-      const ids = [];
-      recursionTreeFindAllIds(currentItem.children, ids);
-      for (let k = 0; k < ids.length; k++) {
-        const id = ids[k];
-        if (!checkedIds.includes(id)) {
-          checkedIds.push(id);
-        }
-      }
-    }
-    checkedIds.push(value);
-    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-    checkChild(dropMenu, checkedIds);
-
-
-    const halfIds = [];
-    const lTreeList = dropMenu.querySelector('.l-tree-list');
-    // console.log('1111111111111111', lTreeList);
-    recursionUpTree(lTreeList, pen.data, checkedIds, pid, value, checked, halfIds, penId);
-  } else {
-    //取消勾选
-    const currentItem = recursionTreeFindItem(pen.data, value);
-    if (currentItem && currentItem.children?.length > 0) {
-      const ids = [];
-      recursionTreeFindAllIds(currentItem.children, ids);
-      checkedIds = checkedIds.filter(el => !ids.includes(el));
-      for (let i = 0; i < ids.length; i++) {
-        const id = ids[i];
-        if (checkedIds.includes(id)) {
-          const index = checkedIds.findIndex(el => el === id);
-          if (index > -1) {
-            checkedIds.splice(checkedIds.findIndex(el => el === id), 1);
-          }
-        }
-      }
-    }
-    const index = checkedIds.findIndex(el => el === value);
-    if (index > -1) {
-      checkedIds.splice(index, 1);
-    }
-    // console.log(checkedIds, 'checkedIds del');
-    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-    checkChild(dropMenu, checkedIds);
-
-    // 收集半选中的节点
-    const halfIds = [];
-    const lTreeList = dropMenu.querySelector('.l-tree-list');
-    // console.log('1111111111111111', lTreeList);
-    recursionUpTree(lTreeList, pen.data, checkedIds, pid, value, checked, halfIds, penId);
-  }
-  //根据最新的checked情况，更新checked数据
-  const list = [];
-  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-  const lTreeList = dropMenu.querySelector('.l-tree-list');
-  const checkedItems = lTreeList.querySelectorAll('.l_tree_lable.l-is-checked');
-  // console.log(checkedItems, 'checkedItems');
-  for (let i = 0; i < checkedItems.length; i++) {
-    const ck = checkedItems[i];
-    // console.log(ck.parentElement.dataset.value, 'ck');
-    list.push(ck.parentElement.dataset.value);
-  }
-
-  window.meta2d.setValue({
-    id: penId,
-    checked: list
-  })
-
-  // 根据最新的checked情况，更新checked的tag
-  replaceAlltags(penId, list);
-}
-function replaceAlltags(penId, list) {
-  const pen = window.meta2d.findOne(penId);
-  if (!pen) {
-    return;
-  }
-  const input_prefix = document.querySelector(`.${TAG_WRAPPER}${penId}`);
-  // input_prefix.replaceChildren('');
-  const frag = document.createDocumentFragment();
-  for (let i = 0; i < list.length; i++) {
-    const key = list[i];
-    const title = recursionFindTitle(pen.data, key);
-    const e = assembleTag(key, title, penId);
-    frag.appendChild(e);
-  }
-  input_prefix.replaceChildren(frag);
-}
-// 判断所有子元素是否都具有某个特定的类
-function checkAllHaveClass(dom, className) {
-  const items = Array.from(dom);
-  const allHaveClass = items.every(item => item.classList.contains(className));
-  return allHaveClass;
-}
-function recursionUpTree(lTreeList, data, checked, pid, value, checkVal, halfIds, penId) {
-  // console.log('2222222222222', pid);
-  if (!pid) return;
-  let isAll = true, has = false;
-  const parent = lTreeList.querySelector(`.l-tree-item[data-value="${pid}"]`);
-  // console.log( '11333333333333',parent);
-  if (parent) {
-    // console.log(parent, 'parent');
-    const currentItem = recursionTreeFindItem(data, parent.dataset.value);
-    const childIds = [];
-    recursionTreeFindAllIds(currentItem.children, childIds);
-    // console.log(childIds, parent.dataset.value, JSON.stringify(checked), 'childIds');
-    if (checkVal) {
-      const ret1 = childIds.every(el => checked.indexOf(el) > -1);
-      if (ret1) {
-        // console.log('ret1 all In',parent.dataset.value);
-        isAll = true;
-        checked.push(parent.dataset.value);
-        if (parent.lastChild.classList.contains('l-is-indeterminate')) {
-          parent.lastChild.classList.remove('l-is-indeterminate');
-        }
-        parent.lastChild.classList.add('l-is-checked');
-      } else {
-        isAll = false;
-        let index = checked.findIndex(el => el === parent.dataset.value);
-        if (index > -1) {
-          checked.splice(index, 1);
-        }
-        if (parent.lastChild.classList.contains('l-is-checked')) {
-          parent.lastChild.classList.remove('l-is-checked');
-        }
-        parent.lastChild.classList.add('l-is-indeterminate');
-      }
-      // const ret2 = 
-    } else {
-      const ret1 = childIds.every(el => checked.indexOf(el) === -1);
-      if (ret1) {
-        // console.log('ret1 all In',parent.dataset.value);
-        isAll = true;
-        let index = checked.findIndex(el => el === parent.dataset.value);
-        if (index > -1) {
-          checked.splice(index, 1);
-        }
-        parent.lastChild.classList.remove('l-is-checked');
-        parent.lastChild.classList.remove('l-is-indeterminate');
-      } else {
-        isAll = false;
-        let index = checked.findIndex(el => el === parent.dataset.value);
-        if (index > -1) {
-          checked.splice(index, 1);
-        }
-        if (parent.lastChild.classList.contains('l-is-checked')) {
-          parent.lastChild.classList.remove('l-is-checked');
-        }
-        parent.lastChild.classList.add('l-is-indeterminate');
-      }
-    }
-
-
-    // const children = lTreeList.querySelectorAll(`.l-tree-item[data-pid="${pid}"]`);
-    // const allActive = checkAllHaveClass(children,'l-is-checked');
-    // console.log(allActive, pid,'allActive');
-    // for (let i = 0; i < children.length; i++) {
-    //   const child = children[i];
-    //   if(!child.classList.contains('l-is-checked')){
-    //     isAll = false;
-    //     console.log( 'isAll',isAll);
-    //   }
-    // }
-
-    // const grandParent = recursionFindParentByChildKey(data, pid);
-    // console.log(grandParent, 'grandParent');
-    // if(grandParent){
-    //   const allChilds = grandParent.children.map(el => el.value);
-    //   const ret = allChilds.every(el => checked.indexOf(el) > -1);
-    //   console.log(ret, 'ret');
-    //   if(ret){
-    //     isAll = true;
-
-    //     for (let k = 0; k < allChilds.length; k++) {
-    //       const child = allChilds[k];
-    //       console.log(child, 'child');
-    //       const childDom = lTreeList.querySelector(`.l-tree-item[data-value="${child}"]`);
-    //       childDom.lastChild.classList.add('l-is-checked');
-    //     }
-    //   }else{
-    //     isAll = false;
-    //   }
-    // }
-    // console.log(isAll,parent, 'isAll');
-    // if (isAll) {
-    //   // parent.lastChild.classList.add('l-is-checked');
-    //   // for (let i = 0; i < parent.children.length; i++) {
-    //   //   const child = parent.children[i];
-    //   //   child.firstChild.classList.add('l-is-checked');
-    //   // }
-    // } else if (has) {
-    //   // parent.classList.add('l-is-indeterminate');
-    // }
-
-    const _pid = parent.dataset.pid;
-    const _value = parent.dataset.value;
-    recursionUpTree(lTreeList, data, checked, _pid, _value, checkVal, halfIds, penId);
-  }
-}
-// function recursionUpTree(lTreeList, data,checked, pid, value,checkVal, halfIds) {
-//   console.log('2222222222222', pid);
-//   if (!pid) return;
-//   let isAll = true, has = false;
-//   const parent = lTreeList.querySelector(`.l-tree-item[data-value="${pid}"]`);
-//   // console.log( '11333333333333',parent);
-//   if (parent) {
-//     // console.log(parent, 'parent');
-//     // const children = lTreeList.querySelectorAll(`.l-tree-item[data-pid="${pid}"]`);
-//     // const allActive = checkAllHaveClass(children,'l-is-checked');
-//     // console.log(allActive, pid,'allActive');
-//     // for (let i = 0; i < children.length; i++) {
-//     //   const child = children[i];
-//     //   if(!child.classList.contains('l-is-checked')){
-//     //     isAll = false;
-//     //     console.log( 'isAll',isAll);
-//     //   }
-//     // }
-
-//     const grandParent = recursionFindParentByChildKey(data, pid);
-//     console.log(grandParent, 'grandParent');
-//     if(grandParent){
-//       const allChilds = grandParent.children.map(el => el.value);
-//       const ret = allChilds.every(el => checked.indexOf(el) > -1);
-//       console.log(ret, 'ret');
-//       if(ret){
-//         isAll = true;
-
-//         for (let k = 0; k < allChilds.length; k++) {
-//           const child = allChilds[k];
-//           console.log(child, 'child');
-//           const childDom = lTreeList.querySelector(`.l-tree-item[data-value="${child}"]`);
-//           childDom.lastChild.classList.add('l-is-checked');
-//         }
-//       }else{
-//         isAll = false;
-//       }
-//     }
-//     console.log(isAll,parent, 'isAll');
-//     if (isAll) {
-//       // parent.lastChild.classList.add('l-is-checked');
-//       // for (let i = 0; i < parent.children.length; i++) {
-//       //   const child = parent.children[i];
-//       //   child.firstChild.classList.add('l-is-checked');
-//       // }
-//     } else if (has) {
-//       // parent.classList.add('l-is-indeterminate');
-//     }
-
-//     const _pid = parent.dataset.pid;
-//     const _value = parent.dataset.value;
-//     recursionUpTree(lTreeList, data,checked, _pid, _value,checkVal, halfIds);
-//   }
-// }
-function checkChild(dropMenu, ids) {
   const lTreeList = dropMenu.querySelector('.l-tree-list');
   let len = lTreeList.children.length;
   for (let i = 0; i < len; i++) {
-    if (lTreeList.children[i].nodeName === DIV) {
-      if (ids.indexOf(lTreeList.children[i].dataset.value) !== -1) {
-        lTreeList.children[i].lastChild.classList.add('l-is-checked');
-      } else {
-        lTreeList.children[i].lastChild.classList.remove('l-is-checked');
+    const item = lTreeList.children[i];
+    if (item.dataset.value === tagDom.dataset.key) {
+      const label = item.lastChild;
+      const classList = label.className.split(' ');
+      const index = classList.findIndex(el => el === 'to__checked');
+      if (index > -1) {
+        classList.splice(index, 1);
+        label.className = classList.join(' ');
       }
+      label.firstChild.checked = false;
     }
   }
+
+  // 更新高度
+  adjustHeight(pen);
 }
-// 向下递归
-// function downAccess(data,checked,allCheckeds, status) {
-//   $('[pId=' + id + ']').each(function (n, item) {
-//     if (status) accessClass(item, checkedClass);
-//     else accessClass(item, unCheckClass);
+function checkboxClick(e) {
+  e.stopPropagation();
+  e.cancelBubble = true;
+  const parentDom = e.target.parentNode;
+  const checkedVal = e.target.checked;
+  if (!checkedVal && parentDom.className.indexOf('to__checked') > -1) {
+    parentDom.className = 'to__item_wrapper'
+  } else if (checkedVal && parentDom.className.indexOf('to__checked') == -1) {
+    parentDom.className = 'to__item_wrapper to__checked'
+  }
+  const penId = e.target.dataset.penId;
+  const pen = window.meta2d.findOne(penId);
+  if (!pen) {
+    return;
+  }
+  const val = e.target.value;
+  const checked = deepClone(pen.checked);
+  updateTags(checkedVal, checked, val, penId, pen);
 
-//     downAccess($(item).attr('nodeId'),id, status);
-//   });
 
-//   for (let i = 0; i < data.length; i++) {
-//     const item = data[i];
-//     if(checked.includes(item.value)){
-//       allCheckeds
-//     }
-//     if(item.children?.length > 0){
-//       downAccess(item.children, id, status);
-//     }
-//   }
-// }
-function accessClass(node, cls) {
-  // var classes = [checkedClass, middleClass, unCheckClass];
-  // classes.map(function (item) {
-  //   if (item == cls) node.classList.add(item);
-  //   else node.classList.remove(item);
-  // });
+
+  // 收集当前节点的所有儿子节点的id
+  const currentItem = recursionTreeFindItem(pen.data, val);
+  let ids = [val];
+  currentItem?.children && recursionTreeFindAllIds(currentItem.children, ids);
+  if(checkedVal){
+    let arr = []
+    for (let i = 0; i < ids.length; i++) {
+      if (!checked.includes(ids[i])) {
+        arr.push(ids[i]);
+      }
+    }
+    ids = checked.concat(arr);
+    // ids = ids.concat(checked);
+  }else{
+    // 移除当前节点的所有儿子节点的id
+    ids = checked.filter(el => !ids.includes(el)); 
+  }
+  
+  window.meta2d.setValue({
+    id: penId,
+    checked:ids,
+  })
+  adjustHeight(pen);
+  renderPenRaw2(pen, pen.data);
 }
-// function checkboxClick(e) {
-//   e.stopPropagation();
-//   e.cancelBubble = true;
-//   const parentDom = e.target.parentNode;
-//   const checkedVal = e.target.checked;
-//   if (!checkedVal && parentDom.className.indexOf('to__checked') > -1) {
-//     parentDom.className = 'to__item_wrapper'
-//   } else if (checkedVal && parentDom.className.indexOf('to__checked') == -1) {
-//     parentDom.className = 'to__item_wrapper to__checked'
-//   }
-//   const penId = e.target.dataset.penId;
-//   const pen = window.meta2d.findOne(penId);
-//   if (!pen) {
-//     return;
-//   }
-//   const val = e.target.value;
-//   const checked = deepClone(pen.checked);
-//   updateTags(checkedVal, checked, val, penId, pen);
-
-
-
-//   // 收集当前节点的所有儿子节点的id
-//   const currentItem = recursionTreeFindItem(pen.data, val);
-//   let ids = [val];
-//   currentItem?.children && recursionTreeFindAllIds(currentItem.children, ids);
-//   if (checkedVal) {
-//     let arr = []
-//     for (let i = 0; i < ids.length; i++) {
-//       if (!checked.includes(ids[i])) {
-//         arr.push(ids[i]);
-//       }
-//     }
-//     ids = checked.concat(arr);
-//     // ids = ids.concat(checked);
-//   } else {
-//     // 移除当前节点的所有儿子节点的id
-//     ids = checked.filter(el => !ids.includes(el));
-//   }
-
-//   window.meta2d.setValue({
-//     id: penId,
-//     checked: ids,
-//   })
-//   adjustHeight(pen);
-//   renderPenRaw2(pen, pen.data);
-// }
-function upAccess(pId) {
+function upAccess(pId){
   // if(!pId) return;
   // var isAll = true, has = false,
   //     pckbox = $('[nodeId='+pId+']').get(0);
@@ -1151,145 +680,44 @@ function updateTags(checkedVal, checked, val, penId, pen) {
 }
 function lableClick(e) {
   e.stopPropagation();
-  // console.log(this,this.previousElementSibling, 'e.target');
-  const { penId, value } = this.parentElement.firstChild.dataset;
-  const { pid } = this.parentElement.parentElement.dataset;
-  // const checkDom = document.querySelector(`.l-checkbox__former[data-value="${value}"]`);
-  // console.log(11111,checkDom,checkDom.checked);
-  // checkDom.checked = !checkDom.checked;
-  // console.log(e.target.parentElement, 'penId, value');
-  const rawChecked = e.target.parentElement.classList.contains('l-is-checked');
-  // console.log(rawChecked, 'rawChecked');
-  if (rawChecked) {
-    e.target.parentElement.classList.remove('l-is-checked');
-  } else {
-    e.target.parentElement.classList.add('l-is-checked');
 
+  const lTreeList = document.querySelector('.l-tree-list');
+  let len = lTreeList.children.length;
+  let child = null;
+  for (let i = 0; i < len; i++) {
+    if (lTreeList.children[i].nodeName === DIV) {
+      if (lTreeList.children[i].dataset.value === e.target.dataset.key) {
+        child = lTreeList.children[i];
+        break;
+      }
+    }
   }
-  const checked = !rawChecked;
-  // console.log(checked, 'checked');
+  if (child) {
+    const classList = child.lastChild.className.split(' ');
+    const index = classList.findIndex(el => el === 'to__checked');
+    if (index > -1) {
+      classList.splice(index, 1);
+    } else {
+      classList.push('to__checked');
+    }
+    child.firstChild.checked = !child.firstChild.checked;
+    child.lastChild.className = classList.join(' ');
+  }
+
+  const penId = e.target.dataset.penId;
   const pen = window.meta2d.findOne(penId);
   if (!pen) {
     return;
   }
-  let checkedIds = deepClone(pen.checked);
-  let halfCheckedIds = deepClone(pen.halfChecked);
-  // console.log(checkedIds, checked, 'iddddd')
-  if (checked) {
-    //勾选
-    const currentItem = recursionTreeFindItem(pen.data, value);
-    // console.log(222222)
-    if (currentItem && currentItem.children?.length > 0) {
-      const ids = [];
-      recursionTreeFindAllIds(currentItem.children, ids);
-      for (let k = 0; k < ids.length; k++) {
-        const id = ids[k];
-        if (!checkedIds.includes(id)) {
-          checkedIds.push(id);
-        }
-      }
-    }
-    checkedIds.push(value);
-    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-    checkChild(dropMenu, checkedIds);
+  const val = e.target.dataset.key;
+  const checked = deepClone(pen.checked);
 
-
-    const halfIds = [];
-    const lTreeList = dropMenu.querySelector('.l-tree-list');
-    // console.log('1111111111111111', lTreeList);
-    recursionUpTree(lTreeList, pen.data, checkedIds, pid, value, checked, halfIds, penId);
-  } else {
-    //取消勾选
-    const currentItem = recursionTreeFindItem(pen.data, value);
-    if (currentItem && currentItem.children?.length > 0) {
-      const ids = [];
-      recursionTreeFindAllIds(currentItem.children, ids);
-      checkedIds = checkedIds.filter(el => !ids.includes(el));
-      for (let i = 0; i < ids.length; i++) {
-        const id = ids[i];
-        if (checkedIds.includes(id)) {
-          const index = checkedIds.findIndex(el => el === id);
-          if (index > -1) {
-            checkedIds.splice(checkedIds.findIndex(el => el === id), 1);
-          }
-        }
-      }
-    }
-    const index = checkedIds.findIndex(el => el === value);
-    if (index > -1) {
-      checkedIds.splice(index, 1);
-    }
-    // console.log(checkedIds, 'checkedIds del');
-    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-    checkChild(dropMenu, checkedIds);
-
-    // 收集半选中的节点
-    const halfIds = [];
-    const lTreeList = dropMenu.querySelector('.l-tree-list');
-    // console.log('1111111111111111', lTreeList);
-    recursionUpTree(lTreeList, pen.data, checkedIds, pid, value, checked, halfIds, penId);
-  }
-  //根据最新的checked情况，更新checked数据
-  const list = [];
-  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-  const lTreeList = dropMenu.querySelector('.l-tree-list');
-  const checkedItems = lTreeList.querySelectorAll('.l_tree_lable.l-is-checked');
-  // console.log(checkedItems, 'checkedItems');
-  for (let i = 0; i < checkedItems.length; i++) {
-    const ck = checkedItems[i];
-    // console.log(ck.parentElement.dataset.value, 'ck');
-    list.push(ck.parentElement.dataset.value);
-  }
-
+  updateTags(child.firstChild.checked, checked, val, penId, pen);
   window.meta2d.setValue({
     id: penId,
-    checked: list
+    checked,
   })
-
-  // 根据最新的checked情况，更新checked的tag
-  replaceAlltags(penId, list);
-
 }
-// function lableClick(e) {
-//   e.stopPropagation();
-
-//   const lTreeList = document.querySelector('.l-tree-list');
-//   let len = lTreeList.children.length;
-//   let child = null;
-//   for (let i = 0; i < len; i++) {
-//     if (lTreeList.children[i].nodeName === DIV) {
-//       if (lTreeList.children[i].dataset.value === e.target.dataset.key) {
-//         child = lTreeList.children[i];
-//         break;
-//       }
-//     }
-//   }
-//   if (child) {
-//     const classList = child.lastChild.className.split(' ');
-//     const index = classList.findIndex(el => el === 'to__checked');
-//     if (index > -1) {
-//       classList.splice(index, 1);
-//     } else {
-//       classList.push('to__checked');
-//     }
-//     child.firstChild.checked = !child.firstChild.checked;
-//     child.lastChild.className = classList.join(' ');
-//   }
-
-//   const penId = e.target.dataset.penId;
-//   const pen = window.meta2d.findOne(penId);
-//   if (!pen) {
-//     return;
-//   }
-//   const val = e.target.dataset.key;
-//   const checked = deepClone(pen.checked);
-
-//   updateTags(child.firstChild.checked, checked, val, penId, pen);
-//   window.meta2d.setValue({
-//     id: penId,
-//     checked,
-//   })
-// }
 function renderData(data, dom, pen) {
   if (Object.prototype.toString.call(data) === '[object Array]') {
     generateStyle(pen);
@@ -1302,9 +730,9 @@ function renderData(data, dom, pen) {
     const showIds = collectExpandShowIds(data, pen);
     addLevelToTree(data);
     // const siblings = recursionFindSiblings(data, "10");
-    // console.log(showIds, 'showIds');
-    const frag = generateDomByData(data, null, pen, null, showIds, [], generateDomByData);
-    // console.log(frag, lTreeList, 'frag');
+    console.log(showIds, 'showIds');
+    const frag = generateDomByData(data, null, pen, null, showIds, generateDomByData);
+    console.log(frag, lTreeList, 'frag');
     lTreeList.appendChild(frag);
 
     lTree.appendChild(lTreeList);
@@ -1325,14 +753,14 @@ function recursionFindParentByChildKey(data, key) {
     }
   }
 }
-function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
+function generateDomByData(data, lTreeList, pen, opt, showIds, fn?) {
   const frag = document.createDocumentFragment();
   for (let i = 0; i < data.length; i++) {
     // 添加标题
     const lTreeItem = document.createElement('div')
     lTreeItem.className = 'l-tree-item';
     // 控制层级的显示与隐藏
-    if (data[i].level === 0 || showIds.includes(data[i].value)) {
+    if (data[i].level === 0 || showIds.includes(data[i].key)) {
       // 默认显示第一级
       lTreeItem.classList.add('l-visible')
     } else {
@@ -1340,7 +768,7 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
       lTreeItem.classList.add('l-hidden')
     }
     // 控制展开与收起
-    if (pen.expanded.includes(data[i].value)) {
+    if (pen.expanded.includes(data[i].key)) {
       lTreeItem.classList.add('l-item-open')
     }
 
@@ -1352,8 +780,8 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
     lTreeItem.dataset.value = data[i].value;
     // find parent
     const parent = recursionFindParentByChildKey(pen.data, data[i].value);
-    // console.log(parent, 'parent');
-    if (parent) {
+    console.log(parent, 'parent');
+    if(parent){
       lTreeItem.dataset.pid = parent.value;
     }
     if (!opt) {
@@ -1364,7 +792,7 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
       lTreeItem.style.setProperty("--level", opt.level + '');
     }
 
-    let key = data[i].value;
+    let key = data[i].key;
     let arrow = `<svg t="1550632829702" class="icon" data-key=${key} style="width:12px;height:12px;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1783" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%"><defs><style type="text/css"></style></defs><path data-key=${key} d="M959.52557 254.29773 511.674589 702.334953 63.824631 254.29773Z" p-id="1784"></path></svg>`
     // 设置箭头
     if (!data[i].children || data[i].children?.length == 0) {
@@ -1393,10 +821,10 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
     lTreeLable.style.paddingLeft = '6px';
     lTreeLable.style.borderRadius = '4px';
     lTreeLable.className = 'l_tree_lable';
-    if (pen.multiple && pen.checked.includes(data[i].value)) {
+    if (pen.multiple && pen.checked.includes(data[i].key)) {
       lTreeLable.classList.add('l-is-checked')
     } else {
-      if (pen.checked.length > 0 && pen.checked[0] === data[i].value) {
+      if (pen.checked.length > 0 && pen.checked[0] === data[i].key) {
         lTreeLable.classList.add('l-is-checked')
       }
     }
@@ -1410,12 +838,12 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
       // checkboxDom.style.width = '18px';
       // checkboxDom.style.height = '18px';
       // checkboxDom.style.verticalAlign = 'middle';
-      if (pen.checked.includes(data[i].value)) {
+      if (pen.checked.includes(data[i].key)) {
         checkboxDom.checked = true;
       }
-      checkboxDom.dataset.value = data[i].value;
+      checkboxDom.value = data[i].key;
       checkboxDom.dataset.penId = pen.id;
-      // checkboxDom.onclick = checkboxClick;
+      checkboxDom.onclick = checkboxClick;
       lTreeLable.appendChild(checkboxDom);
 
       const checkDom = document.createElement("span");
@@ -1426,12 +854,6 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
       // checkDom.style.whiteSpace = 'nowrap';
       // checkDom.style.marginBottom = '8px';
       checkDom.className = 'l-checkbox__input';
-      checkDom.dataset.penId = pen.id;
-      checkDom.dataset.value = data[i].value;
-      if (parent) {
-        checkDom.dataset.pid = parent.value;
-      }
-      checkDom.addEventListener('click', checkboxNewClick);
       lTreeLable.appendChild(checkDom);
     }
 
@@ -1445,8 +867,8 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
     labelDom.style.lineHeight = '40px';
     labelDom.style.width = 'calc(100% - 18px)';
     labelDom.style.marginLeft = '6px';
-    labelDom.innerHTML = data[i].label + '-' + data[i].value;
-    labelDom.dataset.key = data[i].value;
+    labelDom.innerHTML = data[i].label + '-' + data[i].level;
+    labelDom.dataset.key = data[i].key;
     labelDom.dataset.penId = pen.id;
     labelDom.onclick = lableClick;
     // 添加到lTreeLable
@@ -1491,11 +913,13 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
     // 递归
     if (fn) {
       if (data[i].children?.length > 0) {
+        // console.log(data[i].label, level, 'ooooooooo');
         // level++
-        const childFrag = fn(data[i].children, lTreeList, pen, null, showIds, [], fn)
+        const childFrag = fn(data[i].children, lTreeList, pen, null, showIds, fn)
         frag.appendChild(childFrag);
       } else {
         if (i == data.length - 1) {
+          // console.log(data[i].label, level, 'data[i].label');
           // level = 0
         }
       }
@@ -1526,25 +950,25 @@ function handleToggleExpand(accordion, data, expandedKeys, key) {
   if (!expandedKeys.includes(key)) {
     // 手风琴模式
     if (accordion) {
-      // console.log('accordion');
+      console.log('accordion');
       // 所有兄弟节点id
       const siblings = recursionFindSiblings(data, key);
-      // console.log(siblings, 'siblings');
-      // console.log(expandedKeys.filter(key => !siblings.includes(key),), 'expandedKeys');
+      console.log(siblings, 'siblings');
+      console.log(expandedKeys.filter(
+        key => !siblings.includes(key),
+      ), 'expandedKeys');
       // const siblings = Object.values(this.treeNodesMap)
       //   .filter(
       //     node => node.parentId === treeNode.parentId && node.id !== id,
       //   )
       //   .map(node => node.id);
       // 剔除兄弟节点
-      return {
-        list: expandedKeys.filter(
-          key => !siblings.includes(key),
-        ), siblings
-      };
+      return expandedKeys.filter(
+        key => !siblings.includes(key),
+      );
     }
   }
-  return { list: expandedKeys, siblings: [] };
+  return expandedKeys;
 }
 /** 
  * @description 收集要展开显示的子节点的id
@@ -1559,10 +983,9 @@ function collectExpandShowIds(data, pen) {
   if (pen.expanded && pen.expanded.length > 0) {
     for (let i = 0; i < pen.expanded.length; i++) {
       const id = pen.expanded[i];
-      // console.log(JSON.stringify(pen.expanded), JSON.stringify(pen.showIds), ' pen.expanded');
       const item = recursionTreeFindItem(data, id);
       if (item && Array.isArray(item.children) && item.children.length > 0) {
-        expandList.push(...item.children.map(el => el.value));
+        expandList.push(...item.children.map(el => el.key));
       }
     }
   }
@@ -1579,7 +1002,7 @@ function hasCSSRuleInSheet(sheet, ruleText) {
     }
   } catch (e) {
     // 忽略跨域样式表的错误
-    // console.error('Error accessing style sheet:', e);
+    console.error('Error accessing style sheet:', e);
   }
   return false;
 }
@@ -1600,9 +1023,9 @@ function generateStyle(pen) {
       const ruleToCheck = rule + '}';
       if (!hasCSSRuleInSheet(sheet1, ruleToCheck)) {
         insertCSSRuleInSheet(sheet1, ruleToCheck);
-        // console.log(`The rule "${ruleToCheck}" was inserted.`);
+        console.log(`The rule "${ruleToCheck}" was inserted.`);
       } else {
-        // console.log(`The rule "${ruleToCheck}" already exists.`);
+        console.log(`The rule "${ruleToCheck}" already exists.`);
       }
     });
   }
@@ -1751,26 +1174,6 @@ function generateStyle(pen) {
     border-left: 0;
     transform: rotate(45deg) scale(1) translate(-50%, -50%);
     background: transparent;
-}
-  `)
-  sheet.insertRule(`
-  .l_tree_lable.l-is-indeterminate .l-checkbox__input:after {
-    opacity: 1;
-    width: 16px;
-    height: 4px;
-    left: -1px;
-    right: 0;
-    top: 5px;
-    border: unset;
-    transform: scale(.5);
-    background-color: white;
-}
-  `)
-  sheet.insertRule(`
-  .l_tree_lable.l-is-indeterminate .l-checkbox__input {
-    border-color: #0052d9;
-    background-color: #0052d9;;
-    transition: background-color .2s cubic-bezier(.82,0,1,.9);
 }
   `)
 }

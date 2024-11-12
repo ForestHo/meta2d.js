@@ -17,7 +17,8 @@ export * from './iframe';
 export * from './video';
 export * from './panel';
 export * from './filter/treeFilter';
-export * from './filter/timeFilter/index';
+export * from './filter/datePicker/index';
+export * from './filter/dateRangePicker/index';
 export * from './filter/cascadeFilter';
 
 import { rectangle, square } from './rectangle';
@@ -42,7 +43,8 @@ import { mindNode, mindNodeAnchors } from './mindNode';
 import { mindLine, mindLineAnchors } from './mindLine';
 import { panel } from './panel';
 import { treeFilter } from './filter/treeFilter';
-import { timeFilter } from './filter/timeFilter/index';
+import { datePicker } from './filter/datePicker/index';
+import { dateRangePicker } from './filter/dateRangePicker/index';
 import { cascadeFilter } from './filter/cascadeFilter';
 
 export function commonPens() {
@@ -73,7 +75,8 @@ export function commonPens() {
     panel,
     combine:rectangle,
     treeFilter,
-    timeFilter,
+    datePicker,
+    dateRangePicker,
     cascadeFilter,
   };
 }

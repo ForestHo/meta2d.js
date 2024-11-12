@@ -276,7 +276,7 @@ function validateData(pen: Pen) {
     id: pen.id,
   }
   // 校验multiply与checked
-  if (!pen.multiply && pen.checked.length > 0) {
+  if (!pen.multiple && pen.checked.length > 0) {
     Object.assign(obj, {
       checked: [pen.checked[0]]
     })
@@ -491,53 +491,7 @@ function itemClick(e) {
 }
 function renderData(data, dom, pen) {
   if (Object.prototype.toString.call(data) === '[object Array]') {
-    let style = document.createElement('style');
-    style.type = 'text/css';
-    document.head.appendChild(style);
-    let sheet = style.sheet;
-    sheet.insertRule(
-      `div[class^="to__subItem"].to__show {
-        display: block !important;
-      }`
-    );
-    sheet.insertRule(
-      `.to__downList .icon{
-        transform: rotate(-90deg);
-      }`
-    );
-    sheet.insertRule(
-      `.to__downList.to__roate .icon{
-        transform: rotate(0deg);
-      }`
-    );
-    sheet.insertRule(
-      `
-      .to__item_wrapper.to__checked{
-        background-color: #f2f3ff;
-      }
-      `
-    )
-    sheet.insertRule(
-      `
-      .to__item_wrapper.to__hidden{
-        max-height: 0;
-      }
-      `
-    )
-    sheet.insertRule(
-      `
-      .to__item_wrapper.to__visible{
-        max-height: auto;
-      }
-      `
-    )
-    sheet.insertRule(
-      `
-      .to__item.to__hidden{
-        overflow: hidden;
-      }
-      `
-    )
+    generateStyle(pen)
     generateDomByData(data, dom, pen, renderData);
 
   }
@@ -578,7 +532,7 @@ function generateDomByData(data, dom, pen, fn?) {
     rightDom.style.borderRadius = '4px';
     rightDom.onclick = domClick;
     rightDom.className = 'to__item_wrapper'
-    if (pen.multiply && pen.checked.includes(data[i].key)) {
+    if (pen.multiple && pen.checked.includes(data[i].key)) {
       rightDom.className += ' to__checked'
     } else {
       if (pen.checked.length > 0 && pen.checked[0] === data[i].key) {
@@ -587,7 +541,7 @@ function generateDomByData(data, dom, pen, fn?) {
     }
 
     // checkboxDom
-    if (pen.multiply) {
+    if (pen.multiple) {
       const checkboxDom = document.createElement("input");
       checkboxDom.type = "checkbox";
       checkboxDom.name = "cName";
@@ -658,4 +612,90 @@ function generateDomByData(data, dom, pen, fn?) {
       }
     }
   }
+}
+// 判断特定样式表中是否存在某条 CSS 规则
+function hasCSSRuleInSheet(sheet, ruleText) {
+  try {
+    const rules = sheet.cssRules || sheet.rules;
+    for (let i = 0; i < rules.length; i++) {
+      if (rules[i].cssText === ruleText) {
+        return true;
+      }
+    }
+  } catch (e) {
+    // 忽略跨域样式表的错误
+    console.error('Error accessing style sheet:', e);
+  }
+  return false;
+}
+// 插入新的 CSS 规则到特定样式表
+function insertCSSRuleInSheet(sheet, ruleText) {
+  sheet.insertRule(ruleText, sheet.cssRules.length);
+}
+function generateStyle(pen){
+  let extraStyle = document.createElement('style');
+  extraStyle.type = 'text/css';
+  extraStyle.id = pen.id;
+  document.head.appendChild(extraStyle);
+  let sheet1 = extraStyle.sheet;
+  if (pen.styles && pen.styles.length > 0) {
+    pen.styles.forEach((rule) => {
+      // sheet.insertRule(rule + '}', sheet.cssRules.length);
+      const ruleToCheck = rule + '}';
+      if (!hasCSSRuleInSheet(sheet1, ruleToCheck)) {
+        insertCSSRuleInSheet(sheet1, ruleToCheck);
+        console.log(`The rule "${ruleToCheck}" was inserted.`);
+      } else {
+        console.log(`The rule "${ruleToCheck}" already exists.`);
+      }
+    });
+  }
+
+  let style = document.createElement('style');
+    style.type = 'text/css';
+    document.head.appendChild(style);
+    let sheet = style.sheet;
+    sheet.insertRule(
+      `div[class^="to__subItem"].to__show {
+        display: block !important;
+      }`
+    );
+    sheet.insertRule(
+      `.to__downList .icon{
+        transform: rotate(-90deg);
+      }`
+    );
+    sheet.insertRule(
+      `.to__downList.to__roate .icon{
+        transform: rotate(0deg);
+      }`
+    );
+    sheet.insertRule(
+      `
+      .to__item_wrapper.to__checked{
+        background-color: #f2f3ff;
+      }
+      `
+    )
+    sheet.insertRule(
+      `
+      .to__item_wrapper.to__hidden{
+        max-height: 0;
+      }
+      `
+    )
+    sheet.insertRule(
+      `
+      .to__item_wrapper.to__visible{
+        max-height: auto;
+      }
+      `
+    )
+    sheet.insertRule(
+      `
+      .to__item.to__hidden{
+        overflow: hidden;
+      }
+      `
+    )
 }
