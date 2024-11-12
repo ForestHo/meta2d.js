@@ -144,7 +144,7 @@ function validateData(pen: Pen) {
       }
     }
     list = list.concat(pen.checked);
-    console.log(list, 'list');
+    // console.log(list, 'list');
     Object.assign(obj, {
       checked: list
     })
@@ -379,7 +379,91 @@ function onInputchange(e) {
     };
     const fragMent = generateDomByData(pen, pen.data, flowPath, opt);
     cascaderPanel.replaceChildren(fragMent);
+
+    setTimeout(() => {
+      // 根据最新的tag去更新checked
+      const checkedIds = deepClone(pen.checked);
+      const halfIds = [];
+      recursionDownTree(pen.data, pen.checked, halfIds);
+      // reviewChecked(cascaderPanel, pen, pen.data, checkedIds);
+      reviewPanel(pen, cascaderPanel, checkedIds, halfIds);
+    }, 20)
   }
+}
+function reviewPanel(pen, cascaderPanel, checkedIds, halfIds) {
+  // 先全部清空
+  const list = cascaderPanel.querySelectorAll('.l-cascader__item');
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    if (item.firstChild.classList.contains('l-is-checked')) {
+      item.firstChild.classList.remove('l-is-checked');
+    }
+    if (item.firstChild.classList.contains('l-is-indeterminate')) {
+      item.firstChild.classList.remove('l-is-indeterminate');
+    }
+  }
+
+  for (let i = 0; i < checkedIds.length; i++) {
+    const ck = checkedIds[i];
+    const item = cascaderPanel.querySelector(`.l-cascader__item[data-value="${ck}"]`);
+    if (item) {
+      item.firstChild.classList.add('l-is-checked');
+    }
+  }
+  for (let i = 0; i < halfIds.length; i++) {
+    const halfId = halfIds[i];
+    const item = cascaderPanel.querySelector(`.l-cascader__item[data-value="${halfId}"]`);
+    if (item) {
+      item.firstChild.classList.add('l-is-indeterminate');
+    }
+  }
+}
+function reviewChecked(cascaderPanel, pen, data, checkedIds) {
+  for (let i = 0; i < checkedIds.length; i++) {
+    const ck = checkedIds[i];
+    const item = cascaderPanel.querySelector(`.l-cascader__item[data-value="${ck}"]`);
+    if (item) {
+      item.firstChild.classList.add('l-is-checked');
+    }
+    const isLeaf = isLeafNode(data, ck);
+    // console.log(ck, isLeaf, 'isLeaf');
+    if (isLeaf) {
+      // 向上更新父节点
+      {
+        //勾选
+        // const currentItem = recursionTreeFindItem(data, ck);
+        // console.log(222222)
+        // if (currentItem && currentItem.children?.length > 0) {
+        //   const ids = [];
+        //   recursionTreeFindAllIds(currentItem.children, ids);
+        //   console.log(value, JSON.stringify(ids), 'check on ids');
+        //   for (let k = 0; k < ids.length; k++) {
+        //     const id = ids[k];
+        //     if (!checkedIds.includes(id)) {
+        //       checkedIds.push(id);
+        //     }
+        //   }
+        // }
+        // checkedIds.push(value);
+        // console.log('check on 0000', JSON.stringify(checkedIds));
+        // const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+        // checkChild(dropMenu, checkedIds);
+
+        const parent = recursionFindParentByChildKey(pen.data, ck);
+        const halfIds = [];
+        // const lTreeList = dropMenu.querySelector('.l-tree-list');
+        // console.log('check on', parent.value, JSON.stringify(checkedIds));
+        recursionUpTree(cascaderPanel, pen.data, checkedIds, parent.value, ck, true, halfIds, pen.id);
+        // console.log('check on recursionUpTree after', JSON.stringify(checkedIds));
+      }
+    } else {
+
+    }
+  }
+}
+function isLeafNode(data, value) {
+  const item = recursionTreeFindItem(data, value);
+  return !(item.children?.length > 0);
 }
 function updateDropdown(pen, cascaderPanel, filterPaths) {
   for (let k = 0; k < cascaderPanel.children.length; k++) {
@@ -534,7 +618,17 @@ function tagClose(e) {
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
   const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
   const curItem = cascaderPanel.querySelector(`.l-cascader__item[data-value="${value}"]`);
-
+  // console.log(curItem, 'curItem');
+  if (!curItem) {
+    this.parentElement.remove();
+    // 根据最新的tag去更新checked
+    const halfIds = [];
+    recursionDownTree(pen.data, pen.checked, halfIds);
+    // console.log('tagClose', JSON.stringify(checkedList), JSON.stringify(halfIds));
+    // reviewChecked(cascaderPanel, pen, pen.data, checkedIds);
+    reviewPanel(pen, cascaderPanel, checkedList, halfIds);
+    return;
+  }
   const { pid } = curItem.dataset;
   curItem.classList.remove('l-is-checked');
   // console.log(pid, value, 'checkedList');
@@ -698,6 +792,7 @@ function assembleLi(pen, item, level, opt) {
   return li;
 }
 function checkboxNewClick(e) {
+  // console.log('checkboxNewClick');
   e.stopPropagation();
   // console.log(this,this.previousElementSibling, 'e.target');
   const { penId, value } = this.dataset;
@@ -715,13 +810,15 @@ function checkboxNewClick(e) {
 
   }
   const checked = !rawChecked;
-  console.log(checked, pid, penId, value, 'checked');
+  // console.log(checked, pid, penId, value, 'checked');
   const pen = window.meta2d.findOne(penId);
   if (!pen) {
     return;
   }
   let checkedIds = deepClone(pen.checked);
   let halfCheckedIds = deepClone(pen.halfChecked);
+
+
   // console.log(checkedIds, checked, 'iddddd')
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
   const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
@@ -732,7 +829,7 @@ function checkboxNewClick(e) {
     if (currentItem && currentItem.children?.length > 0) {
       const ids = [];
       recursionTreeFindAllIds(currentItem.children, ids);
-      console.log(value, JSON.stringify(ids), 'check on ids');
+      // console.log(value, JSON.stringify(ids), 'check on ids');
       for (let k = 0; k < ids.length; k++) {
         const id = ids[k];
         if (!checkedIds.includes(id)) {
@@ -741,16 +838,16 @@ function checkboxNewClick(e) {
       }
     }
     checkedIds.push(value);
-    console.log('check on 0000', JSON.stringify(checkedIds));
+    // console.log('check on 0000', JSON.stringify(checkedIds));
     const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
     checkChild(dropMenu, checkedIds);
 
 
     const halfIds = [];
     // const lTreeList = dropMenu.querySelector('.l-tree-list');
-    console.log('check on', JSON.stringify(checkedIds));
+    // console.log('check on', JSON.stringify(checkedIds));
     recursionUpTree(cascaderPanel, pen.data, checkedIds, pid, value, checked, halfIds, penId);
-    console.log('check on recursionUpTree after', JSON.stringify(checkedIds));
+    // console.log('check on recursionUpTree after', JSON.stringify(checkedIds));
   } else {
     //取消勾选
     const currentItem = recursionTreeFindItem(pen.data, value);
@@ -772,7 +869,7 @@ function checkboxNewClick(e) {
     if (index > -1) {
       checkedIds.splice(index, 1);
     }
-    console.log(checkedIds, 'checkedIds del');
+    // console.log(checkedIds, 'checkedIds del');
     // const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
     checkChild(dropMenu, checkedIds);
 
@@ -789,7 +886,19 @@ function checkboxNewClick(e) {
   //   const ck = cascaderList[i];
   //   list.push(ck.parentElement.dataset.value);
   // }
-  console.log(JSON.stringify(checkedIds), 'checkedIds end');
+
+  // 如果是搜索模式，还需要更新搜索模式下的checked
+  if (pen.filterable) {
+    const tagWrapper = document.querySelector(`.${TAG_WRAPPER}${pen.id}`);
+    const text = tagWrapper.nextElementSibling.value;
+    // console.log(text, JSON.stringify(checkedIds), 'text');
+    if (text) {
+      // 这种情况的勾选，更新checkedIds
+      recursionAllTree(pen.data, checkedIds);
+    }
+  }
+
+  // console.log(JSON.stringify(checkedIds), 'checkedIds end');
   window.meta2d.setValue({
     id: penId,
     checked: checkedIds
@@ -798,8 +907,33 @@ function checkboxNewClick(e) {
   // 根据最新的checked情况，更新checked的tag
   replaceAlltags(penId, checkedIds);
 }
+function recursionAllTree(data, checkedIds) {
+  for (let i = 0; i < data.length; i++) {
+    const item = data[i];
+    if (Array.isArray(item.children) && item.children.length > 0) {
+      const childIds = [];
+      recursionTreeFindAllIds(item.children, childIds);
+      // console.log(JSON.stringify(childIds), 'childIds');
+      const every = childIds.every(el => checkedIds.includes(el));
+      // console.log(every, 'every');
+      if (every) {
+        if (!checkedIds.includes(item.value)) {
+          checkedIds.push(item.value);
+        }
+      } else {
+        if (checkedIds.includes(item.value)) {
+          const index = checkedIds.findIndex(el => el === item.value);
+          if (index > -1) {
+            checkedIds.splice(index, 1);
+          }
+        }
+      }
+      recursionAllTree(item.children, checkedIds);
+    }
+  }
+}
 function recursionUpTree(cascaderPanel, data, checked, pid, value, checkVal, halfIds, penId) {
-  console.log('2222222222222', pid, value, JSON.stringify(checked), checkVal);
+  // console.log('2222222222222', pid, value, JSON.stringify(checked), checkVal);
   if (!pid) {
     const currentItem = recursionTreeFindItem(data, value);
     const childIds = [];
@@ -814,7 +948,7 @@ function recursionUpTree(cascaderPanel, data, checked, pid, value, checkVal, hal
   };
   let isAll = true, has = false;
   const parent = cascaderPanel.querySelector(`.l-cascader__item[data-value="${pid}"]`);
-  // console.log( '11333333333333',parent);
+  // console.log('11333333333333', parent);
   if (parent) {
     // console.log(parent, 'parent');
     const currentItem = recursionTreeFindItem(data, parent.dataset.value);
@@ -823,7 +957,7 @@ function recursionUpTree(cascaderPanel, data, checked, pid, value, checkVal, hal
     // console.log(childIds, parent.dataset.value, JSON.stringify(checked), 'childIds');
     if (checkVal) {
       const ret1 = childIds.every(el => checked.indexOf(el) > -1);
-      // console.log(ret1,JSON.stringify(childIds),JSON.stringify(checked), 'ret1');
+      // console.log(ret1, JSON.stringify(childIds), JSON.stringify(checked), 'ret1');
       if (ret1) {
         // console.log('ret1 all In',parent.dataset.value);
         isAll = true;
@@ -910,7 +1044,7 @@ function recursionUpTree(cascaderPanel, data, checked, pid, value, checkVal, hal
     // } else if (has) {
     //   // parent.classList.add('l-is-indeterminate');
     // }
-
+    // console.log('next', parent.dataset.pid, parent.dataset.value);
     const _pid = parent.dataset.pid;
     const _value = parent.dataset.value;
     recursionUpTree(cascaderPanel, data, checked, _pid, _value, checkVal, halfIds, penId);
@@ -939,7 +1073,7 @@ function checkChild(dropMenu, ids) {
   const cascaderList = cascaderPanel.querySelectorAll('.l-cascader__item');
   let len = cascaderList.length;
   for (let i = 0; i < len; i++) {
-    console.log(ids.indexOf(cascaderList[i].dataset.value), cascaderList[i].dataset.value, 'index');
+    // console.log(ids.indexOf(cascaderList[i].dataset.value), cascaderList[i].dataset.value, 'index');
     if (ids.indexOf(cascaderList[i].dataset.value) !== -1) {
       cascaderList[i].firstChild.classList.add('l-is-checked');
     } else {
@@ -948,7 +1082,7 @@ function checkChild(dropMenu, ids) {
   }
 }
 function labelClick(e) {
-  console.log('labelClick')
+  // console.log('labelClick')
   e.stopPropagation();
   const { value, penId, level } = this.dataset;
   // const checkedVal = e.target.checked;
@@ -968,7 +1102,7 @@ function recursionFindHasChild(data, key) {
   for (let i = 0; i < data.length; i++) {
     if (data[i].value === key) {
       const typeOf = typeof data[i].children;
-      console.log('typeOf', typeOf, data[i].value)
+      // console.log('typeOf', typeOf, data[i].value)
       if (typeOf === 'boolean') {
         return false;
       }
@@ -1116,41 +1250,49 @@ function liOnClick(e) {
   if (!pen) {
     return;
   }
-  console.log('liOnClick', value)
+
+  if (pen.filterable) {
+    const tagWrapper = document.querySelector(`.${TAG_WRAPPER}${pen.id}`);
+    const text = tagWrapper.nextElementSibling.value;
+    if (text) {
+      return;
+    }
+  }
+
   patchLeftMenu(value, parseInt(level), pen);
 
   // 向下去更新半选状态
   const currentItem = recursionTreeFindItem(pen.data, value);
-  console.log(currentItem, 'currentItem')
-  if(currentItem && currentItem.children?.length > 0){
+  // console.log(currentItem, 'currentItem')
+  if (currentItem && currentItem.children?.length > 0) {
     const halfIds = [];
-    console.log('pen.checked 11', JSON.stringify(pen.checked))
-    recursionDownTree(currentItem.children,pen.checked, halfIds);
-    console.log('halfIds', JSON.stringify(halfIds))
+    // console.log('pen.checked 11', JSON.stringify(pen.checked))
+    recursionDownTree(currentItem.children, pen.checked, halfIds);
+    // console.log('halfIds', JSON.stringify(halfIds))
     const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
     const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
     for (let i = 0; i < halfIds.length; i++) {
       const elem = halfIds[i];
       const item = cascaderPanel.querySelector(`.l-cascader__item[data-value="${elem}"]`);
-      if(item){
+      if (item) {
         item.firstChild.classList.remove('l-is-checked');
         item.firstChild.classList.add('l-is-indeterminate');
       }
     }
   }
 }
-function recursionDownTree(data,checked, halfIds) {
+function recursionDownTree(data, checked, halfIds) {
   for (let i = 0; i < data.length; i++) {
     const item = data[i];
-    if(Array.isArray(item.children) && item.children?.length > 0){
+    if (Array.isArray(item.children) && item.children?.length > 0) {
       const allChilds = [];
       recursionTreeFindAllIds(item.children, allChilds);
       const everyFlag = allChilds.every(el => checked.includes(el));
       const someFlag = allChilds.some(el => checked.includes(el));
-      if(!everyFlag && someFlag){
+      if (!everyFlag && someFlag) {
         halfIds.push(item.value);
       }
-      recursionDownTree(item.children,checked, halfIds);
+      recursionDownTree(item.children, checked, halfIds);
     }
   }
 }
@@ -1241,7 +1383,7 @@ function patchCascadeMenu(pen, lv, level, flowPath, opt) {
       }
     }
   }
-  console.log('ddddddd', cascaderPanel.children.length, pen.flowPath.length, flowPath.length)
+  // console.log('ddddddd', cascaderPanel.children.length, pen.flowPath.length, flowPath.length)
   if (cascaderPanel.children.length > flowPath.length) {
     // 删除多余的层级
     const len = cascaderPanel.children.length;
