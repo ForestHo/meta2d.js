@@ -363,6 +363,11 @@ function validateData(pen: Pen) {
   const obj = {
     id: pen.id,
   }
+  if (!pen.halfChecked) {
+    Object.assign(obj, {
+      halfChecked: []
+    })
+  }
   // 校验multiply与checked
   if (!pen.multiple && pen.checked.length > 0) {
     Object.assign(obj, {
@@ -556,7 +561,7 @@ function treeIconClick(e) {
         }
         // 收集当前需要展开的节点的所有子节点
         recursionCollectExpandIds([currentItem], list, ids);
-        console.log(ids,JSON.stringify(list), '展开 ids');
+        console.log(ids, JSON.stringify(list), '展开 ids');
         const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
         // 隐藏兄弟节点的所有子节点
         showHideChild(dropMenu, ids, siblingChildIds, flag);
@@ -582,7 +587,7 @@ function recursionCollectExpandIds(data, expanded, ids) {
       const list = data[i].children.map(el => el.value);
       ids.push(...list);
     } else {
-    // console.log(data[i].value,expanded.includes(data[i].value)  , 'data[i]'); 
+      // console.log(data[i].value,expanded.includes(data[i].value)  , 'data[i]'); 
       // 这里递归返回，很重要
       continue;
       // return;
@@ -692,6 +697,299 @@ function tagClose(e) {
   // 更新高度
   adjustHeight(pen);
 }
+function checkboxNewClick(e) {
+  e.stopPropagation();
+  // console.log(this,this.previousElementSibling, 'e.target');
+  const { penId, value } = this.parentElement.firstChild.dataset;
+  const { pid } = this.parentElement.parentElement.dataset;
+  // const checkDom = document.querySelector(`.l-checkbox__former[data-value="${value}"]`);
+  // console.log(11111,checkDom,checkDom.checked);
+  // checkDom.checked = !checkDom.checked;
+  // console.log(e.target.parentElement, 'penId, value');
+  const rawChecked = e.target.parentElement.classList.contains('l-is-checked');
+  // console.log(rawChecked, 'rawChecked');
+  if (rawChecked) {
+    e.target.parentElement.classList.remove('l-is-checked');
+  } else {
+    e.target.parentElement.classList.add('l-is-checked');
+
+  }
+  const checked = !rawChecked;
+  // console.log(checked, 'checked');
+  const pen = window.meta2d.findOne(penId);
+  if (!pen) {
+    return;
+  }
+  let checkedIds = deepClone(pen.checked);
+  let halfCheckedIds = deepClone(pen.halfChecked);
+  // console.log(checkedIds, checked, 'iddddd')
+  if (checked) {
+    //勾选
+    const currentItem = recursionTreeFindItem(pen.data, value);
+    // console.log(222222)
+    if (currentItem && currentItem.children?.length > 0) {
+      const ids = [];
+      recursionTreeFindAllIds(currentItem.children, ids);
+      for (let k = 0; k < ids.length; k++) {
+        const id = ids[k];
+        if (!checkedIds.includes(id)) {
+          checkedIds.push(id);
+        }
+      }
+    }
+    checkedIds.push(value);
+    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+    checkChild(dropMenu, checkedIds);
+
+
+    const halfIds = [];
+    const lTreeList = dropMenu.querySelector('.l-tree-list');
+    // console.log('1111111111111111', lTreeList);
+    recursionUpTree(lTreeList, pen.data, checkedIds, pid, value, checked, halfIds, penId);
+  } else {
+    //取消勾选
+    const currentItem = recursionTreeFindItem(pen.data, value);
+    if (currentItem && currentItem.children?.length > 0) {
+      const ids = [];
+      recursionTreeFindAllIds(currentItem.children, ids);
+      checkedIds = checkedIds.filter(el => !ids.includes(el));
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
+        if (checkedIds.includes(id)) {
+          const index = checkedIds.findIndex(el => el === id);
+          if (index > -1) {
+            checkedIds.splice(checkedIds.findIndex(el => el === id), 1);
+          }
+        }
+      }
+    }
+    const index = checkedIds.findIndex(el => el === value);
+    if (index > -1) {
+      checkedIds.splice(index, 1);
+    }
+    // console.log(checkedIds, 'checkedIds del');
+    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+    checkChild(dropMenu, checkedIds);
+
+    // 收集半选中的节点
+    const halfIds = [];
+    const lTreeList = dropMenu.querySelector('.l-tree-list');
+    // console.log('1111111111111111', lTreeList);
+    recursionUpTree(lTreeList, pen.data, checkedIds, pid, value, checked, halfIds, penId);
+  }
+  //根据最新的checked情况，更新checked数据
+  const list = [];
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+  const lTreeList = dropMenu.querySelector('.l-tree-list');
+  const checkedItems = lTreeList.querySelectorAll('.l_tree_lable.l-is-checked');
+  // console.log(checkedItems, 'checkedItems');
+  for (let i = 0; i < checkedItems.length; i++) {
+    const ck = checkedItems[i];
+    // console.log(ck.parentElement.dataset.value, 'ck');
+    list.push(ck.parentElement.dataset.value);
+  }
+
+  window.meta2d.setValue({
+    id: penId,
+    checked: list
+  })
+}
+
+// 判断所有子元素是否都具有某个特定的类
+function checkAllHaveClass(dom, className) {
+  const items = Array.from(dom);
+  const allHaveClass = items.every(item => item.classList.contains(className));
+  return allHaveClass;
+}
+function recursionUpTree(lTreeList, data, checked, pid, value, checkVal, halfIds, penId) {
+  // console.log('2222222222222', pid);
+  if (!pid) return;
+  let isAll = true, has = false;
+  const parent = lTreeList.querySelector(`.l-tree-item[data-value="${pid}"]`);
+  // console.log( '11333333333333',parent);
+  if (parent) {
+    // console.log(parent, 'parent');
+    const currentItem = recursionTreeFindItem(data, parent.dataset.value);
+    const childIds = [];
+    recursionTreeFindAllIds(currentItem.children, childIds);
+    // console.log(childIds, parent.dataset.value, JSON.stringify(checked), 'childIds');
+    if (checkVal) {
+      const ret1 = childIds.every(el => checked.indexOf(el) > -1);
+      if (ret1) {
+        // console.log('ret1 all In',parent.dataset.value);
+        isAll = true;
+        checked.push(parent.dataset.value);
+        if (parent.lastChild.classList.contains('l-is-indeterminate')) {
+          parent.lastChild.classList.remove('l-is-indeterminate');
+        }
+        parent.lastChild.classList.add('l-is-checked');
+      } else {
+        isAll = false;
+        checked.splice(checked.findIndex(el => el === parent.dataset.value), 1);
+        if (parent.lastChild.classList.contains('l-is-checked')) {
+          parent.lastChild.classList.remove('l-is-checked');
+        }
+        parent.lastChild.classList.add('l-is-indeterminate');
+      }
+      // const ret2 = 
+    } else {
+      const ret1 = childIds.every(el => checked.indexOf(el) === -1);
+      if (ret1) {
+        // console.log('ret1 all In',parent.dataset.value);
+        isAll = true;
+        checked.splice(checked.findIndex(el => el === parent.dataset.value), 1);
+        parent.lastChild.classList.remove('l-is-checked');
+        parent.lastChild.classList.remove('l-is-indeterminate');
+      } else {
+        isAll = false;
+        checked.splice(checked.findIndex(el => el === parent.dataset.value), 1);
+        if (parent.lastChild.classList.contains('l-is-checked')) {
+          parent.lastChild.classList.remove('l-is-checked');
+        }
+        parent.lastChild.classList.add('l-is-indeterminate');
+      }
+    }
+
+
+    // const children = lTreeList.querySelectorAll(`.l-tree-item[data-pid="${pid}"]`);
+    // const allActive = checkAllHaveClass(children,'l-is-checked');
+    // console.log(allActive, pid,'allActive');
+    // for (let i = 0; i < children.length; i++) {
+    //   const child = children[i];
+    //   if(!child.classList.contains('l-is-checked')){
+    //     isAll = false;
+    //     console.log( 'isAll',isAll);
+    //   }
+    // }
+
+    // const grandParent = recursionFindParentByChildKey(data, pid);
+    // console.log(grandParent, 'grandParent');
+    // if(grandParent){
+    //   const allChilds = grandParent.children.map(el => el.value);
+    //   const ret = allChilds.every(el => checked.indexOf(el) > -1);
+    //   console.log(ret, 'ret');
+    //   if(ret){
+    //     isAll = true;
+
+    //     for (let k = 0; k < allChilds.length; k++) {
+    //       const child = allChilds[k];
+    //       console.log(child, 'child');
+    //       const childDom = lTreeList.querySelector(`.l-tree-item[data-value="${child}"]`);
+    //       childDom.lastChild.classList.add('l-is-checked');
+    //     }
+    //   }else{
+    //     isAll = false;
+    //   }
+    // }
+    // console.log(isAll,parent, 'isAll');
+    // if (isAll) {
+    //   // parent.lastChild.classList.add('l-is-checked');
+    //   // for (let i = 0; i < parent.children.length; i++) {
+    //   //   const child = parent.children[i];
+    //   //   child.firstChild.classList.add('l-is-checked');
+    //   // }
+    // } else if (has) {
+    //   // parent.classList.add('l-is-indeterminate');
+    // }
+
+    const _pid = parent.dataset.pid;
+    const _value = parent.dataset.value;
+    recursionUpTree(lTreeList, data, checked, _pid, _value, checkVal, halfIds, penId);
+  }
+}
+// function recursionUpTree(lTreeList, data,checked, pid, value,checkVal, halfIds) {
+//   console.log('2222222222222', pid);
+//   if (!pid) return;
+//   let isAll = true, has = false;
+//   const parent = lTreeList.querySelector(`.l-tree-item[data-value="${pid}"]`);
+//   // console.log( '11333333333333',parent);
+//   if (parent) {
+//     // console.log(parent, 'parent');
+//     // const children = lTreeList.querySelectorAll(`.l-tree-item[data-pid="${pid}"]`);
+//     // const allActive = checkAllHaveClass(children,'l-is-checked');
+//     // console.log(allActive, pid,'allActive');
+//     // for (let i = 0; i < children.length; i++) {
+//     //   const child = children[i];
+//     //   if(!child.classList.contains('l-is-checked')){
+//     //     isAll = false;
+//     //     console.log( 'isAll',isAll);
+//     //   }
+//     // }
+
+//     const grandParent = recursionFindParentByChildKey(data, pid);
+//     console.log(grandParent, 'grandParent');
+//     if(grandParent){
+//       const allChilds = grandParent.children.map(el => el.value);
+//       const ret = allChilds.every(el => checked.indexOf(el) > -1);
+//       console.log(ret, 'ret');
+//       if(ret){
+//         isAll = true;
+
+//         for (let k = 0; k < allChilds.length; k++) {
+//           const child = allChilds[k];
+//           console.log(child, 'child');
+//           const childDom = lTreeList.querySelector(`.l-tree-item[data-value="${child}"]`);
+//           childDom.lastChild.classList.add('l-is-checked');
+//         }
+//       }else{
+//         isAll = false;
+//       }
+//     }
+//     console.log(isAll,parent, 'isAll');
+//     if (isAll) {
+//       // parent.lastChild.classList.add('l-is-checked');
+//       // for (let i = 0; i < parent.children.length; i++) {
+//       //   const child = parent.children[i];
+//       //   child.firstChild.classList.add('l-is-checked');
+//       // }
+//     } else if (has) {
+//       // parent.classList.add('l-is-indeterminate');
+//     }
+
+//     const _pid = parent.dataset.pid;
+//     const _value = parent.dataset.value;
+//     recursionUpTree(lTreeList, data,checked, _pid, _value,checkVal, halfIds);
+//   }
+// }
+function checkChild(dropMenu, ids) {
+  const lTreeList = dropMenu.querySelector('.l-tree-list');
+  let len = lTreeList.children.length;
+  for (let i = 0; i < len; i++) {
+    if (lTreeList.children[i].nodeName === DIV) {
+      if (ids.indexOf(lTreeList.children[i].dataset.value) !== -1) {
+        lTreeList.children[i].lastChild.classList.add('l-is-checked');
+      } else {
+        lTreeList.children[i].lastChild.classList.remove('l-is-checked');
+      }
+    }
+  }
+}
+// 向下递归
+// function downAccess(data,checked,allCheckeds, status) {
+//   $('[pId=' + id + ']').each(function (n, item) {
+//     if (status) accessClass(item, checkedClass);
+//     else accessClass(item, unCheckClass);
+
+//     downAccess($(item).attr('nodeId'),id, status);
+//   });
+
+//   for (let i = 0; i < data.length; i++) {
+//     const item = data[i];
+//     if(checked.includes(item.value)){
+//       allCheckeds
+//     }
+//     if(item.children?.length > 0){
+//       downAccess(item.children, id, status);
+//     }
+//   }
+// }
+function accessClass(node, cls) {
+  // var classes = [checkedClass, middleClass, unCheckClass];
+  // classes.map(function (item) {
+  //   if (item == cls) node.classList.add(item);
+  //   else node.classList.remove(item);
+  // });
+}
 function checkboxClick(e) {
   e.stopPropagation();
   e.cancelBubble = true;
@@ -718,7 +1016,14 @@ function checkboxClick(e) {
   let ids = [val];
   currentItem?.children && recursionTreeFindAllIds(currentItem.children, ids);
   if (checkedVal) {
-    ids = ids.concat(checked);
+    let arr = []
+    for (let i = 0; i < ids.length; i++) {
+      if (!checked.includes(ids[i])) {
+        arr.push(ids[i]);
+      }
+    }
+    ids = checked.concat(arr);
+    // ids = ids.concat(checked);
   } else {
     // 移除当前节点的所有儿子节点的id
     ids = checked.filter(el => !ids.includes(el));
@@ -730,6 +1035,26 @@ function checkboxClick(e) {
   })
   adjustHeight(pen);
   renderPenRaw2(pen, pen.data);
+}
+function upAccess(pId) {
+  // if(!pId) return;
+  // var isAll = true, has = false,
+  //     pckbox = $('[nodeId='+pId+']').get(0);
+  // if(pckbox) {
+  //     $('[pId='+pId+']').each(function(n,item){
+  //       var clist = Array.from(item.classList),
+  //           status = clist.includes(checkedClass);
+  //       if(!status) isAll = false;
+  //       else has = true;
+  //       if(clist.includes(middleClass)) has = true;
+  //     });
+
+  //     if(isAll) accessClass(pckbox,checkedClass);
+  //     else if(has)  accessClass(pckbox,middleClass);
+  //     else accessClass(pckbox,unCheckClass);
+
+  //     upAccess($(pckbox).attr('pId'));
+  // }
 }
 function updateTags(checkedVal, checked, val, penId, pen) {
   if (pen.multiple) {
@@ -822,11 +1147,20 @@ function renderData(data, dom, pen) {
 
     lTree.appendChild(lTreeList);
     dom.appendChild(lTree);
-
-    window.meta2d.setValue({
-      id: pen.id,
-      showIds: showIds
-    })
+  }
+}
+function recursionFindParentByChildKey(data, key) {
+  for (let i = 0; i < data.length; i++) {
+    const item = data[i];
+    if (Array.isArray(item.children) && item.children.findIndex(el => el.value === key) > -1) {
+      return item;
+    }
+    if (item.children && item.children.length > 0) {
+      const ret = recursionFindParentByChildKey(item.children, key);
+      if (ret) {
+        return ret;
+      }
+    }
   }
 }
 function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
@@ -854,6 +1188,12 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
     lTreeItem.style.alignItems = 'center';
     lTreeItem.style.padding = `0 0 0 calc(24px * var(--level))`;
     lTreeItem.dataset.value = data[i].value;
+    // find parent
+    const parent = recursionFindParentByChildKey(pen.data, data[i].value);
+    // console.log(parent, 'parent');
+    if (parent) {
+      lTreeItem.dataset.pid = parent.value;
+    }
     if (!opt) {
       lTreeItem.dataset.level = data[i].level + '';
       lTreeItem.style.setProperty("--level", data[i].level + '');
@@ -891,41 +1231,49 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
     lTreeLable.style.paddingLeft = '6px';
     lTreeLable.style.borderRadius = '4px';
     lTreeLable.className = 'l_tree_lable';
-    // if (pen.multiple && pen.checked.includes(data[i].key)) {
-    //   lTreeLable.className += ' to__checked'
-    // } else {
-    //   if (pen.checked.length > 0 && pen.checked[0] === data[i].key) {
-    //     lTreeLable.className += ' to__checked'
-    //   }
-    // }
+    if (pen.multiple && pen.checked.includes(data[i].value)) {
+      lTreeLable.classList.add('l-is-checked')
+    } else {
+      if (pen.checked.length > 0 && pen.checked[0] === data[i].value) {
+        lTreeLable.classList.add('l-is-checked')
+      }
+    }
 
     // checkboxDom
     if (pen.multiple) {
       const checkboxDom = document.createElement("input");
       checkboxDom.type = "checkbox";
       checkboxDom.name = "cName";
-      checkboxDom.className = 'l-checkbox_former';
-      checkboxDom.style.width = '18px';
-      checkboxDom.style.height = '18px';
-      checkboxDom.style.verticalAlign = 'middle';
+      checkboxDom.className = 'l-checkbox__former';
+      // checkboxDom.style.width = '18px';
+      // checkboxDom.style.height = '18px';
+      // checkboxDom.style.verticalAlign = 'middle';
       if (pen.checked.includes(data[i].value)) {
         checkboxDom.checked = true;
       }
-      checkboxDom.value = data[i].value;
+      checkboxDom.dataset.value = data[i].value;
       checkboxDom.dataset.penId = pen.id;
-      checkboxDom.onclick = checkboxClick;
+      // checkboxDom.onclick = checkboxClick;
       lTreeLable.appendChild(checkboxDom);
+
+      const checkDom = document.createElement("span");
+      // checkDom.style.marginLeft = '-80px';
+      // checkDom.style.paddingLeft = '100px';
+      // checkDom.style.width = '16px';
+      // checkDom.style.height = '16px';
+      // checkDom.style.whiteSpace = 'nowrap';
+      // checkDom.style.marginBottom = '8px';
+      checkDom.className = 'l-checkbox__input';
+      checkDom.dataset.penId = pen.id;
+      checkDom.dataset.value = data[i].value;
+      if (parent) {
+        checkDom.dataset.pid = parent.value;
+      }
+      checkDom.addEventListener('click', checkboxNewClick);
+      lTreeLable.appendChild(checkDom);
     }
 
-    const checkDom = document.createElement("span");
-    // checkDom.style.marginLeft = '-80px';
-    // checkDom.style.paddingLeft = '100px';
-    checkDom.style.width = '16px';
-    checkDom.style.height = '16px';
-    checkDom.style.whiteSpace = 'nowrap';
-    checkDom.style.marginBottom = '8px';
-    checkDom.className = 'l_checkbox_input';
-    lTreeLable.appendChild(checkDom);
+
 
     // label
     const labelDom = document.createElement("span");
@@ -1172,5 +1520,95 @@ function generateStyle(pen) {
     // whiteSpace: nowrap;
     background: transparent;
   }
+  `)
+  sheet.insertRule(`
+  .l-checkbox__former {
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+    outline: 0;
+    appearance: none;
+}
+  `)
+  sheet.insertRule(`
+  .l_checkbox_input{
+      position: relative;
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      vertical-align: middle;
+      border: 1px solid #dcdcdc;
+      border-radius: 3px;
+      background-color: #fff;
+      box-sizing: border-box;
+  }
+  `)
+  sheet.insertRule(`
+  .l-checkbox__input {
+    position: relative;
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    border: 1px solid #dcdcdc;
+    border-radius: 3px;
+    // background-color: var(--td-bg-color-container);
+    box-sizing: border-box;
+}
+  `)
+  sheet.insertRule(`
+  .l_tree_lable.l-is-checked .l-checkbox__input {
+    border-color: #0052d9;
+    background-color: #0052d9;
+    transition: background-color .2s cubic-bezier(.82,0,1,.9);
+}
+  `)
+  sheet.insertRule(`
+  .l-checkbox__input:after {
+    content: "";
+    position: absolute;
+    opacity: 0;
+    box-sizing: border-box;
+}
+  `)
+  sheet.insertRule(`
+  .l_tree_lable.l-is-checked .l-checkbox__input:after {
+    opacity: 1;
+    top: 6px;
+    left: 3px;
+    width: 5px;
+    height: 9px;
+    border: 2px solid #fff;
+    border-radius: 0 0 1px;
+    border-top: 0;
+    border-left: 0;
+    transform: rotate(45deg) scale(1) translate(-50%, -50%);
+    background: transparent;
+}
+  `)
+  sheet.insertRule(`
+  .l_tree_lable.l-is-indeterminate .l-checkbox__input:after {
+    opacity: 1;
+    width: 16px;
+    height: 4px;
+    left: -1px;
+    right: 0;
+    top: 5px;
+    border: unset;
+    transform: scale(.5);
+    background-color: white;
+}
+  `)
+  sheet.insertRule(`
+  .l_tree_lable.l-is-indeterminate .l-checkbox__input {
+    border-color: #0052d9;
+    background-color: #0052d9;;
+    transition: background-color .2s cubic-bezier(.82,0,1,.9);
+}
   `)
 }
