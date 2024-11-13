@@ -318,7 +318,7 @@ function renderPenRaw(pen: Pen, mkey: string, data: any, params) {
     cascaderPanel.appendChild(fragMent);
   }
 
- 
+
   reviewPanelFlowPath(cascaderPanel, flowPath);
 }
 function renderPenRaw2(pen: Pen, data: any) {
@@ -328,7 +328,6 @@ function renderPenRaw2(pen: Pen, data: any) {
   } else {
     getTreeFlowPathDefault(data, flowPath, item => item === 0);
   }
-  // console.log('renderPenRaw2', flowPath)
   window.meta2d.setValue({
     id: pen.id,
     flowPath,
@@ -388,7 +387,8 @@ function assembleInputBox(pen: Pen) {
   input.style.background = 'transparent';
   input.className = `${CASCADE_PREFIX}${pen.id}`;
   input.dataset.penId = pen.id;
-  input.oninput = debounce(onInputchange, 1000)
+  input.placeholder = pen.placeholder || '请输入关键字';
+  input.oninput = debounce(onInputchange, 200)
 
 
   const input_prefix = document.createElement("div");
@@ -832,6 +832,12 @@ function assembleLi(pen, item, level, opt) {
     checkDom.className = 'l-cascader-checkbox-input';
     checkDom.dataset.penId = pen.id;
     checkDom.dataset.value = item.value;
+
+    // 控制disabled
+    if (pen.multiple && pen.onlyLeafCheck && item.children && item.children.length > 0) {
+      checkDom.classList.add('l-disabled')
+    }
+
     if (parent) {
       checkDom.dataset.pid = parent.value;
     }
@@ -1273,14 +1279,14 @@ async function nextLevelClick(e) {
   const hasChild = recursionFindHasChild(pen.data, value)
   console.log('hasChild', hasChild)
   if (!hasChild) {
-    const flowPath = deepClone(pen.flowPath);
-    const _level = parseInt(level);
-    flowPath.splice(_level, 1,value);
-    console.log('flowPath', JSON.stringify(flowPath))
-    window.meta2d.setValue({
-      id: penId,
-      flowPath,
-    })
+    // const flowPath = deepClone(pen.flowPath);
+    // const _level = parseInt(level);
+    // flowPath.splice(_level, 1,value);
+    // console.log('flowPath', JSON.stringify(flowPath))
+    // window.meta2d.setValue({
+    //   id: penId,
+    //   flowPath,
+    // })
     // 加载数据
     // pen.loadFn && pen.loadFn(pen, { level, key: value });
     const ret = pen.loadFn && await pen.loadFn(pen, { level, key: value })
@@ -1562,7 +1568,7 @@ function patchCascadeMenu(pen, lv, level, flowPath, opt) {
       }
     }
   }
-  console.log('ddddddd', JSON.stringify(pen.flowPath),JSON.stringify(flowPath),cascaderPanel.children.length, pen.flowPath.length, flowPath.length)
+  console.log('ddddddd', JSON.stringify(pen.flowPath), JSON.stringify(flowPath), cascaderPanel.children.length, pen.flowPath.length, flowPath.length)
   if (cascaderPanel.children.length > flowPath.length) {
     // 删除多余的层级
     const len = cascaderPanel.children.length;
@@ -1670,11 +1676,24 @@ function generateStyle(pen) {
   style.type = 'text/css';
   document.head.appendChild(style);
   let sheet = style.sheet;
+  const defaultText = pen.defaultText ? pen.defaultText : '请选择';
   sheet.insertRule(
     `.l-cascader__panel {
       display: flex;
     }`
   );
+  sheet.insertRule(`
+  .${TAG_WRAPPER}${pen.id}::before {
+    content: '${defaultText}';
+    display: block;
+    color: gray;
+  }
+  `)
+  sheet.insertRule(`
+  .${TAG_WRAPPER}${pen.id}:not(:empty)::before {
+    display: none;
+  }
+  `)
   sheet.insertRule(`
   .l-is-hidden[class^="l-cascade-dropdown-"]{
     visibility: hidden; 
@@ -1703,12 +1722,13 @@ function generateStyle(pen) {
   sheet.insertRule(
     `
     .l-cascader__item-icon.l-icon {
+      width:26px;
       position: absolute;
       height: 100%;
       right: 0;
       top: 0;
       background: transparent;
-      margin: 0 8px;
+      // margin: 0 8px;
       font-size: 16px;
       color: rgba(0, 0, 0, 0.4);
   }
@@ -1853,6 +1873,14 @@ function generateStyle(pen) {
     border-radius: 3px;
     background-color: #fff;
     box-sizing: border-box;
+  `)
+  sheet.insertRule(
+    `
+  .l-cascader-checkbox-input.l-disabled {
+      cursor: not-allowed;
+      pointer-events: none;
+      background-color: #f0f0f0;
+      color: rgba(0, 0, 0, 0.26);
   `)
 
   sheet.insertRule(`

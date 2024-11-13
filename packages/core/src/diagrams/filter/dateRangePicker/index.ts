@@ -45,6 +45,13 @@ enum MonthType {
   CURRENT = 'current-month',
   NEXT = 'next-month'
 }
+const PlaceHolder = {
+  date: ['开始日期', '结束日期'],
+  week: ['开始周', '结束周'],
+  month: ['开始月份', '结束月份'],
+  year: ['开始年份', '结束年份'],
+  time: ['开始时间', '结束时间'],
+}
 const panelComp = {
   "date": ["date", "date"],
   "week": ["week", "week"],
@@ -90,99 +97,17 @@ function getYearOptions(start, end, step = 1) {
   return options;
 }
 let yearOptions = getYearOptions(1900, 2100);
-// const yearOptions = [
-//   {
-//     label: '2021',
-//     value: '2021'
-//   },
-//   {
-//     label: '2022',
-//     value: '2022'
-//   },
-//   {
-//     label: '2023',
-//     value: '2023'
-//   },
-//   {
-//     label: '2024',
-//     value: '2024'
-//   },
-//   {
-//     label: '2025',
-//     value: '2025'
-//   },
-//   {
-//     label: '2026',
-//     value: '2026'
-//   },
-//   {
-//     label: '2027',
-//     value: '2027'
-//   },
-//   {
-//     label: '2028',
-//     value: '2028'
-//   },
-//   {
-//     label: '2029',
-//     value: '2029'
-//   },
-//   {
-//     label: '2030',
-//     value: '2030'
-//   }
-// ];
 let yeartoYearOptions = [];
-const monthOptions = [
-  {
-    label: '1',
-    value: '1'
-  },
-  {
-    label: '2',
-    value: '2'
-  },
-  {
-    label: '3',
-    value: '3'
-  },
-  {
-    label: '4',
-    value: '4'
-  },
-  {
-    label: '5',
-    value: '5'
-  },
-  {
-    label: '6',
-    value: '6'
-  },
-  {
-    label: '7',
-    value: '7'
-  },
-  {
-    label: '8',
-    value: '8'
-  },
-  {
-    label: '9',
-    value: '9'
-  },
-  {
-    label: '10',
-    value: '10'
-  },
-  {
-    label: '11',
-    value: '11'
-  },
-  {
-    label: '12',
-    value: '12'
+let monthOptions = [];
+function getMonthOptions(monthOptions) {
+  for (let i = 1; i <= 12; i++) {
+    monthOptions.push({
+      label: i + '',
+      value: i + ''
+    })
   }
-];
+}
+getMonthOptions(monthOptions)
 const svgMap = {
   [CTL_TYPE.PREV]: `M15.91 17.5l-5.5-5.5 5.5-5.5-1.41-1.41L7.59 12l6.91 6.91 1.41-1.41z`,
   [CTL_TYPE.CURRENT]: `M12 6a6 6 0 100 12 6 6 0 000-12zm-8 6a8 8 0 1116 0 8 8 0 01-16 0z`,
@@ -200,6 +125,7 @@ export function dateRangePicker(pen: Pen): Path2D {
     pen.onMouseEnter = onMouseEnter;
     pen.onMouseLeave = onMouseLeave;
     pen.onRenderPenRaw = renderPenRaw;
+    pen.onRenderPenRawRefresh = renderPenRawRefresh;
     pen.onClick = onClick;
   }
   const { x, y, width, height } = pen.calculative.worldRect;
@@ -230,7 +156,7 @@ export function dateRangePicker(pen: Pen): Path2D {
       }
       if (pickerTimes.length > 0) {
         let format = ""
-        if (!pen.enableTimePicker) {
+        if (pen.mode !== SwitchMode.TIME) {
           format = "YYYY-MM-DD"
         } else {
           format = "YYYY-MM-DD HH:mm:ss"
@@ -283,28 +209,31 @@ export function dateRangePicker(pen: Pen): Path2D {
     setElemPosition(pen, div);
     pen.calculative.singleton.div = div;
 
-    renderData(pen.data, dropMenu, pen)
+    renderData(dropMenu, pen)
 
     if (pen.pickerTimes.length >= 1) {
       console.log(pen.pickerTimes, 'pick done')
       // update input
-      updateInput(dropMenu.previousElementSibling, pen.pickerTimes);
+      updateInput(dropMenu.previousElementSibling, pen.pickerTimes, pen.mode);
     }
   }
   const path = new Path2D();
   return path;
 }
 
-function renderData(data, dom, pen) {
+function renderData(dom, pen) {
   generateStyle(pen)
 
   const lPanel = document.createElement('div');
   lPanel.className = 'l-date-range-picker__panel-content-wrapper';
-  const fragMent = generateDomByData(data, pen, lPanel);
+  if (pen.mode === SwitchMode.TIME) {
+    lPanel.classList.add('l-date-range-picker__panel--time');
+  }
+  const fragMent = generateDomByData(pen);
   lPanel.appendChild(fragMent);
   dom.appendChild(lPanel);
 }
-function generateDomByData(data, pen, parentDom) {
+function generateDomByData(pen) {
   let key = SwitchMode.DATE;
   // 根据配置生成不同的面板
   if (pen.mode) {
@@ -316,31 +245,30 @@ function generateDomByData(data, pen, parentDom) {
     const type = panelComp[key][i];
     let dateDom = null;
     if (type === SwitchMode.DATE) {
-      dateDom = generateDateDom(data, pen, i)
+      dateDom = generateDateDom(pen, i)
       frag.appendChild(dateDom);
     } else if (type === SwitchMode.WEEK) {
-      dateDom = generateWeekDom(data, pen, i)
+      dateDom = generateWeekDom(pen, i)
       frag.appendChild(dateDom);
     } else if (type === SwitchMode.MONTH) {
-      dateDom = generateMonthDom(data, pen, i)
+      dateDom = generateMonthDom(pen, i)
       frag.appendChild(dateDom);
     } else if (type === SwitchMode.QUARTER) {
-      dateDom = generateQuarterDom(data, pen, i)
+      dateDom = generateQuarterDom(pen, i)
       frag.appendChild(dateDom);
     } else if (type === SwitchMode.YEAR) {
-      dateDom = generateYearDom(data, pen, i)
+      dateDom = generateYearDom(pen, i)
       frag.appendChild(dateDom);
     } else if (type === SwitchMode.TIME) {
-      parentDom.classList.add('l-date-range-picker__panel--time');
-      const timeDom = generateTimeDom(data, pen)
+      const timeDom = generateTimeDom(pen)
       frag.firstChild.appendChild(timeDom);
-      const footer = generateFooter(data, pen);
+      const footer = generateFooter(pen);
       frag.appendChild(footer);
     }
   }
   return frag;
 }
-function generateFooter(data, pen) {
+function generateFooter(pen) {
   const frag = document.createDocumentFragment();
 
   const footer = document.createElement('div');
@@ -401,14 +329,14 @@ function onOk(e) {
 function resetDateTimePanel(penId) {
 
 }
-function generateWeekDom(data, pen, index) {
+function generateWeekDom(pen, index) {
   const frag = document.createDocumentFragment();
   const currentYear = dayjs().year();
   let currentMonth = addMonth(dayjs().month(), 1);
   const content = document.createElement('div');
   content.className = 'l-date-picker__panel-content';
 
-  const dateItem = assemleWeekItem(data, pen, {
+  const dateItem = assemleWeekItem(pen, {
     year: currentYear,
     month: (currentMonth + index),
     index
@@ -426,23 +354,23 @@ function generateWeekDom(data, pen, index) {
   frag.appendChild(content);
   return frag;
 }
-function assemleWeekItem(data, pen, opt) {
+function assemleWeekItem(pen, opt) {
   const dateItem = document.createElement('div');
   const header = document.createElement('div');
   header.className = 'l-date-picker__header';
-  const headerFrag = assembleHeader(data, pen, opt, SwitchMode.WEEK);
+  const headerFrag = assembleHeader(pen, opt, SwitchMode.WEEK);
   header.appendChild(headerFrag);
   dateItem.appendChild(header);
 
   const tableItem = document.createElement('table');
   tableItem.className = 'l-date-picker__table';
-  const tableFrag = assembleWeekTable(data, pen, opt);
+  const tableFrag = assembleWeekTable(pen, opt);
   tableItem.appendChild(tableFrag);
   dateItem.appendChild(tableItem);
 
   return dateItem;
 }
-function assembleWeekTable(data, pen, opt) {
+function assembleWeekTable(pen, opt) {
   const frag = document.createDocumentFragment();
   // thead
   const thead = document.createElement('thead');
@@ -647,7 +575,7 @@ function trWeekClick(e) {
   if (pickerTimes.length >= 1) {
     console.log(pickerTimes, 'pick done')
     // update input
-    updateInput(dropMenu.previousElementSibling, pickerTimes);
+    updateInput(dropMenu.previousElementSibling, pickerTimes, pen.mode);
   }
 
   // console.log(pen)
@@ -828,7 +756,7 @@ function getYearByAddMonth(year: number, month: number, num: number) {
     .add(num, 'month')
     .year()
 }
-function generateMonthDom(data, pen, index) {
+function generateMonthDom(pen, index) {
   const frag = document.createDocumentFragment();
   const currentYear = dayjs().year();
   let currentMonth = dayjs().month() + 1;
@@ -836,7 +764,7 @@ function generateMonthDom(data, pen, index) {
   content.className = 'l-date-picker__panel-content';
 
   const _year = addYear(currentYear, index);
-  const dateItem = assemleMonthItem(data, pen, {
+  const dateItem = assemleMonthItem(pen, {
     year: _year,
     month: currentMonth,
     index
@@ -853,10 +781,11 @@ function generateMonthDom(data, pen, index) {
   frag.appendChild(content);
   return frag;
 }
-function generateQuarterDom(data, pen, index) {
-
+function generateQuarterDom(pen, index) {
+  const frag = document.createDocumentFragment();
+  return frag;
 }
-function generateYearDom(data, pen, index) {
+function generateYearDom(pen, index) {
   const frag = document.createDocumentFragment();
   let currentYear = dayjs().year() + (index === 0 ? 0 : 10);
   const content = document.createElement('div');
@@ -871,7 +800,7 @@ function generateYearDom(data, pen, index) {
   console.log(yeartoYearOptions)
   const yOpt = yeartoYearOptions.find(el => currentYear >= el.value[0] && currentYear <= el.value[1]);
   console.log(currentYear, curYear, yOpt)
-  const dateItem = assemleYearItem(data, pen, {
+  const dateItem = assemleYearItem(pen, {
     year: yOpt.value[0],
     index
   });
@@ -888,13 +817,13 @@ function generateYearDom(data, pen, index) {
   frag.appendChild(content);
   return frag;
 }
-function generateTimeDom(data, pen) {
+function generateTimeDom(pen) {
   const frag = document.createDocumentFragment();
-  const timeItem = assembleTimeItem(data, pen);
+  const timeItem = assembleTimeItem(pen);
   frag.appendChild(timeItem);
   return frag;
 }
-function generateDateDom(data, pen, index?) {
+function generateDateDom(pen, index?) {
   const frag = document.createDocumentFragment();
   let currentYear, currentMonth, currentDay;
   if (pen.pickerTimes.length === 0) {
@@ -911,7 +840,7 @@ function generateDateDom(data, pen, index?) {
   content.className = 'l-date-picker__panel-content';
 
   const _month = addMonth(currentMonth, index);
-  const dateItem = assemleDateItem(data, pen, {
+  const dateItem = assemleDateItem(pen, {
     year: currentYear,
     month: _month,
     index
@@ -981,23 +910,23 @@ function minusWeek(year: number, week: number, num: number) {
       .isoWeek()
   );
 }
-function assemleYearItem(data, pen, opt) {
+function assemleYearItem(pen, opt) {
   const dateItem = document.createElement('div');
   const header = document.createElement('div');
   header.className = 'l-date-picker__header';
 
-  const headerFrag = assembleHeader(data, pen, opt, SwitchMode.YEAR);
+  const headerFrag = assembleHeader(pen, opt, SwitchMode.YEAR);
   header.appendChild(headerFrag);
   dateItem.appendChild(header);
 
   const tableItem = document.createElement('table');
   tableItem.className = 'l-date-picker__table';
-  const tableFrag = assembleYearTable(data, pen, opt);
+  const tableFrag = assembleYearTable(pen, opt);
   tableItem.appendChild(tableFrag);
   dateItem.appendChild(tableItem);
   return dateItem;
 }
-function generateDomByType(data, pen, type, i) {
+function generateDomByType(pen, type, i) {
   const frag = document.createDocumentFragment();
   const currentYear = dayjs().year();
   let currentMonth = dayjs().month() + 1;
@@ -1005,7 +934,7 @@ function generateDomByType(data, pen, type, i) {
     const content = document.createElement('div');
     content.className = 'l-date-picker__panel-content';
 
-    const dateItem = assemleDateItem(data, pen, {
+    const dateItem = assemleDateItem(pen, {
       year: currentYear,
       month: currentMonth,
       index: i
@@ -1028,11 +957,11 @@ function generateDomByType(data, pen, type, i) {
 function onAdd(pen: Pen) {
   // adjustHeight(pen);
 }
-function assembleTimeItem(data, pen) {
+function assembleTimeItem(pen) {
   const timeItem = document.createElement('div');
   timeItem.className = 'l-date-picker__panel-time';
   let hour = "", minute = "", second = "";
-  if (pen.enableTimePicker && pen.pickerTimes.length > 0) {
+  if (pen.mode === SwitchMode.TIME && pen.pickerTimes.length > 0) {
     const hhmmss = dayjs(pen.pickerTimes[0]).format("HH:mm:ss");
     const list = hhmmss.split(':');
     hour = list[0];
@@ -1104,7 +1033,7 @@ function assembleTimeItem(data, pen) {
   panel.appendChild(sectionBody);
   timeItem.appendChild(panel);
 
-  if (pen.enableTimePicker && pen.pickerTimes.length > 0) {
+  if (pen.mode === SwitchMode.TIME && pen.pickerTimes.length > 0) {
     setTimeout(() => {
       const hourDistance = hIndex * TIME_HEIGHT;
       hourDom.scrollTo?.({
@@ -1365,7 +1294,7 @@ function updateTagsWithDate(penId, index, key) {
     console.log(pickerTimes, 'pick done')
     const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
     // update input
-    updateInput(dropMenu.previousElementSibling, pickerTimes);
+    updateInput(dropMenu.previousElementSibling, pickerTimes, pen.mode);
   }
 }
 function assembleSecond() {
@@ -1413,39 +1342,39 @@ function assembleHour() {
   }
   return frag;
 }
-function assemleDateItem(data, pen, opt) {
+function assemleDateItem(pen, opt) {
   const dateItem = document.createElement('div');
   const header = document.createElement('div');
   header.className = 'l-date-picker__header';
-  const headerFrag = assembleHeader(data, pen, opt, SwitchMode.DATE);
+  const headerFrag = assembleHeader(pen, opt, SwitchMode.DATE);
   header.appendChild(headerFrag);
   dateItem.appendChild(header);
 
   const tableItem = document.createElement('table');
   tableItem.className = 'l-date-picker__table';
-  const tableFrag = assembleDateTable(data, pen, opt);
+  const tableFrag = assembleDateTable(pen, opt);
   tableItem.appendChild(tableFrag);
   dateItem.appendChild(tableItem);
 
   return dateItem;
 }
-function assemleMonthItem(data, pen, opt) {
+function assemleMonthItem(pen, opt) {
   const dateItem = document.createElement('div');
   const header = document.createElement('div');
   header.className = 'l-date-picker__header';
-  const headerFrag = assembleHeader(data, pen, opt, SwitchMode.MONTH);
+  const headerFrag = assembleHeader(pen, opt, SwitchMode.MONTH);
   header.appendChild(headerFrag);
   dateItem.appendChild(header);
 
   const tableItem = document.createElement('table');
   tableItem.className = 'l-date-picker__table';
-  const tableFrag = assembleMonthTable(data, pen, opt);
+  const tableFrag = assembleMonthTable(pen, opt);
   tableItem.appendChild(tableFrag);
   dateItem.appendChild(tableItem);
 
   return dateItem;
 }
-function assembleDateTable(data, pen, opt) {
+function assembleDateTable(pen, opt) {
   const frag = document.createDocumentFragment();
   // thead
   const thead = document.createElement('thead');
@@ -1461,7 +1390,7 @@ function assembleDateTable(data, pen, opt) {
   frag.appendChild(tbody);
   return frag;
 }
-function assembleYearTable(data, pen, opt) {
+function assembleYearTable(pen, opt) {
   const frag = document.createDocumentFragment();
 
   // tbody
@@ -1472,7 +1401,7 @@ function assembleYearTable(data, pen, opt) {
   frag.appendChild(tbody);
   return frag;
 }
-function assembleMonthTable(data, pen, opt) {
+function assembleMonthTable(pen, opt) {
   const frag = document.createDocumentFragment();
   // thead
   // const thead = document.createElement('thead');
@@ -1753,7 +1682,7 @@ function tdYearClick(e) {
   if (pickerTimes.length >= 1) {
     console.log(pickerTimes, 'pick done')
     // update input
-    updateInput(dropMenu.previousElementSibling, pickerTimes);
+    updateInput(dropMenu.previousElementSibling, pickerTimes, pen.mode);
   }
 
   // const pickerTimes = deepClone(pen.pickerTimes);
@@ -1838,7 +1767,7 @@ function tdMonthClick(e) {
   if (pickerTimes.length >= 1) {
     console.log(pickerTimes, 'pick done')
     // update input
-    updateInput(dropMenu.previousElementSibling, pickerTimes);
+    updateInput(dropMenu.previousElementSibling, pickerTimes, pen.mode);
   }
 
   // 更新body
@@ -2095,7 +2024,7 @@ function tdDateClick(e) {
   // adjustHeight(pen);
 
   // 更新footer
-  if (pen.mode === SwitchMode.TIME && pen.enableTimePicker) {
+  if (pen.mode === SwitchMode.TIME) {
     const button = this.parentElement.parentElement.parentElement.parentElement.parentElement.nextElementSibling.lastChild;
     if (button.classList.contains('l-is-disabled')) {
       button.classList.remove('l-is-disabled');
@@ -2166,7 +2095,7 @@ function tdDateClick(e) {
   if (pickerTimes.length >= 1) {
     console.log(pickerTimes, 'pick done')
     // update input
-    updateInput(dropMenu.previousElementSibling, pickerTimes);
+    updateInput(dropMenu.previousElementSibling, pickerTimes, pen.mode);
   }
 
   // this.parentElement.parentElement.children[this.dataset.rowIndex].children[this.dataset.colIndex].classList.add('l-date-picker__cell--active');
@@ -2382,7 +2311,7 @@ function tdDateTimeClick(e) {
   if (pickerTimes.length >= 1) {
     console.log(pickerTimes, 'pick done')
     // update input
-    updateInput(dropMenu.previousElementSibling, pickerTimes);
+    updateInput(dropMenu.previousElementSibling, pickerTimes, pen.mode);
   }
 
   // this.parentElement.parentElement.children[this.dataset.rowIndex].children[this.dataset.colIndex].classList.add('l-date-picker__cell--active');
@@ -2478,7 +2407,7 @@ function assembleTR(type) {
  * @param {*} type
  * @returns {*}  
  */
-function assembleHeader(data, pen, opt, type) {
+function assembleHeader(pen, opt, type) {
   const frag = document.createDocumentFragment();
   const controller = document.createElement('div');
   controller.className = 'l-date-picker__header-controller';
@@ -3172,7 +3101,7 @@ function assembleRangeInputBox(pen: Pen) {
   leftInner.className = 'l-input__inner';
   leftInner.type = 'text';
   leftInner.spellcheck = false;
-  leftInner.placeholder = '开始日期';
+  leftInner.placeholder = PlaceHolder[pen.mode][0];
   leftInner.dataset.index = '0';
   leftInner.dataset.penId = pen.id;
   leftInner.addEventListener('focus', inputFocus)
@@ -3193,7 +3122,7 @@ function assembleRangeInputBox(pen: Pen) {
   rightInner.className = 'l-input__inner';
   rightInner.type = 'text';
   rightInner.spellcheck = false;
-  rightInner.placeholder = '结束日期';
+  rightInner.placeholder = PlaceHolder[pen.mode][1];
   rightInner.dataset.index = '1';
   rightInner.dataset.penId = pen.id;
   rightInner.addEventListener('focus', inputFocus)
@@ -3351,7 +3280,7 @@ function onSuffixClick(e) {
       updateBody(list[0], penId);
     }
     // 清空input
-    updateInput(this.parentElement, ["", ""]);
+    updateInput(this.parentElement, ["", ""], pen.mode);
   }
 }
 function inputFocus(e) {
@@ -3365,15 +3294,34 @@ function inputFocus(e) {
     focusIndex: parseInt(index),
   })
 }
-function updateInput(dom, pickerTimes) {
+/**
+ * @description 更新input的值，和placeholder值
+ * @author Joseph Ho
+ * @date 13/11/2024
+ * @param {*} dom
+ * @param {*} pickerTimes
+ * @param {*} mode
+ */
+function updateInput(dom, pickerTimes, mode) {
+  console.log('updateInput', mode)
+  let suffix = "";
+  if (mode === SwitchMode.WEEK) {
+    suffix = "周";
+  } else if (mode === SwitchMode.MONTH) {
+    suffix = "月";
+  }
   if (pickerTimes.length === 1) {
     const leftInput = dom.querySelector('.l-input__inner[data-index="0"]');
-    leftInput.value = pickerTimes[0];
+    leftInput.value = pickerTimes[0] ? (pickerTimes[0] + suffix) : "";
+    leftInput.placeholder = PlaceHolder[mode][0];
   } else if (pickerTimes.length === 2) {
     const leftInput = dom.querySelector('.l-input__inner[data-index="0"]');
-    leftInput.value = pickerTimes[0];
+    leftInput.value = pickerTimes[0] ? (pickerTimes[0] + suffix) : "";
+    leftInput.placeholder = PlaceHolder[mode][0];
+
     const rightInput = dom.querySelector('.l-input__inner[data-index="1"]');
-    rightInput.value = pickerTimes[1];
+    rightInput.value = pickerTimes[1] ? (pickerTimes[0] + suffix) : "";
+    rightInput.placeholder = PlaceHolder[mode][1];
   }
 }
 function updateTags(pickerTimes, value, pen) {
@@ -3518,6 +3466,32 @@ function onMouseUp(pen: Pen, e: Point) {
 }
 function onClick(pen: Pen, e: Point) {
   // console.log('onClick', pen);
+}
+/**
+ * @description 更新整个筛选器
+ * @author Joseph Ho
+ * @date 13/11/2024
+ */
+function renderPenRawRefresh(pen: Pen) {
+  resetPenData(pen);
+
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+  // 重新渲染dropdown面板
+  if (pen.mode === SwitchMode.TIME) {
+    dropMenu.firstChild.classList.add('l-date-range-picker__panel--time');
+  }
+  const fragMent = generateDomByData(pen);
+  dropMenu.firstChild.replaceChildren(fragMent);
+
+  // 重置input
+  updateInput(dropMenu.previousElementSibling, ["", ""], pen.mode);
+}
+function resetPenData(pen: Pen) {
+  window.meta2d.setValue({
+    id: pen.id,
+    pickerTimes: [],
+    focusIndex: -1,
+  })
 }
 function renderPenRaw(pen: Pen, mkey: string, data: any) {
   // const flowPath = [];

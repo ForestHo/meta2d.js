@@ -91,7 +91,7 @@ function renderPenRaw2(pen: Pen, data: any) {
   const showIds = collectExpandShowIds(data, pen);
   console.log(showIds, data, 'renderPenRaw2');
   addLevelToTree(data);
-  const frag = generateDomByData(data, null, pen, null, showIds,[], generateDomByData);
+  const frag = generateDomByData(data, null, pen, null, showIds, [], generateDomByData);
   // console.log(frag, 'frag');
   lTreeList.replaceChildren(frag);
   window.meta2d.setValue({
@@ -200,8 +200,9 @@ function assembleInputBox(pen: Pen) {
   // input.style.border = '1px solid #ccc';
   input.style.background = 'transparent';
   input.className = `treefilter-${pen.id}`;
+  input.placeholder = pen.placeholder || '请输入关键字';
   input.dataset.penId = pen.id;
-  input.oninput = debounce(onInputchange, 1000)
+  input.oninput = debounce(onInputchange, 200)
 
 
   const input_prefix = document.createElement("div");
@@ -230,10 +231,10 @@ function onInputchange(e) {
   if (!pen || !pen.filterable) {
     return;
   }
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
   if (e.target.value) {
     onRecursionData(pen.data, e.target.value, paths);
     // console.log(paths, 'paths');
-    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
     console.log(paths, 'paths');
     const disableIds = [];
     recursionCollectDisableIds(pen.data, paths, disableIds);
@@ -242,7 +243,6 @@ function onInputchange(e) {
     const _disableIds = [...new Set(disableIds)];
     updateTree(pen.data, dropMenu, paths, _disableIds)
   } else {
-    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
     const lTreeList = dropMenu.querySelector('.l-tree-list');
     let len = lTreeList.children.length;
     for (let i = 0; i < len; i++) {
@@ -252,6 +252,13 @@ function onInputchange(e) {
           lTreeList.children[i].classList.add('l-visible');
         }
       }
+    }
+  }
+
+  // 输入结束，面板显示
+  if (pen.autoDropdown) {
+    if (dropMenu.classList.contains("l-is-hidden")) {
+      dropMenu.classList.remove("l-is-hidden");
     }
   }
 }
@@ -975,6 +982,7 @@ function replaceAlltags(penId, list) {
     frag.appendChild(e);
   }
   input_prefix.replaceChildren(frag);
+  console.log(frag.children.length, 'frag');
 }
 // 判断所有子元素是否都具有某个特定的类
 function checkAllHaveClass(dom, className) {
@@ -1281,102 +1289,124 @@ function updateTags(checkedVal, checked, val, penId, pen) {
 function lableClick(e) {
   e.stopPropagation();
   // console.log(this,this.previousElementSibling, 'e.target');
-  const { penId, value } = this.parentElement.firstChild.dataset;
+  const { penId, value } = this.dataset;
   const { pid } = this.parentElement.parentElement.dataset;
-  // const checkDom = document.querySelector(`.l-checkbox__former[data-value="${value}"]`);
-  // console.log(11111,checkDom,checkDom.checked);
-  // checkDom.checked = !checkDom.checked;
-  // console.log(e.target.parentElement, 'penId, value');
-  const rawChecked = e.target.parentElement.classList.contains('l-is-checked');
-  // console.log(rawChecked, 'rawChecked');
-  if (rawChecked) {
-    e.target.parentElement.classList.remove('l-is-checked');
-  } else {
-    e.target.parentElement.classList.add('l-is-checked');
 
-  }
-  const checked = !rawChecked;
-  // console.log(checked, 'checked');
   const pen = window.meta2d.findOne(penId);
   if (!pen) {
     return;
   }
   let checkedIds = deepClone(pen.checked);
-  // let halfCheckedIds = deepClone(pen.halfChecked);
-  // console.log(checkedIds, checked, 'iddddd')
-  if (checked) {
-    //勾选
-    const currentItem = recursionTreeFindItem(pen.data, value);
-    // console.log(222222)
-    if (currentItem && currentItem.children?.length > 0) {
-      const ids = [];
-      recursionTreeFindAllIds(currentItem.children, ids);
-      for (let k = 0; k < ids.length; k++) {
-        const id = ids[k];
-        if (!checkedIds.includes(id)) {
-          checkedIds.push(id);
-        }
-      }
+  if (pen.multiple) {
+    // const checkDom = document.querySelector(`.l-checkbox__former[data-value="${value}"]`);
+    // console.log(11111,checkDom,checkDom.checked);
+    // checkDom.checked = !checkDom.checked;
+    // console.log(e.target.parentElement, 'penId, value');
+    const rawChecked = e.target.parentElement.classList.contains('l-is-checked');
+    // console.log(rawChecked, 'rawChecked');
+    if (rawChecked) {
+      e.target.parentElement.classList.remove('l-is-checked');
+    } else {
+      e.target.parentElement.classList.add('l-is-checked');
+
     }
-    checkedIds.push(value);
-    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-    checkChild(dropMenu, checkedIds);
+    const checked = !rawChecked;
+    // console.log(checked, 'checked');
 
-
-    const halfIds = [];
-    const lTreeList = dropMenu.querySelector('.l-tree-list');
-    // console.log('1111111111111111', lTreeList);
-    recursionUpTree(lTreeList, pen.data, checkedIds, pid, value, checked, halfIds, penId);
-  } else {
-    //取消勾选
-    const currentItem = recursionTreeFindItem(pen.data, value);
-    if (currentItem && currentItem.children?.length > 0) {
-      const ids = [];
-      recursionTreeFindAllIds(currentItem.children, ids);
-      checkedIds = checkedIds.filter(el => !ids.includes(el));
-      for (let i = 0; i < ids.length; i++) {
-        const id = ids[i];
-        if (checkedIds.includes(id)) {
-          const index = checkedIds.findIndex(el => el === id);
-          if (index > -1) {
-            checkedIds.splice(checkedIds.findIndex(el => el === id), 1);
+    // let halfCheckedIds = deepClone(pen.halfChecked);
+    console.log(checkedIds, checked, 'iddddd')
+    if (checked) {
+      //勾选
+      const currentItem = recursionTreeFindItem(pen.data, value);
+      // console.log(222222)
+      if (currentItem && currentItem.children?.length > 0) {
+        const ids = [];
+        recursionTreeFindAllIds(currentItem.children, ids);
+        for (let k = 0; k < ids.length; k++) {
+          const id = ids[k];
+          if (!checkedIds.includes(id)) {
+            checkedIds.push(id);
           }
         }
       }
+      checkedIds.push(value);
+      const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+      checkChild(dropMenu, checkedIds);
+
+
+      const halfIds = [];
+      const lTreeList = dropMenu.querySelector('.l-tree-list');
+      // console.log('1111111111111111', lTreeList);
+      recursionUpTree(lTreeList, pen.data, checkedIds, pid, value, checked, halfIds, penId);
+    } else {
+      //取消勾选
+      const currentItem = recursionTreeFindItem(pen.data, value);
+      if (currentItem && currentItem.children?.length > 0) {
+        const ids = [];
+        recursionTreeFindAllIds(currentItem.children, ids);
+        checkedIds = checkedIds.filter(el => !ids.includes(el));
+        for (let i = 0; i < ids.length; i++) {
+          const id = ids[i];
+          if (checkedIds.includes(id)) {
+            const index = checkedIds.findIndex(el => el === id);
+            if (index > -1) {
+              checkedIds.splice(checkedIds.findIndex(el => el === id), 1);
+            }
+          }
+        }
+      }
+      const index = checkedIds.findIndex(el => el === value);
+      if (index > -1) {
+        checkedIds.splice(index, 1);
+      }
+      // console.log(checkedIds, 'checkedIds del');
+      const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+      checkChild(dropMenu, checkedIds);
+
+      // 收集半选中的节点
+      const halfIds = [];
+      const lTreeList = dropMenu.querySelector('.l-tree-list');
+      // console.log('1111111111111111', lTreeList);
+      recursionUpTree(lTreeList, pen.data, checkedIds, pid, value, checked, halfIds, penId);
     }
-    const index = checkedIds.findIndex(el => el === value);
-    if (index > -1) {
-      checkedIds.splice(index, 1);
-    }
-    // console.log(checkedIds, 'checkedIds del');
+    //根据最新的checked情况，更新checked数据
+    const list = [];
     const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-    checkChild(dropMenu, checkedIds);
-
-    // 收集半选中的节点
-    const halfIds = [];
     const lTreeList = dropMenu.querySelector('.l-tree-list');
-    // console.log('1111111111111111', lTreeList);
-    recursionUpTree(lTreeList, pen.data, checkedIds, pid, value, checked, halfIds, penId);
-  }
-  //根据最新的checked情况，更新checked数据
-  const list = [];
-  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-  const lTreeList = dropMenu.querySelector('.l-tree-list');
-  const checkedItems = lTreeList.querySelectorAll('.l_tree_lable.l-is-checked');
-  // console.log(checkedItems, 'checkedItems');
-  for (let i = 0; i < checkedItems.length; i++) {
-    const ck = checkedItems[i];
-    // console.log(ck.parentElement.dataset.value, 'ck');
-    list.push(ck.parentElement.dataset.value);
-  }
+    const checkedItems = lTreeList.querySelectorAll('.l_tree_lable.l-is-checked');
+    // console.log(checkedItems, 'checkedItems');
+    for (let i = 0; i < checkedItems.length; i++) {
+      const ck = checkedItems[i];
+      // console.log(ck.parentElement.dataset.value, 'ck');
+      list.push(ck.parentElement.dataset.value);
+    }
 
-  window.meta2d.setValue({
-    id: penId,
-    checked: list
-  })
+    window.meta2d.setValue({
+      id: penId,
+      checked: list
+    })
 
-  // 根据最新的checked情况，更新checked的tag
-  replaceAlltags(penId, list);
+    // 根据最新的checked情况，更新checked的tag
+    replaceAlltags(penId, list);
+  } else {
+    // 单选
+    e.target.parentElement.classList.add('l-is-checked');
+    if (checkedIds.length > 0) {
+      const value = checkedIds[0];
+      const lTreeList = document.querySelector('.l-tree-list');
+      const curItem = lTreeList.querySelector(`.l-tree-item[data-value="${value}"]`);
+      curItem.lastChild.classList.remove('l-is-checked');
+    }
+    checkedIds = [];
+    checkedIds.push(value);
+    window.meta2d.setValue({
+      id: penId,
+      checked: checkedIds
+    })
+    // console.log(checkedIds, 'checkedIds');
+    // 根据最新的checked情况，更新checked的tag
+    replaceAlltags(penId, checkedIds);
+  }
 
 }
 // function lableClick(e) {
@@ -1472,6 +1502,10 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
     if (pen.expanded.includes(data[i].value)) {
       lTreeItem.classList.add('l-item-open')
     }
+    // 控制disabled
+    if(pen.multiple && pen.onlyLeafCheck && data[i].children && data[i].children.length > 0){
+      lTreeItem.classList.add('l-disabled')
+    }
 
     lTreeItem.dataset.penId = pen.id;
     lTreeItem.style.display = 'flex';
@@ -1564,8 +1598,6 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
       lTreeLable.appendChild(checkDom);
     }
 
-
-
     // label
     const labelDom = document.createElement("span");
     labelDom.className = "l-checkbox_label";
@@ -1577,6 +1609,7 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
     labelDom.innerHTML = data[i].label + '-' + data[i].value;
     labelDom.dataset.key = data[i].value;
     labelDom.dataset.penId = pen.id;
+    labelDom.dataset.value = data[i].value;
     labelDom.onclick = lableClick;
     // 添加到lTreeLable
     lTreeLable.appendChild(labelDom);
@@ -1742,6 +1775,19 @@ function generateStyle(pen) {
   document.head.appendChild(style);
   let sheet = style.sheet;
 
+  const defaultText = pen.defaultText ? pen.defaultText : '请选择';
+  sheet.insertRule(`
+  .${TAG_WRAPPER}${pen.id}::before {
+    content: '${defaultText}';
+    display: block;
+    color: gray;
+  }
+  `)
+  sheet.insertRule(`
+  .${TAG_WRAPPER}${pen.id}:not(:empty)::before {
+    display: none;
+  }
+  `)
   sheet.insertRule(`
   .l-is-hidden[class^="l-select__dropdown-inner_"]{
     visibility: hidden; 
@@ -1768,24 +1814,26 @@ function generateStyle(pen) {
       overflow: hidden;
     }`
   );
+  // sheet.insertRule(
+  //   `.l-tree .l-disabled{
+  //     cursor: not-allowed;
+  //   }`
+  // );
   sheet.insertRule(
-    `.l-tree .l-disabled{
-      cursor: not-allowed;
-    }`
-  );
-  sheet.insertRule(
-    `.l-tree .l-disabled{
+    `.l-tree .l-tree-item.l-disabled .l_tree_lable{
       cursor: not-allowed;
       pointer-events: none;
-    }`
-  );
-  sheet.insertRule(
-    `.l-tree .l-disabled .l_tree_lable{
-      cursor: not-allowed;
       background-color: #fff;
       color: rgba(0, 0, 0, 0.26);
     }`
   );
+  // sheet.insertRule(
+  //   `.l-tree .l-disabled .l_tree_lable{
+  //     cursor: not-allowed;
+  //     background-color: #fff;
+  //     color: rgba(0, 0, 0, 0.26);
+  //   }`
+  // );
   sheet.insertRule(
     `.to__downList .icon{
       transform: rotate(-90deg);
@@ -1874,6 +1922,13 @@ function generateStyle(pen) {
     border-radius: 3px;
     // background-color: var(--td-bg-color-container);
     box-sizing: border-box;
+}
+  `)
+  sheet.insertRule(`
+  .l_tree_lable.l-is-checked {
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.9);
+    background-color: #f2f3ff;
 }
   `)
   sheet.insertRule(`

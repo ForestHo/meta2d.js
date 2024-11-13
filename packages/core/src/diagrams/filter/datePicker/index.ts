@@ -18,13 +18,6 @@ dayjs.extend(window.dayjs_plugin_isLeapYear)
 dayjs.extend(window.dayjs_plugin_isoWeeksInYear)
 
 
-// 设置一周从周一开始
-// dayjs.locale('en', {
-//   weekStart: 1 // 1 表示周一，0 表示周日
-// });
-// const day1 = dayjs("2021-12-31").startOf('week').format("YYYY-MM-DD dddd")
-// const day2 = dayjs("2021-12-31").startOf('isoWeek').format("YYYY-MM-DD dddd")
-// console.log(day1, day2)
 const TAG_WRAPPER = 'dtag_wrapper_';
 const TAG_PREFIX = 'dtag_';
 const DROPMENU_PREFIX = 'l-date-range-picker__panel_';
@@ -61,6 +54,7 @@ enum SwitchMode {
   MONTH = "month",
   QUARTER = "quarter",
   YEAR = "year",
+  TIME = "time",
 }
 enum More_Ctl {
   PREV = 'prev',
@@ -92,99 +86,19 @@ function getYearOptions(start, end, step = 1) {
   return options;
 }
 let yearOptions = getYearOptions(1900, 2100);
-// const yearOptions = [
-//   {
-//     label: '2021',
-//     value: '2021'
-//   },
-//   {
-//     label: '2022',
-//     value: '2022'
-//   },
-//   {
-//     label: '2023',
-//     value: '2023'
-//   },
-//   {
-//     label: '2024',
-//     value: '2024'
-//   },
-//   {
-//     label: '2025',
-//     value: '2025'
-//   },
-//   {
-//     label: '2026',
-//     value: '2026'
-//   },
-//   {
-//     label: '2027',
-//     value: '2027'
-//   },
-//   {
-//     label: '2028',
-//     value: '2028'
-//   },
-//   {
-//     label: '2029',
-//     value: '2029'
-//   },
-//   {
-//     label: '2030',
-//     value: '2030'
-//   }
-// ];
 let yeartoYearOptions = [];
-const monthOptions = [
-  {
-    label: '1',
-    value: '1'
-  },
-  {
-    label: '2',
-    value: '2'
-  },
-  {
-    label: '3',
-    value: '3'
-  },
-  {
-    label: '4',
-    value: '4'
-  },
-  {
-    label: '5',
-    value: '5'
-  },
-  {
-    label: '6',
-    value: '6'
-  },
-  {
-    label: '7',
-    value: '7'
-  },
-  {
-    label: '8',
-    value: '8'
-  },
-  {
-    label: '9',
-    value: '9'
-  },
-  {
-    label: '10',
-    value: '10'
-  },
-  {
-    label: '11',
-    value: '11'
-  },
-  {
-    label: '12',
-    value: '12'
+
+let monthOptions = [];
+function getMonthOptions(monthOptions){
+  for (let i = 1; i <= 12; i++) {
+    monthOptions.push({
+      label: i + '',
+      value: i + ''
+    })
   }
-];
+}
+getMonthOptions(monthOptions)
+
 const svgMap = {
   [CTL_TYPE.PREV]: `M15.91 17.5l-5.5-5.5 5.5-5.5-1.41-1.41L7.59 12l6.91 6.91 1.41-1.41z`,
   [CTL_TYPE.CURRENT]: `M12 6a6 6 0 100 12 6 6 0 000-12zm-8 6a8 8 0 1116 0 8 8 0 01-16 0z`,
@@ -201,6 +115,7 @@ export function datePicker(pen: Pen): Path2D {
     pen.onMouseEnter = onMouseEnter;
     pen.onMouseLeave = onMouseLeave;
     pen.onRenderPenRaw = renderPenRaw;
+    pen.onRenderPenRawRefresh = renderPenRawRefresh;
   }
   const { x, y, width, height } = pen.calculative.worldRect;
   if (!pen.calculative.singleton) {
@@ -220,7 +135,7 @@ export function datePicker(pen: Pen): Path2D {
       }
       if (pickerTimes.length > 0) {
         let format = ""
-        if (!pen.enableTimePicker) {
+        if (pen.mode !== SwitchMode.TIME) {
           format = "YYYY-MM-DD"
         } else {
           format = "YYYY-MM-DD HH:mm:ss"
@@ -271,28 +186,28 @@ export function datePicker(pen: Pen): Path2D {
     setElemPosition(pen, div);
     pen.calculative.singleton.div = div;
 
-    renderData(pen.data, dropMenu, pen)
+    renderData(dropMenu, pen)
   }
   const path = new Path2D();
   return path;
 }
 
-function renderData(data, dom, pen) {
+function renderData(dom, pen) {
   generateStyle(pen)
 
   const lPanel = document.createElement('div');
   lPanel.className = 'l-date-picker__panel';
   lPanel.style.display = 'flex';
-  const fragMent = generateDomByData(data, pen);
+  const fragMent = generateDomByData(pen);
   lPanel.appendChild(fragMent);
   dom.appendChild(lPanel);
 }
-function generateDomByData(data, pen) {
+function generateDomByData(pen) {
   let key = "date";
   // 根据配置生成不同的面板
   if (pen.date) {
     key = "date";
-  } else if (pen.enableTimePicker) {
+  } else if (pen.mode === SwitchMode.TIME) {
     key = "datetime";
   }
   const frag = document.createDocumentFragment();
@@ -301,27 +216,29 @@ function generateDomByData(data, pen) {
     if (type === "date") {
       let dateDom = null;
       if (pen.mode === SwitchMode.DATE) {
-        dateDom = generateDateDom(data, pen, i)
+        dateDom = generateDateDom(pen, i)
       } else if (pen.mode === SwitchMode.WEEK) {
-        dateDom = generateWeekDom(data, pen, i)
+        dateDom = generateWeekDom(pen, i)
       } else if (pen.mode === SwitchMode.MONTH) {
-        dateDom = generateMonthDom(data, pen, i)
+        dateDom = generateMonthDom(pen, i)
       } else if (pen.mode === SwitchMode.QUARTER) {
-        dateDom = generateQuarterDom(data, pen, i)
+        dateDom = generateQuarterDom(pen, i)
       } else if (pen.mode === SwitchMode.YEAR) {
-        dateDom = generateYearDom(data, pen, i)
+        dateDom = generateYearDom(pen, i)
+      }else if (pen.mode === SwitchMode.TIME) {
+        dateDom = generateDateDom(pen, i)
       }
       frag.appendChild(dateDom);
     } else if (type === "time") {
-      const timeDom = generateTimeDom(data, pen)
+      const timeDom = generateTimeDom(pen)
       frag.firstChild.appendChild(timeDom);
-      const footer = generateFooter(data, pen);
+      const footer = generateFooter(pen);
       frag.appendChild(footer);
     }
   }
   return frag;
 }
-function generateFooter(data, pen) {
+function generateFooter(pen) {
   const frag = document.createDocumentFragment();
 
   const footer = document.createElement('div');
@@ -351,14 +268,14 @@ function onOk(e) {
   // 隐藏下拉框
   this.parentElement.parentElement.parentElement.style.display = 'none';
 }
-function generateWeekDom(data, pen, index) {
+function generateWeekDom(pen, index) {
   const frag = document.createDocumentFragment();
   const currentYear = dayjs().year();
   let currentMonth = dayjs().month() + 1;
   const content = document.createElement('div');
   content.className = 'l-date-picker__panel-content';
 
-  const dateItem = assemleWeekItem(data, pen, {
+  const dateItem = assemleWeekItem(pen, {
     year: currentYear,
     month: currentMonth,
     index
@@ -376,23 +293,23 @@ function generateWeekDom(data, pen, index) {
   frag.appendChild(content);
   return frag;
 }
-function assemleWeekItem(data, pen, opt) {
+function assemleWeekItem(pen, opt) {
   const dateItem = document.createElement('div');
   const header = document.createElement('div');
   header.className = 'l-date-picker__header';
-  const headerFrag = assembleHeader(data, pen, opt, SwitchMode.WEEK);
+  const headerFrag = assembleHeader(pen, opt, SwitchMode.WEEK);
   header.appendChild(headerFrag);
   dateItem.appendChild(header);
 
   const tableItem = document.createElement('table');
   tableItem.className = 'l-date-picker__table';
-  const tableFrag = assembleWeekTable(data, pen, opt);
+  const tableFrag = assembleWeekTable(pen, opt);
   tableItem.appendChild(tableFrag);
   dateItem.appendChild(tableItem);
 
   return dateItem;
 }
-function assembleWeekTable(data, pen, opt) {
+function assembleWeekTable(pen, opt) {
   const frag = document.createDocumentFragment();
   // thead
   const thead = document.createElement('thead');
@@ -651,14 +568,14 @@ function assembleWeekBodyTRs(pen, opt: { year: number, month: number }) {
 
   return frag;
 }
-function generateMonthDom(data, pen, index) {
+function generateMonthDom(pen, index) {
   const frag = document.createDocumentFragment();
   const currentYear = dayjs().year();
   let currentMonth = dayjs().month() + 1;
   const content = document.createElement('div');
   content.className = 'l-date-picker__panel-content';
 
-  const dateItem = assemleMonthItem(data, pen, {
+  const dateItem = assemleMonthItem(pen, {
     year: currentYear,
     month: currentMonth,
     index
@@ -676,10 +593,18 @@ function generateMonthDom(data, pen, index) {
   frag.appendChild(content);
   return frag;
 }
-function generateQuarterDom(data, pen, index) {
-
+/**
+ * @description 暂未实现此函数
+ * @author Joseph Ho
+ * @date 13/11/2024
+ * @param {*} pen
+ * @param {*} index
+ */
+function generateQuarterDom(pen, index) {
+  const frag = document.createDocumentFragment();
+  return frag;
 }
-function generateYearDom(data, pen, index) {
+function generateYearDom(pen, index) {
   const frag = document.createDocumentFragment();
   const currentYear = dayjs().year();
   const content = document.createElement('div');
@@ -692,7 +617,7 @@ function generateYearDom(data, pen, index) {
   }
   yeartoYearOptions = getYeartoYearOptions(curYear - 80, curYear + 70, 10);
   const yOpt = yeartoYearOptions.find(el => currentYear >= el.value[0] && currentYear <= el.value[1]);
-  const dateItem = assemleYearItem(data, pen, {
+  const dateItem = assemleYearItem(pen, {
     year: yOpt.value[0],
     index
   });
@@ -709,13 +634,13 @@ function generateYearDom(data, pen, index) {
   frag.appendChild(content);
   return frag;
 }
-function generateTimeDom(data, pen) {
+function generateTimeDom(pen) {
   const frag = document.createDocumentFragment();
-  const timeItem = assembleTimeItem(data, pen);
+  const timeItem = assembleTimeItem(pen);
   frag.appendChild(timeItem);
   return frag;
 }
-function generateDateDom(data, pen, index?) {
+function generateDateDom(pen, index?) {
   const frag = document.createDocumentFragment();
   let currentYear, currentMonth, currentDay;
   if (pen.pickerTimes.length === 0) {
@@ -731,7 +656,7 @@ function generateDateDom(data, pen, index?) {
   const content = document.createElement('div');
   content.className = 'l-date-picker__panel-content';
 
-  const dateItem = assemleDateItem(data, pen, {
+  const dateItem = assemleDateItem(pen, {
     year: currentYear,
     month: currentMonth,
     index
@@ -750,23 +675,23 @@ function generateDateDom(data, pen, index?) {
   frag.appendChild(content);
   return frag;
 }
-function assemleYearItem(data, pen, opt) {
+function assemleYearItem(pen, opt) {
   const dateItem = document.createElement('div');
   const header = document.createElement('div');
   header.className = 'l-date-picker__header';
 
-  const headerFrag = assembleHeader(data, pen, opt, SwitchMode.YEAR);
+  const headerFrag = assembleHeader(pen, opt, SwitchMode.YEAR);
   header.appendChild(headerFrag);
   dateItem.appendChild(header);
 
   const tableItem = document.createElement('table');
   tableItem.className = 'l-date-picker__table';
-  const tableFrag = assembleYearTable(data, pen, opt);
+  const tableFrag = assembleYearTable(pen, opt);
   tableItem.appendChild(tableFrag);
   dateItem.appendChild(tableItem);
   return dateItem;
 }
-function generateDomByType(data, pen, type, i) {
+function generateDomByType(pen, type, i) {
   const frag = document.createDocumentFragment();
   const currentYear = dayjs().year();
   let currentMonth = dayjs().month() + 1;
@@ -774,7 +699,7 @@ function generateDomByType(data, pen, type, i) {
     const content = document.createElement('div');
     content.className = 'l-date-picker__panel-content';
 
-    const dateItem = assemleDateItem(data, pen, {
+    const dateItem = assemleDateItem(pen, {
       year: currentYear,
       month: currentMonth,
       index: i
@@ -796,11 +721,11 @@ function generateDomByType(data, pen, type, i) {
 function onAdd(pen: Pen) {
   adjustHeight(pen);
 }
-function assembleTimeItem(data, pen) {
+function assembleTimeItem(pen) {
   const timeItem = document.createElement('div');
   timeItem.className = 'l-date-picker__panel-time';
   let hour = "", minute = "", second = "";
-  if (pen.enableTimePicker && pen.pickerTimes.length > 0) {
+  if (pen.mode === SwitchMode.TIME && pen.pickerTimes.length > 0) {
     const hhmmss = dayjs(pen.pickerTimes[0]).format("HH:mm:ss");
     const list = hhmmss.split(':');
     hour = list[0];
@@ -872,7 +797,7 @@ function assembleTimeItem(data, pen) {
   panel.appendChild(sectionBody);
   timeItem.appendChild(panel);
 
-  if (pen.enableTimePicker && pen.pickerTimes.length > 0) {
+  if (pen.mode === SwitchMode.TIME && pen.pickerTimes.length > 0) {
     setTimeout(() => {
       const hourDistance = hIndex * TIME_HEIGHT;
       hourDom.scrollTo?.({
@@ -1065,7 +990,7 @@ function updateTagsWithDate(penId, index, key) {
   adjustHeight(pen);
 
   // 更新footer
-  if (pen.enableTimePicker) {
+  if (pen.mode === SwitchMode.TIME) {
     const button = panelTime.parentElement.nextElementSibling.lastChild;
     if (button.classList.contains('l-is-disabled')) {
       button.classList.remove('l-is-disabled');
@@ -1120,39 +1045,39 @@ function assembleHour() {
   }
   return frag;
 }
-function assemleDateItem(data, pen, opt) {
+function assemleDateItem(pen, opt) {
   const dateItem = document.createElement('div');
   const header = document.createElement('div');
   header.className = 'l-date-picker__header';
-  const headerFrag = assembleHeader(data, pen, opt, SwitchMode.DATE);
+  const headerFrag = assembleHeader(pen, opt, SwitchMode.DATE);
   header.appendChild(headerFrag);
   dateItem.appendChild(header);
 
   const tableItem = document.createElement('table');
   tableItem.className = 'l-date-picker__table';
-  const tableFrag = assembleDateTable(data, pen, opt);
+  const tableFrag = assembleDateTable(pen, opt);
   tableItem.appendChild(tableFrag);
   dateItem.appendChild(tableItem);
 
   return dateItem;
 }
-function assemleMonthItem(data, pen, opt) {
+function assemleMonthItem(pen, opt) {
   const dateItem = document.createElement('div');
   const header = document.createElement('div');
   header.className = 'l-date-picker__header';
-  const headerFrag = assembleHeader(data, pen, opt, SwitchMode.MONTH);
+  const headerFrag = assembleHeader(pen, opt, SwitchMode.MONTH);
   header.appendChild(headerFrag);
   dateItem.appendChild(header);
 
   const tableItem = document.createElement('table');
   tableItem.className = 'l-date-picker__table';
-  const tableFrag = assembleMonthTable(data, pen, opt);
+  const tableFrag = assembleMonthTable(pen, opt);
   tableItem.appendChild(tableFrag);
   dateItem.appendChild(tableItem);
 
   return dateItem;
 }
-function assembleDateTable(data, pen, opt) {
+function assembleDateTable(pen, opt) {
   const frag = document.createDocumentFragment();
   // thead
   const thead = document.createElement('thead');
@@ -1168,7 +1093,7 @@ function assembleDateTable(data, pen, opt) {
   frag.appendChild(tbody);
   return frag;
 }
-function assembleYearTable(data, pen, opt) {
+function assembleYearTable(pen, opt) {
   const frag = document.createDocumentFragment();
 
   // tbody
@@ -1179,7 +1104,7 @@ function assembleYearTable(data, pen, opt) {
   frag.appendChild(tbody);
   return frag;
 }
-function assembleMonthTable(data, pen, opt) {
+function assembleMonthTable(pen, opt) {
   const frag = document.createDocumentFragment();
   // thead
   // const thead = document.createElement('thead');
@@ -1452,7 +1377,7 @@ function tdClick(e) {
   const { value } = e.target.dataset;
   const pickerTimes = deepClone(pen.pickerTimes);
   let yyhhdd = '';
-  if (!pen.enableTimePicker) {
+  if (pen.mode !== SwitchMode.TIME) {
     yyhhdd = dayjs().year(_currentYear).month(_currentMonth - 1).date(value).format("YYYY-MM-DD");
   } else {
     const { hour, minute, second } = this.parentElement.parentElement.parentElement.parentElement.nextElementSibling.dataset;
@@ -1466,7 +1391,7 @@ function tdClick(e) {
   adjustHeight(pen);
 
   // 更新footer
-  if (pen.enableTimePicker) {
+  if (pen.mode === SwitchMode.TIME) {
     const button = this.parentElement.parentElement.parentElement.parentElement.parentElement.nextElementSibling.lastChild;
     if (button.classList.contains('l-is-disabled')) {
       button.classList.remove('l-is-disabled');
@@ -1587,7 +1512,7 @@ function assembleTR(type) {
  * @param {*} type
  * @returns {*}  
  */
-function assembleHeader(data, pen, opt, type) {
+function assembleHeader(pen, opt, type) {
   const frag = document.createDocumentFragment();
   const controller = document.createElement('div');
   controller.className = 'l-date-picker__header-controller';
@@ -2384,6 +2309,18 @@ function onMouseUp(pen: Pen, e: Point) {
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
   dropMenu.style.display = dropMenu.style.display === 'none' ? 'block' : 'none';
 }
+/**
+ * @description 更新整个筛选器
+ * @author Joseph Ho
+ * @date 13/11/2024
+ */
+function renderPenRawRefresh(pen: Pen) {
+  console.log('renderPenRawRefresh', pen)
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+  // 重新渲染dropdown面板
+  const fragMent = generateDomByData(pen);
+  dropMenu.firstChild.replaceChildren(fragMent);
+}
 function renderPenRaw(pen: Pen, mkey: string, data: any) {
   // const flowPath = [];
   // getTreeFlowPathDefault(data, flowPath, item => item === 0);
@@ -3026,6 +2963,13 @@ function generateStyle(pen: Pen) {
     background-color: #b5c7ff;
     border-color: #b5c7ff;
 }
+  `)
+  sheet.insertRule(`
+  [class^="l-date-range-picker__panel_"] {
+    width: auto;
+    height: 300px;
+}
+  
   `)
 }
 
