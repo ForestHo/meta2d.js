@@ -84,7 +84,7 @@ export function treeFilter(pen: Pen): Path2D {
 function renderPenRaw(pen: Pen, mkey: string, data: any) {
   const lTreeList = document.querySelector('.l-tree-list');
   const { index: insertIndex, level } = getChildIndex(lTreeList, mkey);
-  const showIds = collectExpandShowIds(data, pen);
+  const showIds = collectExpandShowIds(data, pen.expanded);
   generateDomByData(data, lTreeList, pen, { index: insertIndex + 1, level: level + 1 }, showIds, [], null);
   window.meta2d.setValue({
     id: pen.id,
@@ -94,7 +94,7 @@ function renderPenRaw(pen: Pen, mkey: string, data: any) {
 function renderPenRaw2(pen: Pen, data: any) {
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
   const lTreeList = dropMenu.querySelector('.l-tree-list');
-  const showIds = collectExpandShowIds(data, pen);
+  const showIds = collectExpandShowIds(data, pen.expanded);
   // console.log(showIds, data, 'renderPenRaw2');
   addLevelToTree(data);
   const frag = generateDomByData(data, null, pen, null, showIds, [], generateDomByData);
@@ -115,16 +115,41 @@ function renderPenRawRefresh(pen: Pen) {
   const data = deepClone(pen.data);
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
   const lTreeList = dropMenu.querySelector('.l-tree-list');
-  const showIds = collectExpandShowIds(data, pen);
+  let showIds = [];
+  const obj = {
+    id: pen.id,
+  }
+  if (pen.expandAll) {
+    const ids = []
+    collectExpandIds(pen.data, ids)
+    Object.assign(obj, {
+      expanded: ids
+    })
+    showIds = collectExpandShowIds(data, ids);
+  } else {
+    Object.assign(obj, {
+      expanded: []
+    })
+    showIds = collectExpandShowIds(data, []);
+  }
+  Object.assign(obj, { showIds })
+  window.meta2d.setValue(obj)
+
   // console.log(showIds, data, 'renderPenRaw2');
   addLevelToTree(data);
   const frag = generateDomByData(data, null, pen, null, showIds, [], generateDomByData);
   // console.log(frag, 'frag');
   lTreeList.replaceChildren(frag);
-  window.meta2d.setValue({
-    id: pen.id,
-    showIds: showIds
-  })
+
+
+
+  if (pen.autoDropdown) {
+    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+    dropMenu.classList.add("l-is-hidden");
+  } else {
+    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+    dropMenu.classList.remove("l-is-hidden");
+  }
 }
 function getChildIndex(dom, key: string) {
   var childNodes = dom.childNodes;
@@ -1486,7 +1511,7 @@ function renderData(data, dom, pen) {
 
     const lTreeList = document.createElement('div');
     lTreeList.className = 'l-tree-list';
-    const showIds = collectExpandShowIds(data, pen);
+    const showIds = collectExpandShowIds(data, pen.expanded);
     addLevelToTree(data);
     // const siblings = recursionFindSiblings(data, "10");
     // console.log(showIds, 'showIds');
@@ -1531,7 +1556,7 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
       lTreeItem.classList.add('l-item-open')
     }
     // 控制disabled
-    if(pen.multiple && pen.onlyLeafCheck && data[i].children && data[i].children.length > 0){
+    if (pen.multiple && pen.onlyLeafCheck && data[i].children && data[i].children.length > 0) {
       lTreeItem.classList.add('l-disabled')
     }
 
@@ -1744,12 +1769,12 @@ function handleToggleExpand(accordion, data, expandedKeys, key) {
  * @param {*} pen
  * @returns {*}  
  */
-function collectExpandShowIds(data, pen) {
+function collectExpandShowIds(data, expanded) {
   const expandList = [];
-  if (pen.expanded && pen.expanded.length > 0) {
-    for (let i = 0; i < pen.expanded.length; i++) {
-      const id = pen.expanded[i];
-      // console.log(JSON.stringify(pen.expanded), JSON.stringify(pen.showIds), ' pen.expanded');
+  if (expanded && expanded.length > 0) {
+    for (let i = 0; i < expanded.length; i++) {
+      const id = expanded[i];
+      // console.log(JSON.stringify(expanded), JSON.stringify(showIds), ' expanded');
       const item = recursionTreeFindItem(data, id);
       if (item && Array.isArray(item.children) && item.children.length > 0) {
         expandList.push(...item.children.map(el => el.value));

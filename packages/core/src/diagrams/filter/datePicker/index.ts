@@ -2475,14 +2475,14 @@ function generateStyle(pen: Pen) {
 
   sheet.insertRule(`
   .l-date-picker__header-controller .l-date-picker__header-controller-month {
-    width: 80px;
+    width: 60px;
     display: flex;
     position: relative;
 }
   `)
   sheet.insertRule(`
   .l-date-picker__header-controller .l-date-picker__header-controller-year {
-    width: 78px;
+    width: 70px;
     display: flex;
     position: relative;
 }

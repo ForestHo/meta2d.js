@@ -3608,7 +3608,7 @@ function generateStyle(pen: Pen) {
   let sheet = style.sheet;
   sheet.insertRule(`
   [class^="l-date-range-picker__panel_"]{
-    width: 560px;
+    width: auto;
     height:300px;
   }
   `)
