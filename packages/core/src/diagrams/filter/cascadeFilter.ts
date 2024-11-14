@@ -348,12 +348,21 @@ function renderPenRaw2(pen: Pen, data: any) {
     // adjustHeight(pen);
   }
 }
+function resetPenData(pen: Pen) {
+  window.meta2d.setValue({
+    id: pen.id,
+    checked: [],
+    flowPath: [],
+  })
+}
 /**
  * @description 更新整个筛选器
  * @author Joseph Ho
  * @date 13/11/2024
  */
 function renderPenRawRefresh(pen: Pen) {
+  resetPenData(pen);
+
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
   const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
   const flowPath = [];
@@ -377,6 +386,24 @@ function renderPenRawRefresh(pen: Pen) {
     }
     // adjustHeight(pen);
   }
+
+
+  // 控制过滤搜索
+  const input = document.querySelector(`.${CASCADE_PREFIX}${pen.id}`);
+  input.readOnly = pen.filterable ? !pen.filterable : true;
+  input.placeholder = pen.filterable ? '请输入关键字' : '';
+
+  // 控制是否显示下拉面板
+  if (pen.autoDropdown) {
+    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+    dropMenu.classList.add("l-is-hidden");
+  } else {
+    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+    dropMenu.classList.remove("l-is-hidden");
+  }
+
+  // 根据最新的checked情况，更新checked的tag
+  replaceAlltags(pen.id, pen.checked);
 }
 // 计算方法
 function getLevel(arr) {
@@ -417,7 +444,7 @@ function assembleInputBox(pen: Pen) {
   input.style.background = 'transparent';
   input.className = `${CASCADE_PREFIX}${pen.id}`;
   input.dataset.penId = pen.id;
-  input.placeholder = pen.placeholder || '请输入关键字';
+  input.placeholder = pen.filterable ? '请输入关键字' : '';
   input.oninput = debounce(onInputchange, 200)
 
 
@@ -725,7 +752,7 @@ function tagClose(e) {
   // let halfCheckedIds = deepClone(pen.halfChecked);
 
   // console.log(curItem, 'curItem');
-  if (!pen.checkStrictly) {
+  if (pen.multiple && !pen.checkStrictly) {
     if (!curItem) {
       this.parentElement.remove();
       // 根据最新的tag去更新checked
@@ -936,7 +963,7 @@ function checkboxNewClick(e) {
   let checkedIds = deepClone(pen.checked);
   // let halfCheckedIds = deepClone(pen.halfChecked);
 
-  if (!pen.checkStrictly) {
+  if (pen.multiple && !pen.checkStrictly) {
     {// console.log(checkedIds, checked, 'iddddd')
       const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
       const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
@@ -1225,61 +1252,73 @@ function labelClick(e) {
     return;
   }
 
+  let text = '';
   if (pen.filterable) {
     const tagWrapper = document.querySelector(`.${TAG_WRAPPER}${pen.id}`);
-    const text = tagWrapper.nextElementSibling.value;
-    if (text) {
-      return;
-    }
+    text = tagWrapper.nextElementSibling.value;
+    // if (!text) {
+    //   return;
+    // }
   }
+  if (!text) {
+    // 非搜索模式下，点击label
+    {
+      patchLeftMenu(value, parseInt(level), pen)
 
-  {
-    patchLeftMenu(value, parseInt(level), pen)
-
-    if (!pen.checkStrictly) {
-      // 向下去更新半选状态
-      const currentItem = recursionTreeFindItem(pen.data, value);
-      // console.log(currentItem, 'currentItem')
-      if (currentItem && currentItem.children?.length > 0) {
-        const halfIds = [];
-        // console.log('pen.checked 11', JSON.stringify(pen.checked))
-        recursionDownTree(currentItem.children, pen.checked, halfIds);
-        // console.log('halfIds', JSON.stringify(halfIds))
-        const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-        const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
-        for (let i = 0; i < halfIds.length; i++) {
-          const elem = halfIds[i];
-          const item = cascaderPanel.querySelector(`.l-cascader__item[data-value="${elem}"]`);
-          if (item) {
-            item.firstChild.classList.remove('l-is-checked');
-            item.firstChild.classList.add('l-is-indeterminate');
+      if (pen.multiple && !pen.checkStrictly) {
+        // 向下去更新半选状态
+        const currentItem = recursionTreeFindItem(pen.data, value);
+        // console.log(currentItem, 'currentItem')
+        if (currentItem && currentItem.children?.length > 0) {
+          const halfIds = [];
+          // console.log('pen.checked 11', JSON.stringify(pen.checked))
+          recursionDownTree(currentItem.children, pen.checked, halfIds);
+          // console.log('halfIds', JSON.stringify(halfIds))
+          const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+          const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
+          for (let i = 0; i < halfIds.length; i++) {
+            const elem = halfIds[i];
+            const item = cascaderPanel.querySelector(`.l-cascader__item[data-value="${elem}"]`);
+            if (item) {
+              item.firstChild.classList.remove('l-is-checked');
+              item.firstChild.classList.add('l-is-indeterminate');
+            }
           }
         }
-      }
-    } else {
-
-    }
-
-    if (!pen.multiple) {
-      const flowPath = deepClone(pen.flowPath);
-      const checked = deepClone(pen.checked);
-      const isLeaf = isLeafNode(pen.data, value)
-      if (isLeaf) {
-        updateTags(true, checked, value, penId, pen);
       } else {
-        updateTags(true, checked, flowPath[flowPath.length - 1], penId, pen);
-      }
-      window.meta2d.setValue({
-        id: penId,
-        checked,
-      })
-    }
-  }
 
-  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-  const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
-  const flowPath = deepClone(pen.flowPath);
-  reviewPanelFlowPath(cascaderPanel, flowPath);
+      }
+
+      if (!pen.multiple) {
+        const flowPath = deepClone(pen.flowPath);
+        const checked = deepClone(pen.checked);
+        const isLeaf = isLeafNode(pen.data, value)
+        console.log('isLeaf', isLeaf, flowPath, checked)
+        if (isLeaf) {
+          updateTags(true, checked, value, penId, pen);
+        } else {
+          updateTags(true, checked, flowPath[flowPath.length - 1], penId, pen);
+        }
+        window.meta2d.setValue({
+          id: penId,
+          checked,
+        })
+      }
+    }
+
+    const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+    const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
+    const flowPath = deepClone(pen.flowPath);
+    reviewPanelFlowPath(cascaderPanel, flowPath);
+  } else {
+    const checked = deepClone(pen.checked);
+    // console.log('checked', JSON.stringify(checked))
+    updateTags(true, checked, value, penId, pen);
+    window.meta2d.setValue({
+      id: penId,
+      checked,
+    })
+  }
 }
 function recursionFindHasChild(data, key) {
   for (let i = 0; i < data.length; i++) {

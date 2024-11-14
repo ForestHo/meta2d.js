@@ -8,6 +8,7 @@ const DROPMENU_PREFIX = 'l-select__dropdown-inner_';
 const TAG_WRAPPER = 'tag_wrapper_';
 const TAG_PREFIX = 'tag_';
 const DIV = 'DIV';
+const TREE_PREFIX = 'l-treefilter-';
 export function treeFilter(pen: Pen): Path2D {
   if (!pen.onDestroy) {
     pen.onDestroy = onDestroy;
@@ -142,6 +143,11 @@ function renderPenRawRefresh(pen: Pen) {
   lTreeList.replaceChildren(frag);
 
 
+  // 控制过滤搜索
+  const inputDom = document.querySelector(`.${TREE_PREFIX}${pen.id}`);
+  console.log(inputDom,pen.filterable, 'inputDom');
+  inputDom.readOnly = pen.filterable ? !pen.filterable : true;
+  inputDom.placeholder = pen.filterable ? '请输入关键字' : '';
 
   if (pen.autoDropdown) {
     const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
@@ -251,8 +257,8 @@ function assembleInputBox(pen: Pen) {
   // input.style.outline = 'none';
   // input.style.border = '1px solid #ccc';
   input.style.background = 'transparent';
-  input.className = `treefilter-${pen.id}`;
-  input.placeholder = pen.placeholder || '请输入关键字';
+  input.className = `${TREE_PREFIX}${pen.id}`;
+  input.placeholder = pen.filterable ? '请输入关键字' : '';
   input.dataset.penId = pen.id;
   input.oninput = debounce(onInputchange, 200)
 
@@ -284,6 +290,7 @@ function onInputchange(e) {
     return;
   }
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+  // console.log(e.target.value, 'onInputchange');
   if (e.target.value) {
     onRecursionData(pen.data, e.target.value, paths);
     // console.log(paths, 'paths');
@@ -301,6 +308,10 @@ function onInputchange(e) {
       if (lTreeList.children[i].nodeName === DIV) {
         if (lTreeList.children[i].classList.contains('l-disabled')) {
           lTreeList.children[i].classList.remove('l-disabled');
+          lTreeList.children[i].classList.add('l-visible');
+        }
+        if (lTreeList.children[i].classList.contains('l-hidden')) {
+          lTreeList.children[i].classList.remove('l-hidden');
           lTreeList.children[i].classList.add('l-visible');
         }
       }
@@ -847,7 +858,7 @@ function tagClose(e) {
   let checkedIds = deepClone(checkedList);
   // let halfCheckedIds = deepClone(pen.halfChecked);
 
-  if (!pen.checkStrictly) {
+  if (pen.multiple && !pen.checkStrictly) {
     {
       //取消勾选
       const currentItem = recursionTreeFindItem(pen.data, value);
@@ -927,7 +938,7 @@ function checkboxNewClick(e) {
   let checkedIds = deepClone(pen.checked);
   // let halfCheckedIds = deepClone(pen.halfChecked);
 
-  if (!pen.checkStrictly) {
+  if (pen.multiple && !pen.checkStrictly) {
     // 父子勾选关联
     // console.log(checkedIds, checked, 'iddddd')
     if (checked) {
