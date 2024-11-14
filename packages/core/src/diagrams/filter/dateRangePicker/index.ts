@@ -228,6 +228,8 @@ function renderData(dom, pen) {
   lPanel.className = 'l-date-range-picker__panel-content-wrapper';
   if (pen.mode === SwitchMode.TIME) {
     lPanel.classList.add('l-date-range-picker__panel--time');
+  }else{
+    lPanel.classList.remove('l-date-range-picker__panel--time');
   }
   const fragMent = generateDomByData(pen);
   lPanel.appendChild(fragMent);
@@ -3479,6 +3481,8 @@ function renderPenRawRefresh(pen: Pen) {
   // 重新渲染dropdown面板
   if (pen.mode === SwitchMode.TIME) {
     dropMenu.firstChild.classList.add('l-date-range-picker__panel--time');
+  }else{
+    dropMenu.firstChild.classList.remove('l-date-range-picker__panel--time');
   }
   const fragMent = generateDomByData(pen);
   dropMenu.firstChild.replaceChildren(fragMent);
@@ -3588,45 +3592,46 @@ function generateStyle(pen: Pen) {
   extraStyle.type = 'text/css';
   extraStyle.id = style_prefix + pen.id;
   document.head.appendChild(extraStyle);
-  let sheet1 = extraStyle.sheet;
-  if (pen.styles && pen.styles.length > 0) {
-    pen.styles.forEach((rule) => {
-      // sheet.insertRule(rule + '}', sheet.cssRules.length);
-      const ruleToCheck = rule + '}';
-      if (!hasCSSRuleInSheet(sheet1, ruleToCheck)) {
-        insertCSSRuleInSheet(sheet1, ruleToCheck);
-        // console.log(`The rule "${ruleToCheck}" was inserted.`);
-      } else {
-        // console.log(`The rule "${ruleToCheck}" already exists.`);
-      }
-    });
-  }
+  // let sheet1 = extraStyle.sheet;
+  extraStyle.innerHTML = pen.styles ? pen.styles : '';
+  // if (pen.styles && pen.styles.length > 0) {
+  //   pen.styles.forEach((rule) => {
+  //     // sheet.insertRule(rule + '}', sheet.cssRules.length);
+  //     const ruleToCheck = rule + '}';
+  //     if (!hasCSSRuleInSheet(sheet1, ruleToCheck)) {
+  //       insertCSSRuleInSheet(sheet1, ruleToCheck);
+  //       // console.log(`The rule "${ruleToCheck}" was inserted.`);
+  //     } else {
+  //       // console.log(`The rule "${ruleToCheck}" already exists.`);
+  //     }
+  //   });
+  // }
+
+
   let style = document.createElement('style');
   style.type = 'text/css';
   // style.id = pen.id;
   document.head.appendChild(style);
-  let sheet = style.sheet;
-  sheet.insertRule(`
-  [class^="l-date-range-picker__panel_"]{
-    width: auto;
-    height:300px;
-  }
-  `)
-  sheet.insertRule(
-    `.l-date-picker__panel-content,
-    .l-date-range-picker__panel-content-wrapper {
-        display: flex;
-        width: 100%;
-        height: 100%;
-        // height:300px;
-      }`
-  );
+  // let sheet = style.sheet;
 
-  sheet.insertRule(`
-  .l-date-picker__panel-year, 
-  .l-date-picker__panel-month, 
-  .l-date-picker__panel-quarter, 
-  .l-date-picker__panel-week, 
+  style.innerHTML =
+    `[class^="l-date-range-picker__panel_"] {
+    width: auto;
+    height: 300px;
+  }
+  
+  .l-date-picker__panel-content,
+  .l-date-range-picker__panel-content-wrapper {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    // height:300px;
+  }
+  
+  .l-date-picker__panel-year,
+  .l-date-picker__panel-month,
+  .l-date-picker__panel-quarter,
+  .l-date-picker__panel-week,
   .l-date-picker__panel-date,
   .l-date-picker__panel-time {
     display: flex;
@@ -3635,21 +3640,17 @@ function generateStyle(pen: Pen) {
     gap: 12px;
     width: 280px;
     box-sizing: border-box;
-}
-  `)
-
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__cell--now .l-date-picker__cell-inner {
     color: #366ef4;
     background: #f2f3ff;
-  }`)
-
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__cell--additional .l-date-picker__cell-inner {
     color: rgba(0, 0, 0, 0.26);
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__cell-inner {
     position: relative;
     z-index: 5;
@@ -3660,33 +3661,28 @@ function generateStyle(pen: Pen) {
     height: 24px;
     margin: calc(4px - 1px);
     border-radius: 3px;
-    transition: box-shadow .2s cubic-bezier(.38,0,.24,1), background-color .2s linear, border-color .2s linear, color .2s linear;
-}
-  `)
-
-  sheet.insertRule(`
+    transition: box-shadow 0.2s cubic-bezier(0.38, 0, 0.24, 1),
+      background-color 0.2s linear, border-color 0.2s linear, color 0.2s linear;
+  }
+  
   .l-date-picker__header-controller .l-date-picker__header-controller-month {
     width: 60px;
     display: flex;
     position: relative;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__header-controller .l-date-picker__header-controller-year {
     width: 70px;
     display: flex;
     position: relative;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__header-controller .l-date-picker__header-controller-range-year {
     width: 130px;
     display: flex;
     position: relative;
-}
-  `)
-
-  sheet.insertRule(`
+  }
+  
   .l-input {
     margin: 0;
     padding: 0;
@@ -3703,36 +3699,32 @@ function generateStyle(pen: Pen) {
     color: rgba(0, 0, 0, 0.9);
     width: 100%;
     box-sizing: border-box;
-    transition: border cubic-bezier(.38,0,.24,1) .2s, box-shadow cubic-bezier(.38,0,.24,1) .2s, background-color cubic-bezier(.38,0,.24,1) .2s;
+    transition: border cubic-bezier(0.38, 0, 0.24, 1) 0.2s,
+      box-shadow cubic-bezier(0.38, 0, 0.24, 1) 0.2s,
+      background-color cubic-bezier(0.38, 0, 0.24, 1) 0.2s;
     display: flex;
     align-items: center;
     overflow: hidden;
-}
-  `)
-
-  sheet.insertRule(`
+  }
+  
   .l-select-input,
-  .l-input__wrap{
+  .l-input__wrap {
     width: 100%;
   }
-  `)
-
-  sheet.insertRule(`
+  
   .l-date-picker__header-controller {
     display: inline-flex;
     gap: 8px;
-  }`)
-
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
     width: 100%;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-input__inner {
     flex: 1;
     border: none;
@@ -3748,43 +3740,40 @@ function generateStyle(pen: Pen) {
     word-wrap: normal;
     overflow: hidden;
     text-overflow: ellipsis;
-  `)
-
-  sheet.insertRule(`
+  }
+  
   .l-button {
     width: 24px;
     padding: 0;
     color: rgba(0, 0, 0, 0.9);
     background-color: transparent;
     border-color: transparent;
-}
-  `)
-  sheet.insertRule(`
-  .l-popup__content{
+  }
+  
+  .l-popup__content {
     width: 100%;
     max-height: 160px;
     margin: 8px 0;
     padding: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    box-shadow: 0 3px 14px 2px rgba(0, 0, 0, .05),0 8px 10px 1px rgba(0, 0, 0, 6%),0 5px 5px -3px rgba(0, 0, 0, 10%);
-
+    box-shadow: 0 3px 14px 2px rgba(0, 0, 0, 0.05),
+      0 8px 10px 1px rgba(0, 0, 0, 6%), 0 5px 5px -3px rgba(0, 0, 0, 10%);
+  
     position: relative;
     background: #fff;
     border-radius: 6px;
-
+  
     box-sizing: border-box;
     word-break: break-all;
     z-index: 1000;
-  }`)
-  sheet.insertRule(`
+  }
   .l-select-option.l-is-selected:not(.l-is-disabled) {
     color: #0052d9;
     background-color: #f2f3ff;
-    transition: all .2s linear;
-}
-  `)
-  sheet.insertRule(`
+    transition: all 0.2s linear;
+  }
+  
   .l-select-option {
     display: flex;
     align-items: center;
@@ -3793,11 +3782,10 @@ function generateStyle(pen: Pen) {
     cursor: pointer;
     padding: 0 8px;
     color: rgba(0, 0, 0, 0.9);
-    transition: background-color .2s cubic-bezier(.38,0,.24,1);
+    transition: background-color 0.2s cubic-bezier(0.38, 0, 0.24, 1);
     box-sizing: border-box;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-popup {
     box-sizing: border-box;
     margin: 0;
@@ -3805,44 +3793,37 @@ function generateStyle(pen: Pen) {
     list-style: none;
     color: rgba(0, 0, 0, 0.9);
     display: inline-block;
-  }`)
-  sheet.insertRule(`
+  }
   .l-select__list {
     margin: 0;
     padding: 6px;
     list-style: none;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-select-option span {
     position: relative;
     white-space: nowrap;
     word-wrap: normal;
     overflow: hidden;
     text-overflow: ellipsis;
-  }`)
-  sheet.insertRule(`
-  .l-button{
+  }
+  .l-button {
     cursor: pointer;
   }
-  `)
-  sheet.insertRule(`
-  .l-date-picker__table th, 
+  
+  .l-date-picker__table th,
   .l-date-picker__table td.l-date-picker__cell {
     padding: 0;
     border: 0;
     line-height: 22px;
   }
-  `)
-  sheet.insertRule(`
+  
   .l-date-picker__table th {
     text-align: center;
     color: rgba(0, 0, 0, 0.6);
     font-weight: 400;
-}
-  `)
-
-  sheet.insertRule(`
+  }
+  
   .l-time-picker__panel-body-scroll {
     flex: 1;
     height: 100%;
@@ -3852,9 +3833,8 @@ function generateStyle(pen: Pen) {
     list-style: none;
     padding: 0;
     margin: 0;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-time-picker__panel-body {
     width: 100%;
     height: 216px;
@@ -3863,16 +3843,15 @@ function generateStyle(pen: Pen) {
     display: flex;
     align-items: center;
     justify-content: center;
-
-  `)
-  sheet.insertRule(`
-  ul, dl, ol {
+  }
+  ul,
+  dl,
+  ol {
     margin: 0;
     padding: 0 0 0 1.2em;
     line-height: 22px;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-time-picker__panel-body-scroll-item {
     height: 24px;
     line-height: 24px;
@@ -3881,36 +3860,31 @@ function generateStyle(pen: Pen) {
     border-radius: 3px;
     text-align: center;
     cursor: pointer;
-    transition: .2s linear;
-}
-  `)
-  sheet.insertRule(`
-  .l-time-picker__panel-body-active-mask{
-      position: absolute;
-      top: 50%;
-      height: 24px;
-      width: 100%;
-      display: flex;
+    transition: 0.2s linear;
   }
-  `)
-  sheet.insertRule(`
-  .l-time-picker__panel-body-active-mask>div {
+  
+  .l-time-picker__panel-body-active-mask {
+    position: absolute;
+    top: 50%;
+    height: 24px;
+    width: 100%;
+    display: flex;
+  }
+  
+  .l-time-picker__panel-body-active-mask > div {
     flex: 1;
-    transform: translateY(calc(0px -(calc(24px + 6px) / 2)));
+    transform: translateY(calc(0px - (calc(24px + 6px) / 2)));
     height: 24px;
     background-color: #f2f3ff;
     margin: 6px 4px;
     border-radius: 3px;
-}
-  `)
-  sheet.insertRule(`
-  .l-date-picker__panel .l-time-picker__panel, 
+  }
+  
+  .l-date-picker__panel .l-time-picker__panel,
   .l-date-range-picker__panel .l-time-picker__panel {
     width: 216px;
-}
-  `)
-
-  sheet.insertRule(`
+  }
+  
   .l-time-picker__panel {
     width: 280px;
     background: transparent;
@@ -3919,10 +3893,9 @@ function generateStyle(pen: Pen) {
     position: relative;
     --timePickerPanelOffsetTop: 15;
     --timePickerPanelOffsetBottom: 35;
-}
-  `)
-  sheet.insertRule(`
-  .l-date-picker__panel-time-viewer, 
+  }
+  
+  .l-date-picker__panel-time-viewer,
   .l-date-range-picker__panel-time-viewer {
     display: flex;
     height: 32px;
@@ -3930,62 +3903,50 @@ function generateStyle(pen: Pen) {
     align-items: center;
     justify-content: center;
     color: rgba(0, 0, 0, 0.9);
-}
-  `)
-  sheet.insertRule(`
-  .l-date-picker__panel-time, 
+  }
+  
+  .l-date-picker__panel-time,
   .l-date-range-picker__panel-time {
     display: flex;
     flex-direction: column;
     gap: 6px;
     padding: 12px 8px;
     border-left: 1px solid #e7e7e7;
-}
-  `)
-
-  sheet.insertRule(`
+  }
+  
   .l-time-picker__panel-body-scroll:after {
-    height: calc(50% - var(--timePickerPanelOffsetBottom, 0)* 1px);
-}
-  `)
-
-  sheet.insertRule(`
+    height: calc(50% - var(--timePickerPanelOffsetBottom, 0) * 1px);
+  }
+  
   .l-time-picker__panel-body-scroll:after,
   .l-time-picker__panel-body-scroll:before {
     display: block;
     height: 50%;
     content: "";
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-time-picker__panel-body-scroll::-webkit-scrollbar {
     display: none;
   }
-  `)
-  sheet.insertRule(`
+  
   .l-time-picker__panel-body-scroll:before {
-    height: calc(50% - var(--timePickerPanelOffsetTop, 0)* 1px);
+    height: calc(50% - var(--timePickerPanelOffsetTop, 0) * 1px);
   }
-  `)
-  sheet.insertRule(`
+  
   .l-time-picker__panel-body-scroll-item.is-current {
     color: #0052d9;
   }
-  `)
-  sheet.insertRule(`
+  
   .l-date-picker__cell--active .l-date-picker__cell-inner {
     color: #fff !important;
     background-color: #0052d9 !important;
-}
-  `)
-
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__cell--highlight:before {
     opacity: 1;
     background-color: #f2f3ff;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__cell:before,
   .l-date-picker__cell:after {
     content: "";
@@ -3998,86 +3959,74 @@ function generateStyle(pen: Pen) {
     border-radius: 3px;
     height: 24px;
     transform: translateY(-50%);
-    transition: opacity .2s cubic-bezier(0,0,.15,1);
-}
-  `)
-
-  sheet.insertRule(`
+    transition: opacity 0.2s cubic-bezier(0, 0, 0.15, 1);
+  }
+  
   .l-date-picker__cell--active-start:before {
     opacity: 1;
-    left: calc(calc(4px - 1px)* 2);
+    left: calc(calc(4px - 1px) * 2);
     border-top-left-radius: 3px;
     border-bottom-left-radius: 3px;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__cell--active-end:before {
     opacity: 1;
-    right: calc(calc(4px - 1px)* 2);
+    right: calc(calc(4px - 1px) * 2);
     border-top-right-radius: 3px;
     border-bottom-right-radius: 3px;
-}
-  `)
-
-  sheet.insertRule(`
-  .l-date-picker__panel-year .l-date-picker__cell-inner, 
-  .l-date-picker__panel-month .l-date-picker__cell-inner, 
+  }
+  
+  .l-date-picker__panel-year .l-date-picker__cell-inner,
+  .l-date-picker__panel-month .l-date-picker__cell-inner,
   .l-date-picker__panel-quarter .l-date-picker__cell-inner {
     width: 48px;
-}
-  `)
-
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__panel-year .l-date-picker__table tbody tr,
-  .l-date-picker__panel-month .l-date-picker__table tbody tr, 
+  .l-date-picker__panel-month .l-date-picker__table tbody tr,
   .l-date-picker__panel-quarter .l-date-picker__table tbody tr {
     display: flex;
     justify-content: space-between;
-}
-  `)
-
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__table-week-row:hover:after {
     box-shadow: inset 0 0 0 1px #0052d9;
-}
-  `)
-  sheet.insertRule(`
-  .l-date-picker__table-week-row:hover 
-  .l-date-picker__cell:first-child .l-date-picker__cell-inner {
+  }
+  
+  .l-date-picker__table-week-row:hover
+    .l-date-picker__cell:first-child
+    .l-date-picker__cell-inner {
     color: #0052d9;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__table td.l-date-picker__cell {
     text-align: center;
     font-weight: 500;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__table-week-row--active:after {
     opacity: 1;
     z-index: 0;
     background-color: #0052d9;
-}
-  `)
-
-  sheet.insertRule(`
-  .l-date-picker__table-week-row--active .l-date-picker__cell:first-child .l-date-picker__cell-inner {
+  }
+  
+  .l-date-picker__table-week-row--active
+    .l-date-picker__cell:first-child
+    .l-date-picker__cell-inner {
     color: #0052d9;
   }
-  `)
-  sheet.insertRule(`
-  .l-date-picker__table-week-row .l-date-picker__cell:first-child .l-date-picker__cell-inner {
-    color: rgba(0,0,0,0.26);
-}
-  `)
-  sheet.insertRule(`
+  
+  .l-date-picker__table-week-row
+    .l-date-picker__cell:first-child
+    .l-date-picker__cell-inner {
+    color: rgba(0, 0, 0, 0.26);
+  }
+  
   .l-date-picker__table-week-row {
     cursor: pointer;
     position: sticky;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__table-week-row:after {
     content: "";
     position: absolute;
@@ -4087,38 +4036,36 @@ function generateStyle(pen: Pen) {
     z-index: 10;
     height: 24px;
     border-radius: 3px;
-    transition: box-shadow .2s cubic-bezier(.38,0,.24,1), background-color .2s linear, border-color .2s linear, color .2s linear;
+    transition: box-shadow 0.2s cubic-bezier(0.38, 0, 0.24, 1),
+      background-color 0.2s linear, border-color 0.2s linear, color 0.2s linear;
     pointer-events: none;
-}
-  `)
-  sheet.insertRule(`
-  .l-date-picker__table-week-row--active .l-date-picker__cell .l-date-picker__cell-inner {
+  }
+  
+  .l-date-picker__table-week-row--active
+    .l-date-picker__cell
+    .l-date-picker__cell-inner {
     background: transparent;
     color: #fff;
-}
-  `)
-  sheet.insertRule(`
-  .l-date-picker__panel, .l-date-range-picker__panel {
+  }
+  
+  .l-date-picker__panel,
+  .l-date-range-picker__panel {
     display: flex;
     flex-direction: column;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__footer--bottom {
     border-top: 1px solid #e7e7e7;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__footer {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     padding: 12px;
     gap: 8px;
-}
-  `)
-
-  sheet.insertRule(`
+  }
+  
   .l-button {
     // font: var(--td-font-body-medium);
     // color: var(--td-text-color-primary);
@@ -4142,53 +4089,44 @@ function generateStyle(pen: Pen) {
     vertical-align: middle;
     white-space: nowrap;
     border-radius: 3px;
-    transition: all .2s linear;
+    transition: all 0.2s linear;
     touch-action: manipulation;
     text-decoration: none;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-button.l-button--theme-primary {
     color: #fff;
     background-color: #0052d9;
     border-color: #0052d9;
     width: auto;
-    height:24px;
+    height: 24px;
     padding-left: 7px !important;
     padding-right: 7px !important;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-button.l-button--theme-primary.l-is-disabled {
     cursor: not-allowed;
     background-color: #b5c7ff;
     border-color: #b5c7ff;
-}
-  `)
-  sheet.insertRule(`
-  .l-date-picker__panel-content, 
-  .l-date-range-picker__panel-content, 
+  }
+  
+  .l-date-picker__panel-content,
+  .l-date-range-picker__panel-content,
   .l-date-range-picker__panel-content-wrapper {
     display: flex;
-}
-  `)
-  sheet.insertRule(`
-    .l-date-range-picker__panel--time.l-date-range-picker__panel-content-wrapper{
-      display: flex;
-      flex-direction: column;
-    }
-  `)
-
-
-  sheet.insertRule(`
+  }
+  
+  .l-date-range-picker__panel--time.l-date-range-picker__panel-content-wrapper {
+    display: flex;
+    flex-direction: column;
+  }
+  
   .l-range-input__inner {
     height: 100%;
     display: flex;
     align-items: center;
     gap: 8px;
-}
-  `)
-  sheet.insertRule(`
+  }
   
   .l-range-input {
     margin: 0;
@@ -4205,22 +4143,20 @@ function generateStyle(pen: Pen) {
     border-color: #dcdcdc;
     padding: 4px 8px;
     background-color: #fff;
-    color: rgba(0,0,0,.9);
+    color: rgba(0, 0, 0, 0.9);
     // font-size: var(--td-font-body-medium);
     box-sizing: border-box;
-    transition: all cubic-bezier(.38,0,.24,1) .2s;
+    transition: all cubic-bezier(0.38, 0, 0.24, 1) 0.2s;
     display: inline-flex;
     flex-direction: column;
     gap: 4px;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-range-input__inner .l-input__wrap {
     height: 100%;
     border-radius: 2px;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-range-input__inner .l-input {
     padding: 0 4px;
     height: 100%;
@@ -4228,100 +4164,89 @@ function generateStyle(pen: Pen) {
     box-shadow: none;
     font-size: inherit;
     border-radius: 2px;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__cell {
     cursor: pointer;
     position: relative;
     padding: 0;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__cell--highlight:before {
     opacity: 1;
     background-color: #f2f3ff;
-}
-  `)
-
-  sheet.insertRule(`
-  .l-date-picker__cell--active-start:before ,
+  }
+  
+  .l-date-picker__cell--active-start:before,
   .l-date-picker__cell--active-end:before {
     opacity: 1;
     left: 6px;
     border-top-left-radius: 3px;
     border-bottom-left-radius: 3px;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__cell--disabled .l-date-picker__cell-inner {
     cursor: not-allowed;
     color: rgba(0, 0, 0, 0.26);
     background-color: #eee;
-}
-  `)
-  sheet.insertRule(`
-  .l-date-picker__cell--disabled+.l-date-picker__cell--disabled:before {
+  }
+  
+  .l-date-picker__cell--disabled + .l-date-picker__cell--disabled:before {
     opacity: 1;
     left: -100%;
     background-color: #eee;
     border-radius: 3px;
-}
-  `)
-  sheet.insertRule(`
-  .l-date-picker__cell--disabled+.l-date-picker__cell--active-start:before{
+  }
+  
+  .l-date-picker__cell--disabled + .l-date-picker__cell--active-start:before {
     opacity: 1;
     left: -100%;
     background-color: #eee;
     border-radius: 3px;
-}
-  `)
-  sheet.insertRule(`
-  .l-date-picker__cell--active-end+.l-date-picker__cell--disabled:before{
+  }
+  
+  .l-date-picker__cell--active-end + .l-date-picker__cell--disabled:before {
     opacity: 1;
     left: -100%;
     background-color: #eee;
     border-radius: 3px;
-}
-  `)
-  sheet.insertRule(`
+  }
+  
   .l-icon {
     fill: currentColor;
-}
-  `)
-  sheet.insertRule(`
-  .l-range-input__prefix>.l-icon, .l-range-input__suffix>.l-icon {
-    transition: color .2s linear;
+  }
+  
+  .l-range-input__prefix > .l-icon,
+  .l-range-input__suffix > .l-icon {
+    transition: color 0.2s linear;
     font-size: 16px;
     color: rgba(0, 0, 0, 0.4);
     flex-shrink: 0;
-}
-  `)
-
-  sheet.insertRule(`
+  }
+  
   .l-range-input.l-range-input--prefix .l-range-input__prefix,
-   .l-range-input.l-range-input--suffix .l-range-input__suffix {
+  .l-range-input.l-range-input--suffix .l-range-input__suffix {
     height: 100%;
     text-align: center;
     display: flex;
     align-items: center;
     font-size: 14px;
-}
-  `)
-
-  sheet.insertRule(`
+  }
+  
   .l-date-picker__table-week-row--range::after {
     opacity: 1;
     z-index: 0 !important;
     background-color: #f2f3ff;
-}
-  `)
-
-  sheet.insertRule(`
-  .l-date-picker__panel-year .l-date-picker__cell--highlight+.l-date-picker__cell--highlight:before,
-   .l-date-picker__panel-month .l-date-picker__cell--highlight+.l-date-picker__cell--highlight:before {
+  }
+  
+  .l-date-picker__panel-year
+    .l-date-picker__cell--highlight
+    + .l-date-picker__cell--highlight:before,
+  .l-date-picker__panel-month
+    .l-date-picker__cell--highlight
+    + .l-date-picker__cell--highlight:before {
     left: calc(0px - calc(24px + 24px));
-}
-  `)
+  }
+  `
 }
 

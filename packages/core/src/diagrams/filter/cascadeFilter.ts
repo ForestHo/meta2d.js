@@ -257,10 +257,10 @@ function getChildrenByLevel(data, level, flowPath) {
 function recursionFindItem(data, level, flowPath) {
   for (let i = 0; i < data.length; i++) {
     const item = data[i];
-    if (item.children && item.children.findIndex(el => el.value === flowPath[level]) > -1) {
+    if (Array.isArray(item.children) && item.children.findIndex(el => el.value === flowPath[level]) > -1) {
       return item.children;
     }
-    if (item.children && item.children.length > 0) {
+    if (Array.isArray(item.children) && item.children.length > 0) {
       const ret = recursionFindItem(item.children, level, flowPath);
       if (ret) {
         return ret;
@@ -313,7 +313,7 @@ function renderPenRaw(pen: Pen, mkey: string, data: any, params) {
   };
   const fragMent = generateDomByData(pen, data, flowPath, opt);
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-  const cascaderPanel = document.querySelector('.l-cascader__panel');
+  const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
   if (cascaderPanel.children[nextLevel]) {
     cascaderPanel.replaceChild(fragMent, cascaderPanel.children[nextLevel]);
   } else {
@@ -321,13 +321,30 @@ function renderPenRaw(pen: Pen, mkey: string, data: any, params) {
   }
   reviewPanelFlowPath(cascaderPanel, flowPath);
 }
-function renderPenRaw2(pen: Pen, data: any) {
-  let flowPath = [];
-  if (pen.flowPath.length > 0) {
-    flowPath = deepClone(pen.flowPath);
-  } else {
-    getTreeFlowPathDefault(data, flowPath, item => item === 0);
-  }
+function renderPenRaw2(pen: Pen, data: any,params:any) {
+  // let flowPath = [];
+  // if (pen.flowPath.length > 0) {
+  //   flowPath = deepClone(pen.flowPath);
+  // } else {
+  //   getTreeFlowPathDefault(data, flowPath, item => item === 0);
+  // }
+  // window.meta2d.setValue({
+  //   id: pen.id,
+  //   flowPath,
+  // })
+  // const opt = {
+  //   penId: pen.id,
+  //   checked: pen.checked,
+  // };
+  // const cascaderPanel = document.querySelector('.l-cascader__panel');
+  // const fragMent = generateDomByData(pen, pen.data, flowPath, opt);
+  // cascaderPanel.replaceChildren(fragMent);
+
+  const { level } = params;
+  const _level = parseInt(level);
+  const nextLevel = _level + 1;
+  const flowPath = [];
+  getTreeFlowPathDefault(data, flowPath, item => item === 0);
   window.meta2d.setValue({
     id: pen.id,
     flowPath,
@@ -336,9 +353,16 @@ function renderPenRaw2(pen: Pen, data: any) {
     penId: pen.id,
     checked: pen.checked,
   };
-  const cascaderPanel = document.querySelector('.l-cascader__panel');
-  const fragMent = generateDomByData(pen, pen.data, flowPath, opt);
+  const fragMent = generateDomByData(pen, data, flowPath, opt);
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+  const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
+  // console.log(nextLevel,'nextLevel')
+  // if (cascaderPanel.children[nextLevel]) {
   cascaderPanel.replaceChildren(fragMent);
+  // } else {
+  //   cascaderPanel.appendChild(fragMent);
+  // }
+  reviewPanelFlowPath(cascaderPanel, flowPath)
 
 
   if (pen.checked.length === 0 && !pen.multiple) {
@@ -413,7 +437,7 @@ function getLevel(arr) {
     maxLevel = Math.max(level, maxLevel);
     for (let i = 0; i < arr.length; i++) {
       let item = arr[i];
-      if (item.children && item.children.length > 0) {
+      if (Array.isArray(item.children) && item.children.length > 0) {
         callBack(item.children, level);
       } else {
         // delete item.children;
@@ -589,7 +613,7 @@ function reviewChecked(cascaderPanel, pen, data, checkedIds) {
 }
 function isLeafNode(data, value) {
   const item = recursionTreeFindItem(data, value);
-  return !(item.children?.length > 0);
+  return !(Array.isArray(item.children)&&item.children?.length > 0);
 }
 function updateDropdown(pen, cascaderPanel, filterPaths) {
   for (let k = 0; k < cascaderPanel.children.length; k++) {
@@ -840,7 +864,7 @@ function recursionFindParentByChildKey(data, key) {
     if (Array.isArray(item.children) && item.children.findIndex(el => el.value === key) > -1) {
       return item;
     }
-    if (item.children && item.children.length > 0) {
+    if (Array.isArray(item.children) && item.children.length > 0) {
       const ret = recursionFindParentByChildKey(item.children, key);
       if (ret) {
         return ret;
@@ -1727,125 +1751,87 @@ function generateStyle(pen) {
   extraStyle.type = 'text/css';
   extraStyle.id = style_prefix + pen.id;
   document.head.appendChild(extraStyle);
-  let sheet1 = extraStyle.sheet;
-  if (pen.styles && pen.styles.length > 0) {
-    pen.styles.forEach((rule) => {
-      // sheet.insertRule(rule + '}', sheet.cssRules.length);
-      const ruleToCheck = rule + '}';
-      if (!hasCSSRuleInSheet(sheet1, ruleToCheck)) {
-        insertCSSRuleInSheet(sheet1, ruleToCheck);
-        // console.log(`The rule "${ruleToCheck}" was inserted.`);
-      } else {
-        // console.log(`The rule "${ruleToCheck}" already exists.`);
-      }
-    });
-  }
+  extraStyle.innerHTML = pen.styles ? pen.styles : '';
+  // let sheet1 = extraStyle.sheet;
+  // if (pen.styles && pen.styles.length > 0) {
+  //   pen.styles.forEach((rule) => {
+  //     // sheet.insertRule(rule + '}', sheet.cssRules.length);
+  //     const ruleToCheck = rule + '}';
+  //     if (!hasCSSRuleInSheet(sheet1, ruleToCheck)) {
+  //       insertCSSRuleInSheet(sheet1, ruleToCheck);
+  //       // console.log(`The rule "${ruleToCheck}" was inserted.`);
+  //     } else {
+  //       // console.log(`The rule "${ruleToCheck}" already exists.`);
+  //     }
+  //   });
+  // }
 
   let style = document.createElement('style');
   style.type = 'text/css';
   document.head.appendChild(style);
-  let sheet = style.sheet;
+  // let sheet = style.sheet;
   const defaultText = pen.defaultText ? pen.defaultText : '请选择';
-  sheet.insertRule(
-    `.l-cascader__panel {
-      display: flex;
-    }`
-  );
-  sheet.insertRule(`
+  style.innerHTML = 
+  `.l-cascader__panel {
+    display: flex;
+  }
   .${TAG_WRAPPER}${pen.id}::before {
     content: '${defaultText}';
     display: block;
     color: gray;
   }
-  `)
-  sheet.insertRule(`
   .${TAG_WRAPPER}${pen.id}:not(:empty)::before {
     display: none;
   }
-  `)
-  sheet.insertRule(`
-  .l-is-hidden[class^="l-cascade-dropdown-"]{
-    visibility: hidden; 
+  .l-is-hidden[class^="l-cascade-dropdown-"] {
+    visibility: hidden;
   }
-  `)
-  sheet.insertRule(
-    `.l-cascader__panel.l-cascader--normal {
-      height: 200px;
-    }`
-  );
-  sheet.insertRule(
-    `.l-cascader__menu {
-      width: 148px;
-      overflow: auto;
-      box-sizing: content-box;
-      padding: 6px;
-      background: #fff;
-    }`
-  );
-  sheet.insertRule(
-    `.l-cascader__menu--segment {
-        border-right: 1px solid #e8e8e8;
-    }`
-  );
-
-  sheet.insertRule(
-    `
-    .l-cascader__item-icon.l-icon {
-      width:26px;
-      position: absolute;
-      height: 100%;
-      right: 0;
-      top: 0;
-      background: transparent;
-      // margin: 0 8px;
-      font-size: 16px;
-      color: rgba(0, 0, 0, 0.4);
+  .l-cascader__panel.l-cascader--normal {
+    height: 200px;
   }
-    `
-  )
-  sheet.insertRule(
-    `
-    .l-icon {
-      display: inline-block;
-      vertical-align: middle;
-      width: 1em;
+  .l-cascader__menu {
+    width: 148px;
+    overflow: auto;
+    box-sizing: content-box;
+    padding: 6px;
+    background: #fff;
   }
-    `
-  )
-  sheet.insertRule(
-    `
-    .l-cascader__item {
-      width: 100%;
-      position: relative;
-      display: flex;
-      align-items: center;
-      height: 28px;
-      color: rgba(0, 0, 0, 0.9);
-      padding: 0 8px;
-      border-radius: 3px;
-      margin-top: 2px;
-      transition: background-color 0.2s cubic-bezier(0.82, 0, 1, 0.9);
-      list-style: none;
+  .l-cascader__menu--segment {
+    border-right: 1px solid #e8e8e8;
   }
-    `
-  )
-  // sheet.insertRule(
-  //   `
-  // .l-cascader-checkbox {
-  //   display: inline-block;
-  //   box-sizing: border-box;
-  //   margin: 0;
-  //   padding: 0;
-  //   list-style: none;
-  //   display: inline-flex;
-  //   align-items: center;
-  //   position: relative;
-  //   cursor: pointer;
-  //   color: rgba(0, 0, 0, 0.9);
-  // `
-  // )
-  sheet.insertRule(
-    `
+  
+  .l-cascader__item-icon.l-icon {
+    width: 26px;
+    position: absolute;
+    height: 100%;
+    right: 0;
+    top: 0;
+    background: transparent;
+    // margin: 0 8px;
+    font-size: 16px;
+    color: rgba(0, 0, 0, 0.4);
+  }
+  
+  .l-icon {
+    display: inline-block;
+    vertical-align: middle;
+    width: 1em;
+  }
+  
+  .l-cascader__item {
+    width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 28px;
+    color: rgba(0, 0, 0, 0.9);
+    padding: 0 8px;
+    border-radius: 3px;
+    margin-top: 2px;
+    transition: background-color 0.2s cubic-bezier(0.82, 0, 1, 0.9);
+    list-style: none;
+  }
+  
   .l-cascader-checkbox-former {
     border: 0;
     clip: rect(0 0 0 0);
@@ -1857,11 +1843,8 @@ function generateStyle(pen) {
     width: 1px;
     outline: 0;
     appearance: none;
-}
-  `
-  )
-  sheet.insertRule(
-    `
+  }
+  
   .l-cascader-checkbox {
     max-width: 100%;
     flex: 1;
@@ -1877,18 +1860,14 @@ function generateStyle(pen) {
     cursor: pointer;
     color: rgba(0, 0, 0, 0.9);
     white-space: nowrap;
-}
-  `
-  )
-  sheet.insertRule(`
+  }
+  
   .l-cascader-checkbox-input:after {
     content: "";
     position: absolute;
     opacity: 0;
     box-sizing: border-box;
-}
-  `)
-  sheet.insertRule(`
+  }
   .l-cascader-checkbox.l-is-checked .l-cascader-checkbox-input:after {
     opacity: 1;
     top: 6px;
@@ -1901,16 +1880,12 @@ function generateStyle(pen) {
     border-left: 0;
     transform: rotate(45deg) scale(1) translate(-50%, -50%);
     background: transparent;
-}
-  `)
-  sheet.insertRule(`
+  }
   .l-cascader-checkbox.l-is-indeterminate .l-cascader-checkbox-input {
     border-color: #0052d9;
     background-color: #0052d9;
-    transition: background-color .2s cubic-bezier(.82,0,1,.9);
-}
-  `)
-  sheet.insertRule(`
+    transition: background-color 0.2s cubic-bezier(0.82, 0, 1, 0.9);
+  }
   .l-cascader-checkbox.l-is-indeterminate .l-cascader-checkbox-input:after {
     opacity: 1;
     width: 16px;
@@ -1919,19 +1894,15 @@ function generateStyle(pen) {
     right: 0;
     top: 5px;
     border: unset;
-    transform: scale(.5);
+    transform: scale(0.5);
     background-color: #fff;
-}
-  `)
-  sheet.insertRule(`
+  }
   .l-cascader-checkbox.l-is-checked .l-cascader-checkbox-input {
     border-color: #0052d9;
     background-color: #0052d9;
-    transition: background-color .2s cubic-bezier(.82,0,1,.9);
-}
-  `)
-  sheet.insertRule(
-    `
+    transition: background-color 0.2s cubic-bezier(0.82, 0, 1, 0.9);
+  }
+  
   .l-cascader-checkbox-input {
     position: relative;
     display: inline-block;
@@ -1942,17 +1913,14 @@ function generateStyle(pen) {
     border-radius: 3px;
     background-color: #fff;
     box-sizing: border-box;
-  `)
-  sheet.insertRule(
-    `
+  }
+  
   .l-cascader-checkbox-input.l-disabled {
-      cursor: not-allowed;
-      pointer-events: none;
-      background-color: #f0f0f0;
-      color: rgba(0, 0, 0, 0.26);
-  `)
-
-  sheet.insertRule(`
+    cursor: not-allowed;
+    pointer-events: none;
+    background-color: #f0f0f0;
+    color: rgba(0, 0, 0, 0.26);
+  }
   .l-cascader-checkbox-label {
     // width: 100%;
     flex: 1;
@@ -1960,28 +1928,22 @@ function generateStyle(pen) {
     display: inline-block;
     margin-left: 8px;
     vertical-align: middle;
-  }`)
-
-  sheet.insertRule(`
+  }
+  
   .l-cascader__item.l-is-expanded {
     background: #f2f3ff;
     color: #0052d9;
-  }`)
-
-  sheet.insertRule(`
+  }
+  
   .l-cascader__item.l-is-selected {
     color: #0052d9;
     background: #f2f3ff;
-}
-  `)
-  sheet.insertRule(`
+  }
   .l-cascader__menu.l-cascader__menu--filter {
     width: auto;
     min-width: 148px;
   }
-  `)
-
-  sheet.insertRule(`
+  
   .l-cascader-panel-empty {
     width: 100%;
     height: 28px;
@@ -1991,17 +1953,15 @@ function generateStyle(pen) {
     text-align: center;
     padding-left: 0;
   }
-  `)
-  sheet.insertRule(`
-  .l-cascader__input{
+  .l-cascader__input {
     width: 100%;
     height: 100%;
     overflow: auto;
     padding: 0 8px;
     border: 1px solid #ccc;
-    borderRadius: 4px;
+    borderradius: 4px;
     // whiteSpace: nowrap;
     background: transparent;
   }
-  `)
+  `
 }

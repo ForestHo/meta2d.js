@@ -145,7 +145,7 @@ function renderPenRawRefresh(pen: Pen) {
 
   // 控制过滤搜索
   const inputDom = document.querySelector(`.${TREE_PREFIX}${pen.id}`);
-  console.log(inputDom,pen.filterable, 'inputDom');
+  console.log(inputDom, pen.filterable, 'inputDom');
   inputDom.readOnly = pen.filterable ? !pen.filterable : true;
   inputDom.placeholder = pen.filterable ? '请输入关键字' : '';
 
@@ -1670,7 +1670,7 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
     labelDom.style.lineHeight = '40px';
     labelDom.style.width = 'calc(100% - 18px)';
     labelDom.style.marginLeft = '6px';
-    labelDom.innerHTML = data[i].label + '-' + data[i].value;
+    labelDom.innerHTML = data[i].label;
     labelDom.dataset.key = data[i].value;
     labelDom.dataset.penId = pen.id;
     labelDom.dataset.value = data[i].value;
@@ -1819,151 +1819,108 @@ function generateStyle(pen) {
   extraStyle.type = 'text/css';
   extraStyle.id = style_prefix + pen.id;
   document.head.appendChild(extraStyle);
-  let sheet1 = extraStyle.sheet;
-  if (pen.styles && pen.styles.length > 0) {
-    pen.styles.forEach((rule) => {
-      // sheet.insertRule(rule + '}', sheet.cssRules.length);
-      const ruleToCheck = rule + '}';
-      if (!hasCSSRuleInSheet(sheet1, ruleToCheck)) {
-        insertCSSRuleInSheet(sheet1, ruleToCheck);
-        // console.log(`The rule "${ruleToCheck}" was inserted.`);
-      } else {
-        // console.log(`The rule "${ruleToCheck}" already exists.`);
-      }
-    });
-  }
+  extraStyle.innerHTML = pen.styles ? pen.styles : '';
+  // let sheet1 = extraStyle.sheet;
+  // if (pen.styles && pen.styles.length > 0) {
+  //   pen.styles.forEach((rule) => {
+  //     // sheet.insertRule(rule + '}', sheet.cssRules.length);
+  //     const ruleToCheck = rule + '}';
+  //     if (!hasCSSRuleInSheet(sheet1, ruleToCheck)) {
+  //       insertCSSRuleInSheet(sheet1, ruleToCheck);
+  //       // console.log(`The rule "${ruleToCheck}" was inserted.`);
+  //     } else {
+  //       // console.log(`The rule "${ruleToCheck}" already exists.`);
+  //     }
+  //   });
+  // }
 
 
   let style = document.createElement('style');
   style.type = 'text/css';
   document.head.appendChild(style);
-  let sheet = style.sheet;
+  // let sheet = style.sheet;
 
   const defaultText = pen.defaultText ? pen.defaultText : '请选择';
-  sheet.insertRule(`
-  .${TAG_WRAPPER}${pen.id}::before {
-    content: '${defaultText}';
-    display: block;
-    color: gray;
-  }
-  `)
-  sheet.insertRule(`
-  .${TAG_WRAPPER}${pen.id}:not(:empty)::before {
-    display: none;
-  }
-  `)
-  sheet.insertRule(`
-  .l-is-hidden[class^="l-select__dropdown-inner_"]{
-    visibility: hidden; 
-  }
-  `)
-  sheet.insertRule(
-    `div[class^="to__subItem"].to__show {
+
+  style.innerHTML =
+    `.${TAG_WRAPPER}${pen.id}::before {
+      content: '${defaultText}';
+      display: block;
+      color: gray;
+    }
+    .${TAG_WRAPPER}${pen.id}:not(:empty)::before {
+      display: none;
+    } 
+    .l-is-hidden[class^="l-select__dropdown-inner_"] {
+      visibility: hidden;
+    }
+    div[class^="to__subItem"].to__show {
       display: block !important;
-    }`
-  );
-  sheet.insertRule(
-    `.l-tree{
+    }
+    .l-tree {
       max-height: 300px;
-    }`
-  );
-  sheet.insertRule(
-    `.l-tree .l-visible{
+    }
+    .l-tree .l-visible {
       display: flex;
-    }`
-  );
-  sheet.insertRule(
-    `.l-tree .l-hidden{
+    }
+    .l-tree .l-hidden {
       max-height: 0;
       overflow: hidden;
-    }`
-  );
-  // sheet.insertRule(
-  //   `.l-tree .l-disabled{
-  //     cursor: not-allowed;
-  //   }`
-  // );
-  sheet.insertRule(
-    `.l-tree .l-tree-item.l-disabled .l_tree_lable{
+    }
+    .l-tree .l-tree-item.l-disabled .l_tree_lable {
       cursor: not-allowed;
       pointer-events: none;
       background-color: #fff;
       color: rgba(0, 0, 0, 0.26);
-    }`
-  );
-  // sheet.insertRule(
-  //   `.l-tree .l-disabled .l_tree_lable{
-  //     cursor: not-allowed;
-  //     background-color: #fff;
-  //     color: rgba(0, 0, 0, 0.26);
-  //   }`
-  // );
-  sheet.insertRule(
-    `.to__downList .icon{
+    }
+    .to__downList .icon {
       transform: rotate(-90deg);
-    }`
-  );
-  sheet.insertRule(
-    `.l-tree-item.l-item-open .to__downList .icon{
+    }
+    .l-tree-item.l-item-open .to__downList .icon {
       transform: rotate(0deg);
-    }`
-  );
-  sheet.insertRule(
-    `
-    .to__item_wrapper.to__checked{
+    }
+    
+    .to__item_wrapper.to__checked {
       background-color: #f2f3ff;
     }
-    `
-  )
-  sheet.insertRule(
-    `
-    .to__item_wrapper.to__hidden{
+    
+    .to__item_wrapper.to__hidden {
       max-height: 0;
     }
-    `
-  )
-  sheet.insertRule(
-    `
-    .to__item_wrapper.to__visible{
+    
+    .to__item_wrapper.to__visible {
       max-height: auto;
     }
-    `
-  )
-  sheet.insertRule(
-    `
-    .to__item.to__hidden{
+    
+    .to__item.to__hidden {
       overflow: hidden;
     }
-    `
-  )
-  sheet.insertRule(`
-  .l-tree__input{
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    padding: 0 8px;
-    border: 1px solid #ccc;
-    borderRadius: 4px;
-    // whiteSpace: nowrap;
-    background: transparent;
-  }
-  `)
-  sheet.insertRule(`
-  .l-checkbox__former {
-    border: 0;
-    clip: rect(0 0 0 0);
-    height: 1px;
-    margin: -1px;
-    overflow: hidden;
-    padding: 0;
-    position: absolute;
-    width: 1px;
-    outline: 0;
-    appearance: none;
-}
-  `)
-  sheet.insertRule(`
-  .l_checkbox_input{
+    
+    .l-tree__input {
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      padding: 0 8px;
+      border: 1px solid #ccc;
+      borderradius: 4px;
+      // whiteSpace: nowrap;
+      background: transparent;
+    }
+    
+    .l-checkbox__former {
+      border: 0;
+      clip: rect(0 0 0 0);
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      padding: 0;
+      position: absolute;
+      width: 1px;
+      outline: 0;
+      appearance: none;
+    }
+    
+    .l_checkbox_input {
       position: relative;
       display: inline-block;
       width: 16px;
@@ -1973,76 +1930,62 @@ function generateStyle(pen) {
       border-radius: 3px;
       background-color: #fff;
       box-sizing: border-box;
-  }
-  `)
-  sheet.insertRule(`
-  .l-checkbox__input {
-    position: relative;
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    vertical-align: middle;
-    border: 1px solid #dcdcdc;
-    border-radius: 3px;
-    // background-color: var(--td-bg-color-container);
-    box-sizing: border-box;
-}
-  `)
-  sheet.insertRule(`
-  .l_tree_lable.l-is-checked {
-    font-weight: 500;
-    color: rgba(0, 0, 0, 0.9);
-    background-color: #f2f3ff;
-}
-  `)
-  sheet.insertRule(`
-  .l_tree_lable.l-is-checked .l-checkbox__input {
-    border-color: #0052d9;
-    background-color: #0052d9;
-    transition: background-color .2s cubic-bezier(.82,0,1,.9);
-}
-  `)
-  sheet.insertRule(`
-  .l-checkbox__input:after {
-    content: "";
-    position: absolute;
-    opacity: 0;
-    box-sizing: border-box;
-}
-  `)
-  sheet.insertRule(`
-  .l_tree_lable.l-is-checked .l-checkbox__input:after {
-    opacity: 1;
-    top: 6px;
-    left: 3px;
-    width: 5px;
-    height: 9px;
-    border: 2px solid #fff;
-    border-radius: 0 0 1px;
-    border-top: 0;
-    border-left: 0;
-    transform: rotate(45deg) scale(1) translate(-50%, -50%);
-    background: transparent;
-}
-  `)
-  sheet.insertRule(`
-  .l_tree_lable.l-is-indeterminate .l-checkbox__input:after {
-    opacity: 1;
-    width: 16px;
-    height: 4px;
-    left: -1px;
-    right: 0;
-    top: 5px;
-    border: unset;
-    transform: scale(.5);
-    background-color: white;
-}
-  `)
-  sheet.insertRule(`
-  .l_tree_lable.l-is-indeterminate .l-checkbox__input {
-    border-color: #0052d9;
-    background-color: #0052d9;;
-    transition: background-color .2s cubic-bezier(.82,0,1,.9);
-}
-  `)
+    }
+    .l-checkbox__input {
+      position: relative;
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      vertical-align: middle;
+      border: 1px solid #dcdcdc;
+      border-radius: 3px;
+      // background-color: var(--td-bg-color-container);
+      box-sizing: border-box;
+    }
+    .l_tree_lable.l-is-checked {
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.9);
+      background-color: #f2f3ff;
+    }
+    .l_tree_lable.l-is-checked .l-checkbox__input {
+      border-color: #0052d9;
+      background-color: #0052d9;
+      transition: background-color 0.2s cubic-bezier(0.82, 0, 1, 0.9);
+    }
+    .l-checkbox__input:after {
+      content: "";
+      position: absolute;
+      opacity: 0;
+      box-sizing: border-box;
+    }
+    .l_tree_lable.l-is-checked .l-checkbox__input:after {
+      opacity: 1;
+      top: 6px;
+      left: 3px;
+      width: 5px;
+      height: 9px;
+      border: 2px solid #fff;
+      border-radius: 0 0 1px;
+      border-top: 0;
+      border-left: 0;
+      transform: rotate(45deg) scale(1) translate(-50%, -50%);
+      background: transparent;
+    }
+    .l_tree_lable.l-is-indeterminate .l-checkbox__input:after {
+      opacity: 1;
+      width: 16px;
+      height: 4px;
+      left: -1px;
+      right: 0;
+      top: 5px;
+      border: unset;
+      transform: scale(0.5);
+      background-color: white;
+    }
+    .l_tree_lable.l-is-indeterminate .l-checkbox__input {
+      border-color: #0052d9;
+      background-color: #0052d9;
+      transition: background-color 0.2s cubic-bezier(0.82, 0, 1, 0.9);
+    }
+    `
 }
