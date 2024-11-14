@@ -500,7 +500,7 @@ function trWeekClick(e) {
     id: penId,
     pickerTimes,
   })
-  adjustHeight(pen);
+  // adjustHeight(pen);
 
   // 还是需要更新月份和年份
 
@@ -719,7 +719,7 @@ function generateDomByType(pen, type, i) {
   return frag;
 }
 function onAdd(pen: Pen) {
-  adjustHeight(pen);
+  // adjustHeight(pen);
 }
 function assembleTimeItem(pen) {
   const timeItem = document.createElement('div');
@@ -987,7 +987,7 @@ function updateTagsWithDate(penId, index, key) {
     id: penId,
     pickerTimes,
   })
-  adjustHeight(pen);
+  // adjustHeight(pen);
 
   // 更新footer
   if (pen.mode === SwitchMode.TIME) {
@@ -1251,7 +1251,7 @@ function tdYearClick(e) {
     id: penId,
     pickerTimes,
   })
-  adjustHeight(pen);
+  // adjustHeight(pen);
   // 更新body
   updateBody(this.parentElement.parentElement.parentElement.parentElement, penId);
 }
@@ -1274,7 +1274,7 @@ function tdMonthClick(e) {
     id: penId,
     pickerTimes,
   })
-  adjustHeight(pen);
+  // adjustHeight(pen);
 
   // 更新body
   updateBody(this.parentElement.parentElement.parentElement.parentElement, penId);
@@ -1388,7 +1388,7 @@ function tdClick(e) {
     id: penId,
     pickerTimes,
   })
-  adjustHeight(pen);
+  // adjustHeight(pen);
 
   // 更新footer
   if (pen.mode === SwitchMode.TIME) {
@@ -2282,7 +2282,7 @@ function tagClose(e) {
   updateBody(list, penId);
 
   // 更新高度
-  adjustHeight(pen);
+  // adjustHeight(pen);
 }
 function onDestroy(pen: Pen) {
   if (pen.calculative.singleton && pen.calculative.singleton.div) {

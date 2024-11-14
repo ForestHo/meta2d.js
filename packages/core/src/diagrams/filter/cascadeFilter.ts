@@ -18,6 +18,7 @@ export function cascadeFilter(pen: Pen): Path2D {
     pen.onMouseLeave = onMouseLeave;
     pen.onRenderPenRaw = renderPenRaw;
     pen.onRenderPenRaw2 = renderPenRaw2;
+    pen.onRenderPenRawRefresh = renderPenRawRefresh;
 
   }
   const { x, y, width, height } = pen.calculative.worldRect;
@@ -90,6 +91,10 @@ function renderData(data, dom, pen) {
 
     const flowPath = [];
     getTreeFlowPathDefault(data, flowPath, item => item === 0);
+    window.meta2d.setValue({
+      id: pen.id,
+      flowPath,
+    })
     const opt = {
       penId: pen.id,
       checked: pen.checked,
@@ -99,17 +104,12 @@ function renderData(data, dom, pen) {
     lPanel.appendChild(fragMent);
     dom.appendChild(lPanel);
 
-
-    window.meta2d.setValue({
-      id: pen.id,
-      flowPath,
-    })
     if (pen.checked) {
       for (let i = 0; i < pen.checked.length; i++) {
         const ck = pen.checked[i];
         updateTags(true, pen.checked, ck, pen.id, pen);
       }
-      adjustHeight(pen);
+      // adjustHeight(pen);
     }
   }
 }
@@ -317,8 +317,6 @@ function renderPenRaw(pen: Pen, mkey: string, data: any, params) {
   } else {
     cascaderPanel.appendChild(fragMent);
   }
-
-
   reviewPanelFlowPath(cascaderPanel, flowPath);
 }
 function renderPenRaw2(pen: Pen, data: any) {
@@ -345,7 +343,37 @@ function renderPenRaw2(pen: Pen, data: any) {
     // 清空tag
     const tagWrapper = document.getElementsByClassName(`${TAG_WRAPPER}${pen.id}`)[0];
     tagWrapper.innerHTML = '';
-    adjustHeight(pen);
+    // adjustHeight(pen);
+  }
+}
+/**
+ * @description 更新整个筛选器
+ * @author Joseph Ho
+ * @date 13/11/2024
+ */
+function renderPenRawRefresh(pen: Pen) {
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+  const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
+  const flowPath = [];
+  getTreeFlowPathDefault(pen.data, flowPath, item => item === 0);
+
+  window.meta2d.setValue({
+    id: pen.id,
+    flowPath,
+  })
+  const opt = {
+    penId: pen.id,
+    checked: pen.checked,
+  };
+  const fragMent = generateDomByData(pen, pen.data, flowPath, opt);
+  cascaderPanel.replaceChildren(fragMent);
+
+  if (pen.checked) {
+    for (let i = 0; i < pen.checked.length; i++) {
+      const ck = pen.checked[i];
+      updateTags(true, pen.checked, ck, pen.id, pen);
+    }
+    // adjustHeight(pen);
   }
 }
 // 计算方法
@@ -1347,7 +1375,7 @@ function checkboxClick(e) {
     id: penId,
     checked: ids,
   })
-  adjustHeight(pen);
+  // adjustHeight(pen);
   // renderPenRaw2(pen, pen.data);
   if (currentItem) {
     const _level = getLevel([currentItem]);

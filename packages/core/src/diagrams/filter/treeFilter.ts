@@ -19,6 +19,7 @@ export function treeFilter(pen: Pen): Path2D {
     pen.onAdd = onAdd;
     pen.onRenderPenRaw = renderPenRaw;
     pen.onRenderPenRaw2 = renderPenRaw2;
+    pen.onRenderPenRawRefresh = renderPenRawRefresh;
   }
   const { x, y, width, height } = pen.calculative.worldRect;
   if (!pen.calculative.singleton) {
@@ -66,12 +67,14 @@ export function treeFilter(pen: Pen): Path2D {
     // dropMenu.style.pointerEvents = 'initial';
     container.appendChild(dropMenu);
 
-    renderData(pen.data, dropMenu, pen)
     div.appendChild(container);
     // 2.加载到div layer
     pen.calculative.canvas.externalElements?.parentElement.appendChild(div);
     setElemPosition(pen, div);
     pen.calculative.singleton.div = div;
+
+
+    renderData(pen.data, dropMenu, pen)
   }
   const path = new Path2D();
   return path;
@@ -87,7 +90,29 @@ function renderPenRaw(pen: Pen, mkey: string, data: any) {
   })
 }
 function renderPenRaw2(pen: Pen, data: any) {
-  const lTreeList = document.querySelector('.l-tree-list');
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+  const lTreeList = dropMenu.querySelector('.l-tree-list');
+  const showIds = collectExpandShowIds(data, pen);
+  console.log(showIds, data, 'renderPenRaw2');
+  addLevelToTree(data);
+  const frag = generateDomByData(data, null, pen, null, showIds, [], generateDomByData);
+  // console.log(frag, 'frag');
+  lTreeList.replaceChildren(frag);
+  window.meta2d.setValue({
+    id: pen.id,
+    showIds: showIds
+  })
+}
+/**
+ * @description 更新整个筛选器
+ * @author Joseph Ho
+ * @date 13/11/2024
+ */
+function renderPenRawRefresh(pen: Pen) {
+  console.log('renderPenRawRefresh', pen)
+  const data = deepClone(pen.data);
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+  const lTreeList = dropMenu.querySelector('.l-tree-list');
   const showIds = collectExpandShowIds(data, pen);
   console.log(showIds, data, 'renderPenRaw2');
   addLevelToTree(data);
@@ -113,7 +138,7 @@ function getChildIndex(dom, key: string) {
   return { index: child_index, level };
 }
 function onAdd(pen: Pen) {
-  adjustHeight(pen);
+  // adjustHeight(pen);
 }
 // 过滤树结构，找到匹配过滤条件的直系亲属树path
 function onRecursionData(data, val, paths) {
@@ -1452,6 +1477,7 @@ function lableClick(e) {
 function renderData(data, dom, pen) {
   if (Array.isArray(data)) {
     generateStyle(pen);
+
     const lTree = document.createElement('div');
     lTree.className = 'l-tree';
     lTree.style.padding = '6px';
