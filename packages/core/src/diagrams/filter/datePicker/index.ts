@@ -89,7 +89,7 @@ let yearOptions = getYearOptions(1900, 2100);
 let yeartoYearOptions = [];
 
 let monthOptions = [];
-function getMonthOptions(monthOptions){
+function getMonthOptions(monthOptions) {
   for (let i = 1; i <= 12; i++) {
     monthOptions.push({
       label: i + '',
@@ -225,7 +225,7 @@ function generateDomByData(pen) {
         dateDom = generateQuarterDom(pen, i)
       } else if (pen.mode === SwitchMode.YEAR) {
         dateDom = generateYearDom(pen, i)
-      }else if (pen.mode === SwitchMode.TIME) {
+      } else if (pen.mode === SwitchMode.TIME) {
         dateDom = generateDateDom(pen, i)
       }
       frag.appendChild(dateDom);
@@ -1578,7 +1578,7 @@ function assembleHeader(pen, opt, type) {
     year.appendChild(yearSelect);
     controller.appendChild(year);
   } else if (type === SwitchMode.YEAR) {
-    console.log('opt111', opt);
+    // console.log('opt111', opt);
     const item = yeartoYearOptions.find(el => el.value[0] <= opt.year && el.value[1] >= opt.year);
     const year = document.createElement('div');
     year.className = 'l-select__wrap l-date-picker__header-controller-range-year';
@@ -1797,15 +1797,15 @@ function changeOption(prevDom, nextDom, ctl, type, penId, index, mode) {
     if (_type === DateSelectType.YEAR) {
       const startYear = parseInt(yearOptions[0].value);
       const moreOpt = generateYearOptions(startYear - 10, 10);
-      console.log(moreOpt, 'moreOpt 00')
+      // console.log(moreOpt, 'moreOpt 00')
       yearOptions.unshift(...moreOpt);
       const liFrag = generateOptDom(moreOpt, { index, penId, type, mode });
       prevDom.prepend(liFrag);
     } else if (_type === DateSelectType.YEAR_RANGE) {
-      console.log('prev year range')
+      // console.log('prev year range')
       const startYear = parseInt(yeartoYearOptions[0].value[0]);
       const moreOpt = getYeartoYearOptions(startYear - 50, startYear);
-      console.log(moreOpt, 'moreOpt 11')
+      // console.log(moreOpt, 'moreOpt 11')
       yeartoYearOptions.unshift(...moreOpt);
       const liFrag = generateOptDom(moreOpt, { index, penId, type, mode });
       prevDom.prepend(liFrag);
@@ -1818,10 +1818,10 @@ function changeOption(prevDom, nextDom, ctl, type, penId, index, mode) {
       const liFrag = generateOptDom(moreOpt, { index, penId, type, mode });
       nextDom.appendChild(liFrag);
     } else if (_type === DateSelectType.YEAR_RANGE) {
-      console.log('next year range')
+      // console.log('next year range')
       const startYear = parseInt(yeartoYearOptions[yeartoYearOptions.length - 1].value[0]);
       const moreOpt = getYeartoYearOptions(startYear + 10, startYear + 50);
-      console.log(moreOpt, 'moreOpt 22')
+      // console.log(moreOpt, 'moreOpt 22')
       yeartoYearOptions.push(...moreOpt);
       const liFrag = generateOptDom(moreOpt, { index, penId, type, mode });
       nextDom.appendChild(liFrag);
@@ -1829,7 +1829,7 @@ function changeOption(prevDom, nextDom, ctl, type, penId, index, mode) {
   }
 }
 function selectScroll(e) {
-  console.log('scroll')
+  // console.log('scroll')
   const { type, mode, penId, index } = this.dataset;
   const _type = parseInt(type);
   const isAtTop = this.scrollTop === 0;
@@ -1874,9 +1874,9 @@ function selectScroll(e) {
     changeOption(null, this.firstChild.nextElementSibling.firstChild, More_Ctl.NEXT, type, penId, index, mode);
   }
 
-  console.log(`Scroll Position: ${this.scrollTop}`);
-  console.log(`Is at top: ${isAtTop}`);
-  console.log(`Is at bottom: ${isAtBottom}`);
+  // console.log(`Scroll Position: ${this.scrollTop}`);
+  // console.log(`Is at top: ${isAtTop}`);
+  // console.log(`Is at bottom: ${isAtBottom}`);
 }
 function onSelect(e) {
   // e.stopPropagation();
@@ -2137,6 +2137,7 @@ function assembleInputBox(pen: Pen) {
   box.style.padding = '0 8px';
   box.style.border = '1px solid #ccc';
   box.style.borderRadius = '4px';
+  box.style.overflow = 'auto';
   // box.style.whiteSpace = 'nowrap';
   box.style.background = 'transparent';
 
@@ -2309,13 +2310,21 @@ function onMouseUp(pen: Pen, e: Point) {
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
   dropMenu.style.display = dropMenu.style.display === 'none' ? 'block' : 'none';
 }
+function resetPenData(pen: Pen) {
+  window.meta2d.setValue({
+    id: pen.id,
+    pickerTimes: [],
+    focusIndex: -1,
+  })
+}
 /**
  * @description 更新整个筛选器
  * @author Joseph Ho
  * @date 13/11/2024
  */
 function renderPenRawRefresh(pen: Pen) {
-  console.log('renderPenRawRefresh', pen)
+  resetPenData(pen);
+  // console.log('renderPenRawRefresh', pen)
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
   // 重新渲染dropdown面板
   const fragMent = generateDomByData(pen);

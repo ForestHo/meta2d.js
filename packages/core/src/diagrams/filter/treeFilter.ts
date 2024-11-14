@@ -40,6 +40,8 @@ export function treeFilter(pen: Pen): Path2D {
     // 创建容器
     const container = document.createElement("div");
     container.style.position = 'relative';
+    container.style.width = '100%';
+    container.style.height = '100%';
     container.dataset.penId = pen.id;
     container.addEventListener("mouseleave", containerMouseLeave);
     container.addEventListener("mouseenter", containerMouseEnter);
@@ -93,7 +95,7 @@ function renderPenRaw2(pen: Pen, data: any) {
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
   const lTreeList = dropMenu.querySelector('.l-tree-list');
   const showIds = collectExpandShowIds(data, pen);
-  console.log(showIds, data, 'renderPenRaw2');
+  // console.log(showIds, data, 'renderPenRaw2');
   addLevelToTree(data);
   const frag = generateDomByData(data, null, pen, null, showIds, [], generateDomByData);
   // console.log(frag, 'frag');
@@ -109,12 +111,12 @@ function renderPenRaw2(pen: Pen, data: any) {
  * @date 13/11/2024
  */
 function renderPenRawRefresh(pen: Pen) {
-  console.log('renderPenRawRefresh', pen)
+  // console.log('renderPenRawRefresh', pen)
   const data = deepClone(pen.data);
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
   const lTreeList = dropMenu.querySelector('.l-tree-list');
   const showIds = collectExpandShowIds(data, pen);
-  console.log(showIds, data, 'renderPenRaw2');
+  // console.log(showIds, data, 'renderPenRaw2');
   addLevelToTree(data);
   const frag = generateDomByData(data, null, pen, null, showIds, [], generateDomByData);
   // console.log(frag, 'frag');
@@ -260,10 +262,10 @@ function onInputchange(e) {
   if (e.target.value) {
     onRecursionData(pen.data, e.target.value, paths);
     // console.log(paths, 'paths');
-    console.log(paths, 'paths');
+    // console.log(paths, 'paths');
     const disableIds = [];
     recursionCollectDisableIds(pen.data, paths, disableIds);
-    console.log(disableIds, 'disableIds');
+    // console.log(disableIds, 'disableIds');
     // 去重
     const _disableIds = [...new Set(disableIds)];
     updateTree(pen.data, dropMenu, paths, _disableIds)
@@ -646,7 +648,7 @@ function treeIconClick(e) {
   })
   // 递归判断树结构的某个节点是否有children
   const hasChild = recursionFindHasChild(pen.data, _key);
-  console.log(hasChild, 'hasChild');
+  // console.log(hasChild, 'hasChild');
   if (!hasChild) {
     // 加载数据
     const { level } = this.parentElement.dataset;
@@ -682,7 +684,7 @@ function treeIconClick(e) {
       let ids = [];
       // 找到所有兄弟节点
       const siblings = recursionFindSiblings(d, key);
-      console.log(siblings, currentItem, 'siblings 收起');
+      // console.log(siblings, currentItem, 'siblings 收起');
       if (flag === Direction.Down) {
         // 收起兄弟节点,隐藏兄弟节点的所有子节点
         let siblingChildIds = [];
@@ -695,7 +697,7 @@ function treeIconClick(e) {
         }
         // 收集当前需要展开的节点的所有子节点
         recursionCollectExpandIds([currentItem], list, ids);
-        console.log(ids, JSON.stringify(list), '展开 ids');
+        // console.log(ids, JSON.stringify(list), '展开 ids');
         const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
         // 隐藏兄弟节点的所有子节点
         showHideChild(dropMenu, ids, siblingChildIds, flag);
@@ -703,7 +705,7 @@ function treeIconClick(e) {
         expandedChild(dropMenu, siblings, false);
       } else if (flag === Direction.Right) {
         recursionTreeFindAllIds(currentItem.children, ids);
-        console.log(ids, '收起 ids');
+        // console.log(ids, '收起 ids');
         const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
         showHideChild(dropMenu, ids, [], flag);
       }
@@ -799,7 +801,7 @@ function tagClose(e) {
   }
   const checkedList = deepClone(pen.checked);
   const index = checkedList.indexOf(value);
-  console.log(checkedList, value, index, 'checkedList');
+  // console.log(checkedList, value, index, 'checkedList');
   if (index > -1) {
     checkedList.splice(index, 1);
   }
@@ -1007,7 +1009,7 @@ function replaceAlltags(penId, list) {
     frag.appendChild(e);
   }
   input_prefix.replaceChildren(frag);
-  console.log(frag.children.length, 'frag');
+  // console.log(frag.children.length, 'frag');
 }
 // 判断所有子元素是否都具有某个特定的类
 function checkAllHaveClass(dom, className) {
@@ -1339,7 +1341,7 @@ function lableClick(e) {
     // console.log(checked, 'checked');
 
     // let halfCheckedIds = deepClone(pen.halfChecked);
-    console.log(checkedIds, checked, 'iddddd')
+    // console.log(checkedIds, checked, 'iddddd')
     if (checked) {
       //勾选
       const currentItem = recursionTreeFindItem(pen.data, value);
@@ -1901,7 +1903,7 @@ function generateStyle(pen) {
   sheet.insertRule(`
   .l-tree__input{
     width: 100%;
-    height: ${pen.height}px;
+    height: 100%;
     overflow: auto;
     padding: 0 8px;
     border: 1px solid #ccc;

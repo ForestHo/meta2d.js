@@ -212,7 +212,7 @@ export function dateRangePicker(pen: Pen): Path2D {
     renderData(dropMenu, pen)
 
     if (pen.pickerTimes.length >= 1) {
-      console.log(pen.pickerTimes, 'pick done')
+      // console.log(pen.pickerTimes, 'pick done')
       // update input
       updateInput(dropMenu.previousElementSibling, pen.pickerTimes, pen.mode);
     }
@@ -241,7 +241,7 @@ function generateDomByData(pen) {
   }
   const frag = document.createDocumentFragment();
   for (let i = 0; i < panelComp[key].length; i++) {
-    console.log(panelComp[key])
+    // console.log(panelComp[key])
     const type = panelComp[key][i];
     let dateDom = null;
     if (type === SwitchMode.DATE) {
@@ -573,7 +573,7 @@ function trWeekClick(e) {
 
   //update input
   if (pickerTimes.length >= 1) {
-    console.log(pickerTimes, 'pick done')
+    // console.log(pickerTimes, 'pick done')
     // update input
     updateInput(dropMenu.previousElementSibling, pickerTimes, pen.mode);
   }
@@ -636,7 +636,7 @@ function assembleWeekBodyTRs(pen, opt: { year: number, month: number }) {
   // const endWeek = dayjs().year(opt.year).month(opt.month - 1).endOf('month').week();
   // const endWeek = startWeek + 5;
   const weeklist = getWeekMonthOfYear(opt.year, opt.month);
-  console.log(weeklist)
+  // console.log(weeklist)
   const frag = document.createDocumentFragment();
   for (let i = 0; i < weeklist.length; i++) {
     const everyWeek = weeklist[i];
@@ -690,13 +690,13 @@ function assembleWeekBodyTRs(pen, opt: { year: number, month: number }) {
     }
 
     const index = pen.pickerTimes.findIndex((el) => el.startsWith(everyWeek[0].value));
-    console.log('index', index)
+    // console.log('index', index)
     if (pen.pickerTimes.length === 2) {
       // 并且起始日期不为空，是存在的
       if (pen.pickerTimes[0]) {
         // const isBetween = dayjs(item.value).isBetween(dayjs(pen.pickerTimes[0]), dayjs(pen.pickerTimes[1]), null, '[]')
         const isBetween = judgeWeekIsBetween(yyww, pen.pickerTimes[0], pen.pickerTimes[1]);
-        console.log(isBetween, yyww, 'isBetween')
+        // console.log(isBetween, yyww, 'isBetween')
         if (isBetween) {
           tr.classList.add('l-date-picker__table-week-row--range');
         }
@@ -731,7 +731,7 @@ function assembleWeekBodyTRs(pen, opt: { year: number, month: number }) {
       // }
       // 选定开始日期，小于开始日期的日期不可选
       // const isBefore = dayjs(item.value).isBefore(dayjs(pen.pickerTimes[0]), 'month');
-      console.log(yyww, pen.pickerTimes[0], 'yyww')
+      // console.log(yyww, pen.pickerTimes[0], 'yyww')
       const isBefore = judgeWeekIsBefore(yyww, pen.pickerTimes[0]);
       if (isBefore) {
         for (let i = 0; i < tr.children.length; i++) {
@@ -797,9 +797,9 @@ function generateYearDom(pen, index) {
     curYear = curYear - curYear % 10;
   }
   yeartoYearOptions = getYeartoYearOptions(curYear - 80, curYear + 70, 10);
-  console.log(yeartoYearOptions)
+  // console.log(yeartoYearOptions)
   const yOpt = yeartoYearOptions.find(el => currentYear >= el.value[0] && currentYear <= el.value[1]);
-  console.log(currentYear, curYear, yOpt)
+  // console.log(currentYear, curYear, yOpt)
   const dateItem = assemleYearItem(pen, {
     year: yOpt.value[0],
     index
@@ -1238,7 +1238,7 @@ function updateTagsWithDate(penId, index, key) {
   if (!pen) {
     return;
   }
-  console.log(val, 'val')
+  // console.log(val, 'val')
 
   const pickerTimes = deepClone(pen.pickerTimes);
   pickerTimes.splice(pen.focusIndex, 1, val);
@@ -1291,7 +1291,7 @@ function updateTagsWithDate(penId, index, key) {
   flag && updateBody(dateDom, penId);
 
   if (pickerTimes.length >= 1) {
-    console.log(pickerTimes, 'pick done')
+    // console.log(pickerTimes, 'pick done')
     const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
     // update input
     updateInput(dropMenu.previousElementSibling, pickerTimes, pen.mode);
@@ -1559,7 +1559,7 @@ function assembleMonthBodyTRs(pen, opt: { year: number, month: number }) {
       td.dataset.value = val + '';
 
       const index = pen.pickerTimes.findIndex((el) => el.startsWith(item.value));
-      console.log('index', index)
+      // console.log('index', index)
       if (pen.pickerTimes.length === 2) {
         // 并且起始日期不为空，是存在的
         if (pen.pickerTimes[0]) {
@@ -1680,7 +1680,7 @@ function tdYearClick(e) {
 
   //update input
   if (pickerTimes.length >= 1) {
-    console.log(pickerTimes, 'pick done')
+    // console.log(pickerTimes, 'pick done')
     // update input
     updateInput(dropMenu.previousElementSibling, pickerTimes, pen.mode);
   }
@@ -1706,7 +1706,7 @@ function tdMonthClick(e) {
   if (!pen) {
     return;
   }
-  console.log(value, 'value')
+  // console.log(value, 'value')
   const pickerTimes = deepClone(pen.pickerTimes);
   const len = pickerTimes.length;
   let focusIndex = pen.focusIndex;
@@ -1765,7 +1765,7 @@ function tdMonthClick(e) {
 
   //update input
   if (pickerTimes.length >= 1) {
-    console.log(pickerTimes, 'pick done')
+    // console.log(pickerTimes, 'pick done')
     // update input
     updateInput(dropMenu.previousElementSibling, pickerTimes, pen.mode);
   }
@@ -1783,7 +1783,7 @@ function tdMonthClick(e) {
  */
 function assembleDateBodyTRs(pen, opt: { year: number, month: number }) {
   const daylist = getTimeListByYearAndMonth(opt.year, opt.month);
-  console.log(daylist, 'daylist')
+  // console.log(daylist, 'daylist')
   const frag = document.createDocumentFragment();
   for (let i = 0; i < daylist.length; i++) {
     const item = daylist[i];
@@ -1878,13 +1878,13 @@ function tdMouseEnter(e) {
   if (pen.pickerTimes.length === 0 || pen.pickerTimes.length === 2) {
     return;
   }
-  console.log(date, value, 'value')
+  // console.log(date, value, 'value')
   let rangeMode = "";
   if (pen.pickerTimes.length === 1) {
-    console.log("start")
+    // console.log("start")
     rangeMode = "start";
   } else if (pen.pickerTimes.length === 2 && pen.pickerTimes[0] === "") {
-    console.log("end")
+    // console.log("end")
     rangeMode = "end";
   }
   window.meta2d.setValue({
@@ -1982,7 +1982,7 @@ function tdDateClick(e) {
     const { hour, minute, second } = this.parentElement.parentElement.parentElement.parentElement.nextElementSibling.dataset;
     yyhhdd = dayjs().year(_currentYear).month(_currentMonth - 1).date(value).hour(hour).minute(minute).second(second).format("YYYY-MM-DD HH:mm:ss");
   }
-  console.log(yyhhdd, 'yyhhdd')
+  // console.log(yyhhdd, 'yyhhdd')
   const pickerTimes = deepClone(pen.pickerTimes);
   const len = pickerTimes.length;
   let focusIndex = pen.focusIndex;
@@ -2069,7 +2069,7 @@ function tdDateClick(e) {
     updateBody(list[0], penId);
     updateBody(list[1], penId);
   } else if (pen.mode === SwitchMode.TIME) {
-    console.log('time', list[0])
+    // console.log('time', list[0])
     // 更新body
     updateBody(list[0], penId);
   }
@@ -2093,7 +2093,7 @@ function tdDateClick(e) {
 
   //update input
   if (pickerTimes.length >= 1) {
-    console.log(pickerTimes, 'pick done')
+    // console.log(pickerTimes, 'pick done')
     // update input
     updateInput(dropMenu.previousElementSibling, pickerTimes, pen.mode);
   }
@@ -2138,7 +2138,7 @@ function tdDateClick(e) {
   // }
 }
 function tdDateTimeClick(e) {
-  console.log('tdDateTimeClick')
+  // console.log('tdDateTimeClick')
   e.stopPropagation();
   const { mode, currentMonth, currentYear } = this.parentElement.parentElement.parentElement.parentElement.dataset;
   const _mode = parseInt(mode);
@@ -2198,7 +2198,7 @@ function tdDateTimeClick(e) {
     const { hour, minute, second } = this.parentElement.parentElement.parentElement.parentElement.nextElementSibling.dataset;
     yyhhdd = dayjs().year(_currentYear).month(_currentMonth - 1).date(value).hour(hour).minute(minute).second(second).format("YYYY-MM-DD HH:mm:ss");
   }
-  console.log(yyhhdd, 'yyhhdd')
+  // console.log(yyhhdd, 'yyhhdd')
   const pickerTimes = deepClone(pen.pickerTimes);
   const len = pickerTimes.length;
   let focusIndex = pen.focusIndex;
@@ -2285,7 +2285,7 @@ function tdDateTimeClick(e) {
     updateBody(list[0], penId);
     updateBody(list[1], penId);
   } else if (pen.mode === SwitchMode.TIME) {
-    console.log('time', list[0])
+    // console.log('time', list[0])
     // 更新body
     updateBody(list[0], penId);
   }
@@ -2309,7 +2309,7 @@ function tdDateTimeClick(e) {
 
   //update input
   if (pickerTimes.length >= 1) {
-    console.log(pickerTimes, 'pick done')
+    // console.log(pickerTimes, 'pick done')
     // update input
     updateInput(dropMenu.previousElementSibling, pickerTimes, pen.mode);
   }
@@ -2692,15 +2692,15 @@ function changeOption(prevDom, nextDom, ctl, type, penId, index, mode) {
     if (_type === DateSelectType.YEAR) {
       const startYear = parseInt(yearOptions[0].value);
       const moreOpt = generateYearOptions(startYear - 10, 10);
-      console.log(moreOpt, 'moreOpt 00')
+      // console.log(moreOpt, 'moreOpt 00')
       yearOptions.unshift(...moreOpt);
       const liFrag = generateOptDom(moreOpt, { index, penId, type, mode });
       prevDom.prepend(liFrag);
     } else if (_type === DateSelectType.YEAR_RANGE) {
-      console.log('prev year range')
+      // console.log('prev year range')
       const startYear = parseInt(yeartoYearOptions[0].value[0]);
       const moreOpt = getYeartoYearOptions(startYear - 50, startYear);
-      console.log(moreOpt, 'moreOpt 11')
+      // console.log(moreOpt, 'moreOpt 11')
       yeartoYearOptions.unshift(...moreOpt);
       const liFrag = generateOptDom(moreOpt, { index, penId, type, mode });
       prevDom.prepend(liFrag);
@@ -2713,10 +2713,10 @@ function changeOption(prevDom, nextDom, ctl, type, penId, index, mode) {
       const liFrag = generateOptDom(moreOpt, { index, penId, type, mode });
       nextDom.appendChild(liFrag);
     } else if (_type === DateSelectType.YEAR_RANGE) {
-      console.log('next year range')
+      // console.log('next year range')
       const startYear = parseInt(yeartoYearOptions[yeartoYearOptions.length - 1].value[0]);
       const moreOpt = getYeartoYearOptions(startYear + 10, startYear + 50);
-      console.log(moreOpt, 'moreOpt 22')
+      // console.log(moreOpt, 'moreOpt 22')
       yeartoYearOptions.push(...moreOpt);
       const liFrag = generateOptDom(moreOpt, { index, penId, type, mode });
       nextDom.appendChild(liFrag);
@@ -2724,7 +2724,7 @@ function changeOption(prevDom, nextDom, ctl, type, penId, index, mode) {
   }
 }
 function selectScroll(e) {
-  console.log('scroll')
+  // console.log('scroll')
   const { type, mode, penId, index } = this.dataset;
   const _type = parseInt(type);
   const isAtTop = this.scrollTop === 0;
@@ -2769,12 +2769,12 @@ function selectScroll(e) {
     changeOption(null, this.firstChild.nextElementSibling.firstChild, More_Ctl.NEXT, type, penId, index, mode);
   }
 
-  console.log(`Scroll Position: ${this.scrollTop}`);
-  console.log(`Is at top: ${isAtTop}`);
-  console.log(`Is at bottom: ${isAtBottom}`);
+  // console.log(`Scroll Position: ${this.scrollTop}`);
+  // console.log(`Is at top: ${isAtTop}`);
+  // console.log(`Is at bottom: ${isAtBottom}`);
 }
 function onSelect(e) {
-  console.log('onSelect', e.target)
+  // console.log('onSelect', e.target)
   // e.stopPropagation();
   const { type, index, penId, value, mode } = e.target.dataset;
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
@@ -3303,7 +3303,7 @@ function inputFocus(e) {
  * @param {*} mode
  */
 function updateInput(dom, pickerTimes, mode) {
-  console.log('updateInput', mode)
+  // console.log('updateInput', mode)
   let suffix = "";
   if (mode === SwitchMode.WEEK) {
     suffix = "周";
@@ -3595,9 +3595,9 @@ function generateStyle(pen: Pen) {
       const ruleToCheck = rule + '}';
       if (!hasCSSRuleInSheet(sheet1, ruleToCheck)) {
         insertCSSRuleInSheet(sheet1, ruleToCheck);
-        console.log(`The rule "${ruleToCheck}" was inserted.`);
+        // console.log(`The rule "${ruleToCheck}" was inserted.`);
       } else {
-        console.log(`The rule "${ruleToCheck}" already exists.`);
+        // console.log(`The rule "${ruleToCheck}" already exists.`);
       }
     });
   }
@@ -3627,7 +3627,8 @@ function generateStyle(pen: Pen) {
   .l-date-picker__panel-month, 
   .l-date-picker__panel-quarter, 
   .l-date-picker__panel-week, 
-  .l-date-picker__panel-date {
+  .l-date-picker__panel-date,
+  .l-date-picker__panel-time {
     display: flex;
     flex-direction: column;
     padding: 12px;
@@ -3665,14 +3666,14 @@ function generateStyle(pen: Pen) {
 
   sheet.insertRule(`
   .l-date-picker__header-controller .l-date-picker__header-controller-month {
-    width: 80px;
+    width: 60px;
     display: flex;
     position: relative;
 }
   `)
   sheet.insertRule(`
   .l-date-picker__header-controller .l-date-picker__header-controller-year {
-    width: 78px;
+    width: 70px;
     display: flex;
     position: relative;
 }
@@ -4193,10 +4194,11 @@ function generateStyle(pen: Pen) {
     margin: 0;
     padding: 0;
     list-style: none;
+    height: 100%;
     width: 100%;
     position: relative;
     // font: var(--td-font-body-medium);
-    height: 32px;
+    // height: 32px;
     border-width: 1px;
     border-style: solid;
     border-radius: 3px;
@@ -4261,7 +4263,23 @@ function generateStyle(pen: Pen) {
   sheet.insertRule(`
   .l-date-picker__cell--disabled+.l-date-picker__cell--disabled:before {
     opacity: 1;
-    left: calc(0px - 36px);
+    left: -100%;
+    background-color: #eee;
+    border-radius: 3px;
+}
+  `)
+  sheet.insertRule(`
+  .l-date-picker__cell--disabled+.l-date-picker__cell--active-start:before{
+    opacity: 1;
+    left: -100%;
+    background-color: #eee;
+    border-radius: 3px;
+}
+  `)
+  sheet.insertRule(`
+  .l-date-picker__cell--active-end+.l-date-picker__cell--disabled:before{
+    opacity: 1;
+    left: -100%;
     background-color: #eee;
     border-radius: 3px;
 }

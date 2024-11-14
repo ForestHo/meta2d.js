@@ -41,6 +41,8 @@ export function cascadeFilter(pen: Pen): Path2D {
     // 创建容器
     const container = document.createElement("div");
     container.style.position = 'relative';
+    container.style.width = '100%';
+    container.style.height = '100%';
     container.dataset.penId = pen.id;
     container.addEventListener("mouseleave", containerMouseLeave);
     container.addEventListener("mouseenter", containerMouseEnter);
@@ -1954,7 +1956,7 @@ function generateStyle(pen) {
   sheet.insertRule(`
   .l-cascader__input{
     width: 100%;
-    height: ${pen.height}px;
+    height: 100%;
     overflow: auto;
     padding: 0 8px;
     border: 1px solid #ccc;
