@@ -3233,7 +3233,10 @@ function onSuffixClick(e) {
       pickerTimes: [],
       focusIndex: 0,
     })
-
+    pen.calculative.canvas.store.emitter.emit('dateRange-pick', {
+      pen,
+      pickerTimes: [],
+    });
     const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
     let selector = ''
     if (pen.mode === SwitchMode.DATE) {
