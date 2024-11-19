@@ -29,6 +29,11 @@ enum DateSelectType {
   YEAR,
   YEAR_RANGE
 }
+enum HHMMSS {
+  HOUR = 'hour',
+  MINUTE = 'minute',
+  SECOND = 'second'
+}
 enum TimeCount {
   HOUR = 24,
   MINUTE = 60,
@@ -96,7 +101,7 @@ function getYearOptions(start, end, step = 1) {
   }
   return options;
 }
-let yearOptions = getYearOptions(1900, 2100);
+let yearOptions = getYearOptions(1900, 2200);
 let yeartoYearOptions = [];
 let monthOptions = [];
 function getMonthOptions(monthOptions) {
@@ -798,7 +803,9 @@ function generateYearDom(pen, index) {
   if (curYear % 10 !== 0) {
     curYear = curYear - curYear % 10;
   }
-  yeartoYearOptions = getYeartoYearOptions(curYear - 80, curYear + 70, 10);
+  if(yeartoYearOptions.length === 0){
+    yeartoYearOptions = getYeartoYearOptions(curYear - 80, curYear + 70, 10);
+  }
   // console.log(yeartoYearOptions)
   const yOpt = yeartoYearOptions.find(el => currentYear >= el.value[0] && currentYear <= el.value[1]);
   // console.log(currentYear, curYear, yOpt)
@@ -1001,6 +1008,7 @@ function assembleTimeItem(pen) {
   panelBody.appendChild(mask);
 
   const hourDom = document.createElement('ul');
+  hourDom.dataset.type = HHMMSS.HOUR;
   hourDom.className = 'l-time-picker__panel-body-scroll';
   hourDom.addEventListener('scroll', debounce((e) => hourScroll(e, pen.id), 200));
   hourDom.addEventListener('click', (e) => { hourClick(e, pen.id) });
@@ -1012,6 +1020,7 @@ function assembleTimeItem(pen) {
   panelBody.appendChild(hourDom);
 
   const minuteDom = document.createElement('ul');
+  minuteDom.dataset.type = HHMMSS.MINUTE;
   minuteDom.className = 'l-time-picker__panel-body-scroll';
   minuteDom.addEventListener('scroll', debounce((e) => minuteScroll(e, pen.id), 200));
   minuteDom.addEventListener('click', (e) => { minuteClick(e, pen.id) });
@@ -1022,6 +1031,7 @@ function assembleTimeItem(pen) {
   panelBody.appendChild(minuteDom);
 
   const secondDom = document.createElement('ul');
+  secondDom.dataset.type = HHMMSS.SECOND;
   secondDom.className = 'l-time-picker__panel-body-scroll';
   secondDom.addEventListener('scroll', debounce((e) => secondScroll(e, pen.id), 200));
   secondDom.addEventListener('click', (e) => { secondClick(e, pen.id) });
@@ -1296,7 +1306,7 @@ function updateTagsWithDate(penId, index, key) {
     // console.log(pickerTimes, 'pick done')
     const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
     // update input
-    updateInput(dropMenu.previousElementSibling, pickerTimes, pen.mode);
+    updateInput(dropMenu.previousElementSibling, pickerTimes, pen);
   }
 }
 function assembleSecond() {
@@ -1443,6 +1453,7 @@ function getMonthList(year) {
 function assembleYearBodyTRs(pen, opt: { year: number }) {
   const frag = document.createDocumentFragment();
   const yOpt = yeartoYearOptions.find(el => opt.year >= el.value[0] && opt.year <= el.value[1]);
+  console.log(yOpt,yeartoYearOptions,opt.year, 'yOpt')
   if (!yOpt) return;
   const yearList = [];
   for (let i = yOpt.value[0]; i <= yOpt.value[1]; i++) {
@@ -1684,7 +1695,7 @@ function tdYearClick(e) {
   if (pickerTimes.length >= 1) {
     // console.log(pickerTimes, 'pick done')
     // update input
-    updateInput(dropMenu.previousElementSibling, pickerTimes, pen.mode);
+    updateInput(dropMenu.previousElementSibling, pickerTimes, pen);
   }
 
   // const pickerTimes = deepClone(pen.pickerTimes);
@@ -1769,7 +1780,7 @@ function tdMonthClick(e) {
   if (pickerTimes.length >= 1) {
     // console.log(pickerTimes, 'pick done')
     // update input
-    updateInput(dropMenu.previousElementSibling, pickerTimes, pen.mode);
+    updateInput(dropMenu.previousElementSibling, pickerTimes, pen);
   }
 
   // 更新body
@@ -2097,7 +2108,7 @@ function tdDateClick(e) {
   if (pickerTimes.length >= 1) {
     // console.log(pickerTimes, 'pick done')
     // update input
-    updateInput(dropMenu.previousElementSibling, pickerTimes, pen.mode);
+    updateInput(dropMenu.previousElementSibling, pickerTimes, pen);
   }
 
   // this.parentElement.parentElement.children[this.dataset.rowIndex].children[this.dataset.colIndex].classList.add('l-date-picker__cell--active');
@@ -2313,7 +2324,7 @@ function tdDateTimeClick(e) {
   if (pickerTimes.length >= 1) {
     // console.log(pickerTimes, 'pick done')
     // update input
-    updateInput(dropMenu.previousElementSibling, pickerTimes, pen.mode);
+    updateInput(dropMenu.previousElementSibling, pickerTimes, pen);
   }
 
   // this.parentElement.parentElement.children[this.dataset.rowIndex].children[this.dataset.colIndex].classList.add('l-date-picker__cell--active');
@@ -2807,6 +2818,7 @@ function onSelect(e) {
     list[_index].dataset.currentYear = _list[0];
     _value = _list.join(' - ');
   }
+  console.log(type,_value, 'value')
   // 更新header
   updateHeader(list[_index], type, _value);
 
@@ -3027,20 +3039,36 @@ function btnClick(e) {
     let _currentYear = parseInt(currentYear);
     if (key === CTL_TYPE.PREV) {
       _currentYear -= 10;
+      const firstYear = yeartoYearOptions[0].value[0];
+      if(_currentYear < firstYear) {
+        const startYear = yeartoYearOptions[0].value[0];
+        const moreOpt = getYeartoYearOptions(startYear - 50, startYear);
+        yeartoYearOptions.unshift(...moreOpt);
+      }
+      const yOpt = yeartoYearOptions.find(el => el.value[0] <= _currentYear && el.value[1] >= _currentYear);
       this.parentElement.parentElement.parentElement.dataset.currentYear = _currentYear;
       updateHeader(this.parentElement.parentElement.parentElement,
-        DateSelectType.YEAR + '', _currentYear);
+        DateSelectType.YEAR_RANGE + '', yOpt.label);
     } else if (key === CTL_TYPE.NEXT) {
       _currentYear += 10;
+      let lastYear = yeartoYearOptions[yeartoYearOptions.length - 1].value[1];
+      if(_currentYear > lastYear) {
+        lastYear += 1;
+        const startYear = yeartoYearOptions[yeartoYearOptions.length - 1].value[0];
+        const moreOpt = getYeartoYearOptions(startYear + 10, startYear + 50);
+        yeartoYearOptions.push(...moreOpt);
+      }
+      const yOpt = yeartoYearOptions.find(el => el.value[0] <= _currentYear && el.value[1] >= _currentYear);
       this.parentElement.parentElement.parentElement.dataset.currentYear = _currentYear;
       updateHeader(this.parentElement.parentElement.parentElement,
-        DateSelectType.YEAR + '', _currentYear);
+        DateSelectType.YEAR_RANGE + '', yOpt.label);
     } else if (key === CTL_TYPE.CURRENT) {
       // 获取当前的年月
       const currentYear = dayjs().year();
+      const yOpt = yeartoYearOptions.find(el => el.value[0] <= currentYear && el.value[1] >= currentYear);
       this.parentElement.parentElement.parentElement.dataset.currentYear = currentYear;
       updateHeader(this.parentElement.parentElement.parentElement,
-        DateSelectType.YEAR + '', currentYear);
+        DateSelectType.YEAR_RANGE + '', yOpt.label);
     }
     // 更新body
     updateBody(this.parentElement.parentElement.parentElement, penId);
@@ -3217,6 +3245,10 @@ function onSuffixClick(e) {
     } else if (pen.mode === SwitchMode.TIME) {
       selector = '.l-date-picker__panel-date';
     }
+    if (pen.mode === SwitchMode.TIME) {
+      // 更新时间
+      resetTimePanel(pen);
+    }
     // console.log(selector, 'selector')
     const list = dropMenu.querySelectorAll(selector);
 
@@ -3282,7 +3314,7 @@ function onSuffixClick(e) {
       updateBody(list[0], penId);
     }
     // 清空input
-    updateInput(this.parentElement, ["", ""], pen.mode);
+    updateInput(this.parentElement, ["", ""], pen);
   }
 }
 function inputFocus(e) {
@@ -3304,8 +3336,9 @@ function inputFocus(e) {
  * @param {*} pickerTimes
  * @param {*} mode
  */
-function updateInput(dom, pickerTimes, mode) {
-  // console.log('updateInput', mode)
+function updateInput(dom, pickerTimes, pen) {
+  // console.log('updateInput', pickerTimes)
+  let mode = pen.mode;
   let suffix = "";
   if (mode === SwitchMode.WEEK) {
     suffix = "周";
@@ -3322,8 +3355,23 @@ function updateInput(dom, pickerTimes, mode) {
     leftInput.placeholder = PlaceHolder[mode][0];
 
     const rightInput = dom.querySelector('.l-input__inner[data-index="1"]');
-    rightInput.value = pickerTimes[1] ? (pickerTimes[0] + suffix) : "";
+    rightInput.value = pickerTimes[1] ? (pickerTimes[1] + suffix) : "";
     rightInput.placeholder = PlaceHolder[mode][1];
+
+    let checkEvery = false;
+    checkEvery = pickerTimes.every(el=>el && dayjs(el).isValid());
+    if(checkEvery){
+      pen.calculative.canvas.store.emitter.emit('dateRange-pick', {
+        pen,
+        pickerTimes
+      });
+    }
+  }
+  if(pickerTimes.length === 0){
+    pen.calculative.canvas.store.emitter.emit('dateRange-pick', {
+      pen,
+      pickerTimes
+    });
   }
 }
 function updateTags(pickerTimes, value, pen) {
@@ -3433,6 +3481,11 @@ function tagClose(e) {
   } else if (pen.mode === SwitchMode.TIME) {
     selector = '.l-date-picker__panel-date';
   }
+  if (pen.mode === SwitchMode.TIME) {
+    // 更新时间
+    resetTimePanel(pen);
+  }
+
   const list = dropMenu.querySelectorAll(selector);
 
   // 更新cascader的checked
@@ -3440,6 +3493,51 @@ function tagClose(e) {
 
   // 更新高度
   // adjustHeight(pen);
+}
+function resetViewer(penId) {
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
+  const viewer = dropMenu.querySelector(`.${DROPMENU_PREFIX}${penId} .l-date-picker__panel-time .l-date-picker__panel-time-viewer`);
+  viewer.innerHTML = '00:00:00';
+}
+function resetTimePanel(pen: Pen) {
+  resetViewer(pen.id);
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+  const timeItem = dropMenu.querySelector('.l-date-picker__panel-time');
+  const { hour, minute, second } = timeItem.dataset;
+  const _hour = parseInt(hour);
+  const _minute = parseInt(minute);
+  const _second = parseInt(second);
+  const newHour = 0, newMinute = 0, newSecond = 0;
+  timeItem.dataset.hour = newHour + '';
+  timeItem.dataset.minute = newMinute + '';
+  timeItem.dataset.second = newSecond + '';
+  const panelBody = timeItem.querySelector('.l-time-picker__panel-body');
+  const hourDom = panelBody.querySelector('ul[data-type="hour"]');
+  hourDom.querySelector(`li[data-value="${_hour}"]`).classList.remove('is-current');
+  hourDom.querySelector(`li[data-value="${newHour}"]`).classList.add('is-current');
+  const minuteDom = panelBody.querySelector('ul[data-type="minute"]');
+  minuteDom.querySelector(`li[data-value="${_minute}"]`).classList.remove('is-current');
+  minuteDom.querySelector(`li[data-value="${newMinute}"]`).classList.add('is-current');
+  const secondDom = panelBody.querySelector('ul[data-type="second"]');
+  secondDom.querySelector(`li[data-value="${_second}"]`).classList.remove('is-current');
+  secondDom.querySelector(`li[data-value="${newSecond}"]`).classList.add('is-current');
+  setTimeout(() => {
+    const hourDistance = newHour * TIME_HEIGHT;
+    hourDom.scrollTo?.({
+      top: hourDistance,
+      behavior: 'smooth',
+    });
+    const minuteDistance = newMinute * TIME_HEIGHT;
+    minuteDom.scrollTo?.({
+      top: minuteDistance,
+      behavior: 'smooth',
+    });
+    const secondDistance = newSecond * TIME_HEIGHT;
+    secondDom.scrollTo?.({
+      top: secondDistance,
+      behavior: 'smooth',
+    })
+  }, 10)
 }
 function onDestroy(pen: Pen) {
   if (pen.calculative.singleton && pen.calculative.singleton.div) {

@@ -145,7 +145,7 @@ function renderPenRawRefresh(pen: Pen) {
 
   // 控制过滤搜索
   const inputDom = document.querySelector(`.${TREE_PREFIX}${pen.id}`);
-  console.log(inputDom, pen.filterable, 'inputDom');
+  // console.log(inputDom, pen.filterable, 'inputDom');
   inputDom.readOnly = pen.filterable ? !pen.filterable : true;
   inputDom.placeholder = pen.filterable ? '请输入关键字' : '';
 
@@ -779,6 +779,13 @@ function recursionCollectExpandIds(data, expanded, ids) {
     }
   }
 }
+/**
+ * @description 递归查找当前节点的所有子节点
+ * @author Joseph Ho
+ * @date 18/11/2024
+ * @param {*} data
+ * @param {*} ids
+ */
 function recursionTreeFindAllIds(data, ids) {
   for (let i = 0; i < data.length; i++) {
     ids.push(data[i].value);
@@ -787,6 +794,14 @@ function recursionTreeFindAllIds(data, ids) {
     }
   }
 }
+/**
+ * @description 递归查找树结构的节点
+ * @author Joseph Ho
+ * @date 18/11/2024
+ * @param {*} data
+ * @param {*} key
+ * @returns {*}  
+ */
 function recursionTreeFindItem(data, key) {
   for (let i = 0; i < data.length; i++) {
     const item = data[i];
@@ -801,20 +816,36 @@ function recursionTreeFindItem(data, key) {
     }
   }
 }
-function recursionFindSiblings(data, key,) {
+/**
+ * @description 找到当前节点的兄弟节点
+ * @author Joseph Ho
+ * @date 18/11/2024
+ * @param {*} data
+ * @param {*} key
+ * @returns {*}  
+ */
+function recursionFindSiblings(data, key) {
   for (let i = 0; i < data.length; i++) {
     const item = data[i];
     if (Array.isArray(item.children) && item.children.findIndex(el => el.value === key) > -1) {
       return item.children.filter(el => el.value !== key).map(el => el.value);
     }
     if (Array.isArray(item.children) && item.children.length > 0) {
-      const ret = recursionFindSiblings(item.children, key,);
+      const ret = recursionFindSiblings(item.children, key);
       if (ret) {
         return ret;
       }
     }
   }
 }
+/**
+ * @description 判断是否有children
+ * @author Joseph Ho
+ * @date 18/11/2024
+ * @param {*} data
+ * @param {*} key
+ * @returns {*}  
+ */
 function recursionFindHasChild(data, key) {
   for (let i = 0; i < data.length; i++) {
     if (data[i].value === key) {
@@ -828,6 +859,13 @@ function recursionFindHasChild(data, key) {
     }
   }
 }
+/**
+ * @description tag close函数
+ * @author Joseph Ho
+ * @date 18/11/2024
+ * @param {*} e
+ * @returns {*}  
+ */
 function tagClose(e) {
   e.stopPropagation();
   const { penId, value } = this.dataset;
@@ -900,7 +938,10 @@ function tagClose(e) {
       id: penId,
       checked: list
     })
-
+    pen.calculative.canvas.store.emitter.emit('treeFilter-change', {
+      pen,
+      checked: list
+    });
     // 根据最新的checked情况，更新checked的tag
     replaceAlltags(penId, list);
   } else {
@@ -909,6 +950,10 @@ function tagClose(e) {
       id: penId,
       checked: checkedList,
     })
+    pen.calculative.canvas.store.emitter.emit('treeFilter-change', {
+      pen,
+      checked: checkedList
+    });
     replaceAlltags(penId, checkedList);
   }
 }
@@ -1026,10 +1071,21 @@ function checkboxNewClick(e) {
     id: penId,
     checked: list
   })
-
+  pen.calculative.canvas.store.emitter.emit('treeFilter-change', {
+    pen,
+    checked: list
+  });
   // 根据最新的checked情况，更新checked的tag
   replaceAlltags(penId, list);
 }
+/**
+ * @description 根据checked更新所有tag
+ * @author Joseph Ho
+ * @date 18/11/2024
+ * @param {*} penId
+ * @param {*} list
+ * @returns {*}  
+ */
 function replaceAlltags(penId, list) {
   const pen = window.meta2d.findOne(penId);
   if (!pen) {
@@ -1053,6 +1109,20 @@ function checkAllHaveClass(dom, className) {
   const allHaveClass = items.every(item => item.classList.contains(className));
   return allHaveClass;
 }
+/**
+ * @description 从树的某个节点向上递归到根节点
+ * @author Joseph Ho
+ * @date 18/11/2024
+ * @param {*} lTreeList
+ * @param {*} data
+ * @param {*} checked
+ * @param {*} pid
+ * @param {*} value
+ * @param {*} checkVal
+ * @param {*} halfIds
+ * @param {*} penId
+ * @returns {*}  
+ */
 function recursionUpTree(lTreeList, data, checked, pid, value, checkVal, halfIds, penId) {
   // console.log('2222222222222', pid);
   if (!pid) return;
@@ -1448,7 +1518,10 @@ function lableClick(e) {
       id: penId,
       checked: list
     })
-
+    pen.calculative.canvas.store.emitter.emit('treeFilter-change', {
+      pen,
+      checked: list
+    });
     // 根据最新的checked情况，更新checked的tag
     replaceAlltags(penId, list);
   } else {
@@ -1466,6 +1539,10 @@ function lableClick(e) {
       id: penId,
       checked: checkedIds
     })
+    pen.calculative.canvas.store.emitter.emit('treeFilter-change', {
+      pen,
+      checked: checkedIds
+    });
     // console.log(checkedIds, 'checkedIds');
     // 根据最新的checked情况，更新checked的tag
     replaceAlltags(penId, checkedIds);
@@ -1534,6 +1611,14 @@ function renderData(data, dom, pen) {
     dom.appendChild(lTree);
   }
 }
+/**
+ * @description 根据child的key查找父节点
+ * @author Joseph Ho
+ * @date 18/11/2024
+ * @param {*} data
+ * @param {*} key
+ * @returns {*}  
+ */
 function recursionFindParentByChildKey(data, key) {
   for (let i = 0; i < data.length; i++) {
     const item = data[i];
@@ -1548,6 +1633,19 @@ function recursionFindParentByChildKey(data, key) {
     }
   }
 }
+/**
+ * @description 根据树的data数据生成dom结构，递归调用，生成树形列表数据
+ * @author Joseph Ho
+ * @date 18/11/2024
+ * @param {*} data
+ * @param {*} lTreeList
+ * @param {*} pen
+ * @param {*} opt
+ * @param {*} showIds
+ * @param {*} hideIds
+ * @param {function} [fn]
+ * @returns {*}  
+ */
 function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
   const frag = document.createDocumentFragment();
   for (let i = 0; i < data.length; i++) {
@@ -1729,6 +1827,13 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
   }
   return frag;
 }
+/**
+ * @description 给tree每个节点添加level
+ * @author Joseph Ho
+ * @date 18/11/2024
+ * @param {*} tree
+ * @param {number} [level=0]
+ */
 function addLevelToTree(tree, level = 0) {
   // 遍历当前层级的节点
   tree.forEach(item => {
@@ -1814,6 +1919,13 @@ function insertCSSRuleInSheet(sheet, ruleText) {
   sheet.insertRule(ruleText, sheet.cssRules.length);
 }
 const style_prefix = 'style_';
+
+/**
+ * @description 生成样式表
+ * @author Joseph Ho
+ * @date 18/11/2024
+ * @param {*} pen
+ */
 function generateStyle(pen) {
   let extraStyle = document.createElement('style');
   extraStyle.type = 'text/css';

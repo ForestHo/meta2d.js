@@ -838,7 +838,10 @@ function tagClose(e) {
     id: penId,
     checked: checkedIds
   })
-
+  pen.calculative.canvas.store.emitter.emit('cascadeFilter-change', {
+    pen,
+    checkedIds
+  });
   // 根据最新的checked情况，更新checked的tag
   replaceAlltags(penId, checkedIds);
 
@@ -1088,7 +1091,10 @@ function checkboxNewClick(e) {
     id: penId,
     checked: checkedIds
   })
-
+  pen.calculative.canvas.store.emitter.emit('cascadeFilter-change', {
+    pen,
+    checked: checkedIds
+  });
   // 根据最新的checked情况，更新checked的tag
   replaceAlltags(penId, checkedIds);
 }
@@ -1267,7 +1273,7 @@ function checkChild(dropMenu, ids) {
   }
 }
 function labelClick(e) {
-  console.log('labelClick')
+  // console.log('labelClick')
   e.stopPropagation();
   const { value, penId, level } = this.dataset;
   // const checkedVal = e.target.checked;
@@ -1317,7 +1323,7 @@ function labelClick(e) {
         const flowPath = deepClone(pen.flowPath);
         const checked = deepClone(pen.checked);
         const isLeaf = isLeafNode(pen.data, value)
-        console.log('isLeaf', isLeaf, flowPath, checked)
+        // console.log('isLeaf', isLeaf, flowPath, checked)
         if (isLeaf) {
           updateTags(true, checked, value, penId, pen);
         } else {
@@ -1327,6 +1333,10 @@ function labelClick(e) {
           id: penId,
           checked,
         })
+        pen.calculative.canvas.store.emitter.emit('cascadeFilter-change', {
+          pen,
+          checked
+        });
       }
     }
 
@@ -1342,6 +1352,10 @@ function labelClick(e) {
       id: penId,
       checked,
     })
+    pen.calculative.canvas.store.emitter.emit('cascadeFilter-change', {
+      pen,
+      checked
+    });
   }
 }
 function recursionFindHasChild(data, key) {
@@ -1370,7 +1384,7 @@ async function nextLevelClick(e) {
     return;
   }
   const hasChild = recursionFindHasChild(pen.data, value)
-  console.log('hasChild', hasChild)
+  // console.log('hasChild', hasChild)
   if (!hasChild) {
     // const flowPath = deepClone(pen.flowPath);
     // const _level = parseInt(level);
@@ -1400,7 +1414,7 @@ async function nextLevelClick(e) {
         checked,
       })
     }
-    console.log('flowPath', JSON.stringify(pen.flowPath))
+    // console.log('flowPath', JSON.stringify(pen.flowPath))
 
     const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
     const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
@@ -1517,7 +1531,7 @@ function findNodeAndParentByValue(tree, value, parents = []) {
   return null;
 }
 function liOnClick(e) {
-  console.log('liOnClick')
+  // console.log('liOnClick')
   const { value, penId, level } = e.target.dataset;
   if (!value || !penId) {
     return;

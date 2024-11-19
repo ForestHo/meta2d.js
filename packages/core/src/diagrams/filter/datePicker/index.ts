@@ -48,6 +48,11 @@ const panelComp = {
   "datetime": ["date", "time"],
   "daterange": ["date", "date"],
 }
+enum HHMMSS {
+  HOUR = 'hour',
+  MINUTE = 'minute',
+  SECOND = 'second'
+}
 enum SwitchMode {
   DATE = "date",
   WEEK = "week",
@@ -763,6 +768,7 @@ function assembleTimeItem(pen) {
   panelBody.appendChild(mask);
 
   const hourDom = document.createElement('ul');
+  hourDom.dataset.type = HHMMSS.HOUR;
   hourDom.className = 'l-time-picker__panel-body-scroll';
   hourDom.addEventListener('scroll', debounce((e) => hourScroll(e, pen.id), 200));
   hourDom.addEventListener('click', (e) => { hourClick(e, pen.id) });
@@ -774,6 +780,7 @@ function assembleTimeItem(pen) {
   panelBody.appendChild(hourDom);
 
   const minuteDom = document.createElement('ul');
+  minuteDom.dataset.type = HHMMSS.MINUTE;
   minuteDom.className = 'l-time-picker__panel-body-scroll';
   minuteDom.addEventListener('scroll', debounce((e) => minuteScroll(e, pen.id), 200));
   minuteDom.addEventListener('click', (e) => { minuteClick(e, pen.id) });
@@ -784,6 +791,7 @@ function assembleTimeItem(pen) {
   panelBody.appendChild(minuteDom);
 
   const secondDom = document.createElement('ul');
+  secondDom.dataset.type = HHMMSS.SECOND;
   secondDom.className = 'l-time-picker__panel-body-scroll';
   secondDom.addEventListener('scroll', debounce((e) => secondScroll(e, pen.id), 200));
   secondDom.addEventListener('click', (e) => { secondClick(e, pen.id) });
@@ -942,6 +950,11 @@ function secondScroll(e, penId) {
     // update tags
     updateTagsWithDate(penId, index, 'hour');
   }
+}
+function resetViewer(penId) {
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
+  const viewer = dropMenu.querySelector(`.${DROPMENU_PREFIX}${penId} .l-date-picker__panel-time .l-date-picker__panel-time-viewer`);
+  viewer.innerHTML = '00:00:00';
 }
 function updateViewer(target, index, type, penId) {
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
@@ -1263,7 +1276,7 @@ function tdMonthClick(e) {
   const { value } = e.target.dataset;
   const penId = this.parentElement.dataset.penId
   const pen = window.meta2d.findOne(penId);
-  if (!pen) {
+  if (!pen || !value) {
     return;
   }
 
@@ -1936,6 +1949,8 @@ function updateBody(dom, penId) {
     trs = assembleWeekBodyTRs(pen, { year, month });
   } else if (pen.mode === SwitchMode.YEAR) {
     trs = assembleYearBodyTRs(pen, { year });
+  } else if (pen.mode === SwitchMode.TIME) {
+    trs = assembleDateBodyTRs(pen, { year, month });
   }
   tbody.replaceChildren(trs);
 }
@@ -2173,6 +2188,7 @@ function assembleInputBox(pen: Pen) {
   return box;
 }
 function updateTags(pickerTimes, value, pen) {
+  console.log('updateTags', pickerTimes, value, pen);
   if (pen.multiple) {
     // 多选
     const index = pickerTimes.findIndex(item => item === value);
@@ -2276,14 +2292,59 @@ function tagClose(e) {
     selector = '.l-date-picker__panel-week';
   } else if (pen.mode === SwitchMode.YEAR) {
     selector = '.l-date-picker__panel-year';
+  } else if (pen.mode === SwitchMode.TIME) {
+    selector = '.l-date-picker__panel-date';
   }
-  const list = dropMenu.querySelector(selector);
+  if (pen.mode === SwitchMode.TIME) {
+    // 更新时间
+    resetTimePanel(pen);
+  }
 
+  const list = dropMenu.querySelector(selector);
   // 更新cascader的checked
   updateBody(list, penId);
-
   // 更新高度
   // adjustHeight(pen);
+}
+function resetTimePanel(pen: Pen) {
+  resetViewer(pen.id);
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+  const timeItem = dropMenu.querySelector('.l-date-picker__panel-time');
+  const { hour, minute, second } = timeItem.dataset;
+  const _hour = parseInt(hour);
+  const _minute = parseInt(minute);
+  const _second = parseInt(second);
+  const newHour = 0, newMinute = 0, newSecond = 0;
+  timeItem.dataset.hour = newHour + '';
+  timeItem.dataset.minute = newMinute + '';
+  timeItem.dataset.second = newSecond + '';
+  const panelBody = timeItem.querySelector('.l-time-picker__panel-body');
+  const hourDom = panelBody.querySelector('ul[data-type="hour"]');
+  hourDom.querySelector(`li[data-value="${_hour}"]`).classList.remove('is-current');
+  hourDom.querySelector(`li[data-value="${newHour}"]`).classList.add('is-current');
+  const minuteDom = panelBody.querySelector('ul[data-type="minute"]');
+  minuteDom.querySelector(`li[data-value="${_minute}"]`).classList.remove('is-current');
+  minuteDom.querySelector(`li[data-value="${newMinute}"]`).classList.add('is-current');
+  const secondDom = panelBody.querySelector('ul[data-type="second"]');
+  secondDom.querySelector(`li[data-value="${_second}"]`).classList.remove('is-current');
+  secondDom.querySelector(`li[data-value="${newSecond}"]`).classList.add('is-current');
+  setTimeout(() => {
+    const hourDistance = newHour * TIME_HEIGHT;
+    hourDom.scrollTo?.({
+      top: hourDistance,
+      behavior: 'smooth',
+    });
+    const minuteDistance = newMinute * TIME_HEIGHT;
+    minuteDom.scrollTo?.({
+      top: minuteDistance,
+      behavior: 'smooth',
+    });
+    const secondDistance = newSecond * TIME_HEIGHT;
+    secondDom.scrollTo?.({
+      top: secondDistance,
+      behavior: 'smooth',
+    })
+  }, 10)
 }
 function onDestroy(pen: Pen) {
   if (pen.calculative.singleton && pen.calculative.singleton.div) {
@@ -2329,6 +2390,19 @@ function renderPenRawRefresh(pen: Pen) {
   // 重新渲染dropdown面板
   const fragMent = generateDomByData(pen);
   dropMenu.firstChild.replaceChildren(fragMent);
+
+  // 重置tags
+  clearAllTags(pen);
+}
+/**
+ * @description 清空所有tag
+ * @author Joseph Ho
+ * @date 19/11/2024
+ * @param {Pen} pen
+ */
+function clearAllTags(pen: Pen) {
+  const tagWrapper = document.getElementsByClassName(`${TAG_WRAPPER}${pen.id}`)[0];
+  tagWrapper.replaceChildren();
 }
 function renderPenRaw(pen: Pen, mkey: string, data: any) {
   // const flowPath = [];
@@ -2426,7 +2500,7 @@ function generateStyle(pen: Pen) {
   document.head.appendChild(style);
   // let sheet = style.sheet;
   style.innerHTML =
-  `.l-date-picker__panel-content,
+    `.l-date-picker__panel-content,
   .l-date-picker__panel-content-wrapper {
     display: flex;
     // height:300px;
