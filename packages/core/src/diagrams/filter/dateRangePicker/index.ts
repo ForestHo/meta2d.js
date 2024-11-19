@@ -1230,6 +1230,7 @@ function adjustPickertimes(mode, times) {
   } else {
     return times;
   }
+  return [];
 }
 function updateTagsWithDate(penId, index, key) {
   const panelTime = document.querySelector(`.${DROPMENU_PREFIX}${penId} .l-date-picker__panel-time`);
@@ -3229,7 +3230,8 @@ function onSuffixClick(e) {
   if (pen.pickerTimes.length === 2) {
     window.meta2d.setValue({
       id: penId,
-      pickerTimes: []
+      pickerTimes: [],
+      focusIndex: 0,
     })
 
     const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
@@ -3592,7 +3594,7 @@ function resetPenData(pen: Pen) {
   window.meta2d.setValue({
     id: pen.id,
     pickerTimes: [],
-    focusIndex: -1,
+    focusIndex: 0,
   })
 }
 function renderPenRaw(pen: Pen, mkey: string, data: any) {
