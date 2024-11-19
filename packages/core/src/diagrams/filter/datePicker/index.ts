@@ -2188,7 +2188,7 @@ function assembleInputBox(pen: Pen) {
   return box;
 }
 function updateTags(pickerTimes, value, pen) {
-  console.log('updateTags', pickerTimes, value, pen);
+  // console.log('updateTags', pickerTimes, value, pen);
   if (pen.multiple) {
     // 多选
     const index = pickerTimes.findIndex(item => item === value);
@@ -2218,7 +2218,10 @@ function updateTags(pickerTimes, value, pen) {
     const tag = assembleTag(value, value, pen.id, pen.mode);
     tagWrapper.replaceChildren(tag);
   }
-
+  pen.calculative.canvas.store.emitter.emit('date-pick', {
+    pen,
+    pickerTimes
+  });
 }
 function assembleTag(key: string, title: string, penId: string, mode: SwitchMode) {
   let _key = TAG_PREFIX + key;
@@ -2299,7 +2302,10 @@ function tagClose(e) {
     // 更新时间
     resetTimePanel(pen);
   }
-
+  pen.calculative.canvas.store.emitter.emit('date-pick', {
+    pen,
+    pickerTimes
+  });
   const list = dropMenu.querySelector(selector);
   // 更新cascader的checked
   updateBody(list, penId);
