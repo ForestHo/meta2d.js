@@ -219,7 +219,7 @@ export function dateRangePicker(pen: Pen): Path2D {
     if (pen.pickerTimes.length >= 1) {
       // console.log(pen.pickerTimes, 'pick done')
       // update input
-      updateInput(dropMenu.previousElementSibling, pen.pickerTimes, pen.mode);
+      updateInput(dropMenu.previousElementSibling, pen.pickerTimes, pen);
     }
   }
   const path = new Path2D();
@@ -582,7 +582,7 @@ function trWeekClick(e) {
   if (pickerTimes.length >= 1) {
     // console.log(pickerTimes, 'pick done')
     // update input
-    updateInput(dropMenu.previousElementSibling, pickerTimes, pen.mode);
+    updateInput(dropMenu.previousElementSibling, pickerTimes, pen);
   }
 
   // console.log(pen)
@@ -3588,7 +3588,7 @@ function renderPenRawRefresh(pen: Pen) {
   dropMenu.firstChild.replaceChildren(fragMent);
 
   // 重置input
-  updateInput(dropMenu.previousElementSibling, ["", ""], pen.mode);
+  updateInput(dropMenu.previousElementSibling, ["", ""], pen);
 }
 function resetPenData(pen: Pen) {
   window.meta2d.setValue({
@@ -4104,15 +4104,13 @@ function generateStyle(pen: Pen) {
     font-weight: 500;
   }
   
-  .l-date-picker__table-week-row--active:after {
+  .l-date-picker__table-week-row.l-date-picker__table-week-row--active:after {
     opacity: 1;
     z-index: 0;
     background-color: #0052d9;
   }
   
-  .l-date-picker__table-week-row--active
-    .l-date-picker__cell:first-child
-    .l-date-picker__cell-inner {
+  .l-date-picker__table-week-row--active .l-date-picker__cell:first-child .l-date-picker__cell-inner {
     color: #0052d9;
   }
   
@@ -4141,9 +4139,7 @@ function generateStyle(pen: Pen) {
     pointer-events: none;
   }
   
-  .l-date-picker__table-week-row--active
-    .l-date-picker__cell
-    .l-date-picker__cell-inner {
+  .l-date-picker__table-week-row--active .l-date-picker__cell .l-date-picker__cell-inner {
     background: transparent;
     color: #fff;
   }

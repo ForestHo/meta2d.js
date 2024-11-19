@@ -1594,7 +1594,7 @@ function assembleHeader(pen, opt, type) {
     // console.log('opt111', opt);
     const item = yeartoYearOptions.find(el => el.value[0] <= opt.year && el.value[1] >= opt.year);
     const year = document.createElement('div');
-    year.className = 'l-select__wrap l-date-picker__header-controller-year';
+    year.className = 'l-select__wrap l-date-picker__header-controller-range-year';
     // 调用函数，生成从1920年起，前后各100年的年份选项，每10年一个选项
     const yearSelect = assembleSelect({
       type: DateSelectType.YEAR_RANGE,
@@ -2558,11 +2558,12 @@ function generateStyle(pen: Pen) {
     display: flex;
     position: relative;
   }
-  .l-date-picker__header-controller .l-date-picker__header-controller-year {
+  .l-date-picker__header-controller .l-date-picker__header-controller-range-year {
     width: 130px;
     display: flex;
     position: relative;
   }
+  
   
   .l-input {
     margin: 0;
@@ -2865,12 +2866,11 @@ function generateStyle(pen: Pen) {
     text-align: center;
     font-weight: 500;
   }
-  .l-date-picker__table-week-row--active:after {
+  .l-date-picker__table-week-row.l-date-picker__table-week-row--active:after {
     opacity: 1;
     z-index: 0;
     background-color: #0052d9;
   }
-  
   .l-date-picker__table-week-row--active
     .l-date-picker__cell:first-child
     .l-date-picker__cell-inner {
