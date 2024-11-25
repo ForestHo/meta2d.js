@@ -1028,6 +1028,12 @@ function assembleSecond() {
   }
   return frag;
 }
+/**
+ * @description 生成分钟选择器的li列表
+ * @author Joseph Ho
+ * @date 20/11/2024
+ * @returns {*}  
+ */
 function assembleMinute() {
   const frag = document.createDocumentFragment();
   for (let i = 0; i < TimeCount.MINUTE; i++) {
@@ -1043,6 +1049,12 @@ function assembleMinute() {
   }
   return frag;
 }
+/**
+ * @description 生成小时选择器的li列表
+ * @author Joseph Ho
+ * @date 20/11/2024
+ * @returns {*}  
+ */
 function assembleHour() {
   const frag = document.createDocumentFragment();
   for (let i = 0; i < TimeCount.HOUR; i++) {
@@ -1058,6 +1070,14 @@ function assembleHour() {
   }
   return frag;
 }
+/**
+ * @description 生成日期选择器的dom
+ * @author Joseph Ho
+ * @date 20/11/2024
+ * @param {*} pen
+ * @param {*} opt
+ * @returns {*}  
+ */
 function assemleDateItem(pen, opt) {
   const dateItem = document.createElement('div');
   const header = document.createElement('div');
@@ -1074,6 +1094,14 @@ function assemleDateItem(pen, opt) {
 
   return dateItem;
 }
+/**
+ * @description 生成月选择器的dom
+ * @author Joseph Ho
+ * @date 20/11/2024
+ * @param {*} pen
+ * @param {*} opt
+ * @returns {*}  
+ */
 function assemleMonthItem(pen, opt) {
   const dateItem = document.createElement('div');
   const header = document.createElement('div');
@@ -1090,6 +1118,14 @@ function assemleMonthItem(pen, opt) {
 
   return dateItem;
 }
+/**
+ * @description
+ * @author Joseph Ho
+ * @date 20/11/2024
+ * @param {*} pen
+ * @param {*} opt
+ * @returns {*}  
+ */
 function assembleDateTable(pen, opt) {
   const frag = document.createDocumentFragment();
   // thead
@@ -1106,6 +1142,14 @@ function assembleDateTable(pen, opt) {
   frag.appendChild(tbody);
   return frag;
 }
+/**
+ * @description
+ * @author Joseph Ho
+ * @date 20/11/2024
+ * @param {*} pen
+ * @param {*} opt
+ * @returns {*}  
+ */
 function assembleYearTable(pen, opt) {
   const frag = document.createDocumentFragment();
 

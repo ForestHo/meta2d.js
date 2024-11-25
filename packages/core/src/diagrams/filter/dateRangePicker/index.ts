@@ -3578,15 +3578,17 @@ function onClick(pen: Pen, e: Point) {
  * @date 13/11/2024
  */
 function renderPenRawRefresh(pen: Pen) {
+  // 重置pen的数据
   resetPenData(pen);
 
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
-  // 重新渲染dropdown面板
+  // 针对time的dom的class做处理
   if (pen.mode === SwitchMode.TIME) {
     dropMenu.firstChild.classList.add('l-date-range-picker__panel--time');
   }else{
     dropMenu.firstChild.classList.remove('l-date-range-picker__panel--time');
   }
+  // 重新根据data生成dom
   const fragMent = generateDomByData(pen);
   dropMenu.firstChild.replaceChildren(fragMent);
 
