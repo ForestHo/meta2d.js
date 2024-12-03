@@ -166,6 +166,7 @@ export function datePicker(pen: Pen): Path2D {
     container.style.position = 'relative';
     container.style.width = '100%';
     container.style.height = '100%';
+   
     // 输入框
     const input = assembleInputBox(pen);
     container.appendChild(input);
@@ -266,12 +267,28 @@ function generateFooter(pen) {
   frag.appendChild(footer);
   return frag;
 }
+function containerClick(e) {
+  e.stopPropagation();
+  // console.log('inputMouseLeave',e);
+  if(e.target.nodeName === 'svg'||e.target.nodeName==="path" || e.target.nodeName === "INPUT"){return;}
+  const { penId } = this.dataset;
+  const pen = window.meta2d.findOne(penId);
+  if (!pen) {
+    return;
+  }
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+  if(dropMenu.classList.contains("l-is-hidden")){
+    dropMenu.classList.remove("l-is-hidden");
+  }else{
+    dropMenu.classList.add("l-is-hidden");
+  }
+}
 function onOk(e) {
   // const content = this.parentElement.previousElementSibling
   // console.log(content)
   updateTagsWithDate(this.dataset.penId, 0, '');
   // 隐藏下拉框
-  this.parentElement.parentElement.parentElement.style.display = 'none';
+  this.parentElement.parentElement.parentElement.classList.add('l-is-hidden');
 }
 function generateWeekDom(pen, index) {
   const frag = document.createDocumentFragment();
@@ -511,6 +528,7 @@ function trWeekClick(e) {
 
   // 更新body
   updateBody(this.parentElement.parentElement.parentElement, penId);
+  resetSelectPop(pen.id);
 }
 function assembleWeekBodyTRs(pen, opt: { year: number, month: number }) {
   // const startWeek = dayjs().year(opt.year).month(opt.month - 1).startOf('month').week();
@@ -651,13 +669,17 @@ function generateDateDom(pen, index?) {
   if (pen.pickerTimes.length === 0) {
     currentYear = dayjs().year();
     currentMonth = dayjs().month() + 1;
+    currentDay = dayjs().date();
   } else {
     const date = dayjs(pen.pickerTimes[0]);
     currentYear = date.year();
     currentMonth = date.month() + 1;
     currentDay = date.date();
   }
-
+  // console.log('index', index,currentYear, currentMonth)
+  if(index > 0 && currentMonth === 1){
+    currentYear = dayjs().year() + 1;
+  }
   const content = document.createElement('div');
   content.className = 'l-date-picker__panel-content';
 
@@ -1311,6 +1333,7 @@ function tdYearClick(e) {
   // adjustHeight(pen);
   // 更新body
   updateBody(this.parentElement.parentElement.parentElement.parentElement, penId);
+  resetSelectPop(pen.id);
 }
 function tdMonthClick(e) {
   e.stopPropagation();
@@ -1335,6 +1358,7 @@ function tdMonthClick(e) {
 
   // 更新body
   updateBody(this.parentElement.parentElement.parentElement.parentElement, penId);
+  resetSelectPop(pen.id);
 }
 /**
  * @description 生成日期选择器的tbody的tr列表
@@ -1387,7 +1411,7 @@ function assembleDateBodyTRs(pen, opt: { year: number, month: number }) {
 function tdClick(e) {
   e.stopPropagation();
   const { mode, currentMonth, currentYear } = this.parentElement.parentElement.parentElement.parentElement.dataset;
-  const _mode = parseInt(mode);
+  // const _mode = parseInt(mode);
   let _currentMonth = parseInt(currentMonth);
   let _currentYear = parseInt(currentYear);
   let flag = -1;// -1: 不需要更新，1: 需要更新月份，2: 需要更新年份和月份 
@@ -1479,8 +1503,7 @@ function tdClick(e) {
   // 更新body
   updateBody(list[_index], penId);
 
-
-
+  resetSelectPop(pen.id);
   // this.parentElement.parentElement.children[this.dataset.rowIndex].children[this.dataset.colIndex].classList.add('l-date-picker__cell--active');
   // if (this.dataset.type === MonthType.PREV) {
   //   if (_mode === SwitchMode.MONTH) {
@@ -1519,6 +1542,15 @@ function tdClick(e) {
   //   // 更新body
   //   updateBody(list[_index], penId);
   // }
+}
+function resetSelectPop(penId) {
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
+  const selects = dropMenu.querySelectorAll('.l-popup.l-select__dropdown');
+  for (let i = 0; i < selects.length; i++) {
+    if(selects[i].classList.contains('l-is-visible')) {
+      selects[i].classList.remove('l-is-visible');
+    }
+  }
 }
 function adjustHeight(pen: Pen) {
   if (pen.calculative.singleton.div) {
@@ -1679,7 +1711,12 @@ function getYeartoYearOptions(startYear, endYear, step = 10) {
 }
 function selectClick(e) {
   e.stopPropagation();
-  this.lastChild.firstChild.style.display = this.lastChild.firstChild.style.display === 'none' ? 'block' : 'none';
+  // this.lastChild.firstChild.style.display = this.lastChild.firstChild.style.display === 'none' ? 'block' : 'none';
+  if(!this.lastChild.firstChild.classList.contains("l-is-visible")){
+    this.lastChild.firstChild.classList.add("l-is-visible");
+  }else{
+    this.lastChild.firstChild.classList.remove("l-is-visible");
+  }
 }
 function assembleSelect(opt: { type, selectVal, index, penId, mode }, options) {
   const select = document.createElement('div');
@@ -1714,7 +1751,7 @@ function assembleSelect(opt: { type, selectVal, index, penId, mode }, options) {
 
   const popParent = document.createElement('div');
   popParent.className = 'l-popup l-select__dropdown';
-  popParent.style.display = 'none';
+  // popParent.style.display = 'none';
   // popParent.style.position = 'absolute';
   // popParent.style.inset = '0px auto auto 0px';
   // popParent.style.margin = '0px';
@@ -2009,7 +2046,7 @@ function assemblePagination(opt) {
     btn.dataset.index = opt.index;
     btn.dataset.penId = opt.penId;
     btn.dataset.type = opt.type;
-    btn.onclick = btnClick;
+    btn.addEventListener('click', btnClick);
 
     const svgDom = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svgDom.setAttribute("viewBox", "0 0 24 24");
@@ -2199,6 +2236,8 @@ function assembleInputBox(pen: Pen) {
   box.style.overflow = 'auto';
   // box.style.whiteSpace = 'nowrap';
   box.style.background = 'transparent';
+  box.dataset.penId = pen.id;
+  box.addEventListener("click", containerClick);
 
   const input = document.createElement("input");
   input.type = "text";
@@ -2296,7 +2335,7 @@ function assembleTag(key: string, title: string, penId: string, mode: SwitchMode
   svgDom.style.fill = 'none';
   svgDom.style.width = '1em';
   svgDom.style.height = '100%';
-  svgDom.onclick = tagClose;
+  svgDom.addEventListener('click', tagClose);
 
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   path.dataset.key = _key;
@@ -2555,7 +2594,9 @@ function generateStyle(pen: Pen) {
     display: flex;
     // height:300px;
   }
-  
+  .l-is-hidden[class^="l-date-picker__panel_"] {
+      visibility: hidden;
+    }
   .l-date-picker__panel-year,
   .l-date-picker__panel-month,
   .l-date-picker__panel-quarter,
@@ -2707,12 +2748,15 @@ function generateStyle(pen: Pen) {
     transition: background-color 0.2s cubic-bezier(0.38, 0, 0.24, 1);
     box-sizing: border-box;
   }
-  .l-popup {
+  .l-popup.l-select__dropdown {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
     list-style: none;
     color: rgba(0, 0, 0, 0.9);
+    display: none;
+  }
+  .l-popup.l-is-visible{
     display: inline-block;
   }
   .l-select__list {

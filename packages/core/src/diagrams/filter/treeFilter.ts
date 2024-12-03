@@ -83,14 +83,15 @@ export function treeFilter(pen: Pen): Path2D {
   return path;
 }
 function renderPenRaw(pen: Pen, mkey: string, data: any) {
-  const lTreeList = document.querySelector('.l-tree-list');
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+  const lTreeList = dropMenu.querySelector('.l-tree-list');
   const { index: insertIndex, level } = getChildIndex(lTreeList, mkey);
   const showIds = collectExpandShowIds(data, pen.expanded);
   generateDomByData(data, lTreeList, pen, { index: insertIndex + 1, level: level + 1 }, showIds, [], null);
   window.meta2d.setValue({
     id: pen.id,
     showIds: showIds
-  })
+  },{doEvent:false})
 }
 function renderPenRaw2(pen: Pen, data: any) {
   const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
@@ -104,7 +105,7 @@ function renderPenRaw2(pen: Pen, data: any) {
   window.meta2d.setValue({
     id: pen.id,
     showIds: showIds
-  })
+  },{doEvent:false})
 }
 /**
  * @description 更新整个筛选器
@@ -134,7 +135,7 @@ function renderPenRawRefresh(pen: Pen) {
     showIds = collectExpandShowIds(data, []);
   }
   Object.assign(obj, { showIds })
-  window.meta2d.setValue(obj)
+  window.meta2d.setValue(obj,{doEvent:false})
 
   // console.log(showIds, data, 'renderPenRaw2');
   addLevelToTree(data);
@@ -568,7 +569,7 @@ function validateData(pen: Pen) {
     })
   }
 
-  window.meta2d.setValue(obj, { render: false });
+  window.meta2d.setValue(obj, { render: false,doEvent: false });
 }
 function onDestroy(pen: Pen) {
   if (pen.calculative.singleton && pen.calculative.singleton.div) {
@@ -615,10 +616,11 @@ enum Direction {
 }
 // let level = 0
 function treeIconClick(e) {
-  const { level } = this.dataset;
+  const { level,penId } = this.dataset;
   const _level = parseInt(level);
   const key = e.target.dataset.key;
-  const lTreeList = document.querySelector('.l-tree-list');
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
+  const lTreeList = dropMenu.querySelector('.l-tree-list');
   let len = lTreeList.children.length;
   let child = null;
   for (let i = 0; i < len; i++) {
@@ -647,7 +649,7 @@ function treeIconClick(e) {
   child.className = classList.join(' ');
 
   // update expanded
-  const penId = child.dataset.penId;
+  // const penId = child.dataset.penId;
   const pen = window.meta2d.findOne(penId);
   if (!pen) {
     return;
@@ -681,7 +683,7 @@ function treeIconClick(e) {
   window.meta2d.setValue({
     id: penId,
     expanded: list
-  })
+  },{doEvent:false})
   // 递归判断树结构的某个节点是否有children
   const hasChild = recursionFindHasChild(pen.data, _key);
   // console.log(hasChild, 'hasChild');
@@ -1703,7 +1705,7 @@ function generateDomByData(data, lTreeList, pen, opt, showIds, hideIds, fn?) {
       lTreeIcon.id = key;
       lTreeIcon.dataset.penId = pen.id;
       lTreeIcon.dataset.level = data[i].level + '';
-      lTreeIcon.onclick = treeIconClick;
+      lTreeIcon.addEventListener('click', treeIconClick);
     }
     lTreeItem.appendChild(lTreeIcon)
 

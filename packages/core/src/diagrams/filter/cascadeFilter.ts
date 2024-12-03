@@ -96,7 +96,7 @@ function renderData(data, dom, pen) {
     window.meta2d.setValue({
       id: pen.id,
       flowPath,
-    })
+    },{doEvent:false})
     const opt = {
       penId: pen.id,
       checked: pen.checked,
@@ -193,7 +193,7 @@ function validateData(pen: Pen) {
   //   })
   // }
 
-  window.meta2d.setValue(obj, { render: false });
+  window.meta2d.setValue(obj, { render: false,doEvent:false });
 }
 function recursionTreeFindAllIds(data, ids) {
   for (let i = 0; i < data.length; i++) {
@@ -306,7 +306,7 @@ function renderPenRaw(pen: Pen, mkey: string, data: any, params) {
   window.meta2d.setValue({
     id: pen.id,
     flowPath,
-  })
+  },{doEvent:false})
   const opt = {
     penId: pen.id,
     checked: pen.checked,
@@ -348,7 +348,7 @@ function renderPenRaw2(pen: Pen, data: any,params:any) {
   window.meta2d.setValue({
     id: pen.id,
     flowPath,
-  })
+  },{doEvent:false})
   const opt = {
     penId: pen.id,
     checked: pen.checked,
@@ -377,7 +377,7 @@ function resetPenData(pen: Pen) {
     id: pen.id,
     checked: [],
     flowPath: [],
-  })
+  },{doEvent:false})
 }
 /**
  * @description 更新整个筛选器
@@ -395,7 +395,7 @@ function renderPenRawRefresh(pen: Pen) {
   window.meta2d.setValue({
     id: pen.id,
     flowPath,
-  })
+  },{doEvent:false})
   const opt = {
     penId: pen.id,
     checked: pen.checked,
@@ -498,7 +498,8 @@ function onInputchange(e) {
   if (!pen || !pen.filterable) {
     return;
   }
-  const cascaderPanel = document.querySelector('.l-cascader__panel');
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${penId}`);
+  const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
   if (value) {
     const paths = getAllPaths(pen.data);
     const filterPaths = paths.filter(el => el.some(item => item.label.includes(value)));
@@ -1609,7 +1610,7 @@ function patchLeftMenu(value, level, pen) {
   window.meta2d.setValue({
     id: pen.id,
     flowPath,
-  })
+  },{doEvent:false})
   // console.log('flowPath', JSON.stringify(pen.data))
   // 根据最新的flowPath去patch
   patchCascadeMenu(pen, level, _level, flowPath, { penId: pen.id });
@@ -1629,7 +1630,8 @@ function findItemByValue(data, value) {
   }
 }
 function patchCascadeMenu(pen, lv, level, flowPath, opt) {
-  const cascaderPanel = document.querySelector('.l-cascader__panel');
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+  const cascaderPanel = dropMenu.querySelector('.l-cascader__panel');
   // 从当前点击的层级，更新后面的层级
   let startIndex = lv;
   const startNode = findItemByValue(pen.data, flowPath[lv]);
