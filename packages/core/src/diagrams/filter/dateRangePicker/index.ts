@@ -3377,6 +3377,12 @@ function inputFocus(e) {
     id: penId,
     focusIndex: parseInt(index),
   },{doEvent:false})
+
+
+  const dropMenu = document.querySelector(`.${DROPMENU_PREFIX}${pen.id}`);
+  if(dropMenu.classList.contains("l-is-hidden")){
+    dropMenu.classList.remove("l-is-hidden");
+  }
 }
 /**
  * @description 更新input的值，和placeholder值
@@ -3400,20 +3406,27 @@ function updateInput(dom, pickerTimes, pen) {
     leftInput.value = pickerTimes[0] ? (pickerTimes[0] + suffix) : "";
     leftInput.placeholder = PlaceHolder[mode][0];
   } else if (pickerTimes.length === 2) {
+    // 这里还是需要判断日期是否需要调整
+    const times = adjustPickertimes(mode, pickerTimes);
+    window.meta2d.setValue({
+      id: pen.id,
+      pickerTimes: times,
+    })
+
     const leftInput = dom.querySelector('.l-input__inner[data-index="0"]');
-    leftInput.value = pickerTimes[0] ? (pickerTimes[0] + suffix) : "";
+    leftInput.value = times[0] ? (times[0] + suffix) : "";
     leftInput.placeholder = PlaceHolder[mode][0];
 
     const rightInput = dom.querySelector('.l-input__inner[data-index="1"]');
-    rightInput.value = pickerTimes[1] ? (pickerTimes[1] + suffix) : "";
+    rightInput.value = times[1] ? (times[1] + suffix) : "";
     rightInput.placeholder = PlaceHolder[mode][1];
 
     let checkEvery = false;
-    checkEvery = pickerTimes.every(el=>el && dayjs(el).isValid());
+    checkEvery = times.every(el=>el && dayjs(el).isValid());
     if(checkEvery){
       pen.calculative.canvas.store.emitter.emit('dateRange-pick', {
         pen,
-        pickerTimes
+        pickerTimes: times
       });
     }
   }
@@ -3877,7 +3890,7 @@ function generateStyle(pen: Pen) {
   }
   
   .l-input__inner {
-    flex: 1;
+    width:100%;
     border: none;
     outline: none;
     padding: 0;
