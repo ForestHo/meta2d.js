@@ -2239,17 +2239,17 @@ function assembleInputBox(pen: Pen) {
   box.dataset.penId = pen.id;
   box.addEventListener("click", containerClick);
 
-  const input = document.createElement("input");
-  input.type = "text";
-  input.style.width = 'auto';
-  input.style.height = 'auto';
-  input.style.border = 'none';
-  input.readOnly = pen.filterable ? !pen.filterable : true;
-  // input.style.outline = 'none';
-  // input.style.border = '1px solid #ccc';
-  input.style.background = 'transparent';
-  input.className = `${CASCADE_PREFIX}${pen.id}`;
-  input.dataset.penId = pen.id;
+  // const input = document.createElement("input");
+  // input.type = "text";
+  // input.style.width = 'auto';
+  // input.style.height = 'auto';
+  // input.style.border = 'none';
+  // input.readOnly = pen.filterable ? !pen.filterable : true;
+  // // input.style.outline = 'none';
+  // // input.style.border = '1px solid #ccc';
+  // input.style.background = 'transparent';
+  // input.className = `${CASCADE_PREFIX}${pen.id}`;
+  // input.dataset.penId = pen.id;
   // input.oninput = debounce(onInputchange, 1000)
 
 
@@ -2267,7 +2267,7 @@ function assembleInputBox(pen: Pen) {
   input_prefix.appendChild(frag);
   box.appendChild(input_prefix);
 
-  box.appendChild(input);
+  // box.appendChild(input);
   return box;
 }
 function updateTags(pickerTimes, value, pen) {
@@ -2588,8 +2588,19 @@ function generateStyle(pen: Pen) {
   style.type = 'text/css';
   document.head.appendChild(style);
   // let sheet = style.sheet;
+
+  const defaultText = pen.defaultText ? pen.defaultText : '请选择';
+
   style.innerHTML =
-    `.l-date-picker__panel-content,
+    `.${TAG_WRAPPER}${pen.id}::before {
+      content: '${defaultText}';
+      display: block;
+      color: gray;
+    }
+    .${TAG_WRAPPER}${pen.id}:not(:empty)::before {
+      display: none;
+    }
+    .l-date-picker__panel-content,
   .l-date-picker__panel-content-wrapper {
     display: flex;
     // height:300px;
