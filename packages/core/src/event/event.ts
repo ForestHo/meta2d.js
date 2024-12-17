@@ -38,15 +38,22 @@ export interface Event {
   conditionType?: string;
   message?: string; //消息名称
   callback?: string; //回调函数 仅http
-  list?:{ 
+  list?:{
     params?: string;
-    value?: EventValue; 
+    value?: EventValue;
   }[] //多个图元对象
   timeout?: number; //延时执行
   //中能定制化参数
   iframeId?:string; //iframe组件的ID
   contents?:string|any;//iframe接受的消息内容
-  info?:string;//iframe接收的消息名称
+  info?: string;//iframe接收的消息名称
+  style?: string;//iframe接收的消息样式
+  id?: string;//iframe组件的ID
+  notModal?: boolean;//是否不弹窗
+  w: number;//弹窗宽度
+  h: number;//弹窗高度
+  x: number;//弹窗x坐标
+  y: number;//弹窗y坐标
 }
 
 export enum EventAction {

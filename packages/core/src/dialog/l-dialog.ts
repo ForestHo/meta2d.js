@@ -15,11 +15,13 @@ interface StyleConfig {
   confirmBtnBg: string;
   cancelBtnColor: string;
   confirmBtnColor: string;
+  borderWidth: number;
+  borderColor: string;
 }
 let style;
 export const registerDialogStyle = () => {
   style = document.createElement('style');
-   style.type = 'text/css';
+  style.type = 'text/css';
   document.head.appendChild(style);
   style.innerHTML = `
     .dialog_mask {
@@ -36,6 +38,7 @@ export const registerDialogStyle = () => {
       background-color: #fff;
       user-select: none;
       overflow:hidden;
+      border-style: solid;
     }
     .default_dialog head {
       display: flex;
@@ -135,33 +138,39 @@ export class LDialog {
   dialog: HTMLElement;
   hammer: any;
   constructor(pen: Pen, e: Event) {
-    pen.calculative.dialog = this;
-    let styleConfig: StyleConfig;
-    if (e.style) {
-      styleConfig = JSON.parse(e.style);
-    }
-    // 遮罩
-    if (!e.notModal) {
-      this.mask = this.createDom(document.body, 'div', `dialog_mask`);
-      this.mask.onclick = () => {
-        this.destroy(pen);
+    try {
+      let styleConfig: StyleConfig;
+      if (e.style) {
+        styleConfig = JSON.parse(e.style);
+      }
+      // 遮罩
+      if (!e.notModal) {
+        this.mask = this.createDom(document.body, 'div', `dialog_mask`);
+        this.mask.onclick = () => {
+          this.destroy(pen);
+        };
+      }
+      // 对话框
+      this.dialog = this.createDom(document.body, 'div', `default_dialog`);
+      e.id && (this.dialog.id = e.id);
+      this.dialog.style.width = `${e.w || 400}px`;
+      e.h && (this.dialog.style.height = `${e.h}px`);
+      this.dialog.onclick = (e) => {
+        e.stopPropagation();
       };
+      this.creteHeader(pen, e, styleConfig);
+      this.createContent(pen, e, styleConfig);
+      const { width, height } = this.dialog.getBoundingClientRect();
+      this.dialog.style.left = `${e.x || (window.innerWidth - width) / 2}px`;
+      this.dialog.style.top = `${e.y || (window.innerHeight - height) / 2}px`;
+      this.dialog.style.borderWidth = styleConfig.borderWidth == undefined ? `1px`: `${styleConfig.borderWidth}px`;
+      this.dialog.style.borderColor = `${styleConfig.borderColor || "#000"}`;
+      this.setStyle(this.dialog, styleConfig, ['dialogBg']);
+      pen.calculative.dialog = this;
+    } catch (error) {
+      pen.calculative.dialog = null;
+      alert('错误！检查下配置是否正确！');
     }
-    // 对话框
-    this.dialog = this.createDom(document.body, 'div', `default_dialog`);
-    e.id && (this.dialog.id = e.id);
-    this.dialog.style.width = `${e.w || 400}px`;
-    e.h && (this.dialog.style.height = `${e.h}px`);
-    this.dialog.onclick = (e) => {
-      e.stopPropagation();
-    };
-    this.creteHeader(pen, e, styleConfig);
-    this.createContent(pen, e, styleConfig);
-    const { width, height } = this.dialog.getBoundingClientRect();
-    this.dialog.style.left = `${e.x || (window.innerWidth - width) / 2}px`;
-    this.dialog.style.top = `${e.y || (window.innerHeight - height) / 2}px`;
-    this.setStyle(this.dialog, styleConfig, ['dialogBg']);
-    console.log('dialog', e, styleConfig);
   }
   creteHeader(pen, e, styleConfig) {
     // 头
@@ -242,16 +251,10 @@ export class LDialog {
   }
   createFooter(pen, e, styleConfig) {
     let footer = this.createDom(this.dialog, 'footer');
-    this.setStyle(footer, styleConfig, [
-      'footerBg',
-      'footerFontSize',
-    ]);
+    this.setStyle(footer, styleConfig, ['footerBg', 'footerFontSize']);
     // 取消按钮
     let cancel = this.createDom(footer, 'button', `btn cancel-btn`);
-    this.setStyle(cancel, styleConfig, [
-      'cancelBtnBg',
-      'cancelBtnColor',
-    ]);
+    this.setStyle(cancel, styleConfig, ['cancelBtnBg', 'cancelBtnColor']);
     cancel.innerText = e.cancelText || '取消';
     cancel.onclick = () => {
       let fn = null;
@@ -261,10 +264,7 @@ export class LDialog {
     };
     // 确定按钮
     let ok = this.createDom(footer, 'button', `btn confirm-btn`);
-    this.setStyle(ok, styleConfig, [
-      'confirmBtnBg',
-      'confirmBtnColor',
-    ]);
+    this.setStyle(ok, styleConfig, ['confirmBtnBg', 'confirmBtnColor']);
     ok.innerText = e.confirmText || '确定';
     ok.onclick = () => {
       let fn = null;
@@ -293,22 +293,20 @@ export class LDialog {
     return dom;
   }
   setStyle(dom: HTMLElement, config: StyleConfig, keys: string[]) {
-    if(!config) return;
+    if (!config) return;
     keys.forEach((key) => {
       if (key.endsWith('Bg') && config[key]) {
         dom.style.backgroundColor = config[key];
       } else if (key.endsWith('Color') && config[key]) {
         dom.style.color = config[key];
       } else if (config[key]) {
-        dom.style.fontSize = config[key]+'px';
+        dom.style.fontSize = config[key] + 'px';
       }
     });
   }
   destroy(pen: Pen) {
-    if (this.mask) {
-      document.body.removeChild(this.mask);
-    }
-    document.body.removeChild(this.dialog);
+    this.mask?.remove();
+    this.dialog?.remove();
     this.mask = null;
     this.dialog = null;
     this.hammer.destroy();

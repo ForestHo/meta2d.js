@@ -378,11 +378,11 @@ export interface Pen extends Rect {
   disabledTextColor?:string; //禁用文字颜色
   inputType?:string; //输入框类型
   deviceId?:string;//关联的设备id
-  pivot?:Point; //旋转中心 
+  pivot?:Point; //旋转中心
   noOnBinds?:boolean; //是否禁用绑定事件
   interaction?:boolean; //是否开启交互 组合时将不会被锁定
   childHover?:boolean; //子元素hover和active是否生效
-  childActive?:boolean; 
+  childActive?:boolean;
   draw?:boolean; //是否绘制 针对combine
   calculative?: {
     x?: number;
@@ -390,7 +390,7 @@ export interface Pen extends Rect {
     width?: number;
     height?: number;
     borderRadius?: number;
-
+    dialog?: any;
     progress?: number;
     progressColor?: string;
     progressGradientColors?: string;
