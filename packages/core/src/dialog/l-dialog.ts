@@ -8,7 +8,7 @@ interface StyleConfig {
   headFontSize: number;
   bodyBg: string;
   bodyColor: string;
-  bodyFontSzie: string;
+  bodyFontSize: string;
   footerBg: string;
   footerFontSize: string;
   cancelBtnBg: string;
@@ -25,7 +25,11 @@ export const registerDialogStyle = () => {
   document.head.appendChild(style);
   style.innerHTML = `
     .dialog_mask {
-      position: fixed;inset:0;
+      position: fixed;
+      left:0;
+      right:0;
+      top:0;
+      bottom:0;
       background-color: #0000006f;
       z-index: 9999;
     }
@@ -146,9 +150,6 @@ export class LDialog {
       // 遮罩
       if (!e.notModal) {
         this.mask = this.createDom(document.body, 'div', `dialog_mask`);
-        this.mask.onclick = () => {
-          this.destroy(pen);
-        };
       }
       // 对话框
       this.dialog = this.createDom(document.body, 'div', `default_dialog`);
@@ -204,11 +205,11 @@ export class LDialog {
       const body = this.createDom(this.dialog, 'span', 'confirm_tip');
       body.innerHTML = e.params || '';
       this.createFooter(pen, e, styleConfig);
-      this.setStyle(body, styleConfig, ['bodyBg', 'bodyColor', 'bodyFontSzie']);
+      this.setStyle(body, styleConfig, ['bodyBg', 'bodyColor', 'bodyFontSize']);
     } else {
       // 值输入弹窗
       const body = this.createDom(this.dialog, 'div', 'value_input');
-      this.setStyle(body, styleConfig, ['bodyBg', 'bodyColor', 'bodyFontSzie']);
+      this.setStyle(body, styleConfig, ['bodyBg', 'bodyColor', 'bodyFontSize']);
       // 创建显示区域
       const screen = this.createDom(body, 'p', 'value_input-screen');
       // 定义按钮文本
