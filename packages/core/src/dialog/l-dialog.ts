@@ -164,12 +164,13 @@ export class LDialog {
       const { width, height } = this.dialog.getBoundingClientRect();
       this.dialog.style.left = `${e.x || (window.innerWidth - width) / 2}px`;
       this.dialog.style.top = `${e.y || (window.innerHeight - height) / 2}px`;
-      this.dialog.style.borderWidth = styleConfig.borderWidth == undefined ? `1px`: `${styleConfig.borderWidth}px`;
-      this.dialog.style.borderColor = `${styleConfig.borderColor || "#000"}`;
+      this.dialog.style.borderWidth = styleConfig?.borderWidth == undefined ? `1px`: `${styleConfig?.borderWidth}px`;
+      this.dialog.style.borderColor = `${styleConfig?.borderColor || "#000"}`;
       this.setStyle(this.dialog, styleConfig, ['dialogBg']);
       pen.calculative.dialog = this;
     } catch (error) {
       pen.calculative.dialog = null;
+      console.log(error);
       alert('错误！检查下配置是否正确！');
     }
   }
