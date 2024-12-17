@@ -146,9 +146,6 @@ export class LDialog {
       // 遮罩
       if (!e.notModal) {
         this.mask = this.createDom(document.body, 'div', `dialog_mask`);
-        this.mask.onclick = () => {
-          this.destroy(pen);
-        };
       }
       // 对话框
       this.dialog = this.createDom(document.body, 'div', `default_dialog`);
