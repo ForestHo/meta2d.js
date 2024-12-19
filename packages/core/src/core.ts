@@ -5487,5 +5487,11 @@ export class Meta2d {
       globalStore.anchors = {};
       globalStore.htmlElements = {};
     }
+    document.querySelectorAll('.dialog_mask[data-key="l-dialog"]').forEach((i) => {
+      i.remove();
+    })
+    document.querySelectorAll('.default_dialog[data-key="l-dialog"]').forEach((i) => {
+      i.remove();
+    })
   }
 }

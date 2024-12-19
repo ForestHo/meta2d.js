@@ -1,4 +1,3 @@
-import Hammer from 'hammerjs';
 import { Pen } from '../pen';
 import { Event } from '../event';
 interface StyleConfig {
@@ -17,6 +16,9 @@ interface StyleConfig {
   confirmBtnColor: string;
   borderWidth: number;
   borderColor: string;
+  headHeight: number;
+  bodyHeight: number;
+  footerHeight: number;
 }
 let style;
 export const registerDialogStyle = () => {
@@ -36,7 +38,7 @@ export const registerDialogStyle = () => {
     .default_dialog {
       position: absolute;
       border-radius: 10px;
-      z-index: 19999;
+      z-index: 9999;
       display: flex;
       flex-direction: column;
       background-color: #fff;
@@ -52,6 +54,7 @@ export const registerDialogStyle = () => {
       cursor: move;
       padding: 10px;
       background-color:#f3f3f3;
+      align-items: center;
     }
     .default_dialog head .dialog_title{
       max-width:90%;
@@ -85,22 +88,21 @@ export const registerDialogStyle = () => {
       color: #fff;
     }
     .default_dialog iframe {
-      flex: 1;
       border:none;
+      height:300px;
     }
     .default_dialog .confirm_tip {
-      flex: 1;
       display:flex;
       justify-content:center;
       align-items: center;
-      min-height:50px;
+      height:50px;
+      overflow:auto;
     }
     .default_dialog .value_input {
       display: flex;
       flex-direction: column;
       padding: 10px;
       font-size: 20px;
-      flex: 1;
     }
     .default_dialog .value_input-screen{
       width: 100%;
@@ -140,7 +142,7 @@ export const registerDialogStyle = () => {
 export class LDialog {
   mask: HTMLElement;
   dialog: HTMLElement;
-  hammer: any;
+  iframeDom: HTMLElement;
   constructor(pen: Pen, e: Event) {
     try {
       let styleConfig: StyleConfig;
@@ -150,12 +152,14 @@ export class LDialog {
       // 遮罩
       if (!e.notModal) {
         this.mask = this.createDom(document.body, 'div', `dialog_mask`);
+        this.mask.dataset.key = 'l-dialog'
       }
       // 对话框
       this.dialog = this.createDom(document.body, 'div', `default_dialog`);
+      this.dialog.dataset.key = 'l-dialog'
       e.id && (this.dialog.id = e.id);
       this.dialog.style.width = `${e.w || 400}px`;
-      e.h && (this.dialog.style.height = `${e.h}px`);
+      // e.h && (this.dialog.style.height = `${e.h}px`);
       this.dialog.onclick = (e) => {
         e.stopPropagation();
       };
@@ -164,10 +168,17 @@ export class LDialog {
       const { width, height } = this.dialog.getBoundingClientRect();
       this.dialog.style.left = `${e.x || (window.innerWidth - width) / 2}px`;
       this.dialog.style.top = `${e.y || (window.innerHeight - height) / 2}px`;
-      this.dialog.style.borderWidth = styleConfig?.borderWidth == undefined ? `1px`: `${styleConfig?.borderWidth}px`;
-      this.dialog.style.borderColor = `${styleConfig?.borderColor || "#000"}`;
+      this.dialog.style.borderWidth =
+        styleConfig?.borderWidth == undefined
+          ? `1px`
+          : `${styleConfig?.borderWidth}px`;
+      this.dialog.style.borderColor = `${styleConfig?.borderColor || '#000'}`;
       this.setStyle(this.dialog, styleConfig, ['dialogBg']);
       pen.calculative.dialog = this;
+      pen.calculative.canvas.parent.on('opened', () => {
+        console.log('opened');
+        this.destroy(pen);
+      })
     } catch (error) {
       pen.calculative.dialog = null;
       console.log(error);
@@ -177,7 +188,7 @@ export class LDialog {
   creteHeader(pen, e, styleConfig) {
     // 头
     let header = this.createDom(this.dialog, 'head');
-    this.setStyle(header, styleConfig, ['headBg', 'headColor', 'headFontSize']);
+    this.setStyle(header, styleConfig, ['headBg', 'headColor', 'headFontSize', 'headHeight']);
     // 标题
     let title = this.createDom(header, 'span', `dialog_title`);
     title.innerHTML = e.title || '';
@@ -199,18 +210,19 @@ export class LDialog {
   createContent(pen, e, styleConfig) {
     // 内容
     if (e.dialogType === 'iframe') {
-      const iframeDom = this.createDom(this.dialog, 'iframe');
+      this.iframeDom = this.createDom(this.dialog, 'iframe');
       const src = (e.iframeSrc || '') + (e.params || '');
-      iframeDom.setAttribute('src', src);
+      this.iframeDom.setAttribute('src', src);
+      this.setStyle(this.iframeDom, styleConfig, [ 'bodyHeight']);
     } else if (e.dialogType === 'confirm') {
-      const body = this.createDom(this.dialog, 'span', 'confirm_tip');
+      const body = this.createDom(this.dialog, 'div', 'confirm_tip');
       body.innerHTML = e.params || '';
       this.createFooter(pen, e, styleConfig);
-      this.setStyle(body, styleConfig, ['bodyBg', 'bodyColor', 'bodyFontSize']);
+      this.setStyle(body, styleConfig, ['bodyBg', 'bodyColor', 'bodyFontSize', 'bodyHeight']);
     } else {
       // 值输入弹窗
       const body = this.createDom(this.dialog, 'div', 'value_input');
-      this.setStyle(body, styleConfig, ['bodyBg', 'bodyColor', 'bodyFontSize']);
+      this.setStyle(body, styleConfig, ['bodyBg', 'bodyColor', 'bodyFontSize', 'bodyHeight']);
       // 创建显示区域
       const screen = this.createDom(body, 'p', 'value_input-screen');
       // 定义按钮文本
@@ -253,7 +265,7 @@ export class LDialog {
   }
   createFooter(pen, e, styleConfig) {
     let footer = this.createDom(this.dialog, 'footer');
-    this.setStyle(footer, styleConfig, ['footerBg', 'footerFontSize']);
+    this.setStyle(footer, styleConfig, ['footerBg', 'footerFontSize','footerHeight']);
     // 取消按钮
     let cancel = this.createDom(footer, 'button', `btn cancel-btn`);
     this.setStyle(cancel, styleConfig, ['cancelBtnBg', 'cancelBtnColor']);
@@ -276,17 +288,25 @@ export class LDialog {
     };
   }
   drag(dragDom: HTMLElement, moveDom: HTMLElement) {
-    let x, y;
     dragDom.onmousedown = (e) => {
-      const { left, top } = moveDom.getBoundingClientRect();
-      x = left;
-      y = top;
+      e.stopPropagation();
+      if (this.iframeDom) {
+        this.iframeDom.style.pointerEvents = 'none';
+      }
+      const startX = e.clientX - moveDom.offsetLeft;
+      const startY = e.clientY - moveDom.offsetTop;
+      document.onmousemove = (e) => {
+        moveDom.style.left = `${e.clientX - startX}px`;
+        moveDom.style.top = `${e.clientY - startY}px`;
+      };
+      document.onmouseup = () => {
+        if (this.iframeDom) {
+          this.iframeDom.style.pointerEvents = 'auto';
+        }
+        document.onmousemove = null;
+        document.onmouseup = null;
+      };
     };
-    this.hammer = new Hammer(dragDom);
-    this.hammer.on('panmove', (event) => {
-      moveDom.style.top = y + event.deltaY + 'px';
-      moveDom.style.left = x + event.deltaX + 'px';
-    });
   }
   createDom(parentElement: HTMLElement, tag: string, className?: string) {
     let dom = document.createElement(tag);
@@ -301,17 +321,24 @@ export class LDialog {
         dom.style.backgroundColor = config[key];
       } else if (key.endsWith('Color') && config[key]) {
         dom.style.color = config[key];
-      } else if (config[key]) {
+      } else if (key.endsWith('Height') && config[key]) {
+        dom.style.height = config[key] + 'px';
+      }else if (config[key]) {
         dom.style.fontSize = config[key] + 'px';
       }
     });
   }
-  destroy(pen: Pen) {
+
+  destroy(pen?: Pen) {
     this.mask?.remove();
     this.dialog?.remove();
     this.mask = null;
     this.dialog = null;
-    this.hammer.destroy();
-    pen.calculative.dialog = null;
+    if (this.iframeDom) {
+      this.iframeDom = null;
+    }
+    if (pen) {
+      pen.calculative.dialog = null;
+    }
   }
 }
