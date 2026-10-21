@@ -1,4 +1,9 @@
-import { clearIframes, commonAnchors, commonPens, cube, updateIframes, reset, updateFormData } from './diagrams';
+import { 
+  // clearIframes, 
+  commonAnchors, commonPens, cube, 
+  // updateIframes, 
+  reset, 
+  updateFormData } from './diagrams';
 import { EventType, Handler, WildcardHandler } from 'mitt';
 import { Canvas } from './canvas';
 import { Options, PenPlugin, PluginOptions } from './options';
@@ -24,8 +29,8 @@ import {
   connectLine,
   nearestAnchor,
   setChildValue,
-  FormItem,
-  BindId,
+  // FormItem,
+  // BindId,
   isAncestor,
   isShowChild,
   CanvasLayer,
@@ -846,11 +851,11 @@ export class Meta2d {
     message.init();
   }
 
-  closeAll() {
-    for (let key in messageList) {
-      messageList[key].close();
-    }
-  }
+  // closeAll() {
+  //   for (let key in messageList) {
+  //     messageList[key].close();
+  //   }
+  // }
 
   async navigatorTo(id: string) {
     if (!id) {
@@ -1272,7 +1277,7 @@ export class Meta2d {
       if(data.theme){
         this.setTheme(data.theme);
       }
-      updateIframes(data.pens);
+      // updateIframes(data.pens);
       this.setBackgroundImage(data.bkImage, data);
       Object.assign(this.store.data, data);
       this.store.data.pens = [];
@@ -1311,8 +1316,8 @@ export class Meta2d {
     // this.initBinds();
     // this.doInitFn();
     this.loadLineAnimateDraws();
-    this.initMessageEvents();
-    this.initGlobalTriggers();
+    // this.initMessageEvents();
+    // this.initGlobalTriggers();
     this.startAnimate();
     // this.startVideo();
     // this.listenSocket();
@@ -1327,13 +1332,13 @@ export class Meta2d {
         this.focus(pen.id);
       }
     }, 100);
-    if (this.store.data.iconUrls) {
-      for (const item of this.store.data.iconUrls) {
-        loadCss(item, () => {
-          this.render();
-        });
-      }
-    }
+    // if (this.store.data.iconUrls) {
+    //   for (const item of this.store.data.iconUrls) {
+    //     loadCss(item, () => {
+    //       this.render();
+    //     });
+    //   }
+    // }
     this.canvas.autoPolylineFlag = false;
     this.store.emitter.emit('opened');
 
@@ -1763,9 +1768,9 @@ export class Meta2d {
           setElemPosition(pen, pen.calculative.singleton.div);
       }
     });
-    if (lock > 0) {
-      this.initMessageEvents();
-    }
+    // if (lock > 0) {
+    //   this.initMessageEvents();
+    // }
   }
 
   // end  - 当前鼠标位置，是否作为终点
@@ -1852,7 +1857,7 @@ export class Meta2d {
       pen.onDestroy?.(pen);
     }
     clearStore(this.store, template);
-    this.hideInput();
+    // this.hideInput();
     this.canvas.tooltip.hide();
     if (this.map && this.map.isShow) {
       this.map.show();
@@ -2515,7 +2520,7 @@ export class Meta2d {
     if (pen) {
       this.store.hover = pen;
       this.store.hover.calculative.hover = true;
-      this.showInput(pen);
+      // this.showInput(pen);
     }
   }
   /**
@@ -3962,123 +3967,123 @@ export class Meta2d {
   // }
 
   // 绑定变量方式更新组件数据
-  setDatas(
-    datas: { dataId?: string; id?: string; value: any }[],
-    {
-      render = true,
-      doEvent = true,
-      history,
-    }: {
-      render?: boolean;
-      doEvent?: boolean;
-      history?: boolean;
-    } = {}
-  ) {
-    // 把{dataId: string; value: any}转成setValue格式数据
-    const penValues: Map<Pen, IValue> = new Map();
-    datas.forEach((v: any) => {
-      this.store.bindDatas[v.dataId]?.forEach(
-        (p: { id: string; formItem: FormItem }) => {
-          const pen = this.store.pens[p.id];
-          if (!pen) {
-            return;
-          }
+  // setDatas(
+  //   datas: { dataId?: string; id?: string; value: any }[],
+  //   {
+  //     render = true,
+  //     doEvent = true,
+  //     history,
+  //   }: {
+  //     render?: boolean;
+  //     doEvent?: boolean;
+  //     history?: boolean;
+  //   } = {}
+  // ) {
+  //   // 把{dataId: string; value: any}转成setValue格式数据
+  //   const penValues: Map<Pen, IValue> = new Map();
+  //   datas.forEach((v: any) => {
+  //     this.store.bindDatas[v.dataId]?.forEach(
+  //       (p: { id: string; formItem: FormItem }) => {
+  //         const pen = this.store.pens[p.id];
+  //         if (!pen) {
+  //           return;
+  //         }
 
-          let penValue = penValues.get(pen);
+  //         let penValue = penValues.get(pen);
 
-          if (!pen.noOnBinds && typeof pen.onBinds === 'function') {
-            // 已经计算了
-            if (penValue) {
-              return;
-            }
-            penValues.set(pen, pen.onBinds(pen, datas, p.formItem));
-            return;
-          }
+  //         if (!pen.noOnBinds && typeof pen.onBinds === 'function') {
+  //           // 已经计算了
+  //           if (penValue) {
+  //             return;
+  //           }
+  //           penValues.set(pen, pen.onBinds(pen, datas, p.formItem));
+  //           return;
+  //         }
 
-          if (penValue) {
-            penValue[p.formItem.key] = v.value;
-          } else {
-            penValue = {
-              id: p.id,
-              [p.formItem.key]: v.value,
-            };
-            penValues.set(pen, penValue);
-          }
-        }
-      );
-      this.store.bind[v.id || v.dataId]?.forEach(
-        (p: { id: string; key: string }) => {
-          const pen = this.store.pens[p.id];
-          if (!pen) {
-            return;
-          }
-          let penValue = penValues.get(pen);
+  //         if (penValue) {
+  //           penValue[p.formItem.key] = v.value;
+  //         } else {
+  //           penValue = {
+  //             id: p.id,
+  //             [p.formItem.key]: v.value,
+  //           };
+  //           penValues.set(pen, penValue);
+  //         }
+  //       }
+  //     );
+  //     this.store.bind[v.id || v.dataId]?.forEach(
+  //       (p: { id: string; key: string }) => {
+  //         const pen = this.store.pens[p.id];
+  //         if (!pen) {
+  //           return;
+  //         }
+  //         let penValue = penValues.get(pen);
 
-          // if (typeof pen.onBinds === 'function') {
-          //   // 已经计算了
-          //   if (penValue) {
-          //     return;
-          //   }
-          //   //TODO onBinds的情况
-          //   penValues.set(pen, pen.onBinds(pen, datas));
-          //   return;
-          // }
-          if (penValue) {
-            penValue[p.key] = v.value;
-          } else {
-            penValue = {
-              id: p.id,
-              [p.key]: v.value,
-            };
-            penValues.set(pen, penValue);
-          }
-        }
-      );
-    });
+  //         // if (typeof pen.onBinds === 'function') {
+  //         //   // 已经计算了
+  //         //   if (penValue) {
+  //         //     return;
+  //         //   }
+  //         //   //TODO onBinds的情况
+  //         //   penValues.set(pen, pen.onBinds(pen, datas));
+  //         //   return;
+  //         // }
+  //         if (penValue) {
+  //           penValue[p.key] = v.value;
+  //         } else {
+  //           penValue = {
+  //             id: p.id,
+  //             [p.key]: v.value,
+  //           };
+  //           penValues.set(pen, penValue);
+  //         }
+  //       }
+  //     );
+  //   });
 
-    let initPens: Pen[];
-    let pens: Pen[];
-    if (history) {
-      initPens = [];
-      pens = [];
-    }
+  //   let initPens: Pen[];
+  //   let pens: Pen[];
+  //   if (history) {
+  //     initPens = [];
+  //     pens = [];
+  //   }
 
-    const batchRendering = this.canvas.batchRendering;
-    this.canvas.batchRendering = true;
-    try {
-      this.store.data.locked && this.doDataEvent(datas);
-      penValues.forEach((value, pen) => {
-        if (!value) {
-          return;
-        }
-        if (history) {
-          initPens.push(deepClone(pen, true));
-        }
+  //   const batchRendering = this.canvas.batchRendering;
+  //   this.canvas.batchRendering = true;
+  //   try {
+  //     // this.store.data.locked && this.doDataEvent(datas);
+  //     penValues.forEach((value, pen) => {
+  //       if (!value) {
+  //         return;
+  //       }
+  //       if (history) {
+  //         initPens.push(deepClone(pen, true));
+  //       }
 
-        // penValues 已按图元完成合并，直接更新，避免再次进入 setValue 分发。
-        this.updatePenValue(pen, value);
+  //       // penValues 已按图元完成合并，直接更新，避免再次进入 setValue 分发。
+  //       this.updatePenValue(pen, value);
 
-        if (doEvent) {
-          this.store.emitter.emit('valueUpdate', pen);
-        }
-        if (history) {
-          pens.push(pen);
-        }
-      });
-    } finally {
-      this.canvas.batchRendering = batchRendering;
-    }
+  //       if (doEvent) {
+  //         this.store.emitter.emit('valueUpdate', pen);
+  //       }
+  //       if (history) {
+  //         pens.push(pen);
+  //       }
+  //     });
+  //   } finally {
+  //     this.canvas.batchRendering = batchRendering;
+  //   }
 
-    render && this.render();
+  //   render && this.render();
 
-    if (history) {
-      this.pushHistory({
-        type: EditType.Update,
-        initPens,
-        pens,
-      });
-    }
-  }
+  //   if (history) {
+  //     this.pushHistory({
+  //       type: EditType.Update,
+  //       initPens,
+  //       pens,
+  //     });
+  //   }
+  // }
 
   setValue(
     data: IValue,
@@ -4116,21 +4121,21 @@ export class Meta2d {
         let bindArr = this.store.bind[data.id];
         if (bindArr && bindArr.length) {
           pens = [];
-          this.setDatas([data] as any, {
-            render,
-            doEvent,
-            history,
-          });
+          // this.setDatas([data] as any, {
+          //   render,
+          //   doEvent,
+          //   history,
+          // });
           return;
         }
       }
     } else if (data.dataId) {
       pens = [];
-      this.setDatas([data] as any, {
-        render,
-        doEvent,
-        history,
-      });
+      // this.setDatas([data] as any, {
+      //   render,
+      //   doEvent,
+      //   history,
+      // });
       return;
     } else if (data.tag) {
       pens = this.find(data.tag);
@@ -4144,11 +4149,11 @@ export class Meta2d {
         });
       }
       if (binds.length) {
-        this.setDatas(binds as any, {
-          render,
-          doEvent,
-          history,
-        });
+        // this.setDatas(binds as any, {
+        //   render,
+        //   doEvent,
+        //   history,
+        // });
       }
       return;
     }
@@ -4223,13 +4228,13 @@ export class Meta2d {
     this.canvas.pushHistory(action);
   }
 
-  showInput(pen: Pen, rect?: Rect) {
-    this.canvas.showInput(pen, rect);
-  }
+  // showInput(pen: Pen, rect?: Rect) {
+  //   this.canvas.showInput(pen, rect);
+  // }
 
-  hideInput() {
-    this.canvas.hideInput();
-  }
+  // hideInput() {
+  //   this.canvas.hideInput();
+  // }
 
   clearDropdownList() {
     this.canvas.clearDropdownList();
@@ -4242,29 +4247,29 @@ export class Meta2d {
   private onEvent = (eventName: string, e: any) => {
     switch (eventName) {
       case 'add':
-        {
-          e.forEach((pen: Pen) => {
-            pen.onAdd?.(pen);
-          });
-        }
+        // {
+        //   e.forEach((pen: Pen) => {
+        //     pen.onAdd?.(pen);
+        //   });
+        // }
         this.onSizeUpdate();
         break;
       case 'enter':
         e && e.onMouseEnter && e.onMouseEnter(e, this.canvas.mousePos);
-        this.store.data.locked && this.doEvent(e, eventName);
+        // this.store.data.locked && this.doEvent(e, eventName);
         break;
       case 'leave':
         e && e.onMouseLeave && e.onMouseLeave(e, this.canvas.mousePos);
-        this.store.data.locked && this.doEvent(e, eventName);
+        // this.store.data.locked && this.doEvent(e, eventName);
         break;
       case 'active':
       case 'inactive':
-        {
-          this.store.data.locked &&
-            e.forEach((pen: Pen) => {
-              this.doEvent(pen, eventName);
-            });
-        }
+        // {
+        //   this.store.data.locked &&
+        //     e.forEach((pen: Pen) => {
+        //       this.doEvent(pen, eventName);
+        //     });
+        // }
         break;
       case 'click':
         if (this.store.data.locked && e.pen && !e.pen.disabled) {
@@ -4278,60 +4283,60 @@ export class Meta2d {
         if(e.pen && e.pen.formId){
           const formPen = this.store.pens[e.pen.formId];
           if(e.pen.formType === 'submit'){
-            this.store.data.locked && formPen && !formPen.disabled && this.doEvent(formPen, 'submit');
+            // this.store.data.locked && formPen && !formPen.disabled && this.doEvent(formPen, 'submit');
           }else if(e.pen.formType ==='reset'){
-            reset(e.pen);
-            this.store.data.locked && formPen && !formPen.disabled && this.doEvent(formPen, 'reset');
+            // reset(e.pen);
+            // this.store.data.locked && formPen && !formPen.disabled && this.doEvent(formPen, 'reset');
           }
         }
         e.pen &&
           e.pen.onClick &&
           !e.pen.disabled &&
           e.pen.onClick(e.pen, this.canvas.mousePos);
-        this.store.data.locked &&
-          e.pen &&
-          !e.pen.disabled &&
-          this.doEvent(e.pen, eventName);
+        // this.store.data.locked &&
+        //   e.pen &&
+        //   !e.pen.disabled &&
+        //   this.doEvent(e.pen, eventName);
         break;
       case 'contextmenu':
         e.pen &&
           e.pen.onContextmenu &&
           !e.pen.disabled &&
           e.pen.onContextmenu(e.pen, this.canvas.mousePos);
-        this.store.data.locked &&
-          e.pen &&
-          !e.pen.disabled &&
-          this.doEvent(e.pen, eventName);
+        // this.store.data.locked &&
+        //   e.pen &&
+        //   !e.pen.disabled &&
+        //   this.doEvent(e.pen, eventName);
         break;
       case 'mousedown':
         e.pen &&
           e.pen.onMouseDown &&
           !e.pen.disabled &&
           e.pen.onMouseDown(e.pen, this.canvas.mousePos);
-        this.store.data.locked &&
-          e.pen &&
-          !e.pen.disabled &&
-          this.doEvent(e.pen, eventName);
+        // this.store.data.locked &&
+        //   e.pen &&
+        //   !e.pen.disabled &&
+        //   this.doEvent(e.pen, eventName);
         break;
       case 'mouseup':
         e.pen &&
           e.pen.onMouseUp &&
           !e.pen.disabled &&
           e.pen.onMouseUp(e.pen, this.canvas.mousePos);
-        this.store.data.locked &&
-          e.pen &&
-          !e.pen.disabled &&
-          this.doEvent(e.pen, eventName);
+        // this.store.data.locked &&
+        //   e.pen &&
+        //   !e.pen.disabled &&
+        //   this.doEvent(e.pen, eventName);
         break;
       case 'dblclick':
-        this.store.data.locked &&
-          e.pen &&
-          !e.pen.disabled &&
-          this.doEvent(e.pen, eventName);
+        // this.store.data.locked &&
+        //   e.pen &&
+        //   !e.pen.disabled &&
+        //   this.doEvent(e.pen, eventName);
         break;
       case 'valueUpdate':
-        e && updateFormData(e,e.formValue);
-        this.store.data.locked && this.doEvent(e, eventName);
+        // e && updateFormData(e,e.formValue);
+        // this.store.data.locked && this.doEvent(e, eventName);
         this.canvas.tooltip.updateText(e as Pen);
         break;
       case 'update':
@@ -4348,556 +4353,556 @@ export class Meta2d {
         this.navigatorTo(e.params);
         break;
       case 'input':
-        this.store.data.locked &&
-          e &&
-          !e.disabled &&
-          this.doEvent(e, eventName);
+        // this.store.data.locked &&
+        //   e &&
+        //   !e.disabled &&
+        //   this.doEvent(e, eventName);
         break;
       case 'change':
-        if(e.pen){
-          updateFormData(e.pen);
-          this.store.data.locked &&!e.pen.disabled &&
-            this.doEvent(e.pen, eventName);
-        }else{
-          updateFormData(e);
-          this.store.data.locked &&
-            e &&
-            !e.disabled &&
-            this.doEvent(e, eventName);
-        }
+        // if(e.pen){
+        //   updateFormData(e.pen);
+        //   this.store.data.locked &&!e.pen.disabled &&
+        //     this.doEvent(e.pen, eventName);
+        // }else{
+        //   updateFormData(e);
+        //   this.store.data.locked &&
+        //     e &&
+        //     !e.disabled &&
+        //     this.doEvent(e, eventName);
+        // }
         break;
     }
 
-    this.doMessageEvent(eventName,e);
+    // this.doMessageEvent(eventName,e);
   };
 
-  private doEvent = (pen: Pen, eventName: EventName) => {
-    if (!pen) {
-      return;
-    }
-    let old = false; //是否是旧的事件
-    let indexArr = []; //事件条件成立的索引
-    pen.events?.forEach((event, index) => {
-      if (event.actions && event.actions.length) {
-        if (event.name === eventName) {
-          //条件成立
-          let flag = false;
-          if (event.conditions && event.conditions.length) {
-            if (event.conditionType === 'and') {
-              flag = event.conditions.every((condition) => {
-                return this.judgeCondition(pen, condition.key, condition);
-              });
-            } else if (event.conditionType === 'or') {
-              flag = event.conditions.some((condition) => {
-                return this.judgeCondition(pen, condition.key, condition);
-              });
-            }
-          } else {
-            flag = true;
-          }
-          if (flag) {
-            // event.actions.forEach((action) => {
-            //   if (this.events[action.action]) {
-            //     this.events[action.action](pen, action);
-            //   }
-            // });
-            indexArr.push(index);
-          }
-        }
-      } else {
-        old = true;
-        if (this.events[event.action] && event.name === eventName) {
-          let can = !event.where?.type;
-          if (event.where) {
-            const { fn, fnJs, comparison, key, value } = event.where;
-            if (fn) {
-              can = fn(pen, { meta2d: this });
-            } else if (fnJs) {
-              try {
-                event.where.fn = makeSafeFn(this.store.options, 'pen', 'context', fnJs) as (
-                  pen: Pen,
-                  context?: {
-                    meta2d: Meta2d;
-                  }
-                ) => boolean;
-              } catch (err) {
-                console.error('Error: make function:', err,'code:', fnJs);
-              }
-              if (event.where.fn) {
-                can = event.where.fn(pen, { meta2d: this });
-              }
-            } else {
-              let pValue = pen[key];
-              if (['x', 'y', 'width', 'height'].includes(key)) {
-                pValue = this.getPenRect(pen)[key];
-              }
-              switch (comparison) {
-                case '>':
-                  can = pValue > +value;
-                  break;
-                case '>=':
-                  can = pValue >= +value;
-                  break;
-                case '<':
-                  can = pValue < +value;
-                  break;
-                case '<=':
-                  can = pValue <= +value;
-                  break;
-                case '=':
-                case '==':
-                  can = pValue == value;
-                  break;
-                case '!=':
-                  can = pValue != value;
-                  break;
-                case '[)':
-                  can = valueInRange(+pValue, value);
-                  break;
-                case '![)':
-                  can = !valueInRange(+pValue, value);
-                  break;
-                case '[]':
-                  can = valueInArray(pValue, value);
-                  break;
-                case '![]':
-                  can = !valueInArray(pValue, value);
-                  break;
-              }
-            }
-          }
-          // can && this.events[event.action](pen, event);
-          if (can) {
-            indexArr.push(index);
-          }
-        }
-      }
-    });
+  // private doEvent = (pen: Pen, eventName: EventName) => {
+  //   if (!pen) {
+  //     return;
+  //   }
+  //   let old = false; //是否是旧的事件
+  //   let indexArr = []; //事件条件成立的索引
+  //   pen.events?.forEach((event, index) => {
+  //     if (event.actions && event.actions.length) {
+  //       if (event.name === eventName) {
+  //         //条件成立
+  //         let flag = false;
+  //         if (event.conditions && event.conditions.length) {
+  //           if (event.conditionType === 'and') {
+  //             flag = event.conditions.every((condition) => {
+  //               return this.judgeCondition(pen, condition.key, condition);
+  //             });
+  //           } else if (event.conditionType === 'or') {
+  //             flag = event.conditions.some((condition) => {
+  //               return this.judgeCondition(pen, condition.key, condition);
+  //             });
+  //           }
+  //         } else {
+  //           flag = true;
+  //         }
+  //         if (flag) {
+  //           // event.actions.forEach((action) => {
+  //           //   if (this.events[action.action]) {
+  //           //     this.events[action.action](pen, action);
+  //           //   }
+  //           // });
+  //           indexArr.push(index);
+  //         }
+  //       }
+  //     } else {
+  //       old = true;
+  //       if (this.events[event.action] && event.name === eventName) {
+  //         let can = !event.where?.type;
+  //         if (event.where) {
+  //           const { fn, fnJs, comparison, key, value } = event.where;
+  //           if (fn) {
+  //             can = fn(pen, { meta2d: this });
+  //           } else if (fnJs) {
+  //             try {
+  //               event.where.fn = makeSafeFn(this.store.options, 'pen', 'context', fnJs) as (
+  //                 pen: Pen,
+  //                 context?: {
+  //                   meta2d: Meta2d;
+  //                 }
+  //               ) => boolean;
+  //             } catch (err) {
+  //               console.error('Error: make function:', err,'code:', fnJs);
+  //             }
+  //             if (event.where.fn) {
+  //               can = event.where.fn(pen, { meta2d: this });
+  //             }
+  //           } else {
+  //             let pValue = pen[key];
+  //             if (['x', 'y', 'width', 'height'].includes(key)) {
+  //               pValue = this.getPenRect(pen)[key];
+  //             }
+  //             switch (comparison) {
+  //               case '>':
+  //                 can = pValue > +value;
+  //                 break;
+  //               case '>=':
+  //                 can = pValue >= +value;
+  //                 break;
+  //               case '<':
+  //                 can = pValue < +value;
+  //                 break;
+  //               case '<=':
+  //                 can = pValue <= +value;
+  //                 break;
+  //               case '=':
+  //               case '==':
+  //                 can = pValue == value;
+  //                 break;
+  //               case '!=':
+  //                 can = pValue != value;
+  //                 break;
+  //               case '[)':
+  //                 can = valueInRange(+pValue, value);
+  //                 break;
+  //               case '![)':
+  //                 can = !valueInRange(+pValue, value);
+  //                 break;
+  //               case '[]':
+  //                 can = valueInArray(pValue, value);
+  //                 break;
+  //               case '![]':
+  //                 can = !valueInArray(pValue, value);
+  //                 break;
+  //             }
+  //           }
+  //         }
+  //         // can && this.events[event.action](pen, event);
+  //         if (can) {
+  //           indexArr.push(index);
+  //         }
+  //       }
+  //     }
+  //   });
 
-    //所有的条件判断后，再统一执行条件成立的事件
-    if (old) {
-      pen.events?.forEach((event, index) => {
-        if (indexArr.includes(index)) {
-          if (this.events[event.action]) {
-            this.events[event.action](pen, event);
-          }
-        }
-      });
-    } else {
-      pen.events?.forEach(async (event, index) => {
-        if (indexArr.includes(index)) {
-          if (event.confirm) {
-            if (
-              !(await this.canvas.popconfirm.showModal(
-                pen,
-                this.canvas.mousePos,
-                event.confirmTitle
-              ))
-            ) {
-              return;
-            }
-          }
-          event.actions.forEach((action) => {
-            if (action.timeout) {
-              setTimeout(() => {
-                if (this.events[action.action]) {
-                  this.events[action.action](pen, action);
-                }
-              }, action.timeout);
-            } else {
-              if (this.events[action.action]) {
-                this.events[action.action](pen, action);
-              }
-            }
-          });
-        }
-      });
-    }
+  //   //所有的条件判断后，再统一执行条件成立的事件
+  //   if (old) {
+  //     pen.events?.forEach((event, index) => {
+  //       if (indexArr.includes(index)) {
+  //         if (this.events[event.action]) {
+  //           this.events[event.action](pen, event);
+  //         }
+  //       }
+  //     });
+  //   } else {
+  //     pen.events?.forEach(async (event, index) => {
+  //       if (indexArr.includes(index)) {
+  //         if (event.confirm) {
+  //           if (
+  //             !(await this.canvas.popconfirm.showModal(
+  //               pen,
+  //               this.canvas.mousePos,
+  //               event.confirmTitle
+  //             ))
+  //           ) {
+  //             return;
+  //           }
+  //         }
+  //         event.actions.forEach((action) => {
+  //           if (action.timeout) {
+  //             setTimeout(() => {
+  //               if (this.events[action.action]) {
+  //                 this.events[action.action](pen, action);
+  //               }
+  //             }, action.timeout);
+  //           } else {
+  //             if (this.events[action.action]) {
+  //               this.events[action.action](pen, action);
+  //             }
+  //           }
+  //         });
+  //       }
+  //     });
+  //   }
 
-    if (eventName === 'valueUpdate') {
-      pen.realTimes?.forEach((realTime) => {
-        let indexArr = [];
-        realTime.triggers?.forEach((trigger, index) => {
-          let flag = false;
-          if (trigger.conditions?.length) {
-            if (trigger.conditionType === 'and') {
-              flag = trigger.conditions.every((condition) => {
-                return this.judgeCondition(pen, realTime.key, condition);
-              });
-            } else if (trigger.conditionType === 'or') {
-              flag = trigger.conditions.some((condition) => {
-                return this.judgeCondition(pen, realTime.key, condition);
-              });
-            }
-          } else {
-            //无条件
-            flag = true;
-          }
-          if (flag) {
-            indexArr.push(index);
-            // trigger.actions?.forEach((event) => {
-            //   this.events[event.action](pen, event);
-            // });
-          }
-        });
+  //   if (eventName === 'valueUpdate') {
+  //     pen.realTimes?.forEach((realTime) => {
+  //       let indexArr = [];
+  //       realTime.triggers?.forEach((trigger, index) => {
+  //         let flag = false;
+  //         if (trigger.conditions?.length) {
+  //           if (trigger.conditionType === 'and') {
+  //             flag = trigger.conditions.every((condition) => {
+  //               return this.judgeCondition(pen, realTime.key, condition);
+  //             });
+  //           } else if (trigger.conditionType === 'or') {
+  //             flag = trigger.conditions.some((condition) => {
+  //               return this.judgeCondition(pen, realTime.key, condition);
+  //             });
+  //           }
+  //         } else {
+  //           //无条件
+  //           flag = true;
+  //         }
+  //         if (flag) {
+  //           indexArr.push(index);
+  //           // trigger.actions?.forEach((event) => {
+  //           //   this.events[event.action](pen, event);
+  //           // });
+  //         }
+  //       });
 
-        //执行
-        realTime.triggers?.forEach((trigger, index) => {
-          if (indexArr.includes(index)) {
-            trigger.actions?.forEach((event) => {
-              if (event.timeout) {
-                setTimeout(() => {
-                  if (this.events[event.action]) {
-                    this.events[event.action](pen, event);
-                  }
-                }, event.timeout);
-              } else {
-                if (this.events[event.action]) {
-                  this.events[event.action](pen, event);
-                }
-              }
-            });
-          }
-        });
-      });
+  //       //执行
+  //       realTime.triggers?.forEach((trigger, index) => {
+  //         if (indexArr.includes(index)) {
+  //           trigger.actions?.forEach((event) => {
+  //             if (event.timeout) {
+  //               setTimeout(() => {
+  //                 if (this.events[event.action]) {
+  //                   this.events[event.action](pen, event);
+  //                 }
+  //               }, event.timeout);
+  //             } else {
+  //               if (this.events[event.action]) {
+  //                 this.events[event.action](pen, event);
+  //               }
+  //             }
+  //           });
+  //         }
+  //       });
+  //     });
 
-      //全局
-      let indexArr = [];
-      this.store.globalTriggers[pen.id]?.forEach((trigger, index) => {
-        let flag = false;
-        if (trigger.conditions?.length) {
-          if (trigger.conditionType === 'and') {
-            flag = trigger.conditions.every((condition) => {
-              return this.judgeCondition(
-                this.store.pens[condition.source],
-                condition.key,
-                condition
-              );
-            });
-          } else if (trigger.conditionType === 'or') {
-            flag = trigger.conditions.some((condition) => {
-              return this.judgeCondition(
-                this.store.pens[condition.source],
-                condition.key,
-                condition
-              );
-            });
-          }
-        } else {
-          //无条件
-          flag = true;
-        }
-        if (flag) {
-          indexArr.push(index);
-        }
-      });
-      this.store.globalTriggers[pen.id]?.forEach((trigger, index) => {
-        if (indexArr.includes(index)) {
-          trigger.actions?.forEach((event) => {
-            if (event.timeout) {
-              setTimeout(() => {
-                if (this.events[event.action]) {
-                  this.events[event.action](pen, event);
-                }
-              }, event.timeout);
-            } else {
-              if (this.events[event.action]) {
-                this.events[event.action](pen, event);
-              }
-            }
-          });
-        }
-      });
+  //     //全局
+  //     let indexArr = [];
+  //     this.store.globalTriggers[pen.id]?.forEach((trigger, index) => {
+  //       let flag = false;
+  //       if (trigger.conditions?.length) {
+  //         if (trigger.conditionType === 'and') {
+  //           flag = trigger.conditions.every((condition) => {
+  //             return this.judgeCondition(
+  //               this.store.pens[condition.source],
+  //               condition.key,
+  //               condition
+  //             );
+  //           });
+  //         } else if (trigger.conditionType === 'or') {
+  //           flag = trigger.conditions.some((condition) => {
+  //             return this.judgeCondition(
+  //               this.store.pens[condition.source],
+  //               condition.key,
+  //               condition
+  //             );
+  //           });
+  //         }
+  //       } else {
+  //         //无条件
+  //         flag = true;
+  //       }
+  //       if (flag) {
+  //         indexArr.push(index);
+  //       }
+  //     });
+  //     this.store.globalTriggers[pen.id]?.forEach((trigger, index) => {
+  //       if (indexArr.includes(index)) {
+  //         trigger.actions?.forEach((event) => {
+  //           if (event.timeout) {
+  //             setTimeout(() => {
+  //               if (this.events[event.action]) {
+  //                 this.events[event.action](pen, event);
+  //               }
+  //             }, event.timeout);
+  //           } else {
+  //             if (this.events[event.action]) {
+  //               this.events[event.action](pen, event);
+  //             }
+  //           }
+  //         });
+  //       }
+  //     });
 
-      //triggers
-      if (pen.triggers?.length) {
-        for (let trigger of pen.triggers) {
-          if (trigger.status?.length) {
-            for (let state of trigger.status) {
-              let flag = false;
-              if (state.conditions?.length) {
-                if (state.conditionType === 'and') {
-                  flag = state.conditions.every((condition) => {
-                    return this.judgeCondition(pen, condition.key, condition);
-                  });
-                } else if (state.conditionType === 'or') {
-                  flag = state.conditions.some((condition) => {
-                    return this.judgeCondition(pen, condition.key, condition);
-                  });
-                }
-              } else {
-                //无条件
-                flag = true;
-              }
-              if (flag) {
-                state.actions?.forEach((event) => {
-                  if (event.timeout) {
-                    setTimeout(() => {
-                      if (this.events[event.action]) {
-                        this.events[event.action](pen, event);
-                      }
-                    }, event.timeout);
-                  } else {
-                    if (this.events[event.action]) {
-                      this.events[event.action](pen, event);
-                    }
-                  }
-                });
-                break;
-              }
-            }
-          }
-        }
-      }
-    }
+  //     //triggers
+  //     if (pen.triggers?.length) {
+  //       for (let trigger of pen.triggers) {
+  //         if (trigger.status?.length) {
+  //           for (let state of trigger.status) {
+  //             let flag = false;
+  //             if (state.conditions?.length) {
+  //               if (state.conditionType === 'and') {
+  //                 flag = state.conditions.every((condition) => {
+  //                   return this.judgeCondition(pen, condition.key, condition);
+  //                 });
+  //               } else if (state.conditionType === 'or') {
+  //                 flag = state.conditions.some((condition) => {
+  //                   return this.judgeCondition(pen, condition.key, condition);
+  //                 });
+  //               }
+  //             } else {
+  //               //无条件
+  //               flag = true;
+  //             }
+  //             if (flag) {
+  //               state.actions?.forEach((event) => {
+  //                 if (event.timeout) {
+  //                   setTimeout(() => {
+  //                     if (this.events[event.action]) {
+  //                       this.events[event.action](pen, event);
+  //                     }
+  //                   }, event.timeout);
+  //                 } else {
+  //                   if (this.events[event.action]) {
+  //                     this.events[event.action](pen, event);
+  //                   }
+  //                 }
+  //               });
+  //               break;
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
 
-    // 事件冒泡，子执行完，父执行
-    this.doEvent(this.store.pens[pen.parentId], eventName);
-  };
+  //   // 事件冒泡，子执行完，父执行
+  //   this.doEvent(this.store.pens[pen.parentId], eventName);
+  // };
 
-  doMessageEvent(eventName: string, data?: any) {
-    if (this.store.messageEvents[eventName]) {
-      this.store.messageEvents[eventName].forEach((item) => {
-        let flag = false;
-        if (item.event.conditions && item.event.conditions.length) {
-          if (item.event.conditionType === 'and') {
-            flag = item.event.conditions.every((condition) => {
-              return this.judgeCondition(item.pen, condition.key, condition);
-            });
-          } else if (item.event.conditionType === 'or') {
-            flag = item.event.conditions.some((condition) => {
-              return this.judgeCondition(item.pen, condition.key, condition);
-            });
-          }
-        } else {
-          flag = true;
-        }
-        if (flag) {
-          item.event.actions.forEach((action) => {
-            if(action.timeout){
-              setTimeout(() => {
-                if (this.events[action.action]) {
-                  this.events[action.action](item.pen, action, data);
-                }
-              }, action.timeout);
-            }else{
-              if (this.events[action.action]) {
-                this.events[action.action](item.pen, action, data);
-              }
-            }
-          });
-        }
-      });
-    }
-  }
+  // doMessageEvent(eventName: string, data?: any) {
+  //   if (this.store.messageEvents[eventName]) {
+  //     this.store.messageEvents[eventName].forEach((item) => {
+  //       let flag = false;
+  //       if (item.event.conditions && item.event.conditions.length) {
+  //         if (item.event.conditionType === 'and') {
+  //           flag = item.event.conditions.every((condition) => {
+  //             return this.judgeCondition(item.pen, condition.key, condition);
+  //           });
+  //         } else if (item.event.conditionType === 'or') {
+  //           flag = item.event.conditions.some((condition) => {
+  //             return this.judgeCondition(item.pen, condition.key, condition);
+  //           });
+  //         }
+  //       } else {
+  //         flag = true;
+  //       }
+  //       if (flag) {
+  //         item.event.actions.forEach((action) => {
+  //           if(action.timeout){
+  //             setTimeout(() => {
+  //               if (this.events[action.action]) {
+  //                 this.events[action.action](item.pen, action, data);
+  //               }
+  //             }, action.timeout);
+  //           }else{
+  //             if (this.events[action.action]) {
+  //               this.events[action.action](item.pen, action, data);
+  //             }
+  //           }
+  //         });
+  //       }
+  //     });
+  //   }
+  // }
 
-  doDataEvent = (datas: { dataId?: string; id?: string; value: any }[]) => {
-    if (!this.store.data.dataEvents?.length) {
-      return;
-    }
-    const data = datas.reduce((accumulator, { dataId, id, value }) => {
-      accumulator[id || dataId] = value;
-      return accumulator;
-    }, {});
-    let indexArr = [];
-    this.store.data.dataEvents?.forEach((event, index) => {
-      let flag = false;
-      if (event.conditions && event.conditions.length) {
-        if (event.conditionType === 'and') {
-          flag = event.conditions.every((condition) => {
-            return this.dataJudegeCondition(data, condition.key, condition);
-          });
-        } else if (event.conditionType === 'or') {
-          flag = event.conditions.some((condition) => {
-            return this.dataJudegeCondition(data, condition.key, condition);
-          });
-        }
-      } else {
-        flag = true;
-      }
-      if (flag) {
-        indexArr.push(index);
-      }
-    });
+  // doDataEvent = (datas: { dataId?: string; id?: string; value: any }[]) => {
+  //   if (!this.store.data.dataEvents?.length) {
+  //     return;
+  //   }
+  //   const data = datas.reduce((accumulator, { dataId, id, value }) => {
+  //     accumulator[id || dataId] = value;
+  //     return accumulator;
+  //   }, {});
+  //   let indexArr = [];
+  //   this.store.data.dataEvents?.forEach((event, index) => {
+  //     let flag = false;
+  //     if (event.conditions && event.conditions.length) {
+  //       if (event.conditionType === 'and') {
+  //         flag = event.conditions.every((condition) => {
+  //           return this.dataJudegeCondition(data, condition.key, condition);
+  //         });
+  //       } else if (event.conditionType === 'or') {
+  //         flag = event.conditions.some((condition) => {
+  //           return this.dataJudegeCondition(data, condition.key, condition);
+  //         });
+  //       }
+  //     } else {
+  //       flag = true;
+  //     }
+  //     if (flag) {
+  //       indexArr.push(index);
+  //     }
+  //   });
 
-    this.store.data.dataEvents?.forEach((event, index) => {
-      if (indexArr.includes(index)) {
-        event.actions?.forEach((action) => {
-          if (this.events[action.action]) {
-            this.events[action.action](data, action);
-          }
-        });
-      }
-    });
-  };
+  //   this.store.data.dataEvents?.forEach((event, index) => {
+  //     if (indexArr.includes(index)) {
+  //       event.actions?.forEach((action) => {
+  //         if (this.events[action.action]) {
+  //           this.events[action.action](data, action);
+  //         }
+  //       });
+  //     }
+  //   });
+  // };
 
-  initGlobalTriggers() {
-    this.store.globalTriggers = {};
-    this.store.data.triggers?.forEach((trigger) => {
-      trigger.conditions.forEach((condition) => {
-        if (condition.source) {
-          if (!this.store.globalTriggers[condition.source]) {
-            this.store.globalTriggers[condition.source] = [];
-          }
-          if (!this.store.globalTriggers[condition.source].includes(trigger)) {
-            this.store.globalTriggers[condition.source].push(trigger);
-          }
-        }
-      });
-    });
-  }
+  // initGlobalTriggers() {
+  //   this.store.globalTriggers = {};
+  //   this.store.data.triggers?.forEach((trigger) => {
+  //     trigger.conditions.forEach((condition) => {
+  //       if (condition.source) {
+  //         if (!this.store.globalTriggers[condition.source]) {
+  //           this.store.globalTriggers[condition.source] = [];
+  //         }
+  //         if (!this.store.globalTriggers[condition.source].includes(trigger)) {
+  //           this.store.globalTriggers[condition.source].push(trigger);
+  //         }
+  //       }
+  //     });
+  //   });
+  // }
 
-  initMessageEvents() {
-    this.store.messageEvents = {};
-    this.store.data.pens.forEach((pen) => {
-      pen.events?.forEach((event) => {
-        if (event.name === 'message' && event.message) {
-          if (!this.store.messageEvents[event.message]) {
-            this.store.messageEvents[event.message] = [];
-          }
-          this.store.messageEvents[event.message].push({
-            pen: pen,
-            event: event,
-          });
-        }
-      });
-    });
-  }
+  // initMessageEvents() {
+  //   this.store.messageEvents = {};
+  //   this.store.data.pens.forEach((pen) => {
+  //     pen.events?.forEach((event) => {
+  //       if (event.name === 'message' && event.message) {
+  //         if (!this.store.messageEvents[event.message]) {
+  //           this.store.messageEvents[event.message] = [];
+  //         }
+  //         this.store.messageEvents[event.message].push({
+  //           pen: pen,
+  //           event: event,
+  //         });
+  //       }
+  //     });
+  //   });
+  // }
 
-  dataJudegeCondition(data: any, key: string, condition: TriggerCondition) {
-    const { type, target, fnJs, fn, operator, valueType } = condition;
-    let can = false;
-    if (type === 'fn') {
-      //方法
-      if (fn) {
-        can = fn(data, { meta2d: this });
-      } else if (fnJs) {
-        try {
-          condition.fn = makeSafeFn(this.store.options, 'data', 'context', fnJs) as (
-            data: any,
-            context?: {
-              meta2d: Meta2d;
-            }
-          ) => boolean;
-        } catch (err) {
-          console.error('Error: make function:', err);
-        }
-        if (condition.fn) {
-          can = condition.fn(data, { meta2d: this });
-        }
-      }
-    } else {
-      //TODO boolean类型 数字类型
-      let value = condition.value;
-      if (valueType === 'prop') {
-        value = data[condition.value];
-      }
-      let compareValue = data[key];
-      switch (operator) {
-        case '>':
-          can = compareValue > +value;
-          break;
-        case '>=':
-          can = compareValue >= +value;
-          break;
-        case '<':
-          can = compareValue < +value;
-          break;
-        case '<=':
-          can = compareValue <= +value;
-          break;
-        case '=':
-        case '==':
-          can = compareValue == value;
-          break;
-        case '!=':
-          can = compareValue != value;
-          break;
-        case '[)':
-          can = valueInRange(+compareValue, value);
-          break;
-        case '![)':
-          can = !valueInRange(+compareValue, value);
-          break;
-        case '[]':
-          can = valueInArray(compareValue, value);
-          break;
-        case '![]':
-          can = !valueInArray(compareValue, value);
-          break;
-      }
-    }
-    return can;
-  }
+  // dataJudegeCondition(data: any, key: string, condition: TriggerCondition) {
+  //   const { type, target, fnJs, fn, operator, valueType } = condition;
+  //   let can = false;
+  //   if (type === 'fn') {
+  //     //方法
+  //     if (fn) {
+  //       can = fn(data, { meta2d: this });
+  //     } else if (fnJs) {
+  //       try {
+  //         condition.fn = makeSafeFn(this.store.options, 'data', 'context', fnJs) as (
+  //           data: any,
+  //           context?: {
+  //             meta2d: Meta2d;
+  //           }
+  //         ) => boolean;
+  //       } catch (err) {
+  //         console.error('Error: make function:', err);
+  //       }
+  //       if (condition.fn) {
+  //         can = condition.fn(data, { meta2d: this });
+  //       }
+  //     }
+  //   } else {
+  //     //TODO boolean类型 数字类型
+  //     let value = condition.value;
+  //     if (valueType === 'prop') {
+  //       value = data[condition.value];
+  //     }
+  //     let compareValue = data[key];
+  //     switch (operator) {
+  //       case '>':
+  //         can = compareValue > +value;
+  //         break;
+  //       case '>=':
+  //         can = compareValue >= +value;
+  //         break;
+  //       case '<':
+  //         can = compareValue < +value;
+  //         break;
+  //       case '<=':
+  //         can = compareValue <= +value;
+  //         break;
+  //       case '=':
+  //       case '==':
+  //         can = compareValue == value;
+  //         break;
+  //       case '!=':
+  //         can = compareValue != value;
+  //         break;
+  //       case '[)':
+  //         can = valueInRange(+compareValue, value);
+  //         break;
+  //       case '![)':
+  //         can = !valueInRange(+compareValue, value);
+  //         break;
+  //       case '[]':
+  //         can = valueInArray(compareValue, value);
+  //         break;
+  //       case '![]':
+  //         can = !valueInArray(compareValue, value);
+  //         break;
+  //     }
+  //   }
+  //   return can;
+  // }
 
-  judgeCondition(pen: Pen, key: string, condition: TriggerCondition) {
-    const { type, target, fnJs, fn, operator, valueType } = condition;
-    let can = false;
-    if (type === 'fn') {
-      //方法
-      if (fn) {
-        can = fn(pen, { meta2d: this });
-      } else if (fnJs) {
-        try {
-          condition.fn = makeSafeFn(this.store.options, 'pen', 'context', fnJs) as (
-            pen: Pen,
-            context?: {
-              meta2d: Meta2d;
-            }
-          ) => boolean;
-        } catch (err) {
-          console.error('Error: make function:', err);
-        }
-        if (condition.fn) {
-          can = condition.fn(pen, { meta2d: this });
-        }
-      }
-    } else {
-      //TODO boolean类型 数字类型
-      let value = condition.value;
-      if (valueType === 'prop') {
-        value = this.store.pens[target][condition.value];
-      }
-      let compareValue = getter(pen, key);
-      if (['x', 'y', 'width', 'height'].includes(key)) {
-        compareValue = this.getPenRect(pen)[key];
-      }
-      switch (operator) {
-        case '>':
-          can = compareValue > +value;
-          break;
-        case '>=':
-          can = compareValue >= +value;
-          break;
-        case '<':
-          can = compareValue < +value;
-          break;
-        case '<=':
-          can = compareValue <= +value;
-          break;
-        case '=':
-        case '==':
-          can = compareValue == value;
-          break;
-        case '!=':
-          can = compareValue != value;
-          break;
-        case '[)':
-          can = valueInRange(+compareValue, value);
-          break;
-        case '![)':
-          can = !valueInRange(+compareValue, value);
-          break;
-        case '[]':
-          can = valueInArray(compareValue, value);
-          break;
-        case '![]':
-          can = !valueInArray(compareValue, value);
-          break;
-      }
-    }
-    return can;
-  }
+  // judgeCondition(pen: Pen, key: string, condition: TriggerCondition) {
+  //   const { type, target, fnJs, fn, operator, valueType } = condition;
+  //   let can = false;
+  //   if (type === 'fn') {
+  //     //方法
+  //     if (fn) {
+  //       can = fn(pen, { meta2d: this });
+  //     } else if (fnJs) {
+  //       try {
+  //         condition.fn = makeSafeFn(this.store.options, 'pen', 'context', fnJs) as (
+  //           pen: Pen,
+  //           context?: {
+  //             meta2d: Meta2d;
+  //           }
+  //         ) => boolean;
+  //       } catch (err) {
+  //         console.error('Error: make function:', err);
+  //       }
+  //       if (condition.fn) {
+  //         can = condition.fn(pen, { meta2d: this });
+  //       }
+  //     }
+  //   } else {
+  //     //TODO boolean类型 数字类型
+  //     let value = condition.value;
+  //     if (valueType === 'prop') {
+  //       value = this.store.pens[target][condition.value];
+  //     }
+  //     let compareValue = getter(pen, key);
+  //     if (['x', 'y', 'width', 'height'].includes(key)) {
+  //       compareValue = this.getPenRect(pen)[key];
+  //     }
+  //     switch (operator) {
+  //       case '>':
+  //         can = compareValue > +value;
+  //         break;
+  //       case '>=':
+  //         can = compareValue >= +value;
+  //         break;
+  //       case '<':
+  //         can = compareValue < +value;
+  //         break;
+  //       case '<=':
+  //         can = compareValue <= +value;
+  //         break;
+  //       case '=':
+  //       case '==':
+  //         can = compareValue == value;
+  //         break;
+  //       case '!=':
+  //         can = compareValue != value;
+  //         break;
+  //       case '[)':
+  //         can = valueInRange(+compareValue, value);
+  //         break;
+  //       case '![)':
+  //         can = !valueInRange(+compareValue, value);
+  //         break;
+  //       case '[]':
+  //         can = valueInArray(compareValue, value);
+  //         break;
+  //       case '![]':
+  //         can = !valueInArray(compareValue, value);
+  //         break;
+  //     }
+  //   }
+  //   return can;
+  // }
 
   pushChildren(parent: Pen, children: Pen[]) {
     const initUpdatePens: Pen[] = [deepClone(parent, true)];
@@ -7346,11 +7351,11 @@ export class Meta2d {
   }
   destroy(onlyData?: boolean) {
     this.clear(false);
-    clearIframes();
-    this.stopDataMock();
-    this.closeSocket();
-    this.closeNetwork();
-    this.closeAll();
+    // clearIframes();
+    // this.stopDataMock();
+    // this.closeSocket();
+    // this.closeNetwork();
+    // this.closeAll();
     le5leTheme.destroyThemeSheet(this.store.id);
     this.store.emitter.all.clear(); // 内存释放
     this.canvas.destroy();

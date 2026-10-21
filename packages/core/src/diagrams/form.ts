@@ -170,54 +170,54 @@ function mouseMove(pen: Pen, e: Point) {
 }
 
 //更新表单数据
-export function updateFormData(pen, key?: string) {
-  if (pen.formId && pen.formKey && pen.formValue) {
-    //表单图元更新值
-    const leaderPen = pen.calculative.canvas.store.pens[pen.formId];
-    if (leaderPen) {
-      if (!leaderPen.formData) {
-        leaderPen.formData = {};
-      }
-      leaderPen.formData[pen.formKey] = pen[pen.formValue];
-    }
-  }
-}
+// export function updateFormData(pen, key?: string) {
+//   if (pen.formId && pen.formKey && pen.formValue) {
+//     //表单图元更新值
+//     const leaderPen = pen.calculative.canvas.store.pens[pen.formId];
+//     if (leaderPen) {
+//       if (!leaderPen.formData) {
+//         leaderPen.formData = {};
+//       }
+//       leaderPen.formData[pen.formKey] = pen[pen.formValue];
+//     }
+//   }
+// }
 
 //提交表单
 export function submit(pen: Pen) {}
 
 //重置表单
-export function reset(pen: Pen) {
-  const formPen = pen.calculative.canvas.store.pens[pen.formId];
-  // formPen.followers.forEach((id:string,index:number)=>{
-  for (let i = formPen.followers.length - 1; i >= 0; i--) {
-    let id = formPen.followers[i];
-    const follower = pen.calculative.canvas.store.pens[id];
-    if (
-      follower &&
-      follower.formId &&
-      follower.formKey &&
-      formPen.formData[follower.formKey]
-    ) {
-      const value = follower[follower.formValue];
-      let data: any = '';
-      if (Array.isArray(value)) {
-        data = [];
-      }
-      // follower[follower.formValue] = data;
-      // follower.calculative[follower.formValue] = data;
-      pen.calculative.canvas.parent.setValue(
-        { id: follower.id, [follower.formValue]: data },
-        { render: false, doEvent: false, history: false }
-      );
-    }
-    if (!follower) {
-      formPen.followers.splice(i, 1);
-    }
-  }
-  formPen.formData = {};
-  pen.calculative.canvas.parent.render();
-}
+// export function reset(pen: Pen) {
+//   const formPen = pen.calculative.canvas.store.pens[pen.formId];
+//   // formPen.followers.forEach((id:string,index:number)=>{
+//   for (let i = formPen.followers.length - 1; i >= 0; i--) {
+//     let id = formPen.followers[i];
+//     const follower = pen.calculative.canvas.store.pens[id];
+//     if (
+//       follower &&
+//       follower.formId &&
+//       follower.formKey &&
+//       formPen.formData[follower.formKey]
+//     ) {
+//       const value = follower[follower.formValue];
+//       let data: any = '';
+//       if (Array.isArray(value)) {
+//         data = [];
+//       }
+//       // follower[follower.formValue] = data;
+//       // follower.calculative[follower.formValue] = data;
+//       pen.calculative.canvas.parent.setValue(
+//         { id: follower.id, [follower.formValue]: data },
+//         { render: false, doEvent: false, history: false }
+//       );
+//     }
+//     if (!follower) {
+//       formPen.followers.splice(i, 1);
+//     }
+//   }
+//   formPen.formData = {};
+//   pen.calculative.canvas.parent.render();
+// }
 
 const formValueMap = {
   progress: 'progress',

@@ -29,33 +29,33 @@ function getIframeKey(iframeUrl: string): string {
   }
 }
 
-export function clearIframes() {
-  for(const key in iframes){
-    iframes[key]?.remove();
-    delete iframes[key];
-  }
-}
+// export function clearIframes() {
+//   for(const key in iframes){
+//     iframes[key]?.remove();
+//     delete iframes[key];
+//   }
+// }
 
-export function updateIframes(pens: Pen[]) {
-  for(const key in iframes){
-    if (!pens.some((pen) => pen.name == 'iframe' && getIframeKey(pen.iframe) == key)) {
-      iframes[key]?.remove();
-      delete iframes[key];
-    }
-  }
-}
+// export function updateIframes(pens: Pen[]) {
+//   for(const key in iframes){
+//     if (!pens.some((pen) => pen.name == 'iframe' && getIframeKey(pen.iframe) == key)) {
+//       iframes[key]?.remove();
+//       delete iframes[key];
+//     }
+//   }
+// }
 
-function matchIframe(pen: Pen) {
-  const key = getIframeKey(pen.iframe);
-  const div = iframes[key];
-  if (div) {
-    pen.calculative.singleton.div = div;
-    pen.calculative.iframeKey = key;
-    generateAroundDiv(pen);
-    return true;
-  }
-  return false;
-}
+// function matchIframe(pen: Pen) {
+//   const key = getIframeKey(pen.iframe);
+//   const div = iframes[key];
+//   if (div) {
+//     pen.calculative.singleton.div = div;
+//     pen.calculative.iframeKey = key;
+//     generateAroundDiv(pen);
+//     return true;
+//   }
+//   return false;
+// }
 
 export function iframe(pen: Pen) {
   if (!pen.onDestroy) {

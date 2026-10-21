@@ -152,17 +152,17 @@ export interface Bind {
   key?: string;
 }
 
-export interface RealTime {
-  label?: string;
-  key?: string;
-  type?: string;
-  keywords?: true;
-  triggers?: Trigger[];
-  bind?: Bind;
-  value?: string;
-  enableMock?: boolean;
-  mock?: any;
-  productId?: string;
-  deviceId?: string;
-  propertyId?: string;
-}
+// export interface RealTime {
+//   label?: string;
+//   key?: string;
+//   type?: string;
+//   keywords?: true;
+//   triggers?: Trigger[];
+//   bind?: Bind;
+//   value?: string;
+//   enableMock?: boolean;
+//   mock?: any;
+//   productId?: string;
+//   deviceId?: string;
+//   propertyId?: string;
+// }

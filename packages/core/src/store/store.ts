@@ -1,6 +1,8 @@
 import { default as mitt, Emitter } from 'mitt';
 
-import { CanvasLayer, FormItem, LockState, Pen } from '../pen';
+import { CanvasLayer, 
+  // FormItem,
+   LockState, Pen } from '../pen';
 import { defaultOptions, Options } from '../options';
 import { defaultTheme, Theme } from '../theme';
 
@@ -52,37 +54,37 @@ export interface Meta2dData {
   penBackground?: string; // 画笔默认背景色
   paths?: { [key: string]: string }; // paths 该图纸使用到的 svgPath ，打开后需要保存到 globalStore.paths
   bkImage?: string; // 背景图片
-  http?: string; // http 请求 Url
-  httpTimeInterval?: number; // http 请求间隔
-  httpHeaders?: HeadersInit; //请求头
+  // http?: string; // http 请求 Url
+  // httpTimeInterval?: number; // http 请求间隔
+  // httpHeaders?: HeadersInit; //请求头
   version?: string; // 版本号
   id?: string;
   _id?: string;
   // https?: HttpOptions[];
   width?: number;
   height?: number;
-  networkInterval?: number;
+  // networkInterval?: number;
   // networks?: Network[];
   // iot?:Iot;
   // sqls?:Sql[];
-  iconUrls?: string[];
-  mockData?: Function;
+  // iconUrls?: string[];
+  // mockData?: Function;
   name?: string;
-  enableMock?: boolean;
+  // enableMock?: boolean;
   minScale?: number;
   maxScale?: number;
   template?: string; //模版id
-  cancelFirstConnect?: boolean; //http定时轮询首次是否请求
+  // cancelFirstConnect?: boolean; //http定时轮询首次是否请求
   component?: boolean;
   theme?: string; //主题
   themeOnlyCanvas?: boolean;
   smoothNum?:number;//平滑量 值越大，平滑效果越好
-  triggers?:Trigger[]; //全局状态
-  dataPoints?: string[]; //数据点
-  dataset?:{
-    devices?: DataMock[]; //数据模拟
-  };
-  dataEvents?:Event[]; //数据点事件
+  // triggers?:Trigger[]; //全局状态
+  // dataPoints?: string[]; //数据点
+  // dataset?:{
+  //   devices?: DataMock[]; //数据模拟
+  // };
+  // dataEvents?:Event[]; //数据点事件
   fits?: Fit[];
   disableTranslate?: boolean; //禁止平移
   disableScale?: boolean; //禁止缩放
@@ -226,8 +228,8 @@ export interface Meta2dStore {
   historyIndex?: number;
   path2dMap: WeakMap<Pen, Path2D>;
   animateMap: WeakMap<Pen, Pen>;
-  bindDatas: { [key: string]: { id: string; formItem: FormItem }[] };
-  bind?: { [key: string]: { id: string; key: string }[] };
+  // bindDatas: { [key: string]: { id: string; formItem: FormItem }[] };
+  // bind?: { [key: string]: { id: string; key: string }[] };
   active?: Pen[];
   hover?: Pen;
   lastHover?: Pen;

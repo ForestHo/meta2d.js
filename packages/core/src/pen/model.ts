@@ -356,11 +356,11 @@ export interface Pen extends Rect {
   dropdownColor?: string;
   dropdownHoverColor?: string;
   dropdownHoverBackground?: string;
-  events?: Event[];
+  // events?: Event[];
 
-  iframe?: string;
-  video?: string;
-  audio?: string;
+  // iframe?: string;
+  // video?: string;
+  // audio?: string;
 
   max?: number; // progress最大值
   min?: number; // progress最小值
@@ -391,7 +391,7 @@ export interface Pen extends Rect {
    */
   isBottom?: boolean; // 是否是底部图片
   canvasLayer?: CanvasLayer; //图元所在画布层
-  form?: FormItem[]; // 业务表单
+  // form?: FormItem[]; // 业务表单
   lockedOnCombine?: LockState; // 组合成 combine ，该节点的 locked 值
   ratio?: boolean; //宽高比锁定
   animateLineWidth?: number; //连线动画线宽
@@ -400,8 +400,8 @@ export interface Pen extends Rect {
   scrolling?: string; //iframe scrolling属性
   animations?: any[]; //动画数组
   currentAnimation?: number; //当前动画索引
-  realTimes?: RealTime[];
-  triggers?:  Trigger[]; //状态
+  // realTimes?: RealTime[];
+  // triggers?:  Trigger[]; //状态
   crossOrigin?: string;
   imageRadius?: number; //图片圆角
   textFlip?: boolean; //文字是否镜像
@@ -418,20 +418,20 @@ export interface Pen extends Rect {
    */
   template?: boolean; //是否作为模版图元
   thumbImg?: string; //iframe嵌入场景缩略图
-  apiUrl?: string;
-  apiMethod?: string;
-  apiHeaders?: any;
-  apiBody?: any;
-  apiEnable?: boolean;
-  sql?: string; // 数据源sql
+  // apiUrl?: string;
+  // apiMethod?: string;
+  // apiHeaders?: any;
+  // apiBody?: any;
+  // apiEnable?: boolean;
+  // sql?: string; // 数据源sql
   container?:boolean; //是否是容器组件
   disabled?:boolean; //是否禁用
   disabledColor?:string; //禁用颜色
   disabledBackground?:string; //禁用背景色
   disabledTextColor?:string; //禁用文字颜色
   inputType?:string; //输入框类型
-  productId?:string; //产品id
-  deviceId?:string;//关联的设备id
+  // productId?:string; //产品id
+  // deviceId?:string;//关联的设备id
   pivot?:Point; //旋转中心
   noOnBinds?:boolean; //是否禁用绑定事件
   interaction?:boolean; //是否开启交互 组合时将不会被锁定
@@ -439,11 +439,11 @@ export interface Pen extends Rect {
   childActive?:boolean;
   draw?:boolean; //是否绘制 针对combine
   copyIndex?:number; //复制的索引 临时属性
-  formId?:string; //表单id
-  formData?:any; //表单数据
-  formKey?:string; //表单key
-  formValue?:string; //表单值对应的属性key
-  formType?:string; //表单类型 reset or submit
+  // formId?:string; //表单id
+  // formData?:any; //表单数据
+  // formKey?:string; //表单key
+  // formValue?:string; //表单值对应的属性key
+  // formType?:string; //表单类型 reset or submit
   className?:string;//dom样式
   styles?:any;
   isDom?:boolean; //是否是dom元素
@@ -625,11 +625,11 @@ export interface Pen extends Rect {
 
     canvas?: Canvas;
 
-    iframe?: string;
-    iframeKey?: string;
-    video?: string;
-    audio?: string;
-    media?: HTMLMediaElement;
+    // iframe?: string;
+    // iframeKey?: string;
+    // video?: string;
+    // audio?: string;
+    // media?: HTMLMediaElement;
 
     // flip?: Flip;
     flipX?: boolean;
@@ -682,41 +682,41 @@ export interface Pen extends Rect {
   // 前一个动画帧状态数据
   prevFrame?: Pen;
 
-  onAdd?: (pen: Pen) => void;
-  onValue?: (pen: Pen) => void;
-  onBeforeValue?: (pen: Pen, value: ChartData) => any;
-  onDestroy?: (pen: Pen) => void;
-  onMove?: (pen: Pen) => void;
-  onResize?: (pen: Pen, raw?: boolean) => void; // raw : 是否是原生resize触发的，scale也会触发resize事件
-  onRotate?: (pen: Pen) => void;
-  onScale?: (pen: Pen) => void;
-  onClick?: (pen: Pen, e: Point) => void;
-  onMouseEnter?: (pen: Pen, e: Point) => void;
-  onMouseLeave?: (pen: Pen, e: Point) => void;
-  onMouseDown?: (pen: Pen, e: Point) => void;
-  onMouseMove?: (pen: Pen, e: Point) => void;
-  onMouseUp?: (pen: Pen, e: Point) => void;
-  onShowInput?: (pen: Pen, e: Point) => void;
-  onSetTheme?: (theme: string, config?: any) => void;
-  onInput?: (pen: Pen, text: string) => void;
-  onChangeId?: (pen: Pen, oldId: string, newId: string) => void;
-  onBinds?: (pen: Pen, values: IValue[], formItem: FormItem) => IValue;
-  onStartVideo?: (pen: Pen) => void;
-  onPauseVideo?: (pen: Pen) => void;
-  onStopVideo?: (pen: Pen) => void;
-  onRenderPenRaw?: (pen: Pen) => void;
-  onKeyDown?: (pen: Pen, key: string) => void;
-  onWheel?: (pen: Pen, e: WheelEvent) => void;
-  onContextmenu?: (pen: Pen, e: Point) => void;
-  setTheme?: (pen:Pen,styles:any) => void;
-  onConnectLine?: (line: Pen, e: {
-    lineAnchor: Point;
-    fromAnchor: Point;
-    line: Pen;
-    anchor: Point;
-    pen: Pen;
-    fromPen: Pen
-  }) => void;
+  // onAdd?: (pen: Pen) => void;
+  // onValue?: (pen: Pen) => void;
+  // onBeforeValue?: (pen: Pen, value: ChartData) => any;
+  // onDestroy?: (pen: Pen) => void;
+  // onMove?: (pen: Pen) => void;
+  // onResize?: (pen: Pen, raw?: boolean) => void; // raw : 是否是原生resize触发的，scale也会触发resize事件
+  // onRotate?: (pen: Pen) => void;
+  // onScale?: (pen: Pen) => void;
+  // onClick?: (pen: Pen, e: Point) => void;
+  // onMouseEnter?: (pen: Pen, e: Point) => void;
+  // onMouseLeave?: (pen: Pen, e: Point) => void;
+  // onMouseDown?: (pen: Pen, e: Point) => void;
+  // onMouseMove?: (pen: Pen, e: Point) => void;
+  // onMouseUp?: (pen: Pen, e: Point) => void;
+  // onShowInput?: (pen: Pen, e: Point) => void;
+  // onSetTheme?: (theme: string, config?: any) => void;
+  // onInput?: (pen: Pen, text: string) => void;
+  // onChangeId?: (pen: Pen, oldId: string, newId: string) => void;
+  // onBinds?: (pen: Pen, values: IValue[], formItem: FormItem) => IValue;
+  // onStartVideo?: (pen: Pen) => void;
+  // onPauseVideo?: (pen: Pen) => void;
+  // onStopVideo?: (pen: Pen) => void;
+  // onRenderPenRaw?: (pen: Pen) => void;
+  // onKeyDown?: (pen: Pen, key: string) => void;
+  // onWheel?: (pen: Pen, e: WheelEvent) => void;
+  // onContextmenu?: (pen: Pen, e: Point) => void;
+  // setTheme?: (pen:Pen,styles:any) => void;
+  // onConnectLine?: (line: Pen, e: {
+  //   lineAnchor: Point;
+  //   fromAnchor: Point;
+  //   line: Pen;
+  //   anchor: Point;
+  //   pen: Pen;
+  //   fromPen: Pen
+  // }) => void;
 }
 
 // 图元调试数据，options.debug 开启对应项后记录
@@ -725,14 +725,14 @@ export interface PenDebug {
 }
 
 // 属性绑定变量
-export interface FormItem {
-  key: string;
-  /**
-   * 单属性绑定单变量 或 绑定多变量
-   * 为数组时，顺序不重要
-   */
-  dataIds?: BindId | BindId[];
-}
+// export interface FormItem {
+//   key: string;
+//   /**
+//    * 单属性绑定单变量 或 绑定多变量
+//    * 为数组时，顺序不重要
+//    */
+//   dataIds?: BindId | BindId[];
+// }
 
 export type BindId = {
   dataId: string;
@@ -870,31 +870,31 @@ export const defaultFormat = {
 /**
  * 清空 pen 的 生命周期
  */
-export function clearLifeCycle(pen: Pen) {
-  pen.onAdd = undefined;
-  pen.onValue = undefined;
-  pen.onBeforeValue = undefined;
-  pen.onDestroy = undefined;
-  pen.onMove = undefined;
-  pen.onResize = undefined;
-  pen.onRotate = undefined;
-  pen.onClick = undefined;
-  pen.onMouseEnter = undefined;
-  pen.onMouseLeave = undefined;
-  pen.onMouseDown = undefined;
-  pen.onMouseMove = undefined;
-  pen.onMouseUp = undefined;
-  pen.onShowInput = undefined;
-  pen.onInput = undefined;
-  pen.onChangeId = undefined;
-  pen.onBinds = undefined;
-  pen.onStartVideo = undefined;
-  pen.onPauseVideo = undefined;
-  pen.onStopVideo = undefined;
-  pen.onRenderPenRaw = undefined;
-  pen.onKeyDown = undefined;
-  pen.onContextmenu = undefined;
-  pen.onScale = undefined;
-  pen.onWheel = undefined;
-  pen.onConnectLine = undefined;
-}
+// export function clearLifeCycle(pen: Pen) {
+//   pen.onAdd = undefined;
+//   pen.onValue = undefined;
+//   pen.onBeforeValue = undefined;
+//   pen.onDestroy = undefined;
+//   pen.onMove = undefined;
+//   pen.onResize = undefined;
+//   pen.onRotate = undefined;
+//   pen.onClick = undefined;
+//   pen.onMouseEnter = undefined;
+//   pen.onMouseLeave = undefined;
+//   pen.onMouseDown = undefined;
+//   pen.onMouseMove = undefined;
+//   pen.onMouseUp = undefined;
+//   pen.onShowInput = undefined;
+//   pen.onInput = undefined;
+//   pen.onChangeId = undefined;
+//   pen.onBinds = undefined;
+//   pen.onStartVideo = undefined;
+//   pen.onPauseVideo = undefined;
+//   pen.onStopVideo = undefined;
+//   pen.onRenderPenRaw = undefined;
+//   pen.onKeyDown = undefined;
+//   pen.onContextmenu = undefined;
+//   pen.onScale = undefined;
+//   pen.onWheel = undefined;
+//   pen.onConnectLine = undefined;
+// }
