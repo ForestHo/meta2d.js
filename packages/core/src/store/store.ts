@@ -18,16 +18,16 @@ export interface Meta2dData {
   origin: Point;
   center: Point;
   locked?: LockState;
-  websocket?: string;
-  mqtt?: string;
-  mqttOptions?: {
-    clientId?: string;
-    username?: string;
-    password?: string;
-    customClientId?: boolean;
-  };
-  mqttTopics?: string;
-  websocketProtocols?: string | string[];
+  // websocket?: string;
+  // mqtt?: string;
+  // mqttOptions?: {
+  //   clientId?: string;
+  //   username?: string;
+  //   password?: string;
+  //   customClientId?: boolean;
+  // };
+  // mqttTopics?: string;
+  // websocketProtocols?: string | string[];
   background?: string;
   globalAlpha?: number;
   socketCbJs?: string;
@@ -58,13 +58,13 @@ export interface Meta2dData {
   version?: string; // 版本号
   id?: string;
   _id?: string;
-  https?: HttpOptions[];
+  // https?: HttpOptions[];
   width?: number;
   height?: number;
   networkInterval?: number;
-  networks?: Network[];
-  iot?:Iot;
-  sqls?:Sql[];
+  // networks?: Network[];
+  // iot?:Iot;
+  // sqls?:Sql[];
   iconUrls?: string[];
   mockData?: Function;
   name?: string;
@@ -118,88 +118,88 @@ export interface DataMock {
   enableMock?: boolean;
 }
 
-export interface Network {
-  name?: string;
-  protocol?: 'mqtt' | 'websocket' | 'http' | 'iot' | 'sql'| 'ADIIOT'|'SSE';
-  type?: string; //subscribe
-  url?: string;
-  //websocket
-  protocols?: string;
-  //mqtt
-  topics?: string;
-  options?: {
-    clientId?: string;
-    username?: string;
-    password?: string;
-    customClientId?: boolean;
-  };
-  //http
-  headers?: any; //请求头
-  method?: string;
-  body?: any;
-  //SSE
-  withCredentials?:boolean;
-  data?: Network
-  interval?: number; // http 请求间隔
-  times?: number; // 临时 重连次数
-  index?: number; // 临时 索引
-  devices?: any[]; //物联网设备,
-  dbId?: string; //数据库id
-  sql?: string; //sql语句
-  enable?: boolean; //是否启用
-  once?: boolean; //是否只执行一次
-  socketCbJs?: string; //socket回调js
-  socketFn?: Function;
-  children?: any[]; //点位数组
-  preJs?: string; //前置处理
-  preFn?: Function;
-}
+// export interface Network {
+//   name?: string;
+//   protocol?: 'mqtt' | 'websocket' | 'http' | 'iot' | 'sql'| 'ADIIOT'|'SSE';
+//   type?: string; //subscribe
+//   url?: string;
+//   //websocket
+//   protocols?: string;
+//   //mqtt
+//   topics?: string;
+//   options?: {
+//     clientId?: string;
+//     username?: string;
+//     password?: string;
+//     customClientId?: boolean;
+//   };
+//   //http
+//   headers?: any; //请求头
+//   method?: string;
+//   body?: any;
+//   //SSE
+//   withCredentials?:boolean;
+//   data?: Network
+//   interval?: number; // http 请求间隔
+//   times?: number; // 临时 重连次数
+//   index?: number; // 临时 索引
+//   devices?: any[]; //物联网设备,
+//   dbId?: string; //数据库id
+//   sql?: string; //sql语句
+//   enable?: boolean; //是否启用
+//   once?: boolean; //是否只执行一次
+//   socketCbJs?: string; //socket回调js
+//   socketFn?: Function;
+//   children?: any[]; //点位数组
+//   preJs?: string; //前置处理
+//   preFn?: Function;
+// }
 
-export interface Iot {
-  protocol?: 'mqtt' | 'websocket';
-  url?: string;
-  host?: string;
-  devices?:{
-    deviceId:string;
-    properties:string[];
-    token:string;
-  }[];
-  list?:{
-    label:string;
-    key:string;
-  }[];
-  tree?:any;
-  token?:string;
-  enable?:boolean;
-  room?:string;
-  computes?:any[];
-  interval?:any;
-  times?:number;
-}
+// export interface Iot {
+//   protocol?: 'mqtt' | 'websocket';
+//   url?: string;
+//   host?: string;
+//   devices?:{
+//     deviceId:string;
+//     properties:string[];
+//     token:string;
+//   }[];
+//   list?:{
+//     label:string;
+//     key:string;
+//   }[];
+//   tree?:any;
+//   token?:string;
+//   enable?:boolean;
+//   room?:string;
+//   computes?:any[];
+//   interval?:any;
+//   times?:number;
+// }
 
-export interface Sql {
-  interval?: number;
-  sql?:string;
-  dbId?: string;
-  dbType?:string;
-  name?:string;
-  bindId?: string;
-  index?: number;
-  method?: string;
-  pageSize?: number;
-  current?: number;
-  keys?: string[]; // 子数据点key
-  enable?: boolean;
-}
+// export interface Sql {
+//   interval?: number;
+//   sql?:string;
+//   dbId?: string;
+//   dbType?:string;
+//   name?:string;
+//   bindId?: string;
+//   index?: number;
+//   method?: string;
+//   pageSize?: number;
+//   current?: number;
+//   keys?: string[]; // 子数据点key
+//   enable?: boolean;
+// }
 
-export interface HttpOptions {
-  http?: string; // http 请求 Url
-  httpTimeInterval?: number; // http 请求间隔
-  httpHeaders?: HeadersInit; //请求头
-  method?: string;
-  body?: BodyInit | null;
-  times?: number; // 临时 重连次数
-}
+// export interface HttpOptions {
+//   http?: string; // http 请求 Url
+//   httpTimeInterval?: number; // http 请求间隔
+//   httpHeaders?: HeadersInit; //请求头
+//   method?: string;
+//   body?: BodyInit | null;
+//   times?: number; // 临时 重连次数
+// }
 
 export enum EditType {
   Add,

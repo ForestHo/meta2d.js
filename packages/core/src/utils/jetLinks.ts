@@ -1,5 +1,5 @@
 import { Meta2d } from "../core";
-import { Network } from "../store";
+// import { Network } from "../store";
 import { getCookie } from "./url";
 import { s8 } from "./uuid";
 import { Pen } from "../pen";

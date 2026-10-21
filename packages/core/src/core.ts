@@ -54,9 +54,9 @@ import {
   Meta2dData,
   Meta2dStore,
   useStore,
-  Network,
-  HttpOptions,
-  Sql,
+  // Network,
+  // HttpOptions,
+  // Sql,
 } from './store';
 import {
   formatPadding,
@@ -80,8 +80,8 @@ import { deepClone } from './utils/clone';
 import { Event, EventAction, EventName, TriggerCondition } from './event';
 import { ViewMap } from './map';
 // TODO: 这种引入方式，引入 connect， webpack 5 报错
-import { MqttClient } from 'mqtt';
-import * as mqtt from 'mqtt/dist/mqtt.min.js';
+// import { MqttClient } from 'mqtt';
+// import * as mqtt from 'mqtt/dist/mqtt.min.js';
 
 import pkg from '../package.json';
 import { lockedError } from './utils/error';
@@ -90,7 +90,7 @@ import { getter } from './utils/object';
 import { d, getCookie, getMeta2dData, getToken, queryURLParams } from './utils/url';
 import { HotkeyType } from './data';
 import { Message, MessageOptions, messageList } from './message';
-import { closeJetLinks, connectJetLinks, getSendData, sendJetLinksData } from './utils/jetLinks';
+// import { closeJetLinks, connectJetLinks, getSendData, sendJetLinksData } from './utils/jetLinks';
 import { le5leTheme } from './theme'
 import { t as _t, setLocale as setLocaleModule, addLocale as addLocaleModule, Meta2dTranslations } from './locale';
 const echartReg = /^echarts/;
@@ -100,10 +100,10 @@ const GLOBALVARALIAS = "meta2d"
 export class Meta2d {
   store: Meta2dStore;
   canvas: Canvas;
-  websocket: WebSocket;
-  mqttClient: MqttClient;
-  websockets: WebSocket[];
-  mqttClients: MqttClient[];
+  // websocket: WebSocket;
+  // mqttClient: MqttClient;
+  // websockets: WebSocket[];
+  // mqttClients: MqttClient[];
   eventSources: EventSource[];
   penPluginMap: Map<
     PenPlugin,
@@ -114,18 +114,18 @@ export class Meta2d {
       option: Object;
     }[]
   > = new Map();
-  socketFn: (
-    e: string,
-    // topic: string,
-    context?: {
-      meta2d?: Meta2d;
-      type?: string;
-      topic?: string;
-      url?: string;
-      method?: string;
-      net?: any;
-    }
-  ) => boolean | string;
+  // socketFn: (
+  //   e: string,
+  //   // topic: string,
+  //   context?: {
+  //     meta2d?: Meta2d;
+  //     type?: string;
+  //     topic?: string;
+  //     url?: string;
+  //     method?: string;
+  //     net?: any;
+  //   }
+  // ) => boolean | string;
   events: Record<number, (pen: Pen, e: Event, params?: any) => void> = {};
   private setPropsRenderPending = false;
   map: ViewMap;
@@ -145,7 +145,7 @@ export class Meta2d {
     this.registerCanvasDraw({ cube });
     this.registerAnchors(commonAnchors());
     globalThis[opts.alias || GLOBALVARALIAS] = this;
-    this.initEventFns();
+    // this.initEventFns();
     this.store.emitter.on('*', this.onEvent);
   }
 
@@ -372,474 +372,474 @@ export class Meta2d {
       le5leTheme.createThemeSheet(this.store.data.theme, this.store.id);
     // }
   }
-  initEventFns() {
-    this.events[EventAction.Link] = (pen: Pen, e: Event) => {
-      if (window && e.value && typeof e.value === 'string') {
-        let url = e.value;
-        if(url.includes('${')){
-          let keys = url.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-          if (keys) {
-            keys?.forEach((key) => {
-              url = url.replace(`\${${key}}`, getter(pen,key)||this.getDynamicParam(key));
-            });
-          }
-        }
-        window.open(url, e.params ?? '_blank');
-        return;
-      }
-      console.warn('[meta2d] Link param is not a string');
-    };
-    this.events[EventAction.SetProps] = (pen: Pen, e: Event) => {
-      // TODO: 若频繁地触发，重复 render 可能带来性能问题，待考虑
-      const value = e.value;
-      if (value && typeof value === 'object') {
-        const pens = e.params ? this.find(e.params) : this.find(pen.id);
-        const _value:any = {};
-        for(let key in value){
-          if(value[key]?.id){
-            _value[key] = this.store.pens[value[key].id]?.[value[key].key];
-          }else{
-            if(typeof value[key] === 'string'&&value[key].includes('${')){
-              let __value = value[key]
-              let keys = __value.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-              if (keys) {
-                keys.forEach((key) => {
-                  __value = __value.replace(
-                    `\${${key}}`, getter(pen,key)||this.getDynamicParam(key)
-                  );
-                });
-              }
-              _value[key] = __value;
-            } else if (
-              typeof value[key] === 'string' &&
-              ((value[key].startsWith('{') && value[key].endsWith('}')) ||
-                (value[key].startsWith('[') && value[key].endsWith(']')))
-            ) {
-              try{
-                _value[key] = JSON.parse(value[key]);
-              }catch(e){
-                _value[key] = value[key];
-              }
-            } else {
-              _value[key] = value[key];
-            }
-          }
-        }
+  // initEventFns() {
+  //   this.events[EventAction.Link] = (pen: Pen, e: Event) => {
+  //     if (window && e.value && typeof e.value === 'string') {
+  //       let url = e.value;
+  //       if(url.includes('${')){
+  //         let keys = url.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //         if (keys) {
+  //           keys?.forEach((key) => {
+  //             url = url.replace(`\${${key}}`, getter(pen,key)||this.getDynamicParam(key));
+  //           });
+  //         }
+  //       }
+  //       window.open(url, e.params ?? '_blank');
+  //       return;
+  //     }
+  //     console.warn('[meta2d] Link param is not a string');
+  //   };
+  //   this.events[EventAction.SetProps] = (pen: Pen, e: Event) => {
+  //     // TODO: 若频繁地触发，重复 render 可能带来性能问题，待考虑
+  //     const value = e.value;
+  //     if (value && typeof value === 'object') {
+  //       const pens = e.params ? this.find(e.params) : this.find(pen.id);
+  //       const _value:any = {};
+  //       for(let key in value){
+  //         if(value[key]?.id){
+  //           _value[key] = this.store.pens[value[key].id]?.[value[key].key];
+  //         }else{
+  //           if(typeof value[key] === 'string'&&value[key].includes('${')){
+  //             let __value = value[key]
+  //             let keys = __value.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //             if (keys) {
+  //               keys.forEach((key) => {
+  //                 __value = __value.replace(
+  //                   `\${${key}}`, getter(pen,key)||this.getDynamicParam(key)
+  //                 );
+  //               });
+  //             }
+  //             _value[key] = __value;
+  //           } else if (
+  //             typeof value[key] === 'string' &&
+  //             ((value[key].startsWith('{') && value[key].endsWith('}')) ||
+  //               (value[key].startsWith('[') && value[key].endsWith(']')))
+  //           ) {
+  //             try{
+  //               _value[key] = JSON.parse(value[key]);
+  //             }catch(e){
+  //               _value[key] = value[key];
+  //             }
+  //           } else {
+  //             _value[key] = value[key];
+  //           }
+  //         }
+  //       }
 
-        let visibleChanged = false;
-        pens.forEach((pen: Pen) => {
-          if (_value.hasOwnProperty('visible')) {
-            if (pen.visible !== _value.visible) {
-              // 批量设置属性时统一在循环结束后更新尺寸，避免每个图元重复创建定时器。
-              visibleChanged = true;
-              this.store.emitter.emit('setProps-visible', {
-                pen: pen,
-                visible: _value.visible,
-              });
-              this.setVisible(pen, _value.visible, false, false);
-            }
-          }
-          this.setValue(
-            { id: pen.id, ..._value },
-            { render: false, doEvent: false }
-          );
-        });
-        if (visibleChanged) {
-          this.onSizeUpdate();
-        }
-        this.requestSetPropsRender();
-        return;
-      }
-      console.warn('[meta2d] SetProps value is not an object');
-    };
-    this.events[EventAction.StartAnimate] = (pen: Pen, e: Event) => {
-      let _pen = pen;
-      if (e.value) {
-        _pen = this.findOne(e.value as string);
-      }
-      if (
-        this.store.animates.has(_pen) &&
-        !_pen.calculative.pause &&
-        _pen.animateName === e.params
-      ) {
-        return;
-      }
-      if (e.targetType && e.params) {
-        this.startAnimate((e.value as string) || [pen], e.params);
-        return;
-      }
-      if (!e.value || typeof e.value === 'string') {
-        this.startAnimate((e.value as string) || [pen]);
-        return;
-      }
-      console.warn('[meta2d] StartAnimate value is not a string');
-    };
-    this.events[EventAction.PauseAnimate] = (pen: Pen, e: Event) => {
-      if (!e.value || typeof e.value === 'string') {
-        this.pauseAnimate((e.value as string) || [pen]);
-        return;
-      }
-      console.warn('[meta2d] PauseAnimate value is not a string');
-    };
-    this.events[EventAction.StopAnimate] = (pen: Pen, e: Event) => {
-      if (!e.value || typeof e.value === 'string') {
-        if (e.value) {
-          let _pen = this.findOne(e.value as string);
-          if (!this.store.animates.has(_pen)) {
-            return;
-          }
-        } else {
-          if (!this.store.animates.has(pen)) {
-            return;
-          }
-        }
-        this.stopAnimate((e.value as string) || [pen]);
-        return;
-      }
-      console.warn('[meta2d] StopAnimate event value is not a string');
-    };
-    this.events[EventAction.StartVideo] = (pen: Pen, e: Event) => {
-      if (!e.value || typeof e.value === 'string') {
-        this.startVideo((e.value as string) || [pen]);
-        return;
-      }
-      console.warn('[meta2d] StartVideo value is not a string');
-    };
-    this.events[EventAction.PauseVideo] = (pen: Pen, e: Event) => {
-      if (!e.value || typeof e.value === 'string') {
-        this.pauseVideo((e.value as string) || [pen]);
-        return;
-      }
-      console.warn('[meta2d] PauseVideo value is not a string');
-    };
-    this.events[EventAction.StopVideo] = (pen: Pen, e: Event) => {
-      if (!e.value || typeof e.value === 'string') {
-        this.stopVideo((e.value as string) || [pen]);
-        return;
-      }
-      console.warn('[meta2d] StopVideo event value is not a string');
-    };
-    this.events[EventAction.JS] = (pen: Pen, e: Event, params?: any) => {
-      if (e.value && !e.fn) {
-        try {
-          if (typeof e.value !== 'string') {
-            throw new Error('[meta2d] Function value must be string');
-          }
-          const fnJs = e.value;
-          e.fn = makeSafeFn(
-            this.store.options,
-            'pen',
-            'params',
-            'context',
-            fnJs
-          ) as (
-            pen: Pen,
-            params: any,
-            context?: { meta2d: Meta2d; eventName: string }
-          ) => void;
-        } catch (err) {
-          console.error('[meta2d]: Error on make a function:', err ,'code:', e.value);
-        }
-      }
-      e.fn?.(pen, params || e.params, { meta2d: this, eventName: e.name });
-    };
-    this.events[EventAction.GlobalFn] = (pen: Pen, e: Event) => {
-      if (typeof e.value !== 'string') {
-        console.warn('[meta2d] GlobalFn value must be a string');
-        return;
-      }
-      if (globalThis[e.value]) {
-        globalThis[e.value](pen, e.params);
-      }
-    };
-    this.events[EventAction.Emit] = (pen: Pen, e: Event) => {
-      if (typeof e.value !== 'string') {
-        console.warn('[meta2d] Emit value must be a string');
-        return;
-      }
-      this.store.emitter.emit(e.value, {
-        pen,
-        params: e.params,
-        eventName: e.name,
-      });
-    };
-    this.events[EventAction.SendPropData] = (pen: Pen, e: Event) => {
-      const value = deepClone(e.value);
-      if (value && typeof value === 'object') {
-        const _pen = e.params ? this.findOne(e.params) : pen;
-        for (let key in value) {
-          if (value[key] === undefined || value[key] === '') {
-            value[key] = _pen[key];
-          }
-        }
-        value.id = _pen.id;
-        this.doSendDataEvent(value, e.extend);
-        return;
-      }
-      console.warn('[meta2d] SendPropData value is not an object');
-    };
-    this.events[EventAction.SendVarData] = (pen: Pen, e: Event) => {
-      const value = deepClone(e.value);
-      if (value && typeof value === 'object') {
-        const _pen = e.params ? this.findOne(e.params) : pen;
-        let array = [];
-        for (let key in value) {
-          let obj = {
-            dataId: key,
-            value: value[key],
-          };
-          if (!obj.value) {
-            let oneForm = _pen.form?.find(
-              (_item) =>
-                (_item.dataIds as BindId) &&
-                (_item.dataIds as BindId).dataId === obj.dataId
-            );
-            if (oneForm) {
-              obj.value = _pen[oneForm.key];
-            }
-          }
-          array.push(obj);
-        }
-        this.doSendDataEvent(array, e.extend);
-        return;
-      }
-      console.warn('[meta2d] SendVarData value is not an object');
-    };
-    this.events[EventAction.Navigator] = (pen: Pen, e: Event) => {
-      if (e.value && typeof e.value === 'string') {
-        this.navigatorTo(e.value);
-      }
-    };
-    this.events[EventAction.Dialog] = (pen: Pen, e: Event) => {
-      if (e.params && typeof e.params === 'string') {
-        let url = e.params;
-        if (e.params.includes('${')) {
-          let keys = e.params.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-          if (keys) {
-            keys?.forEach((key) => {
-              url = url.replace(`\${${key}}`, getter(pen,key)||this.getDynamicParam(key));
-            });
-          }
-        }
-        const extend = e.extend || {};
-        Object.keys(extend).forEach((key)=>{
-          if(!['x','y','width','height','relative','pen'].includes(key)){
-            if(url.indexOf('?')!==-1){
-              url+=`&${key}=${extend[key]}`
-            }else{
-              url+=`?${key}=${extend[key]}`
-            }
-          }
-        })
-        let data = this.getEventData(e.list, pen);
-        if(Object.keys(data).length){
-          data = null;
-        }
-        this.canvas.dialog.show(e.value as any, url, e.extend ? { ...extend, pen } : undefined, data);
-      }
-    };
-    this.events[EventAction.SendData] = (pen: Pen, e: Event) => {
-      if(e.data?.length){
-        const value: any = this.getSendData(e.data, pen);
-        if(pen.formId && pen.formData){
-          //表单数据
-          Object.assign(value,pen.formData);
-        }
-        this.sendDataToNetWork(value, pen, e);
-        return;
-      }
-      if (e.list?.length) {
-        // if (e.targetType === 'id') {
-        if (e.network && e.network.protocol === 'ADIIOT') {
-          const list: any = getSendData(this,pen,e);
-          if(list.length){
-            sendJetLinksData(this,list);
-          }
-          return;
-        }
-        const value: any = this.getEventData(e.list, pen);
-        if (pen.deviceId) {
-          value.deviceId = pen.deviceId;
-        }
-        if(pen.formId && pen.formData){
-          //表单数据
-          Object.assign(value,pen.formData);
-        }
-        this.sendDataToNetWork(value, pen, e);
-        return;
-        // }
-      }
-      const value = deepClone(e.value);
-      if (value && typeof value === 'object') {
-        if (e.targetType === 'id') {
-          const _pen = e.params ? this.findOne(e.params) : pen;
-          for (let key in value) {
-            if (value[key] === undefined || value[key] === '') {
-              value[key] = getter(_pen,key);
-            } else if (
-              typeof value[key] === 'string' &&
-              value[key]?.indexOf('${') > -1
-            ) {
-              let keys = value[key].match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-              if (keys?.length) {
-                value[key] = getter(_pen,key[0]) ?? this.getDynamicParam(keys[0]);
-              }
-            }
-          }
-          // value.id = _pen.id;
-          if (_pen.deviceId) {
-            value.deviceId = _pen.deviceId;
-          }
-          this.sendDataToNetWork(value, pen, e);
-          return;
-        }
-      }
-    };
-    this.events[EventAction.PostMessage] = (pen: Pen, e: Event) => {
-      if (typeof e.value !== 'string') {
-        console.warn('[meta2d] Emit value must be a string');
-        return;
-      }
-      const _pen = e.params ? this.findOne(e.params) : pen;
-      const iframeName = ['iframe', 'htmlDom']
-      if (!iframeName.includes(_pen.name) && !_pen.iframe) {
-        console.warn('不是嵌入页面');
-        return;
-      }
-      let params: any = {}
-      _pen.iframe?
-        params = queryURLParams(_pen.iframe.split('?')[1]) : params = {id:_pen.id};
-      let value: any = this.getSendData(e.data, pen);
-      if(e.list){
-        value = this.getEventData(e.list, pen);
-      }
-      (
-        _pen.calculative.singleton.div.children[0] as HTMLIFrameElement
-      ).contentWindow.postMessage(
-        JSON.stringify({
-          name: e.value,
-          id: params.id,
-          data: value,
-        }),
-        '*'
-      );
-      return;
-    };
-    this.events[EventAction.PostMessageToParent] = (pen: Pen, e: Event) => {
-      if (typeof e.value !== 'string') {
-        console.warn('[meta2d] Emit value must be a string');
-        return;
-      }
-      let value: any = this.getSendData(e.data, pen);
-      if(e.list){
-        value = this.getEventData(e.list, pen);
-      }
-      window.parent.postMessage(
-        JSON.stringify({ name: e.value, data: value }),
-        '*'
-      );
-      return;
-    };
-    this.events[EventAction.Message] = (pen: Pen, e: Event, params?: any) => {
-      let theme = e.params;
-      let content = e.value
-      if(!content && params && params.type === 'http'){
-        content = params.error.statusText;
-        if(!theme){
-          theme = 'error';
-        }
-      }
-      this.message({
-        theme,
-        content,
-        ...e.extend,
-      });
-    };
-  }
+  //       let visibleChanged = false;
+  //       pens.forEach((pen: Pen) => {
+  //         if (_value.hasOwnProperty('visible')) {
+  //           if (pen.visible !== _value.visible) {
+  //             // 批量设置属性时统一在循环结束后更新尺寸，避免每个图元重复创建定时器。
+  //             visibleChanged = true;
+  //             this.store.emitter.emit('setProps-visible', {
+  //               pen: pen,
+  //               visible: _value.visible,
+  //             });
+  //             this.setVisible(pen, _value.visible, false, false);
+  //           }
+  //         }
+  //         this.setValue(
+  //           { id: pen.id, ..._value },
+  //           { render: false, doEvent: false }
+  //         );
+  //       });
+  //       if (visibleChanged) {
+  //         this.onSizeUpdate();
+  //       }
+  //       this.requestSetPropsRender();
+  //       return;
+  //     }
+  //     console.warn('[meta2d] SetProps value is not an object');
+  //   };
+  //   this.events[EventAction.StartAnimate] = (pen: Pen, e: Event) => {
+  //     let _pen = pen;
+  //     if (e.value) {
+  //       _pen = this.findOne(e.value as string);
+  //     }
+  //     if (
+  //       this.store.animates.has(_pen) &&
+  //       !_pen.calculative.pause &&
+  //       _pen.animateName === e.params
+  //     ) {
+  //       return;
+  //     }
+  //     if (e.targetType && e.params) {
+  //       this.startAnimate((e.value as string) || [pen], e.params);
+  //       return;
+  //     }
+  //     if (!e.value || typeof e.value === 'string') {
+  //       this.startAnimate((e.value as string) || [pen]);
+  //       return;
+  //     }
+  //     console.warn('[meta2d] StartAnimate value is not a string');
+  //   };
+  //   this.events[EventAction.PauseAnimate] = (pen: Pen, e: Event) => {
+  //     if (!e.value || typeof e.value === 'string') {
+  //       this.pauseAnimate((e.value as string) || [pen]);
+  //       return;
+  //     }
+  //     console.warn('[meta2d] PauseAnimate value is not a string');
+  //   };
+  //   this.events[EventAction.StopAnimate] = (pen: Pen, e: Event) => {
+  //     if (!e.value || typeof e.value === 'string') {
+  //       if (e.value) {
+  //         let _pen = this.findOne(e.value as string);
+  //         if (!this.store.animates.has(_pen)) {
+  //           return;
+  //         }
+  //       } else {
+  //         if (!this.store.animates.has(pen)) {
+  //           return;
+  //         }
+  //       }
+  //       this.stopAnimate((e.value as string) || [pen]);
+  //       return;
+  //     }
+  //     console.warn('[meta2d] StopAnimate event value is not a string');
+  //   };
+  //   this.events[EventAction.StartVideo] = (pen: Pen, e: Event) => {
+  //     if (!e.value || typeof e.value === 'string') {
+  //       this.startVideo((e.value as string) || [pen]);
+  //       return;
+  //     }
+  //     console.warn('[meta2d] StartVideo value is not a string');
+  //   };
+  //   this.events[EventAction.PauseVideo] = (pen: Pen, e: Event) => {
+  //     if (!e.value || typeof e.value === 'string') {
+  //       this.pauseVideo((e.value as string) || [pen]);
+  //       return;
+  //     }
+  //     console.warn('[meta2d] PauseVideo value is not a string');
+  //   };
+  //   this.events[EventAction.StopVideo] = (pen: Pen, e: Event) => {
+  //     if (!e.value || typeof e.value === 'string') {
+  //       this.stopVideo((e.value as string) || [pen]);
+  //       return;
+  //     }
+  //     console.warn('[meta2d] StopVideo event value is not a string');
+  //   };
+  //   this.events[EventAction.JS] = (pen: Pen, e: Event, params?: any) => {
+  //     if (e.value && !e.fn) {
+  //       try {
+  //         if (typeof e.value !== 'string') {
+  //           throw new Error('[meta2d] Function value must be string');
+  //         }
+  //         const fnJs = e.value;
+  //         e.fn = makeSafeFn(
+  //           this.store.options,
+  //           'pen',
+  //           'params',
+  //           'context',
+  //           fnJs
+  //         ) as (
+  //           pen: Pen,
+  //           params: any,
+  //           context?: { meta2d: Meta2d; eventName: string }
+  //         ) => void;
+  //       } catch (err) {
+  //         console.error('[meta2d]: Error on make a function:', err ,'code:', e.value);
+  //       }
+  //     }
+  //     e.fn?.(pen, params || e.params, { meta2d: this, eventName: e.name });
+  //   };
+  //   this.events[EventAction.GlobalFn] = (pen: Pen, e: Event) => {
+  //     if (typeof e.value !== 'string') {
+  //       console.warn('[meta2d] GlobalFn value must be a string');
+  //       return;
+  //     }
+  //     if (globalThis[e.value]) {
+  //       globalThis[e.value](pen, e.params);
+  //     }
+  //   };
+  //   this.events[EventAction.Emit] = (pen: Pen, e: Event) => {
+  //     if (typeof e.value !== 'string') {
+  //       console.warn('[meta2d] Emit value must be a string');
+  //       return;
+  //     }
+  //     this.store.emitter.emit(e.value, {
+  //       pen,
+  //       params: e.params,
+  //       eventName: e.name,
+  //     });
+  //   };
+  //   this.events[EventAction.SendPropData] = (pen: Pen, e: Event) => {
+  //     const value = deepClone(e.value);
+  //     if (value && typeof value === 'object') {
+  //       const _pen = e.params ? this.findOne(e.params) : pen;
+  //       for (let key in value) {
+  //         if (value[key] === undefined || value[key] === '') {
+  //           value[key] = _pen[key];
+  //         }
+  //       }
+  //       value.id = _pen.id;
+  //       this.doSendDataEvent(value, e.extend);
+  //       return;
+  //     }
+  //     console.warn('[meta2d] SendPropData value is not an object');
+  //   };
+  //   this.events[EventAction.SendVarData] = (pen: Pen, e: Event) => {
+  //     const value = deepClone(e.value);
+  //     if (value && typeof value === 'object') {
+  //       const _pen = e.params ? this.findOne(e.params) : pen;
+  //       let array = [];
+  //       for (let key in value) {
+  //         let obj = {
+  //           dataId: key,
+  //           value: value[key],
+  //         };
+  //         if (!obj.value) {
+  //           let oneForm = _pen.form?.find(
+  //             (_item) =>
+  //               (_item.dataIds as BindId) &&
+  //               (_item.dataIds as BindId).dataId === obj.dataId
+  //           );
+  //           if (oneForm) {
+  //             obj.value = _pen[oneForm.key];
+  //           }
+  //         }
+  //         array.push(obj);
+  //       }
+  //       this.doSendDataEvent(array, e.extend);
+  //       return;
+  //     }
+  //     console.warn('[meta2d] SendVarData value is not an object');
+  //   };
+  //   this.events[EventAction.Navigator] = (pen: Pen, e: Event) => {
+  //     if (e.value && typeof e.value === 'string') {
+  //       this.navigatorTo(e.value);
+  //     }
+  //   };
+  //   this.events[EventAction.Dialog] = (pen: Pen, e: Event) => {
+  //     if (e.params && typeof e.params === 'string') {
+  //       let url = e.params;
+  //       if (e.params.includes('${')) {
+  //         let keys = e.params.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //         if (keys) {
+  //           keys?.forEach((key) => {
+  //             url = url.replace(`\${${key}}`, getter(pen,key)||this.getDynamicParam(key));
+  //           });
+  //         }
+  //       }
+  //       const extend = e.extend || {};
+  //       Object.keys(extend).forEach((key)=>{
+  //         if(!['x','y','width','height','relative','pen'].includes(key)){
+  //           if(url.indexOf('?')!==-1){
+  //             url+=`&${key}=${extend[key]}`
+  //           }else{
+  //             url+=`?${key}=${extend[key]}`
+  //           }
+  //         }
+  //       })
+  //       let data = this.getEventData(e.list, pen);
+  //       if(Object.keys(data).length){
+  //         data = null;
+  //       }
+  //       this.canvas.dialog.show(e.value as any, url, e.extend ? { ...extend, pen } : undefined, data);
+  //     }
+  //   };
+  //   this.events[EventAction.SendData] = (pen: Pen, e: Event) => {
+  //     if(e.data?.length){
+  //       const value: any = this.getSendData(e.data, pen);
+  //       if(pen.formId && pen.formData){
+  //         //表单数据
+  //         Object.assign(value,pen.formData);
+  //       }
+  //       this.sendDataToNetWork(value, pen, e);
+  //       return;
+  //     }
+  //     if (e.list?.length) {
+  //       // if (e.targetType === 'id') {
+  //       if (e.network && e.network.protocol === 'ADIIOT') {
+  //         const list: any = getSendData(this,pen,e);
+  //         if(list.length){
+  //           sendJetLinksData(this,list);
+  //         }
+  //         return;
+  //       }
+  //       const value: any = this.getEventData(e.list, pen);
+  //       if (pen.deviceId) {
+  //         value.deviceId = pen.deviceId;
+  //       }
+  //       if(pen.formId && pen.formData){
+  //         //表单数据
+  //         Object.assign(value,pen.formData);
+  //       }
+  //       this.sendDataToNetWork(value, pen, e);
+  //       return;
+  //       // }
+  //     }
+  //     const value = deepClone(e.value);
+  //     if (value && typeof value === 'object') {
+  //       if (e.targetType === 'id') {
+  //         const _pen = e.params ? this.findOne(e.params) : pen;
+  //         for (let key in value) {
+  //           if (value[key] === undefined || value[key] === '') {
+  //             value[key] = getter(_pen,key);
+  //           } else if (
+  //             typeof value[key] === 'string' &&
+  //             value[key]?.indexOf('${') > -1
+  //           ) {
+  //             let keys = value[key].match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //             if (keys?.length) {
+  //               value[key] = getter(_pen,key[0]) ?? this.getDynamicParam(keys[0]);
+  //             }
+  //           }
+  //         }
+  //         // value.id = _pen.id;
+  //         if (_pen.deviceId) {
+  //           value.deviceId = _pen.deviceId;
+  //         }
+  //         this.sendDataToNetWork(value, pen, e);
+  //         return;
+  //       }
+  //     }
+  //   };
+  //   this.events[EventAction.PostMessage] = (pen: Pen, e: Event) => {
+  //     if (typeof e.value !== 'string') {
+  //       console.warn('[meta2d] Emit value must be a string');
+  //       return;
+  //     }
+  //     const _pen = e.params ? this.findOne(e.params) : pen;
+  //     const iframeName = ['iframe', 'htmlDom']
+  //     if (!iframeName.includes(_pen.name) && !_pen.iframe) {
+  //       console.warn('不是嵌入页面');
+  //       return;
+  //     }
+  //     let params: any = {}
+  //     _pen.iframe?
+  //       params = queryURLParams(_pen.iframe.split('?')[1]) : params = {id:_pen.id};
+  //     let value: any = this.getSendData(e.data, pen);
+  //     if(e.list){
+  //       value = this.getEventData(e.list, pen);
+  //     }
+  //     (
+  //       _pen.calculative.singleton.div.children[0] as HTMLIFrameElement
+  //     ).contentWindow.postMessage(
+  //       JSON.stringify({
+  //         name: e.value,
+  //         id: params.id,
+  //         data: value,
+  //       }),
+  //       '*'
+  //     );
+  //     return;
+  //   };
+  //   this.events[EventAction.PostMessageToParent] = (pen: Pen, e: Event) => {
+  //     if (typeof e.value !== 'string') {
+  //       console.warn('[meta2d] Emit value must be a string');
+  //       return;
+  //     }
+  //     let value: any = this.getSendData(e.data, pen);
+  //     if(e.list){
+  //       value = this.getEventData(e.list, pen);
+  //     }
+  //     window.parent.postMessage(
+  //       JSON.stringify({ name: e.value, data: value }),
+  //       '*'
+  //     );
+  //     return;
+  //   };
+  //   this.events[EventAction.Message] = (pen: Pen, e: Event, params?: any) => {
+  //     let theme = e.params;
+  //     let content = e.value
+  //     if(!content && params && params.type === 'http'){
+  //       content = params.error.statusText;
+  //       if(!theme){
+  //         theme = 'error';
+  //       }
+  //     }
+  //     this.message({
+  //       theme,
+  //       content,
+  //       ...e.extend,
+  //     });
+  //   };
+  // }
 
-  getSendData(data:any[], cpen?: Pen){
-    const value: any = {};
-    data?.forEach((item: any) => {
-      if(item.prop){
-        if(item.id&&item.id!=='固定值'){
-          const pen = this.findOne(item.id);
-          value[item.prop] = getter(pen,item.key);// pen[item.key];
-        }else{
-          if(typeof item.value === 'string'&&item.value.includes('${')){
-            let _value = item.value
-            let keys = _value.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-            if (keys) {
-              keys.forEach((key) => {
-                _value = _value.replace(
-                  `\${${key}}`,getter(cpen,key) || this.getDynamicParam(key)
-                );
-              });
-            }
-            value[item.prop] = _value;
-          }else{
-            value[item.prop] = this.convertType(item.value,item.type);
-          }
-        }
-      }
-    });
-    return value;
-  }
+  // getSendData(data:any[], cpen?: Pen){
+  //   const value: any = {};
+  //   data?.forEach((item: any) => {
+  //     if(item.prop){
+  //       if(item.id&&item.id!=='固定值'){
+  //         const pen = this.findOne(item.id);
+  //         value[item.prop] = getter(pen,item.key);// pen[item.key];
+  //       }else{
+  //         if(typeof item.value === 'string'&&item.value.includes('${')){
+  //           let _value = item.value
+  //           let keys = _value.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //           if (keys) {
+  //             keys.forEach((key) => {
+  //               _value = _value.replace(
+  //                 `\${${key}}`,getter(cpen,key) || this.getDynamicParam(key)
+  //               );
+  //             });
+  //           }
+  //           value[item.prop] = _value;
+  //         }else{
+  //           value[item.prop] = this.convertType(item.value,item.type);
+  //         }
+  //       }
+  //     }
+  //   });
+  //   return value;
+  // }
 
-  convertType(value: string, type:string) {
-    if(typeof value === 'string'){
-      if(['switch','bool','boolean'].includes(type)){
-        if (value === 'false') {
-          return false;
-        } else if (value === 'true') {
-          return true;
-        }
-      }else if( ['integer','number','int','enum','double','float'].includes(type)){
-        if(!isNaN(Number(value))){
-          return Number(value);
-        }
-      }
-    }else if(typeof value === 'object'){
-      let bodyStr = JSON.stringify(value);
-      let keys = bodyStr.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-      if (keys?.length) {
-        for(let i=0; i<keys.length; i++){
-          bodyStr = bodyStr.replace(
-            `\${${keys[i]}}`,
-            this.getDynamicParam(keys[i])
-          );
-        }
-      }
-      return JSON.parse(bodyStr);
-    }
-    return value;
-  }
+  // convertType(value: string, type:string) {
+  //   if(typeof value === 'string'){
+  //     if(['switch','bool','boolean'].includes(type)){
+  //       if (value === 'false') {
+  //         return false;
+  //       } else if (value === 'true') {
+  //         return true;
+  //       }
+  //     }else if( ['integer','number','int','enum','double','float'].includes(type)){
+  //       if(!isNaN(Number(value))){
+  //         return Number(value);
+  //       }
+  //     }
+  //   }else if(typeof value === 'object'){
+  //     let bodyStr = JSON.stringify(value);
+  //     let keys = bodyStr.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //     if (keys?.length) {
+  //       for(let i=0; i<keys.length; i++){
+  //         bodyStr = bodyStr.replace(
+  //           `\${${keys[i]}}`,
+  //           this.getDynamicParam(keys[i])
+  //         );
+  //       }
+  //     }
+  //     return JSON.parse(bodyStr);
+  //   }
+  //   return value;
+  // }
 
-  getEventData(list: any, pen: Pen) {
-    const value: any = {};
-    if (list?.length) {
-      list.forEach((item: any) => {
-        const _pen = item.params ? this.findOne(item.params) : pen;
-        for (let key in item.value) {
-          if (item.value[key] === undefined || item.value[key] === '') {
-            value[key] = _pen[key];
-          } else if (
-            typeof item.value[key] === 'string' &&
-            item.value[key]?.indexOf('${') > -1
-          ) {
-            let keys = item.value[key].match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-            if (keys?.length) {
-              value[key] = _pen[keys[0]] ?? this.getDynamicParam(keys[0]);
-            }
-          } else {
-            value[key] = item.value[key];
-          }
-        }
-      });
-    }
-    if (Object.keys(value).length) {
-      return value;
-    } else return {};
-  }
+  // getEventData(list: any, pen: Pen) {
+  //   const value: any = {};
+  //   if (list?.length) {
+  //     list.forEach((item: any) => {
+  //       const _pen = item.params ? this.findOne(item.params) : pen;
+  //       for (let key in item.value) {
+  //         if (item.value[key] === undefined || item.value[key] === '') {
+  //           value[key] = _pen[key];
+  //         } else if (
+  //           typeof item.value[key] === 'string' &&
+  //           item.value[key]?.indexOf('${') > -1
+  //         ) {
+  //           let keys = item.value[key].match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //           if (keys?.length) {
+  //             value[key] = _pen[keys[0]] ?? this.getDynamicParam(keys[0]);
+  //           }
+  //         } else {
+  //           value[key] = item.value[key];
+  //         }
+  //       }
+  //     });
+  //   }
+  //   if (Object.keys(value).length) {
+  //     return value;
+  //   } else return {};
+  // }
 
   message(options: MessageOptions) {
     const message = new Message(this.canvas.parentElement, options);
@@ -893,236 +893,236 @@ export class Meta2d {
     }
   }
 
-  doSendDataEvent(value: any, topics?: string) {
-    let data = JSON.stringify(value);
-    if (this.mqttClient && this.mqttClient.connected) {
-      if (topics) {
-        topics.split(',').forEach((topic) => {
-          this.mqttClient.publish(topic, data);
-        });
-      } else {
-        this.store.data.mqttTopics &&
-          this.store.data.mqttTopics.split(',').forEach((topic) => {
-            this.mqttClient.publish(topic, data);
-          });
-      }
-    }
-    if (this.websocket && this.websocket.readyState === 1) {
-      this.websocket.send(data);
-    }
-    if (this.store.data.https || this.store.data.http) {
-      this.sendDatabyHttp(data);
-    }
-    this.store.emitter.emit('sendData', data);
-  }
+  // doSendDataEvent(value: any, topics?: string) {
+  //   let data = JSON.stringify(value);
+  //   if (this.mqttClient && this.mqttClient.connected) {
+  //     if (topics) {
+  //       topics.split(',').forEach((topic) => {
+  //         this.mqttClient.publish(topic, data);
+  //       });
+  //     } else {
+  //       this.store.data.mqttTopics &&
+  //         this.store.data.mqttTopics.split(',').forEach((topic) => {
+  //           this.mqttClient.publish(topic, data);
+  //         });
+  //     }
+  //   }
+  //   if (this.websocket && this.websocket.readyState === 1) {
+  //     this.websocket.send(data);
+  //   }
+  //   if (this.store.data.https || this.store.data.http) {
+  //     this.sendDatabyHttp(data);
+  //   }
+  //   this.store.emitter.emit('sendData', data);
+  // }
 
-  async sendDataToNetWork(value: any, pen: Pen, e: any) {
-    const network = deepClone(e.network);
-    if (network.data) {
-      Object.assign(network, network.data);
-      delete network.data;
-    }
-    if(network.protocol === 'iot'){
-      if (this.store.data.iot.room) {
-        let payload = {
-          token: this.store.data.iot.token,
-          data: value,
-        };
-        if (value.name) {
-          const keys = Object.keys(value).filter(
-            (key) => value[key] === 'aggregate'
-          );
-          if (keys.length) {
-            const _value = deepClone(value);
-            keys.forEach((key) => {
-              delete _value[key];
-            });
-            delete _value.name;
-            if (_value.start && typeof _value.start === 'string') {
-              _value.start = Math.floor(
-                new Date(_value.start).getTime() / 1000
-              );
-            }
-            if (_value.end && typeof _value.end === 'string') {
-              _value.end = Math.floor(new Date(_value.end).getTime() / 1000);
-            }
-            let payload = [];
-            keys.forEach((key) => {
-              let arr = key.split('#');
-              payload.push({
-                token: this.store.data.iot.token,
-                deviceId: arr[0],
-                key: arr[1],
-                name: arr[1] + '_' + value.name,
-                ..._value,
-              });
-            });
+  // async sendDataToNetWork(value: any, pen: Pen, e: any) {
+  //   const network = deepClone(e.network);
+  //   if (network.data) {
+  //     Object.assign(network, network.data);
+  //     delete network.data;
+  //   }
+  //   if(network.protocol === 'iot'){
+  //     if (this.store.data.iot.room) {
+  //       let payload = {
+  //         token: this.store.data.iot.token,
+  //         data: value,
+  //       };
+  //       if (value.name) {
+  //         const keys = Object.keys(value).filter(
+  //           (key) => value[key] === 'aggregate'
+  //         );
+  //         if (keys.length) {
+  //           const _value = deepClone(value);
+  //           keys.forEach((key) => {
+  //             delete _value[key];
+  //           });
+  //           delete _value.name;
+  //           if (_value.start && typeof _value.start === 'string') {
+  //             _value.start = Math.floor(
+  //               new Date(_value.start).getTime() / 1000
+  //             );
+  //           }
+  //           if (_value.end && typeof _value.end === 'string') {
+  //             _value.end = Math.floor(new Date(_value.end).getTime() / 1000);
+  //           }
+  //           let payload = [];
+  //           keys.forEach((key) => {
+  //             let arr = key.split('#');
+  //             payload.push({
+  //               token: this.store.data.iot.token,
+  //               deviceId: arr[0],
+  //               key: arr[1],
+  //               name: arr[1] + '_' + value.name,
+  //               ..._value,
+  //             });
+  //           });
 
-            this.iotMqttClient &&
-              this.iotMqttClient.publish(
-                `le5le-iot/${this.store.data.iot.room}/property/aggregate`,
-                JSON.stringify(payload)
-              );
-            return;
-          }
-        }
+  //           this.iotMqttClient &&
+  //             this.iotMqttClient.publish(
+  //               `le5le-iot/${this.store.data.iot.room}/property/aggregate`,
+  //               JSON.stringify(payload)
+  //             );
+  //           return;
+  //         }
+  //       }
 
-        this.iotMqttClient &&
-          this.iotMqttClient.publish(
-            `le5le-iot/${this.store.data.iot.room}/properties/set`,
-            JSON.stringify(payload)
-          );
-      } else {
-        this.iotMqttClient &&
-          this.iotMqttClient.publish(
-            `le5le-iot/property/set/${this.store.data.iot?.token}`,
-            JSON.stringify(value)
-          );
-      }
-      return;
-    }
-    if (!network.url) {
-      return;
-    }
-    if (network.protocol === 'http') {
-      if (typeof network.headers === 'object') {
-        /*for (let i in network.headers) {
-          if (typeof network.headers[i] === 'string') {
-            let keys = network.headers[i].match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-            if (keys) {
-              network.headers[i] = network.headers[i].replace(
-                `\${${keys[0]}}`,
-                this.getDynamicParam(keys[0])
-              );
-            }
-          }
-        }*/
-        let headersStr = JSON.stringify(network.headers);
-        let keys = headersStr.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-        if (keys?.length) {
-         for(let i=0; i<keys.length; i++){
-            headersStr = headersStr.replace(
-              `\${${keys[i]}}`,
-              this.getDynamicParam(keys[i])
-            );
-          }
-        }
-        network.headers = JSON.parse(headersStr);
-      }
-      let params = undefined;
-      let url = network.url;
-      if (network.method === 'GET') {
-        if(Object.keys(value).length !== 0){
-          if(url.includes('?')){
-             params =
-            '&' +
-            Object.keys(value)
-              .map((key) => key + '=' + value[key])
-              .join('&');
-          }else{
-            params =
-              '?' +
-              Object.keys(value)
-                .map((key) => key + '=' + value[key])
-                .join('&');
-          }
-        }
-      }
-      // if (network.method === 'POST') {
-        if (url.indexOf('${') > -1) {
-          let keys = url.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-          if (keys) {
-            keys.forEach((key) => {
-              url = url.replace(
-                `\${${key}}`,
-                getter(pen, key) || this.getDynamicParam(key)
-              );
-            });
-          }
-        }
-      // }
-      const res: Response = await fetch(url + (params ? params : ''), {
-        headers: network.headers || {},
-        method: network.method,
-        body: network.method === 'POST' ? JSON.stringify(value) : undefined,
-      });
-      if (res.ok) {
-        if (e.callback) {
-          const data = await res.text();
-          if (!e.fn) {
-            try {
-              if (typeof e.callback !== 'string') {
-                throw new Error('[meta2d] Function callback must be string');
-              }
-              const fnJs = e.callback;
-              e.fn = makeSafeFn(
-                this.store.options,
-                'pen',
-                'data',
-                'context',
-                fnJs
-              ) as (
-                pen: Pen,
-                data: string,
-                context?: { meta2d: Meta2d; e: any }
-              ) => void;
-            } catch (err) {
-              console.error('[meta2d]: Error on make a function:', err ,'code:', e.callback);
-            }
-          }
-          e.fn?.(pen, data, { meta2d: this, e });
-        }
-        console.info('http消息发送成功');
-      }else {
-        this.store.emitter.emit('error', { type: 'http', error: res });
-      }
-    } else if (network.protocol === 'mqtt') {
-      const clients = this.mqttClients?.filter(
-        (client) => (client.options as any).href === network.url
-      );
-      if (clients && clients.length) {
-        if (clients[0].connected) {
-          network.topics.split(',').forEach((topic) => {
-            clients[0].publish(topic, JSON.stringify(value));
-          });
-        }
-      } else {
-        //临时建立连接
-        let mqttClient = mqtt.connect(network.url, network.options);
-        mqttClient.on('connect', () => {
-          console.info('mqtt连接成功');
-          network.topics.split(',').forEach((topic) => {
-            mqttClient.publish(topic, JSON.stringify(value));
-            setTimeout(() => {
-              mqttClient?.end();
-            },1000);
-          });
-        });
-      }
-    } else if (network.protocol === 'websocket') {
-      const websockets = this.websockets?.filter(
-        (socket) => socket.url === network.url
-      );
-      if (websockets && websockets.length) {
-        if (websockets[0].readyState === 1) {
-          websockets[0].send(JSON.stringify(value));
-        }
-      } else {
-        //临时建立连接
-        let websocket = new WebSocket(
-          network.url,
-          network.protocols || undefined
-        );
-        websocket.onopen = function () {
-          console.info('websocket连接成功');
-          websocket.send(JSON.stringify(value));
-          setTimeout(() => {
-            websocket.close();
-          }, 100);
-        };
-      }
-    }
-  }
+  //       this.iotMqttClient &&
+  //         this.iotMqttClient.publish(
+  //           `le5le-iot/${this.store.data.iot.room}/properties/set`,
+  //           JSON.stringify(payload)
+  //         );
+  //     } else {
+  //       this.iotMqttClient &&
+  //         this.iotMqttClient.publish(
+  //           `le5le-iot/property/set/${this.store.data.iot?.token}`,
+  //           JSON.stringify(value)
+  //         );
+  //     }
+  //     return;
+  //   }
+  //   if (!network.url) {
+  //     return;
+  //   }
+  //   if (network.protocol === 'http') {
+  //     if (typeof network.headers === 'object') {
+  //       /*for (let i in network.headers) {
+  //         if (typeof network.headers[i] === 'string') {
+  //           let keys = network.headers[i].match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //           if (keys) {
+  //             network.headers[i] = network.headers[i].replace(
+  //               `\${${keys[0]}}`,
+  //               this.getDynamicParam(keys[0])
+  //             );
+  //           }
+  //         }
+  //       }*/
+  //       let headersStr = JSON.stringify(network.headers);
+  //       let keys = headersStr.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //       if (keys?.length) {
+  //        for(let i=0; i<keys.length; i++){
+  //           headersStr = headersStr.replace(
+  //             `\${${keys[i]}}`,
+  //             this.getDynamicParam(keys[i])
+  //           );
+  //         }
+  //       }
+  //       network.headers = JSON.parse(headersStr);
+  //     }
+  //     let params = undefined;
+  //     let url = network.url;
+  //     if (network.method === 'GET') {
+  //       if(Object.keys(value).length !== 0){
+  //         if(url.includes('?')){
+  //            params =
+  //           '&' +
+  //           Object.keys(value)
+  //             .map((key) => key + '=' + value[key])
+  //             .join('&');
+  //         }else{
+  //           params =
+  //             '?' +
+  //             Object.keys(value)
+  //               .map((key) => key + '=' + value[key])
+  //               .join('&');
+  //         }
+  //       }
+  //     }
+  //     // if (network.method === 'POST') {
+  //       if (url.indexOf('${') > -1) {
+  //         let keys = url.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //         if (keys) {
+  //           keys.forEach((key) => {
+  //             url = url.replace(
+  //               `\${${key}}`,
+  //               getter(pen, key) || this.getDynamicParam(key)
+  //             );
+  //           });
+  //         }
+  //       }
+  //     // }
+  //     const res: Response = await fetch(url + (params ? params : ''), {
+  //       headers: network.headers || {},
+  //       method: network.method,
+  //       body: network.method === 'POST' ? JSON.stringify(value) : undefined,
+  //     });
+  //     if (res.ok) {
+  //       if (e.callback) {
+  //         const data = await res.text();
+  //         if (!e.fn) {
+  //           try {
+  //             if (typeof e.callback !== 'string') {
+  //               throw new Error('[meta2d] Function callback must be string');
+  //             }
+  //             const fnJs = e.callback;
+  //             e.fn = makeSafeFn(
+  //               this.store.options,
+  //               'pen',
+  //               'data',
+  //               'context',
+  //               fnJs
+  //             ) as (
+  //               pen: Pen,
+  //               data: string,
+  //               context?: { meta2d: Meta2d; e: any }
+  //             ) => void;
+  //           } catch (err) {
+  //             console.error('[meta2d]: Error on make a function:', err ,'code:', e.callback);
+  //           }
+  //         }
+  //         e.fn?.(pen, data, { meta2d: this, e });
+  //       }
+  //       console.info('http消息发送成功');
+  //     }else {
+  //       this.store.emitter.emit('error', { type: 'http', error: res });
+  //     }
+  //   } else if (network.protocol === 'mqtt') {
+  //     const clients = this.mqttClients?.filter(
+  //       (client) => (client.options as any).href === network.url
+  //     );
+  //     if (clients && clients.length) {
+  //       if (clients[0].connected) {
+  //         network.topics.split(',').forEach((topic) => {
+  //           clients[0].publish(topic, JSON.stringify(value));
+  //         });
+  //       }
+  //     } else {
+  //       //临时建立连接
+  //       let mqttClient = mqtt.connect(network.url, network.options);
+  //       mqttClient.on('connect', () => {
+  //         console.info('mqtt连接成功');
+  //         network.topics.split(',').forEach((topic) => {
+  //           mqttClient.publish(topic, JSON.stringify(value));
+  //           setTimeout(() => {
+  //             mqttClient?.end();
+  //           },1000);
+  //         });
+  //       });
+  //     }
+  //   } else if (network.protocol === 'websocket') {
+  //     const websockets = this.websockets?.filter(
+  //       (socket) => socket.url === network.url
+  //     );
+  //     if (websockets && websockets.length) {
+  //       if (websockets[0].readyState === 1) {
+  //         websockets[0].send(JSON.stringify(value));
+  //       }
+  //     } else {
+  //       //临时建立连接
+  //       let websocket = new WebSocket(
+  //         network.url,
+  //         network.protocols || undefined
+  //       );
+  //       websocket.onopen = function () {
+  //         console.info('websocket连接成功');
+  //         websocket.send(JSON.stringify(value));
+  //         setTimeout(() => {
+  //           websocket.close();
+  //         }, 100);
+  //       };
+  //     }
+  //   }
+  // }
 
   resize(width?: number, height?: number) {
     this.canvas.resize(width, height);
@@ -1306,19 +1306,19 @@ export class Meta2d {
     if (!render) {
       this.canvas.opening = true;
     }
-    this.doInitJS();
-    this.initBindDatas();
-    this.initBinds();
-    this.doInitFn();
+    // this.doInitJS();
+    // this.initBindDatas();
+    // this.initBinds();
+    // this.doInitFn();
     this.loadLineAnimateDraws();
     this.initMessageEvents();
     this.initGlobalTriggers();
     this.startAnimate();
-    this.startVideo();
-    this.listenSocket();
-    this.connectSocket();
-    this.connectNetwork();
-    this.startDataMock();
+    // this.startVideo();
+    // this.listenSocket();
+    // this.connectSocket();
+    // this.connectNetwork();
+    // this.startDataMock();
     this.canvas.initGlobalStyle();
     this.render();
     setTimeout(() => {
@@ -1491,249 +1491,249 @@ export class Meta2d {
     };
   }
 
-  initBindDatas() {
-    this.store.bindDatas = {};
-    this.store.data.pens.forEach((pen) => {
-      pen.form?.forEach((formItem) => {
-        let dataIds: BindId[];
-        if (formItem.dataIds) {
-          if (Array.isArray(formItem.dataIds)) {
-            dataIds = formItem.dataIds;
-          } else {
-            dataIds = [formItem.dataIds];
-          }
-        }
-        dataIds?.forEach((item) => {
-          if (!this.store.bindDatas[item.dataId]) {
-            this.store.bindDatas[item.dataId] = [];
-          }
-          this.store.bindDatas[item.dataId].push({
-            id: pen.id,
-            formItem,
-          });
-        });
-      });
-    });
-  }
+  // initBindDatas() {
+  //   this.store.bindDatas = {};
+  //   this.store.data.pens.forEach((pen) => {
+  //     pen.form?.forEach((formItem) => {
+  //       let dataIds: BindId[];
+  //       if (formItem.dataIds) {
+  //         if (Array.isArray(formItem.dataIds)) {
+  //           dataIds = formItem.dataIds;
+  //         } else {
+  //           dataIds = [formItem.dataIds];
+  //         }
+  //       }
+  //       dataIds?.forEach((item) => {
+  //         if (!this.store.bindDatas[item.dataId]) {
+  //           this.store.bindDatas[item.dataId] = [];
+  //         }
+  //         this.store.bindDatas[item.dataId].push({
+  //           id: pen.id,
+  //           formItem,
+  //         });
+  //       });
+  //     });
+  //   });
+  // }
 
-  jetLinksList: any[] = [];
-  jetLinksClient: any;
+  // jetLinksList: any[] = [];
+  // jetLinksClient: any;
 
-  initBinds() {
-    this.jetLinksList = [];
-    this.store.bind = {};
-    const devices = [];
-    const properties = [];
-    const computes = [];
-    this.store.data.pens.forEach((pen) => {
-      pen.realTimes?.forEach((realTime) => {
-        if (realTime.bind && realTime.bind.id) {
-          // if (!this.store.bind[realTime.bind.id]) {
-          //   this.store.bind[realTime.bind.id] = [];
-          // }
-          // this.store.bind[realTime.bind.id].push({
-          //   id: pen.id,
-          //   key: realTime.key,
-          // });
+  // initBinds() {
+  //   this.jetLinksList = [];
+  //   this.store.bind = {};
+  //   const devices = [];
+  //   const properties = [];
+  //   const computes = [];
+  //   this.store.data.pens.forEach((pen) => {
+  //     pen.realTimes?.forEach((realTime) => {
+  //       if (realTime.bind && realTime.bind.id) {
+  //         // if (!this.store.bind[realTime.bind.id]) {
+  //         //   this.store.bind[realTime.bind.id] = [];
+  //         // }
+  //         // this.store.bind[realTime.bind.id].push({
+  //         //   id: pen.id,
+  //         //   key: realTime.key,
+  //         // });
 
-          //JetLinks
-          const Jet = this.store.data.networks?.some((item)=>item.protocol === 'ADIIOT');
-            let productId = realTime.productId || pen.productId;
-            let deviceId = realTime.deviceId || pen.deviceId;
-            let propertyId = realTime.propertyId;
-            let flag = false;
-          if(Jet){
-            if(productId && typeof productId === 'string' &&productId.indexOf('${') > -1){
-              let keys = productId.match(/(?<=\$\{).*?(?=\})/g);
-              if(keys?.length){
-                productId = this.getDynamicParam(keys[0])||productId;
-              }
-              flag = true;
-            }
-            if(deviceId && typeof deviceId === 'string' && deviceId.indexOf('${') > -1){
-              let keys = deviceId.match(/(?<=\$\{).*?(?=\})/g);
-              if(keys?.length){
-                deviceId = this.getDynamicParam(keys[0])||deviceId;
-              }
-              flag = true;
-            }
-            if(propertyId && typeof propertyId === 'string' &&propertyId.indexOf('${') > -1){
-              let keys = propertyId.match(/(?<=\$\{).*?(?=\})/g);
-              if(keys?.length){
-                propertyId = this.getDynamicParam(keys[0])||propertyId;
-              }
-              flag = true;
-            }
-            if(flag){
-              realTime.bind&&(realTime.bind.id = productId+'#'+deviceId+'#'+propertyId);
-            }
-          }
-          if (!this.store.bind[realTime.bind.id]) {
-            this.store.bind[realTime.bind.id] = [];
-          }
-          this.store.bind[realTime.bind.id].push({
-            id: pen.id,
-            key: realTime.key,
-          });
-          if(Jet){
-            if (productId && deviceId && propertyId) {
-              const index = this.jetLinksList.findIndex((item) =>
-                item.topic.startsWith(`/${productId}/${deviceId}`)
-              );
-              if (index > -1) {
-                const properties = this.jetLinksList[index].properties;
-                if (!properties.includes(realTime.propertyId)) {
-                  this.jetLinksList[index].properties.push(realTime.propertyId);
-                }
-              } else {
-                this.jetLinksList.push({
-                  topic: `/${productId}/${deviceId}`,
-                  deviceId,
-                  properties: [realTime.propertyId],
-                });
-              }
-            }
-          }
-          if(realTime.bind.class === 'iot'){
-            if(realTime.bind.compute_name){
-              let c_idx = computes.findIndex((item) => item.id === realTime.bind.id);
-              if(c_idx === -1){
-                computes.push(deepClone(realTime.bind));
-              }
-              let idx = devices.findIndex((item) => item.deviceId === realTime.bind.deviceId);
-              if(idx > -1){
-                if (!devices[idx].properties.includes(realTime.bind.key)) {
-                  devices[idx].properties.push(realTime.bind.key);
-                }
-              }else{
-                devices.push({
-                  deviceId: realTime.bind.deviceId,
-                  properties: [realTime.bind.key],
-                  token: realTime.bind.token
-                });
-              }
-            }else{
-              let bind = realTime.bind.id.split('#');
-              let idx = devices.findIndex((item) => item.deviceId === bind[0]);
-              if(idx > -1){
-                if (!devices[idx].properties.includes(bind[1])) {
-                  devices[idx].properties.push(bind[1]);
-                }
-              }else{
-                devices.push({
-                  deviceId: bind[0],
-                  properties: [bind[1]],
-                  token: realTime.bind.token
-                });
-              }
-              let index = properties.findIndex((item) => item.key === realTime.bind.id);
-              if (index === -1) {
-                properties.push({
-                  key: realTime.bind.id,
-                  label: realTime.bind.label,
-                });
-              }
-            }
-          }else if(realTime.bind.class === 'sql'){
-            let bind = realTime.bind.id.split('#');
-            const sql = this.store.data.sqls.find((item) => item.bindId === bind[0]);
-            if(sql){
-              if(!sql.keys){
-                sql.keys = [];
-              }
-              bind.shift();
-              const key = bind.join('#');
-              if(!sql.keys.includes(key)){
-                sql.keys.push(key);
-              }
-            }
-          }
-        }
-      });
-      pen.events?.forEach((event)=>{
-        const actions = event.actions?.filter((item)=>item.action === EventAction.SendData);
-        actions?.forEach((action)=>{
-          action.data?.forEach((item)=>{
-            if(item.class === 'iot'){
-              let bind = item.prop.split('#');
-              let idx = devices.findIndex((item) => item.deviceId === bind[0]);
-              if(idx > -1){
-                if (!devices[idx].properties.includes(bind[1])) {
-                  devices[idx].properties.push(bind[1]);
-                }
-              }else{
-                devices.push({
-                  deviceId: bind[0],
-                  properties: [bind[1]],
-                  token: item.token
-                });
-              }
-            }
-          });
-        })
-      })
-    });
+  //         //JetLinks
+  //         const Jet = this.store.data.networks?.some((item)=>item.protocol === 'ADIIOT');
+  //           let productId = realTime.productId || pen.productId;
+  //           let deviceId = realTime.deviceId || pen.deviceId;
+  //           let propertyId = realTime.propertyId;
+  //           let flag = false;
+  //         if(Jet){
+  //           if(productId && typeof productId === 'string' &&productId.indexOf('${') > -1){
+  //             let keys = productId.match(/(?<=\$\{).*?(?=\})/g);
+  //             if(keys?.length){
+  //               productId = this.getDynamicParam(keys[0])||productId;
+  //             }
+  //             flag = true;
+  //           }
+  //           if(deviceId && typeof deviceId === 'string' && deviceId.indexOf('${') > -1){
+  //             let keys = deviceId.match(/(?<=\$\{).*?(?=\})/g);
+  //             if(keys?.length){
+  //               deviceId = this.getDynamicParam(keys[0])||deviceId;
+  //             }
+  //             flag = true;
+  //           }
+  //           if(propertyId && typeof propertyId === 'string' &&propertyId.indexOf('${') > -1){
+  //             let keys = propertyId.match(/(?<=\$\{).*?(?=\})/g);
+  //             if(keys?.length){
+  //               propertyId = this.getDynamicParam(keys[0])||propertyId;
+  //             }
+  //             flag = true;
+  //           }
+  //           if(flag){
+  //             realTime.bind&&(realTime.bind.id = productId+'#'+deviceId+'#'+propertyId);
+  //           }
+  //         }
+  //         if (!this.store.bind[realTime.bind.id]) {
+  //           this.store.bind[realTime.bind.id] = [];
+  //         }
+  //         this.store.bind[realTime.bind.id].push({
+  //           id: pen.id,
+  //           key: realTime.key,
+  //         });
+  //         if(Jet){
+  //           if (productId && deviceId && propertyId) {
+  //             const index = this.jetLinksList.findIndex((item) =>
+  //               item.topic.startsWith(`/${productId}/${deviceId}`)
+  //             );
+  //             if (index > -1) {
+  //               const properties = this.jetLinksList[index].properties;
+  //               if (!properties.includes(realTime.propertyId)) {
+  //                 this.jetLinksList[index].properties.push(realTime.propertyId);
+  //               }
+  //             } else {
+  //               this.jetLinksList.push({
+  //                 topic: `/${productId}/${deviceId}`,
+  //                 deviceId,
+  //                 properties: [realTime.propertyId],
+  //               });
+  //             }
+  //           }
+  //         }
+  //         if(realTime.bind.class === 'iot'){
+  //           if(realTime.bind.compute_name){
+  //             let c_idx = computes.findIndex((item) => item.id === realTime.bind.id);
+  //             if(c_idx === -1){
+  //               computes.push(deepClone(realTime.bind));
+  //             }
+  //             let idx = devices.findIndex((item) => item.deviceId === realTime.bind.deviceId);
+  //             if(idx > -1){
+  //               if (!devices[idx].properties.includes(realTime.bind.key)) {
+  //                 devices[idx].properties.push(realTime.bind.key);
+  //               }
+  //             }else{
+  //               devices.push({
+  //                 deviceId: realTime.bind.deviceId,
+  //                 properties: [realTime.bind.key],
+  //                 token: realTime.bind.token
+  //               });
+  //             }
+  //           }else{
+  //             let bind = realTime.bind.id.split('#');
+  //             let idx = devices.findIndex((item) => item.deviceId === bind[0]);
+  //             if(idx > -1){
+  //               if (!devices[idx].properties.includes(bind[1])) {
+  //                 devices[idx].properties.push(bind[1]);
+  //               }
+  //             }else{
+  //               devices.push({
+  //                 deviceId: bind[0],
+  //                 properties: [bind[1]],
+  //                 token: realTime.bind.token
+  //               });
+  //             }
+  //             let index = properties.findIndex((item) => item.key === realTime.bind.id);
+  //             if (index === -1) {
+  //               properties.push({
+  //                 key: realTime.bind.id,
+  //                 label: realTime.bind.label,
+  //               });
+  //             }
+  //           }
+  //         }else if(realTime.bind.class === 'sql'){
+  //           let bind = realTime.bind.id.split('#');
+  //           const sql = this.store.data.sqls.find((item) => item.bindId === bind[0]);
+  //           if(sql){
+  //             if(!sql.keys){
+  //               sql.keys = [];
+  //             }
+  //             bind.shift();
+  //             const key = bind.join('#');
+  //             if(!sql.keys.includes(key)){
+  //               sql.keys.push(key);
+  //             }
+  //           }
+  //         }
+  //       }
+  //     });
+  //     pen.events?.forEach((event)=>{
+  //       const actions = event.actions?.filter((item)=>item.action === EventAction.SendData);
+  //       actions?.forEach((action)=>{
+  //         action.data?.forEach((item)=>{
+  //           if(item.class === 'iot'){
+  //             let bind = item.prop.split('#');
+  //             let idx = devices.findIndex((item) => item.deviceId === bind[0]);
+  //             if(idx > -1){
+  //               if (!devices[idx].properties.includes(bind[1])) {
+  //                 devices[idx].properties.push(bind[1]);
+  //               }
+  //             }else{
+  //               devices.push({
+  //                 deviceId: bind[0],
+  //                 properties: [bind[1]],
+  //                 token: item.token
+  //               });
+  //             }
+  //           }
+  //         });
+  //       })
+  //     })
+  //   });
 
-    if(!this.store.data.iot){
-      this.store.data.iot = {};
-    }
-    if(devices.length){
-      this.store.data.iot.devices = devices;
-    }else{
-      delete this.store.data.iot.devices
-    }
-    if(properties.length){
-      this.store.data.iot.list = properties;
-    }else{
-      delete this.store.data.iot.list
-    }
-    if(computes.length){
-      this.store.data.iot.computes = computes;
-    }
-  }
+  //   if(!this.store.data.iot){
+  //     this.store.data.iot = {};
+  //   }
+  //   if(devices.length){
+  //     this.store.data.iot.devices = devices;
+  //   }else{
+  //     delete this.store.data.iot.devices
+  //   }
+  //   if(properties.length){
+  //     this.store.data.iot.list = properties;
+  //   }else{
+  //     delete this.store.data.iot.list
+  //   }
+  //   if(computes.length){
+  //     this.store.data.iot.computes = computes;
+  //   }
+  // }
 
-  connectSocket() {
-    this.connectWebsocket();
-    this.connectMqtt();
-    this.connectHttp();
-  }
+  // connectSocket() {
+  //   this.connectWebsocket();
+  //   this.connectMqtt();
+  //   this.connectHttp();
+  // }
 
   /**
    * open 后执行初始化 Js ，每个图纸可配置一个初始化 js
    */
-  private doInitJS() {
-    const initJs = this.store.data.initJs;
-    if (initJs && initJs.trim()) {
-      try {
-        let fn = makeSafeFn(this.store.options, 'context', initJs) as (context?: {
-          meta2d: Meta2d;
-        }) => void;
-        fn({ meta2d: this });
-        fn = null;
-      } catch (e) {
-        console.warn('initJs error', e);
-      }
-    }
-  }
+  // private doInitJS() {
+  //   const initJs = this.store.data.initJs;
+  //   if (initJs && initJs.trim()) {
+  //     try {
+  //       let fn = makeSafeFn(this.store.options, 'context', initJs) as (context?: {
+  //         meta2d: Meta2d;
+  //       }) => void;
+  //       fn({ meta2d: this });
+  //       fn = null;
+  //     } catch (e) {
+  //       console.warn('initJs error', e);
+  //     }
+  //   }
+  // }
 
-  doInitFn() {
-    let params = queryURLParams();
-    let binds = [];
-    for (let key in params) {
-      if (params.hasOwnProperty(key)) {
-        if (key.startsWith('bind-')) {
-          binds.push({
-            id: key.replace('bind-', ''),
-            dataId: key.replace('bind-', ''),
-            value: params[key],
-          });
-        }
-      }
-    }
-    if (binds.length) {
-      this.setDatas(binds, { history: false });
-    }
-  }
+  // doInitFn() {
+  //   let params = queryURLParams();
+  //   let binds = [];
+  //   for (let key in params) {
+  //     if (params.hasOwnProperty(key)) {
+  //       if (key.startsWith('bind-')) {
+  //         binds.push({
+  //           id: key.replace('bind-', ''),
+  //           dataId: key.replace('bind-', ''),
+  //           value: params[key],
+  //         });
+  //       }
+  //     }
+  //   }
+  //   if (binds.length) {
+  //     this.setDatas(binds, { history: false });
+  //   }
+  // }
 
   drawLine(lineName?: string) {
     lineName && lockedError(this.store);
@@ -2555,7 +2555,7 @@ export class Meta2d {
   }
 
   data(): Meta2dData {
-    this.initBinds();
+    // this.initBinds();
     const data: Meta2dData = deepClone(this.store.data);
     const { pens, paths } = this.store.data;
     data.version = pkg.version;
@@ -2596,838 +2596,838 @@ export class Meta2d {
     this.canvas.redo();
   }
 
-  listenSocket() {
-    try {
-      let socketFn: (
-        e: string,
-        context?: {
-          meta2d?: Meta2d;
-          type?: string;
-          topic?: string;
-          url?: string;
-        }
-      ) => boolean;
-      const socketCbJs = this.store.data.socketCbJs;
-      if (socketCbJs) {
-        socketFn = makeSafeFn(this.store.options, 'e', 'context', socketCbJs) as (
-          e: string,
-          context?: {
-            meta2d?: Meta2d;
-            type?: string;
-            topic?: string;
-            url?: string;
-          }
-        ) => boolean;
-      }
-      if (!socketFn) {
-        this.socketFn = null;
-        return false;
-      }
-      this.socketFn = socketFn;
-    } catch (e) {
-      console.error('Create the function for socket:', e);
-      return false;
-    }
+  // listenSocket() {
+  //   try {
+  //     let socketFn: (
+  //       e: string,
+  //       context?: {
+  //         meta2d?: Meta2d;
+  //         type?: string;
+  //         topic?: string;
+  //         url?: string;
+  //       }
+  //     ) => boolean;
+  //     const socketCbJs = this.store.data.socketCbJs;
+  //     if (socketCbJs) {
+  //       socketFn = makeSafeFn(this.store.options, 'e', 'context', socketCbJs) as (
+  //         e: string,
+  //         context?: {
+  //           meta2d?: Meta2d;
+  //           type?: string;
+  //           topic?: string;
+  //           url?: string;
+  //         }
+  //       ) => boolean;
+  //     }
+  //     if (!socketFn) {
+  //       this.socketFn = null;
+  //       return false;
+  //     }
+  //     this.socketFn = socketFn;
+  //   } catch (e) {
+  //     console.error('Create the function for socket:', e);
+  //     return false;
+  //   }
 
-    return true;
-  }
+  //   return true;
+  // }
 
-  websocketTimes = 0;
-  connectWebsocket(websocket?: string) {
-    this.closeWebsocket();
-    if (websocket) {
-      this.store.data.websocket = websocket;
-    }
-    if (this.store.data.websocket) {
-      try {
-        this.websocket = new WebSocket(
-          this.store.data.websocket,
-          this.store.data.websocketProtocols || undefined
-        );
-      } catch (error) {
-        this.store.emitter.emit('error', { type: 'websocket', error });
-        return;
-      }
-      this.websocket.onmessage = (e) => {
-        this.socketCallback(e.data, {
-          type: 'websocket',
-          url: this.store.data.websocket,
-        });
-      };
+  // websocketTimes = 0;
+  // connectWebsocket(websocket?: string) {
+  //   this.closeWebsocket();
+  //   if (websocket) {
+  //     this.store.data.websocket = websocket;
+  //   }
+  //   if (this.store.data.websocket) {
+  //     try {
+  //       this.websocket = new WebSocket(
+  //         this.store.data.websocket,
+  //         this.store.data.websocketProtocols || undefined
+  //       );
+  //     } catch (error) {
+  //       this.store.emitter.emit('error', { type: 'websocket', error });
+  //       return;
+  //     }
+  //     this.websocket.onmessage = (e) => {
+  //       this.socketCallback(e.data, {
+  //         type: 'websocket',
+  //         url: this.store.data.websocket,
+  //       });
+  //     };
 
-      this.websocket.onerror = (error) => {
-        this.store.emitter.emit('error', { type: 'websocket', error });
-      };
+  //     this.websocket.onerror = (error) => {
+  //       this.store.emitter.emit('error', { type: 'websocket', error });
+  //     };
 
-      this.websocket.onclose = () => {
-        if (this.store.options.reconnetTimes) {
-          this.websocketTimes++;
-          if (this.websocketTimes >= this.store.options.reconnetTimes) {
-            this.websocketTimes = 0;
-            this.closeWebsocket();
-            return;
-          }
-        }
-        console.info('Canvas websocket closed and reconneting...');
-        this.connectWebsocket();
-      };
-    }
-  }
+  //     this.websocket.onclose = () => {
+  //       if (this.store.options.reconnetTimes) {
+  //         this.websocketTimes++;
+  //         if (this.websocketTimes >= this.store.options.reconnetTimes) {
+  //           this.websocketTimes = 0;
+  //           this.closeWebsocket();
+  //           return;
+  //         }
+  //       }
+  //       console.info('Canvas websocket closed and reconneting...');
+  //       this.connectWebsocket();
+  //     };
+  //   }
+  // }
 
-  closeWebsocket() {
-    if (this.websocket) {
-      this.websocket.onclose = undefined;
-      this.websocket.close();
-      this.websocket = undefined;
-    }
-  }
+  // closeWebsocket() {
+  //   if (this.websocket) {
+  //     this.websocket.onclose = undefined;
+  //     this.websocket.close();
+  //     this.websocket = undefined;
+  //   }
+  // }
 
-  mqttTimes = 0;
-  connectMqtt(params?: {
-    mqtt: string;
-    mqttTopics: string;
-    mqttOptions?: {
-      clientId?: string;
-      username?: string;
-      password?: string;
-      customClientId?: boolean;
-    };
-  }) {
-    this.closeMqtt();
-    if (params) {
-      this.store.data.mqtt = params.mqtt;
-      this.store.data.mqttTopics = params.mqttTopics;
-      this.store.data.mqttOptions = params.mqttOptions;
-    }
-    if (this.store.data.mqtt) {
-      if (
-        this.store.data.mqttOptions.clientId &&
-        !this.store.data.mqttOptions.customClientId
-      ) {
-        this.store.data.mqttOptions.clientId = s8();
-      }
-      const mqttOptions = { ...this.store.data.mqttOptions };
-      // 如果没有username/password或为空字符串则删除username/password
-      if (!mqttOptions.username) {
-        delete mqttOptions.username;
-      }
-      if (!mqttOptions.password) {
-        delete mqttOptions.password;
-      }
-      const { username, password } = mqttOptions;
-      // username 和 password 必须同时存在或者同时不存在才去建立mqtt连接
-      if ((username && password) || (!username && !password)) {
-        this.mqttClient = mqtt.connect(this.store.data.mqtt, mqttOptions);
-        this.mqttClient.on('message', (topic: string, message: Buffer) => {
-          this.socketCallback(message.toString(), {
-            topic,
-            type: 'mqtt',
-            url: this.store.data.mqtt,
-          });
-        });
+  // mqttTimes = 0;
+  // connectMqtt(params?: {
+  //   mqtt: string;
+  //   mqttTopics: string;
+  //   mqttOptions?: {
+  //     clientId?: string;
+  //     username?: string;
+  //     password?: string;
+  //     customClientId?: boolean;
+  //   };
+  // }) {
+  //   this.closeMqtt();
+  //   if (params) {
+  //     this.store.data.mqtt = params.mqtt;
+  //     this.store.data.mqttTopics = params.mqttTopics;
+  //     this.store.data.mqttOptions = params.mqttOptions;
+  //   }
+  //   if (this.store.data.mqtt) {
+  //     if (
+  //       this.store.data.mqttOptions.clientId &&
+  //       !this.store.data.mqttOptions.customClientId
+  //     ) {
+  //       this.store.data.mqttOptions.clientId = s8();
+  //     }
+  //     const mqttOptions = { ...this.store.data.mqttOptions };
+  //     // 如果没有username/password或为空字符串则删除username/password
+  //     if (!mqttOptions.username) {
+  //       delete mqttOptions.username;
+  //     }
+  //     if (!mqttOptions.password) {
+  //       delete mqttOptions.password;
+  //     }
+  //     const { username, password } = mqttOptions;
+  //     // username 和 password 必须同时存在或者同时不存在才去建立mqtt连接
+  //     if ((username && password) || (!username && !password)) {
+  //       this.mqttClient = mqtt.connect(this.store.data.mqtt, mqttOptions);
+  //       this.mqttClient.on('message', (topic: string, message: Buffer) => {
+  //         this.socketCallback(message.toString(), {
+  //           topic,
+  //           type: 'mqtt',
+  //           url: this.store.data.mqtt,
+  //         });
+  //       });
 
-        this.mqttClient.on('error', (error) => {
-          this.store.emitter.emit('error', { type: 'mqtt', error });
-        });
+  //       this.mqttClient.on('error', (error) => {
+  //         this.store.emitter.emit('error', { type: 'mqtt', error });
+  //       });
 
-        this.mqttClient.on('close', () => {
-          if (this.store.options.reconnetTimes) {
-            this.mqttTimes++;
-            if (this.mqttTimes >= this.store.options.reconnetTimes) {
-              this.mqttTimes = 0;
-              this.closeMqtt();
-            }
-          }
-        });
+  //       this.mqttClient.on('close', () => {
+  //         if (this.store.options.reconnetTimes) {
+  //           this.mqttTimes++;
+  //           if (this.mqttTimes >= this.store.options.reconnetTimes) {
+  //             this.mqttTimes = 0;
+  //             this.closeMqtt();
+  //           }
+  //         }
+  //       });
 
-        if (this.store.data.mqttTopics) {
-          this.mqttClient.subscribe(this.store.data.mqttTopics.split(','));
-        }
-      } else {
-        console.warn('缺少用户名或密码');
-      }
-    }
-  }
+  //       if (this.store.data.mqttTopics) {
+  //         this.mqttClient.subscribe(this.store.data.mqttTopics.split(','));
+  //       }
+  //     } else {
+  //       console.warn('缺少用户名或密码');
+  //     }
+  //   }
+  // }
 
-  closeMqtt() {
-    this.mqttClient?.end();
-  }
+  // closeMqtt() {
+  //   this.mqttClient?.end();
+  // }
 
-  httpTimer: any;
-  httpTimerList: any[] = [];
-  connectHttp() {
-    this.closeHttp();
-    const { https } = this.store.data;
-    if (https) {
-      if (!this.store.data.cancelFirstConnect) {
-        https.forEach(async (item) => {
-          this.oldRequestHttp(item);
-        });
-      }
-      https.forEach((item, index) => {
-        if (item.http && item.httpTimeInterval !== 0) {
-          item.times = 0;
-          this.httpTimerList[index] = setInterval(async () => {
-            // 默认每一秒请求一次
-            this.oldRequestHttp(item);
-            if (this.store.options.reconnetTimes) {
-              // item.times++;
-              if (item.times >= this.store.options.reconnetTimes) {
-                item.times = 0;
-                clearInterval(this.httpTimerList[index]);
-                this.httpTimerList[index] = undefined;
-              }
-            }
-          }, item.httpTimeInterval || 1000);
-        }
-      });
-    } else {
-      const { http, httpTimeInterval, httpHeaders } = this.store.data;
-      if (http) {
-        this.httpTimer = setInterval(async () => {
-          // 默认每一秒请求一次
-          const res: Response = await fetch(http, {
-            headers: httpHeaders,
-          });
-          if (res.ok) {
-            const data = await res.text();
-            this.socketCallback(data, { type: 'http', url: http });
-          }
-        }, httpTimeInterval || 1000);
-      }
-    }
-  }
+  // httpTimer: any;
+  // httpTimerList: any[] = [];
+  // connectHttp() {
+  //   this.closeHttp();
+  //   const { https } = this.store.data;
+  //   if (https) {
+  //     if (!this.store.data.cancelFirstConnect) {
+  //       https.forEach(async (item) => {
+  //         this.oldRequestHttp(item);
+  //       });
+  //     }
+  //     https.forEach((item, index) => {
+  //       if (item.http && item.httpTimeInterval !== 0) {
+  //         item.times = 0;
+  //         this.httpTimerList[index] = setInterval(async () => {
+  //           // 默认每一秒请求一次
+  //           this.oldRequestHttp(item);
+  //           if (this.store.options.reconnetTimes) {
+  //             // item.times++;
+  //             if (item.times >= this.store.options.reconnetTimes) {
+  //               item.times = 0;
+  //               clearInterval(this.httpTimerList[index]);
+  //               this.httpTimerList[index] = undefined;
+  //             }
+  //           }
+  //         }, item.httpTimeInterval || 1000);
+  //       }
+  //     });
+  //   } else {
+  //     const { http, httpTimeInterval, httpHeaders } = this.store.data;
+  //     if (http) {
+  //       this.httpTimer = setInterval(async () => {
+  //         // 默认每一秒请求一次
+  //         const res: Response = await fetch(http, {
+  //           headers: httpHeaders,
+  //         });
+  //         if (res.ok) {
+  //           const data = await res.text();
+  //           this.socketCallback(data, { type: 'http', url: http });
+  //         }
+  //       }, httpTimeInterval || 1000);
+  //     }
+  //   }
+  // }
 
-  async oldRequestHttp(_req: HttpOptions) {
-    let req = deepClone(_req);
-    if (req.http) {
-      const res: Response = await fetch(req.http, {
-        headers: req.httpHeaders,
-        method: req.method || 'GET',
-        body: req.method === 'POST' ? JSON.stringify(req.body) : undefined,
-      });
-      if (res.ok) {
-        const data = await res.text();
-        this.socketCallback(data, { type: 'http', url: req.http });
-      } else {
-        _req.times++;
-        this.store.emitter.emit('error', { type: 'http', error: res });
-      }
-    }
-  }
+  // async oldRequestHttp(_req: HttpOptions) {
+  //   let req = deepClone(_req);
+  //   if (req.http) {
+  //     const res: Response = await fetch(req.http, {
+  //       headers: req.httpHeaders,
+  //       method: req.method || 'GET',
+  //       body: req.method === 'POST' ? JSON.stringify(req.body) : undefined,
+  //     });
+  //     if (res.ok) {
+  //       const data = await res.text();
+  //       this.socketCallback(data, { type: 'http', url: req.http });
+  //     } else {
+  //       _req.times++;
+  //       this.store.emitter.emit('error', { type: 'http', error: res });
+  //     }
+  //   }
+  // }
 
-  async sendDatabyHttp(data: string) {
-    const { https } = this.store.data;
-    if (https) {
-      https.forEach(async (item) => {
-        if (item.http) {
-          const res: Response = await fetch(item.http, {
-            method: 'post',
-            body: data,
-            headers: item.httpHeaders,
-          });
-          if (res.ok) {
-            console.info('http消息发送成功');
-          }
-        }
-      });
-    } else {
-      const { http, httpHeaders } = this.store.data;
-      if (http) {
-        // 默认每一秒请求一次
-        const res: Response = await fetch(http, {
-          method: 'post',
-          body: data,
-          headers: httpHeaders,
-        });
-        if (res.ok) {
-          console.info('http消息发送成功');
-        }
-      }
-    }
-  }
+  // async sendDatabyHttp(data: string) {
+  //   const { https } = this.store.data;
+  //   if (https) {
+  //     https.forEach(async (item) => {
+  //       if (item.http) {
+  //         const res: Response = await fetch(item.http, {
+  //           method: 'post',
+  //           body: data,
+  //           headers: item.httpHeaders,
+  //         });
+  //         if (res.ok) {
+  //           console.info('http消息发送成功');
+  //         }
+  //       }
+  //     });
+  //   } else {
+  //     const { http, httpHeaders } = this.store.data;
+  //     if (http) {
+  //       // 默认每一秒请求一次
+  //       const res: Response = await fetch(http, {
+  //         method: 'post',
+  //         body: data,
+  //         headers: httpHeaders,
+  //       });
+  //       if (res.ok) {
+  //         console.info('http消息发送成功');
+  //       }
+  //     }
+  //   }
+  // }
 
-  closeHttp() {
-    clearInterval(this.httpTimer);
-    this.httpTimer = undefined;
-    this.httpTimerList &&
-      this.httpTimerList.forEach((_httpTimer) => {
-        clearInterval(_httpTimer);
-        _httpTimer = undefined;
-      });
-  }
+  // closeHttp() {
+  //   clearInterval(this.httpTimer);
+  //   this.httpTimer = undefined;
+  //   this.httpTimerList &&
+  //     this.httpTimerList.forEach((_httpTimer) => {
+  //       clearInterval(_httpTimer);
+  //       _httpTimer = undefined;
+  //     });
+  // }
 
-  updateTimer: any;
-  updateTimerList: any[] = [];
-  sqlTimerList: any[] = [];
-  connectNetwork() {
-    this.closeNetwork();
-    const { networks } = this.store.data;
-    const https = [];
-    if (networks) {
-      let mqttIndex = 0, httpIndex = 0, websocketIndex = 0, sseIndex = 0;
-      this.mqttClients = [];
-      this.websockets = [];
-      this.eventSources = [];
-      networks.forEach(async (net) => {
-        // if (net.type === 'subscribe') {
-        if (net.protocol === 'mqtt') {
-          net.index = mqttIndex;
-          this.connectNetMqtt(net);
-          mqttIndex += 1;
-        } else if (net.protocol === 'websocket') {
-          net.index = websocketIndex;
-          this.connectNetWebSocket(net);
-          // this.websockets[websocketIndex] = new WebSocket(
-          //   net.url,
-          //   net.protocols || undefined
-          // );
-          // this.websockets[websocketIndex].onmessage = (e) => {
-          //   this.socketCallback(e.data, { type: 'websocket', url: net.url });
-          // };
-          // this.websockets[websocketIndex].onerror = (error) => {
-          //   this.store.emitter.emit('error', { type: 'websocket', error });
-          // };
-          // this.websockets[websocketIndex].onclose = () => {
-          //   if (this.store.options.reconnetTimes) {
-          //     net.times++;
-          //     if (net.times >= this.store.options.reconnetTimes) {
-          //       net.times = 0;
-          //       this.websockets[net.index]?.close();
-          //       return;
-          //     }
-          //   }
-          // console.info('Canvas websocket closed and reconneting...');
-          // };
+  // updateTimer: any;
+  // updateTimerList: any[] = [];
+  // sqlTimerList: any[] = [];
+  // connectNetwork() {
+  //   this.closeNetwork();
+  //   const { networks } = this.store.data;
+  //   const https = [];
+  //   if (networks) {
+  //     let mqttIndex = 0, httpIndex = 0, websocketIndex = 0, sseIndex = 0;
+  //     this.mqttClients = [];
+  //     this.websockets = [];
+  //     this.eventSources = [];
+  //     networks.forEach(async (net) => {
+  //       // if (net.type === 'subscribe') {
+  //       if (net.protocol === 'mqtt') {
+  //         net.index = mqttIndex;
+  //         this.connectNetMqtt(net);
+  //         mqttIndex += 1;
+  //       } else if (net.protocol === 'websocket') {
+  //         net.index = websocketIndex;
+  //         this.connectNetWebSocket(net);
+  //         // this.websockets[websocketIndex] = new WebSocket(
+  //         //   net.url,
+  //         //   net.protocols || undefined
+  //         // );
+  //         // this.websockets[websocketIndex].onmessage = (e) => {
+  //         //   this.socketCallback(e.data, { type: 'websocket', url: net.url });
+  //         // };
+  //         // this.websockets[websocketIndex].onerror = (error) => {
+  //         //   this.store.emitter.emit('error', { type: 'websocket', error });
+  //         // };
+  //         // this.websockets[websocketIndex].onclose = () => {
+  //         //   if (this.store.options.reconnetTimes) {
+  //         //     net.times++;
+  //         //     if (net.times >= this.store.options.reconnetTimes) {
+  //         //       net.times = 0;
+  //         //       this.websockets[net.index]?.close();
+  //         //       return;
+  //         //     }
+  //         //   }
+  //         // console.info('Canvas websocket closed and reconneting...');
+  //         // };
 
-          websocketIndex += 1;
-        } else if (net.protocol === 'http') {
-          net.index = httpIndex;
-          https.push({
-            url: net.url,
-            interval: net.interval,
-            headers: net.headers || undefined,
-            method: net.method,
-            body: net.body,
-            enable: net.enable,
-            index: net.index,
-            once: net.once,
-          });
-          httpIndex += 1;
-        }else if (net.protocol === 'ADIIOT') {
-          connectJetLinks(this,net);
-        }else if (net.protocol === 'SSE'){
-          net.index = sseIndex;
-          this.connectSSE(net);
-          sseIndex += 1;
-        }
-      });
-    }
-    this.onNetworkConnect(https);
-    this.connectIot();
-    this.connectSqls();
-  }
+  //         websocketIndex += 1;
+  //       } else if (net.protocol === 'http') {
+  //         net.index = httpIndex;
+  //         https.push({
+  //           url: net.url,
+  //           interval: net.interval,
+  //           headers: net.headers || undefined,
+  //           method: net.method,
+  //           body: net.body,
+  //           enable: net.enable,
+  //           index: net.index,
+  //           once: net.once,
+  //         });
+  //         httpIndex += 1;
+  //       }else if (net.protocol === 'ADIIOT') {
+  //         connectJetLinks(this,net);
+  //       }else if (net.protocol === 'SSE'){
+  //         net.index = sseIndex;
+  //         this.connectSSE(net);
+  //         sseIndex += 1;
+  //       }
+  //     });
+  //   }
+  //   this.onNetworkConnect(https);
+  //   this.connectIot();
+  //   this.connectSqls();
+  // }
 
-  reconnectNetwork(index:number){
-    const net = this.store.data.networks?.[index];
-    if (!net) {
-      return;
-    }
-    if (net.protocol === 'mqtt') {
-      this.mqttClients && this.mqttClients[net.index]?.end();
-      this.connectNetMqtt(net);
-    } else if (net.protocol === 'websocket') {
-      if(this.websockets && this.websockets[net.index]){
-        this.websockets[net.index].onclose = undefined;
-        this.websockets[net.index].close();
-        this.websockets[net.index] = undefined;
-      }
-      this.connectNetWebSocket(net);
-    }else if(net.protocol === 'http'){
-      if(this.updateTimerList){
-        clearInterval(this.updateTimerList[net.index]);
-        this.updateTimerList[net.index] = undefined;
-      }
-      const http = deepClone(net);
-      if (!this.store.data.cancelFirstConnect) {
-        this.requestHttp(http);
-      }
-      if(net.interval !== 0){
-        this.updateTimerList[net.index] = setInterval(async () => {
-          this.requestHttp(http);
-        }, http.interval || 1000);
-      }
-    }else if(net.protocol === 'SSE'){
-      if(this.eventSources){
-        this.eventSources[net.index]?.close();
-        this.eventSources[net.index] = undefined;
-      }
-      this.connectSSE(net);
-    }
-  }
+  // reconnectNetwork(index:number){
+  //   const net = this.store.data.networks?.[index];
+  //   if (!net) {
+  //     return;
+  //   }
+  //   if (net.protocol === 'mqtt') {
+  //     this.mqttClients && this.mqttClients[net.index]?.end();
+  //     this.connectNetMqtt(net);
+  //   } else if (net.protocol === 'websocket') {
+  //     if(this.websockets && this.websockets[net.index]){
+  //       this.websockets[net.index].onclose = undefined;
+  //       this.websockets[net.index].close();
+  //       this.websockets[net.index] = undefined;
+  //     }
+  //     this.connectNetWebSocket(net);
+  //   }else if(net.protocol === 'http'){
+  //     if(this.updateTimerList){
+  //       clearInterval(this.updateTimerList[net.index]);
+  //       this.updateTimerList[net.index] = undefined;
+  //     }
+  //     const http = deepClone(net);
+  //     if (!this.store.data.cancelFirstConnect) {
+  //       this.requestHttp(http);
+  //     }
+  //     if(net.interval !== 0){
+  //       this.updateTimerList[net.index] = setInterval(async () => {
+  //         this.requestHttp(http);
+  //       }, http.interval || 1000);
+  //     }
+  //   }else if(net.protocol === 'SSE'){
+  //     if(this.eventSources){
+  //       this.eventSources[net.index]?.close();
+  //       this.eventSources[net.index] = undefined;
+  //     }
+  //     this.connectSSE(net);
+  //   }
+  // }
 
-  iotMqttClient:MqttClient;
-  iotTimer: any;
+  // iotMqttClient:MqttClient;
+  // iotTimer: any;
 
-  async connectIot(){
-    const { iot } = this.store.data;
-    if(!(iot&&iot?.devices?.length)||(iot&&iot.enable === false)){
-      return;
-    }
-    let { url, password, username } = await this.getMqttUrl();
-    if(!url){
-      url = globalThis.iotUrl;
-    }
-    if(!url){
-      console.warn('iot Request address error')
-      return;
-    }
-    const {token, room, data} = await this.getIotToken(iot.devices,iot.protocol==='websocket'?1:undefined,iot.room);
-    if(data){
-      // 初始数据
-      this.socketCallback( JSON.stringify(data), {
-        type: 'iot',
-        url,
-        method: 'mqtt'
-      });
-    }
-    if(room){
-      iot.room = room;
-    }
-    iot.token = token;
-    //物联网设备
-    const options = {
-      username,
-      password,
-      clientId: 'client-'+Math.random().toString(16).slice(2,8),
-    }
-      this.iotMqttClient = mqtt.connect(url,options);
-      this.iotMqttClient.on('message', (topic: string, message: Buffer) => {
-        this.socketCallback(message.toString(), {
-          topic:`le5le-iot/properties/${token}`,
-          type: 'iot',
-          url,
-          method: 'mqtt'
-        });
-      })
-      this.iotMqttClient.on('error', (error) => {
-        this.store.emitter.emit('error', { type: 'mqtt', error });
-      });
-      if(iot.room){
-        this.iotMqttClient.subscribe(`le5le-iot/${iot.room}/properties/get`);
-      }else{
-        this.iotMqttClient.subscribe(`le5le-iot/properties/${token}`);
-      }
-      this.iotTimer = setInterval(()=>{
-        if(iot.room){
-          this.iotMqttClient && this.iotMqttClient.publish(`le5le-iot/subscribe/ping`, iot.room);
-        }else{
-          this.iotMqttClient && this.iotMqttClient.publish(`le5le-iot/subscribe/ping`, token);
-        }
-      },300000);
-      if(this.store.data.iot.computes?.length){
-        let flag = false;
-        this.store.data.iot.computes.forEach((item)=>{
-          if(item.times>0){
-            flag = true;
-          }
-        });
-        this.iotAggregatePublish(this.store.data.iot.computes);
-        iot.times = 0;
-        if(flag){
-          iot.interval = setInterval(()=>{
-            iot.times += 1;
-            let arr = this.store.data.iot.computes.filter((item)=>item.times && iot.times%item.times===0);
-            if(arr.length){
-              this.iotAggregatePublish(arr);
-            }
-          },1000);
-        }
-      }
-  }
+  // async connectIot(){
+  //   const { iot } = this.store.data;
+  //   if(!(iot&&iot?.devices?.length)||(iot&&iot.enable === false)){
+  //     return;
+  //   }
+  //   let { url, password, username } = await this.getMqttUrl();
+  //   if(!url){
+  //     url = globalThis.iotUrl;
+  //   }
+  //   if(!url){
+  //     console.warn('iot Request address error')
+  //     return;
+  //   }
+  //   const {token, room, data} = await this.getIotToken(iot.devices,iot.protocol==='websocket'?1:undefined,iot.room);
+  //   if(data){
+  //     // 初始数据
+  //     this.socketCallback( JSON.stringify(data), {
+  //       type: 'iot',
+  //       url,
+  //       method: 'mqtt'
+  //     });
+  //   }
+  //   if(room){
+  //     iot.room = room;
+  //   }
+  //   iot.token = token;
+  //   //物联网设备
+  //   const options = {
+  //     username,
+  //     password,
+  //     clientId: 'client-'+Math.random().toString(16).slice(2,8),
+  //   }
+  //     this.iotMqttClient = mqtt.connect(url,options);
+  //     this.iotMqttClient.on('message', (topic: string, message: Buffer) => {
+  //       this.socketCallback(message.toString(), {
+  //         topic:`le5le-iot/properties/${token}`,
+  //         type: 'iot',
+  //         url,
+  //         method: 'mqtt'
+  //       });
+  //     })
+  //     this.iotMqttClient.on('error', (error) => {
+  //       this.store.emitter.emit('error', { type: 'mqtt', error });
+  //     });
+  //     if(iot.room){
+  //       this.iotMqttClient.subscribe(`le5le-iot/${iot.room}/properties/get`);
+  //     }else{
+  //       this.iotMqttClient.subscribe(`le5le-iot/properties/${token}`);
+  //     }
+  //     this.iotTimer = setInterval(()=>{
+  //       if(iot.room){
+  //         this.iotMqttClient && this.iotMqttClient.publish(`le5le-iot/subscribe/ping`, iot.room);
+  //       }else{
+  //         this.iotMqttClient && this.iotMqttClient.publish(`le5le-iot/subscribe/ping`, token);
+  //       }
+  //     },300000);
+  //     if(this.store.data.iot.computes?.length){
+  //       let flag = false;
+  //       this.store.data.iot.computes.forEach((item)=>{
+  //         if(item.times>0){
+  //           flag = true;
+  //         }
+  //       });
+  //       this.iotAggregatePublish(this.store.data.iot.computes);
+  //       iot.times = 0;
+  //       if(flag){
+  //         iot.interval = setInterval(()=>{
+  //           iot.times += 1;
+  //           let arr = this.store.data.iot.computes.filter((item)=>item.times && iot.times%item.times===0);
+  //           if(arr.length){
+  //             this.iotAggregatePublish(arr);
+  //           }
+  //         },1000);
+  //       }
+  //     }
+  // }
 
-  iotAggregateBuild(item:any){
-    let data = {
-      token: this.store.data.iot.token,
-      deviceId:item.deviceId,
-      key:item.key,
-      name: item.key+'_'+item.compute_name//item.id
-    };
-    ['aggregate','start','end','groupBy','limit','recent'].forEach((key)=>{
-      if(item[key]){
-        if(item[key].indexOf('${') > -1){
-            let keys = item[key].match(/(?<=\$\{).*?(?=\})/g);
-            data[key] = this.getDynamicParam(keys[0])
-        }else{
-          if(key ==='start' || key ==='end'){
-            if(typeof item[key] === 'string'){
-              data[key] = Math.floor(new Date(item[key]).getTime() / 1000);
-            }else{
-              data[key] = item[key]
-            }
-          }else{
-            data[key] = item[key];
-          }
-        }
-      }
-    });
-    return data;
-  }
+  // iotAggregateBuild(item:any){
+  //   let data = {
+  //     token: this.store.data.iot.token,
+  //     deviceId:item.deviceId,
+  //     key:item.key,
+  //     name: item.key+'_'+item.compute_name//item.id
+  //   };
+  //   ['aggregate','start','end','groupBy','limit','recent'].forEach((key)=>{
+  //     if(item[key]){
+  //       if(item[key].indexOf('${') > -1){
+  //           let keys = item[key].match(/(?<=\$\{).*?(?=\})/g);
+  //           data[key] = this.getDynamicParam(keys[0])
+  //       }else{
+  //         if(key ==='start' || key ==='end'){
+  //           if(typeof item[key] === 'string'){
+  //             data[key] = Math.floor(new Date(item[key]).getTime() / 1000);
+  //           }else{
+  //             data[key] = item[key]
+  //           }
+  //         }else{
+  //           data[key] = item[key];
+  //         }
+  //       }
+  //     }
+  //   });
+  //   return data;
+  // }
 
-  iotAggregatePublish(item:any){
-    if(this.iotMqttClient){
-      let data = item.map((_item)=>{
-        return this.iotAggregateBuild(_item);
-      })
+  // iotAggregatePublish(item:any){
+  //   if(this.iotMqttClient){
+  //     let data = item.map((_item)=>{
+  //       return this.iotAggregateBuild(_item);
+  //     })
 
-      this.iotMqttClient.publish(`le5le-iot/${this.store.data.iot.room}/property/aggregate`, JSON.stringify(data));
-    }
-  }
+  //     this.iotMqttClient.publish(`le5le-iot/${this.store.data.iot.room}/property/aggregate`, JSON.stringify(data));
+  //   }
+  // }
 
-  closeIot(){
-    if(this.iotMqttClient){
-      const { iot } = this.store.data;
-      if(iot.interval){
-        clearInterval(iot.interval);
-        iot.interval = undefined;
-      }
-      if(iot?.token){
-        this.unsubscribeIot(iot.token, iot.room);
-      }
-      this.iotMqttClient.end();
-      this.iotMqttClient = undefined;
-    }
-    clearInterval(this.iotTimer);
-    this.iotTimer = undefined;
-  }
+  // closeIot(){
+  //   if(this.iotMqttClient){
+  //     const { iot } = this.store.data;
+  //     if(iot.interval){
+  //       clearInterval(iot.interval);
+  //       iot.interval = undefined;
+  //     }
+  //     if(iot?.token){
+  //       this.unsubscribeIot(iot.token, iot.room);
+  //     }
+  //     this.iotMqttClient.end();
+  //     this.iotMqttClient = undefined;
+  //   }
+  //   clearInterval(this.iotTimer);
+  //   this.iotTimer = undefined;
+  // }
   //  type SqlType = 'list' | 'get' | 'exec' | 'add' | 'update' | 'delete';
 
-  connectSqls(){
-    const { sqls } = this.store.data;
-    if(sqls&&sqls.length){
-      // let sqlIndex = 0;
-      sqls.forEach( async(sql, index)=>{
-        if(sql.enable !== false){
-          await this.doSqlCode(sql);
-          if(sql.interval){
-            sql.index = index;
-            this.sqlTimerList[index] = setInterval(async () => {
-              await this.doSqlCode(sql);
-            }, sql.interval);
-            // index += 1;
-          }
-        }
-      })
-    }
-  }
+  // connectSqls(){
+  //   const { sqls } = this.store.data;
+  //   if(sqls&&sqls.length){
+  //     // let sqlIndex = 0;
+  //     sqls.forEach( async(sql, index)=>{
+  //       if(sql.enable !== false){
+  //         await this.doSqlCode(sql);
+  //         if(sql.interval){
+  //           sql.index = index;
+  //           this.sqlTimerList[index] = setInterval(async () => {
+  //             await this.doSqlCode(sql);
+  //           }, sql.interval);
+  //           // index += 1;
+  //         }
+  //       }
+  //     })
+  //   }
+  // }
 
-  async connectSSE(net:Network){
-    if(net.enable === false){
-      return;
-    }
-    if (net.preJs) {
-      if (!net.preFn) {
-        net.preFn = makeSafeAsyncFn(this.store.options, 'network', net.preJs);
-      }
-      if(net.preFn){
-        const preNet = await net.preFn(net);
-        if (preNet) {
-          net = preNet;
-        }
-      }
-    }
-    this.eventSources[net.index] = new EventSource(net.url,{withCredentials:net.withCredentials});
-    this.eventSources[net.index].onmessage = (e) => {
-      this.socketCallback(e.data, { type: 'SSE', url: net.url, name:net.name, net });
-    };
-    this.eventSources[net.index].onerror = (error) => {
-      this.store.emitter.emit('error', { type: 'SSE', error });
-    };
-  }
+  // async connectSSE(net:Network){
+  //   if(net.enable === false){
+  //     return;
+  //   }
+  //   if (net.preJs) {
+  //     if (!net.preFn) {
+  //       net.preFn = makeSafeAsyncFn(this.store.options, 'network', net.preJs);
+  //     }
+  //     if(net.preFn){
+  //       const preNet = await net.preFn(net);
+  //       if (preNet) {
+  //         net = preNet;
+  //       }
+  //     }
+  //   }
+  //   this.eventSources[net.index] = new EventSource(net.url,{withCredentials:net.withCredentials});
+  //   this.eventSources[net.index].onmessage = (e) => {
+  //     this.socketCallback(e.data, { type: 'SSE', url: net.url, name:net.name, net });
+  //   };
+  //   this.eventSources[net.index].onerror = (error) => {
+  //     this.store.emitter.emit('error', { type: 'SSE', error });
+  //   };
+  // }
 
-  closeSSE(){
-    this.eventSources &&
-    this.eventSources.forEach((es) => {
-      if (es) {
-        es.close();
-        es = undefined;
-      }
-    });
-  }
+  // closeSSE(){
+  //   this.eventSources &&
+  //   this.eventSources.forEach((es) => {
+  //     if (es) {
+  //       es.close();
+  //       es = undefined;
+  //     }
+  //   });
+  // }
 
-  async connectNetMqtt(net:Network){
-    if(net.enable === false){
-      return;
-    }
-    if (net.preJs) {
-      if (!net.preFn) {
-        net.preFn = makeSafeAsyncFn(this.store.options, 'network', net.preJs);
-      }
-      if(net.preFn){
-        const preNet = await net.preFn(net);
-        if (preNet) {
-          net = preNet;
-        }
-      }
-    }
-    if (net.options.clientId && !net.options.customClientId) {
-      net.options.clientId = s8();
-    }
-    let url = net.url;
-    if(url.indexOf('${') > -1){
-      let keys = url.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-      if (keys) {
-        keys.forEach((key) => {
-          url = url.replace(
-            `\${${key}}`,this.getDynamicParam(key)
-          );
-        });
-      }
-    }
-    net.times = 0;
-    let options = deepClone(net.options);
-    if(options?.username&&options.username.includes('${')){
-      let keys = options.username.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-      if (keys) {
-        keys.forEach((key) => {
-          options.username = options.username.replace(
-            `\${${key}}`,this.getDynamicParam(key)
-          );
-        });
-      }
-    }
-    if(options?.password&&options.password.includes('${')){
-      let keys = options.password.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-      if (keys) {
-        keys.forEach((key) => {
-          options.password = options.password.replace(
-            `\${${key}}`,this.getDynamicParam(key)
-          );
-        });
-      }
-    }
-    // 稳定连接配置
-    if(!options.hasOwnProperty("keepalive")){
-      Object.assign(options,{keepallive: 30});
-    }
-    //  clean为false 时，clientId 是必填项
-    // if(options.clientId && !options.hasOwnProperty("clean")){
-    //   Object.assign(options,{clean: false});
-    // }
-    if(!options.hasOwnProperty("reconnectPeriod")){
-      Object.assign(options,{reconnectPeriod: 5000});
-    }
-    if(!options.hasOwnProperty("connectTimeout")){
-      Object.assign(options,{connectTimeout: 10 * 1000});
-    }
-    this.mqttClients[net.index] = mqtt.connect(url, options);
-    this.mqttClients[net.index].on(
-      'message',
-      (topic: string, message: Buffer) => {
-        this.socketCallback(message.toString(), {
-          topic,
-          type: 'mqtt',
-          url: net.url,
-          name: net.name,
-          net
-        });
-      }
-    );
-    this.mqttClients[net.index].on('error', (error) => {
-      this.store.emitter.emit('error', { type: 'mqtt', error });
-    });
-    //mqtt 默认重连配置 reconnectPeriod
-    // let reconnectDelay = 1000;
-    // this.mqttClients[net.index].on('close', () => {
-    //   if (this.store.options.reconnetTimes) {
-    //     net.times++;
-    //     if (net.times >= this.store.options.reconnetTimes) {
-    //       net.times = 0;
-    //       this.mqttClients && this.mqttClients[net.index]?.end();
-    //     }
-    //     setTimeout(()=>{
-    //       if (net.times < this.store.options.reconnetTimes) {
-    //         this.mqttClients[net.index].reconnect(options as any);
-    //         reconnectDelay = Math.min(reconnectDelay * 2, 10 * 1000);
-    //       }
-    //     },reconnectDelay)
-    //   }
-    // });
-    this.mqttClients[net.index].on('connect', (connack) => {
-      // reconnectDelay = 1000;
+  // async connectNetMqtt(net:Network){
+  //   if(net.enable === false){
+  //     return;
+  //   }
+  //   if (net.preJs) {
+  //     if (!net.preFn) {
+  //       net.preFn = makeSafeAsyncFn(this.store.options, 'network', net.preJs);
+  //     }
+  //     if(net.preFn){
+  //       const preNet = await net.preFn(net);
+  //       if (preNet) {
+  //         net = preNet;
+  //       }
+  //     }
+  //   }
+  //   if (net.options.clientId && !net.options.customClientId) {
+  //     net.options.clientId = s8();
+  //   }
+  //   let url = net.url;
+  //   if(url.indexOf('${') > -1){
+  //     let keys = url.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //     if (keys) {
+  //       keys.forEach((key) => {
+  //         url = url.replace(
+  //           `\${${key}}`,this.getDynamicParam(key)
+  //         );
+  //       });
+  //     }
+  //   }
+  //   net.times = 0;
+  //   let options = deepClone(net.options);
+  //   if(options?.username&&options.username.includes('${')){
+  //     let keys = options.username.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //     if (keys) {
+  //       keys.forEach((key) => {
+  //         options.username = options.username.replace(
+  //           `\${${key}}`,this.getDynamicParam(key)
+  //         );
+  //       });
+  //     }
+  //   }
+  //   if(options?.password&&options.password.includes('${')){
+  //     let keys = options.password.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //     if (keys) {
+  //       keys.forEach((key) => {
+  //         options.password = options.password.replace(
+  //           `\${${key}}`,this.getDynamicParam(key)
+  //         );
+  //       });
+  //     }
+  //   }
+  //   // 稳定连接配置
+  //   if(!options.hasOwnProperty("keepalive")){
+  //     Object.assign(options,{keepallive: 30});
+  //   }
+  //   //  clean为false 时，clientId 是必填项
+  //   // if(options.clientId && !options.hasOwnProperty("clean")){
+  //   //   Object.assign(options,{clean: false});
+  //   // }
+  //   if(!options.hasOwnProperty("reconnectPeriod")){
+  //     Object.assign(options,{reconnectPeriod: 5000});
+  //   }
+  //   if(!options.hasOwnProperty("connectTimeout")){
+  //     Object.assign(options,{connectTimeout: 10 * 1000});
+  //   }
+  //   this.mqttClients[net.index] = mqtt.connect(url, options);
+  //   this.mqttClients[net.index].on(
+  //     'message',
+  //     (topic: string, message: Buffer) => {
+  //       this.socketCallback(message.toString(), {
+  //         topic,
+  //         type: 'mqtt',
+  //         url: net.url,
+  //         name: net.name,
+  //         net
+  //       });
+  //     }
+  //   );
+  //   this.mqttClients[net.index].on('error', (error) => {
+  //     this.store.emitter.emit('error', { type: 'mqtt', error });
+  //   });
+  //   //mqtt 默认重连配置 reconnectPeriod
+  //   // let reconnectDelay = 1000;
+  //   // this.mqttClients[net.index].on('close', () => {
+  //   //   if (this.store.options.reconnetTimes) {
+  //   //     net.times++;
+  //   //     if (net.times >= this.store.options.reconnetTimes) {
+  //   //       net.times = 0;
+  //   //       this.mqttClients && this.mqttClients[net.index]?.end();
+  //   //     }
+  //   //     setTimeout(()=>{
+  //   //       if (net.times < this.store.options.reconnetTimes) {
+  //   //         this.mqttClients[net.index].reconnect(options as any);
+  //   //         reconnectDelay = Math.min(reconnectDelay * 2, 10 * 1000);
+  //   //       }
+  //   //     },reconnectDelay)
+  //   //   }
+  //   // });
+  //   this.mqttClients[net.index].on('connect', (connack) => {
+  //     // reconnectDelay = 1000;
 
-      if (!connack.sessionPresent) {
-        // 创建了新会话或没有找到旧会话，需要重新订阅主题
-        if (net.topics) {
-          let topics = net.topics;
-          if(topics.indexOf('${') > -1){
-            let keys = topics.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-            if (keys) {
-              keys.forEach((key) => {
-                topics = topics.replace(
-                  `\${${key}}`,this.getDynamicParam(key)
-                );
-              });
-            }
-          }
-          // QoS=1 是 MQTT 中最常用的级别，它能在保证大部分消息可靠传递
-          this.mqttClients[net.index].subscribe(topics.split(','),{ qos: 1 },(err)=>{
-            if(err) console.error("订阅失败：",err);
-          });
-        }
-      } else {
-        //已恢复之前的会话，可以接收离线消息，不需要重新订阅，之前的订阅已恢复
-      }
-    })
-  }
+  //     if (!connack.sessionPresent) {
+  //       // 创建了新会话或没有找到旧会话，需要重新订阅主题
+  //       if (net.topics) {
+  //         let topics = net.topics;
+  //         if(topics.indexOf('${') > -1){
+  //           let keys = topics.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //           if (keys) {
+  //             keys.forEach((key) => {
+  //               topics = topics.replace(
+  //                 `\${${key}}`,this.getDynamicParam(key)
+  //               );
+  //             });
+  //           }
+  //         }
+  //         // QoS=1 是 MQTT 中最常用的级别，它能在保证大部分消息可靠传递
+  //         this.mqttClients[net.index].subscribe(topics.split(','),{ qos: 1 },(err)=>{
+  //           if(err) console.error("订阅失败：",err);
+  //         });
+  //       }
+  //     } else {
+  //       //已恢复之前的会话，可以接收离线消息，不需要重新订阅，之前的订阅已恢复
+  //     }
+  //   })
+  // }
 
-  async connectNetWebSocket(net: Network) {
-    if (this.websockets[net.index]) {
-      this.websockets[net.index].onclose = undefined;
-      this.websockets[net.index]?.close();
-      this.websockets[net.index] = undefined;
-    }
-    if(net.enable === false ){
-      return;
-    }
-    if (net.preJs) {
-      if (!net.preFn) {
-        net.preFn = makeSafeAsyncFn(this.store.options, 'network', net.preJs);
-      }
-      if(net.preFn){
-        const preNet = await net.preFn(net);
-        if (preNet) {
-          net = preNet;
-        }
-      }
-    }
-    let url = net.url;
-    if(url.indexOf('${') > -1){
-      let keys = url.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-      if (keys) {
-        keys.forEach((key) => {
-          url = url.replace(
-            `\${${key}}`,this.getDynamicParam(key)
-          );
-        });
-      }
-    }
-    this.websockets[net.index] = new WebSocket(
-      url,
-      net.protocols || undefined
-    );
-    this.websockets[net.index].onmessage = (e) => {
-      this.socketCallback(e.data, { type: 'websocket', url: net.url, name:net.name, net });
-    };
-    this.websockets[net.index].onerror = (error) => {
-      this.store.emitter.emit('error', { type: 'websocket', error });
-    };
-    this.websockets[net.index].onclose = () => {
-      if (this.store.options.reconnetTimes) {
-        net.times++;
-        if (net.times >= this.store.options.reconnetTimes) {
-          net.times = 0;
-          this.websockets[net.index].onclose = undefined;
-          this.websockets[net.index]?.close();
-          this.websockets[net.index] = undefined;
-          return;
-        }
-      }
-      setTimeout(() => {
-        console.info('Canvas websocket closed and reconneting...');
-        this.connectNetWebSocket(net);
-      }, 2000);
-    };
-  }
+  // async connectNetWebSocket(net: Network) {
+  //   if (this.websockets[net.index]) {
+  //     this.websockets[net.index].onclose = undefined;
+  //     this.websockets[net.index]?.close();
+  //     this.websockets[net.index] = undefined;
+  //   }
+  //   if(net.enable === false ){
+  //     return;
+  //   }
+  //   if (net.preJs) {
+  //     if (!net.preFn) {
+  //       net.preFn = makeSafeAsyncFn(this.store.options, 'network', net.preJs);
+  //     }
+  //     if(net.preFn){
+  //       const preNet = await net.preFn(net);
+  //       if (preNet) {
+  //         net = preNet;
+  //       }
+  //     }
+  //   }
+  //   let url = net.url;
+  //   if(url.indexOf('${') > -1){
+  //     let keys = url.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //     if (keys) {
+  //       keys.forEach((key) => {
+  //         url = url.replace(
+  //           `\${${key}}`,this.getDynamicParam(key)
+  //         );
+  //       });
+  //     }
+  //   }
+  //   this.websockets[net.index] = new WebSocket(
+  //     url,
+  //     net.protocols || undefined
+  //   );
+  //   this.websockets[net.index].onmessage = (e) => {
+  //     this.socketCallback(e.data, { type: 'websocket', url: net.url, name:net.name, net });
+  //   };
+  //   this.websockets[net.index].onerror = (error) => {
+  //     this.store.emitter.emit('error', { type: 'websocket', error });
+  //   };
+  //   this.websockets[net.index].onclose = () => {
+  //     if (this.store.options.reconnetTimes) {
+  //       net.times++;
+  //       if (net.times >= this.store.options.reconnetTimes) {
+  //         net.times = 0;
+  //         this.websockets[net.index].onclose = undefined;
+  //         this.websockets[net.index]?.close();
+  //         this.websockets[net.index] = undefined;
+  //         return;
+  //       }
+  //     }
+  //     setTimeout(() => {
+  //       console.info('Canvas websocket closed and reconneting...');
+  //       this.connectNetWebSocket(net);
+  //     }, 2000);
+  //   };
+  // }
 
-  async getMqttUrl(){
-    const res: Response = await fetch('/api/iot/app/mqtt', {
-      method: 'GET',
-      headers: {
-        Authorization: getToken(),
-      },
-    });
-    if (res.ok) {
-      const data = await res.text();
-      let results = JSON.parse(data);
-      let port = results.wssPort||results.wsPort;
-      if(!port){
-        return
-      }
-      return{
-        username: results.username,
-        password: results.password,
-        url: `${location.protocol === 'https:'?'wss':'ws'}://${results.host}:${location.protocol === 'https:'?results.wssPort:results.wsPort}${results.path}`
-      }
-    }
-  }
+  // async getMqttUrl(){
+  //   const res: Response = await fetch('/api/iot/app/mqtt', {
+  //     method: 'GET',
+  //     headers: {
+  //       Authorization: getToken(),
+  //     },
+  //   });
+  //   if (res.ok) {
+  //     const data = await res.text();
+  //     let results = JSON.parse(data);
+  //     let port = results.wssPort||results.wsPort;
+  //     if(!port){
+  //       return
+  //     }
+  //     return{
+  //       username: results.username,
+  //       password: results.password,
+  //       url: `${location.protocol === 'https:'?'wss':'ws'}://${results.host}:${location.protocol === 'https:'?results.wssPort:results.wsPort}${results.path}`
+  //     }
+  //   }
+  // }
 
-  async getIotToken(devices:any, type:number, room?:string){
-    const res: Response = await fetch('/api/iot/subscribe/properties', {
-      method: 'POST',
-      headers: {
-        Authorization: getToken(),
-      },
-      body:JSON.stringify({devices: devices,type,room}),
-    });
-    if (res.ok) {
-      return await res.json()
-    }
-  }
+  // async getIotToken(devices:any, type:number, room?:string){
+  //   const res: Response = await fetch('/api/iot/subscribe/properties', {
+  //     method: 'POST',
+  //     headers: {
+  //       Authorization: getToken(),
+  //     },
+  //     body:JSON.stringify({devices: devices,type,room}),
+  //   });
+  //   if (res.ok) {
+  //     return await res.json()
+  //   }
+  // }
 
-  async unsubscribeIot(token:string, room?:string){
-    const ret:any = await fetch(`/api/iot/unsubscribe/properties`,{
-      method: 'POST',
-      headers: {
-        Authorization: getToken(),
-      },
-      body:JSON.stringify({token, room}),
-    });
-    return ret;
-  }
+  // async unsubscribeIot(token:string, room?:string){
+  //   const ret:any = await fetch(`/api/iot/unsubscribe/properties`,{
+  //     method: 'POST',
+  //     headers: {
+  //       Authorization: getToken(),
+  //     },
+  //     body:JSON.stringify({token, room}),
+  //   });
+  //   return ret;
+  // }
 
-  async doSqlCode(sql:Sql){
-    const method = sql.method || 'get';
-    let _sql = sql.sql;
-    if(method === 'list'){
-      // _sql+= ` LIMIT ${sql.pageSize||20}`+(sql.current>1?(' OFFSET '+(sql.current-1)*sql.pageSize):'');
-      if(sql.pageSize !== -1){
-        if(sql.dbType==="oracle"){
-          if(!_sql.includes('OFFSET')){
-            _sql+= ` OFFSET ${((sql.current||1)-1)*(sql.pageSize||20)} ROWS FETCH NEXT ${sql.pageSize||20} ROWS ONLY`
-          }
-        }else{
-          if(!_sql.includes('LIMIT')){
-            _sql+= ` LIMIT ${sql.pageSize||20}`+(sql.current>1?(' OFFSET '+(sql.current-1)*(sql.pageSize||20)):'');
-          }
-        }
-      }
-    }
-    const res: Response = await fetch( `/api/iot/data/sql/${method}`, {
-      method: 'POST',
-      headers:{
-         Authorization: getToken(),
-      },
-      body:JSON.stringify({ dbId:sql.dbId||(sql as any).dbid,sql:_sql,}),
-    });
-    if (res.ok) {
-      let data:any = await res.text();
-      if(data){
-        const arr = [];
-        data = JSON.parse(data);
-        if(data.error){
-          this.store.emitter.emit('error', { type: 'sql', error: data.error });
-          return;
-        }
-        sql.keys?.forEach((key)=>{
-          arr.push({id: sql.bindId+'#'+ key,value:getter(data,key.split('#').join('.'))});
-        });
+  // async doSqlCode(sql:Sql){
+  //   const method = sql.method || 'get';
+  //   let _sql = sql.sql;
+  //   if(method === 'list'){
+  //     // _sql+= ` LIMIT ${sql.pageSize||20}`+(sql.current>1?(' OFFSET '+(sql.current-1)*sql.pageSize):'');
+  //     if(sql.pageSize !== -1){
+  //       if(sql.dbType==="oracle"){
+  //         if(!_sql.includes('OFFSET')){
+  //           _sql+= ` OFFSET ${((sql.current||1)-1)*(sql.pageSize||20)} ROWS FETCH NEXT ${sql.pageSize||20} ROWS ONLY`
+  //         }
+  //       }else{
+  //         if(!_sql.includes('LIMIT')){
+  //           _sql+= ` LIMIT ${sql.pageSize||20}`+(sql.current>1?(' OFFSET '+(sql.current-1)*(sql.pageSize||20)):'');
+  //         }
+  //       }
+  //     }
+  //   }
+  //   const res: Response = await fetch( `/api/iot/data/sql/${method}`, {
+  //     method: 'POST',
+  //     headers:{
+  //        Authorization: getToken(),
+  //     },
+  //     body:JSON.stringify({ dbId:sql.dbId||(sql as any).dbid,sql:_sql,}),
+  //   });
+  //   if (res.ok) {
+  //     let data:any = await res.text();
+  //     if(data){
+  //       const arr = [];
+  //       data = JSON.parse(data);
+  //       if(data.error){
+  //         this.store.emitter.emit('error', { type: 'sql', error: data.error });
+  //         return;
+  //       }
+  //       sql.keys?.forEach((key)=>{
+  //         arr.push({id: sql.bindId+'#'+ key,value:getter(data,key.split('#').join('.'))});
+  //       });
 
-        arr.push({id:sql.bindId,value:data});
-        this.socketCallback(JSON.stringify(arr), { type: 'sql', url: `/api/iot/data/sql/${method}`,method, net:sql});
-      }
-    }
-  }
+  //       arr.push({id:sql.bindId,value:data});
+  //       this.socketCallback(JSON.stringify(arr), { type: 'sql', url: `/api/iot/data/sql/${method}`,method, net:sql});
+  //     }
+  //   }
+  // }
 
   randomString(e: number) {
     e = e || 32;
@@ -3540,118 +3540,118 @@ export class Meta2d {
   }
 
   //数据模拟
-  dataMock() {
-    let arr = [];
-    this.store.data.dataset?.devices?.forEach((data) => {
-      let value = this.mockValue(data);
-      if (value !== undefined) {
-        arr.push({
-          id: data.id,
-          value,
-        });
-      }
-    });
-    if (arr.length) {
-      this.setDatas(arr, {
-        render: true,
-        doEvent: true,
-        history: false,
-      });
-    }
-  }
+  // dataMock() {
+  //   let arr = [];
+  //   this.store.data.dataset?.devices?.forEach((data) => {
+  //     let value = this.mockValue(data);
+  //     if (value !== undefined) {
+  //       arr.push({
+  //         id: data.id,
+  //         value,
+  //       });
+  //     }
+  //   });
+  //   if (arr.length) {
+  //     this.setDatas(arr, {
+  //       render: true,
+  //       doEvent: true,
+  //       history: false,
+  //     });
+  //   }
+  // }
 
-  networkMock() {
-    if (this.store.data.networks && this.store.data.networks.length) {
-      let arr = [];
-      this.store.data.networks.forEach((net) => {
-        if(net.enable === false){
-          net.children?.forEach((child) => {
-            let _child = deepClone(child);
-            _child.enableMock = true;
-            let value = this.mockValue(_child);
-            if (value !== undefined) {
-              arr.push({
-                id: child.id,
-                value,
-              });
-            }
-          });
-        }
-      });
-      if (arr.length) {
-        this.setDatas(arr, {
-          render: true,
-          doEvent: true,
-          history: false,
-        });
-      }
-    }
-  }
+  // networkMock() {
+  //   if (this.store.data.networks && this.store.data.networks.length) {
+  //     let arr = [];
+  //     this.store.data.networks.forEach((net) => {
+  //       if(net.enable === false){
+  //         net.children?.forEach((child) => {
+  //           let _child = deepClone(child);
+  //           _child.enableMock = true;
+  //           let value = this.mockValue(_child);
+  //           if (value !== undefined) {
+  //             arr.push({
+  //               id: child.id,
+  //               value,
+  //             });
+  //           }
+  //         });
+  //       }
+  //     });
+  //     if (arr.length) {
+  //       this.setDatas(arr, {
+  //         render: true,
+  //         doEvent: true,
+  //         history: false,
+  //       });
+  //     }
+  //   }
+  // }
 
-  startDataMock() {
-    let enable = this.store.data.enableMock;
-    if (enable) {
-      this.stopDataMock();
-      this.initBinds();
-      this.updateTimer = setInterval(() => {
-        //本地调试
-        this.store.data.pens.forEach((pen) => {
-          this.penMock(pen);
-        });
-        // this.dataMock();
-        this.networkMock();
-        this.render();
-      }, this.store.data.networkInterval || 1000);
-    }else{
-      this.stopDataMock();
-    }
-  }
+  // startDataMock() {
+  //   let enable = this.store.data.enableMock;
+  //   if (enable) {
+  //     this.stopDataMock();
+  //     this.initBinds();
+  //     this.updateTimer = setInterval(() => {
+  //       //本地调试
+  //       this.store.data.pens.forEach((pen) => {
+  //         this.penMock(pen);
+  //       });
+  //       // this.dataMock();
+  //       this.networkMock();
+  //       this.render();
+  //     }, this.store.data.networkInterval || 1000);
+  //   }else{
+  //     this.stopDataMock();
+  //   }
+  // }
 
-  stopDataMock() {
-    clearInterval(this.updateTimer);
-    this.updateTimer = undefined;
-  }
+  // stopDataMock() {
+  //   clearInterval(this.updateTimer);
+  //   this.updateTimer = undefined;
+  // }
 
-  penMock(pen: Pen) {
-    if (pen.realTimes) {
-      let _d: any = {};
-      pen.realTimes.forEach((realTime) => {
-        let value = this.mockValue(realTime);
-        if (value !== undefined) {
-          _d[realTime.key] = value;
-        }
-      });
-      if (Object.keys(_d).length) {
-        let data = pen.onBeforeValue ? pen.onBeforeValue(pen, _d) : _d;
-        this.canvas.updateValue(pen, data);
-        // this.store.emitter.emit('valueUpdate', pen);
-        pen.onValue?.(pen);
-        this.store.emitter.emit('valueUpdate', pen);
-      }
-    }
-  }
+  // penMock(pen: Pen) {
+  //   if (pen.realTimes) {
+  //     let _d: any = {};
+  //     pen.realTimes.forEach((realTime) => {
+  //       let value = this.mockValue(realTime);
+  //       if (value !== undefined) {
+  //         _d[realTime.key] = value;
+  //       }
+  //     });
+  //     if (Object.keys(_d).length) {
+  //       let data = pen.onBeforeValue ? pen.onBeforeValue(pen, _d) : _d;
+  //       this.canvas.updateValue(pen, data);
+  //       // this.store.emitter.emit('valueUpdate', pen);
+  //       pen.onValue?.(pen);
+  //       this.store.emitter.emit('valueUpdate', pen);
+  //     }
+  //   }
+  // }
 
-  penNetwork(pen: Pen) {
-    if (!pen.apiUrl) {
-      return;
-    }
-    const penNetwork: Network = {
-      url: pen.apiUrl,
-      method: pen.apiMethod,
-      headers: pen.apiHeaders,
-      body: pen.apiBody,
-    };
-    //临时请求一次
-    this.requestHttp(penNetwork);
-    if (pen.apiEnable) {
-      if (!this.store.pensNetwork) {
-        this.store.pensNetwork = {};
-      }
-      this.store.pensNetwork[pen.id] = penNetwork;
-    } else {
-      delete this.store.pensNetwork[pen.id];
-    }
-  }
+  // penNetwork(pen: Pen) {
+  //   if (!pen.apiUrl) {
+  //     return;
+  //   }
+  //   const penNetwork: Network = {
+  //     url: pen.apiUrl,
+  //     method: pen.apiMethod,
+  //     headers: pen.apiHeaders,
+  //     body: pen.apiBody,
+  //   };
+  //   //临时请求一次
+  //   this.requestHttp(penNetwork);
+  //   if (pen.apiEnable) {
+  //     if (!this.store.pensNetwork) {
+  //       this.store.pensNetwork = {};
+  //     }
+  //     this.store.pensNetwork[pen.id] = penNetwork;
+  //   } else {
+  //     delete this.store.pensNetwork[pen.id];
+  //   }
+  // }
 
   // getCookie(name: string) {
   //   let arr: RegExpMatchArray | null;
@@ -3664,302 +3664,302 @@ export class Meta2d {
   // }
 
   //获取动态参数
-  getDynamicParam(key: string) {
-    let lsValue = localStorage.getItem(key);
-    if(globalThis.le5leTokenD){
-      let tokenkeys = [globalThis.le5leSSOTokenName ?? 'ssotoken',globalThis.le5leTokenName ?? 'token'];
-      if(tokenkeys.includes(key)){
-        lsValue = d(lsValue)
-      }
-    }
-    let params = queryURLParams();
-    let value = params[key] || lsValue || getCookie(key) || globalThis[key] || '';
-    return value;
-  }
+  // getDynamicParam(key: string) {
+  //   let lsValue = localStorage.getItem(key);
+  //   if(globalThis.le5leTokenD){
+  //     let tokenkeys = [globalThis.le5leSSOTokenName ?? 'ssotoken',globalThis.le5leTokenName ?? 'token'];
+  //     if(tokenkeys.includes(key)){
+  //       lsValue = d(lsValue)
+  //     }
+  //   }
+  //   let params = queryURLParams();
+  //   let value = params[key] || lsValue || getCookie(key) || globalThis[key] || '';
+  //   return value;
+  // }
 
-  onNetworkConnect(https: Network[]) {
-    // let enable = this.store.data.enableMock;
-    if (!(https && https.length)) {
-      return;
-    }
-    if (this.store.pensNetwork) {
-      for (let key in this.store.pensNetwork) {
-        https.push(this.store.pensNetwork[key]);
-      }
-    }
-    if (!this.store.data.cancelFirstConnect) {
-      https.forEach(async (_item) => {
-        if(_item.enable !== false){
-          this.requestHttp(_item);
-        }
-      });
-    }
-    // if( enable ){
-    //   this.updateTimer = setInterval(() => {
-    //     //模拟数据
+  // onNetworkConnect(https: Network[]) {
+  //   // let enable = this.store.data.enableMock;
+  //   if (!(https && https.length)) {
+  //     return;
+  //   }
+  //   if (this.store.pensNetwork) {
+  //     for (let key in this.store.pensNetwork) {
+  //       https.push(this.store.pensNetwork[key]);
+  //     }
+  //   }
+  //   if (!this.store.data.cancelFirstConnect) {
+  //     https.forEach(async (_item) => {
+  //       if(_item.enable !== false){
+  //         this.requestHttp(_item);
+  //       }
+  //     });
+  //   }
+  //   // if( enable ){
+  //   //   this.updateTimer = setInterval(() => {
+  //   //     //模拟数据
 
-    //     this.store.data.pens.forEach((pen) => {
-    //       this.penMock(pen);
-    //     });
+  //   //     this.store.data.pens.forEach((pen) => {
+  //   //       this.penMock(pen);
+  //   //     });
 
-    //     // https.forEach(async (_item) => {
-    //     //   this.requestHttp(_item);
-    //     // });
-    //     this.render();
-    //   }, this.store.data.networkInterval || 1000);
-    // }
+  //   //     // https.forEach(async (_item) => {
+  //   //     //   this.requestHttp(_item);
+  //   //     // });
+  //   //     this.render();
+  //   //   }, this.store.data.networkInterval || 1000);
+  //   // }
 
-    https.forEach((_item, index) => {
-      _item.times = 0;
-      if(_item.interval !== 0 && _item.enable !== false){
-        if(_item.once){
-          setTimeout(async () => {
-            this.requestHttp(_item);
-          }, _item.interval || 1000);
-        }else{
-          this.updateTimerList[index] = setInterval(async () => {
-            this.requestHttp(_item);
-            if (this.store.options.reconnetTimes) {
-              // _item.times++;
-              if (_item.times >= this.store.options.reconnetTimes) {
-                _item.times = 0;
-                clearInterval(this.updateTimerList[index]);
-                this.updateTimerList[index] = undefined;
-              }
-            }
-          }, _item.interval || 1000);
-        }
-      }
-    });
-  }
+  //   https.forEach((_item, index) => {
+  //     _item.times = 0;
+  //     if(_item.interval !== 0 && _item.enable !== false){
+  //       if(_item.once){
+  //         setTimeout(async () => {
+  //           this.requestHttp(_item);
+  //         }, _item.interval || 1000);
+  //       }else{
+  //         this.updateTimerList[index] = setInterval(async () => {
+  //           this.requestHttp(_item);
+  //           if (this.store.options.reconnetTimes) {
+  //             // _item.times++;
+  //             if (_item.times >= this.store.options.reconnetTimes) {
+  //               _item.times = 0;
+  //               clearInterval(this.updateTimerList[index]);
+  //               this.updateTimerList[index] = undefined;
+  //             }
+  //           }
+  //         }, _item.interval || 1000);
+  //       }
+  //     }
+  //   });
+  // }
 
-  async requestHttp(_req: Network) {
-    let req = deepClone(_req);
-    const net: Network = this.store.data.networks?.filter(
-      (item) => item.protocol === 'http',
-    )[req.index];
-    if (net?.preJs) {
-      if (!net.preFn) {
-        net.preFn = makeSafeAsyncFn(this.store.options, 'network', net.preJs);
-      }
-      if(net.preFn){
-        const preReq = await net.preFn(req);
-        if (preReq) {
-          req = preReq;
-        }
-      }
-    }
-    if (req.url) {
-      if(req.url.indexOf('${') > -1){
-        let keys = req.url.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-          if (keys) {
-            keys.forEach((key) => {
-              req.url = req.url.replace(
-                `\${${key}}`,this.getDynamicParam(key)
-              );
-            });
-          }
-      }
-      if (typeof req.headers === 'object') {
-        /*for (let i in req.headers) {
-          if (typeof req.headers[i] === 'string') {
-            let keys = req.headers[i].match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-            if (keys) {
-              req.headers[i] = req.headers[i].replace(
-                `\${${keys[0]}}`,
-                this.getDynamicParam(keys[0])
-              );
-            }
-          }
-        }*/
-        let headersStr = JSON.stringify(req.headers);
-        let keys = headersStr.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-        if (keys?.length) {
-         for(let i=0; i<keys.length; i++){
-            headersStr = headersStr.replace(
-              `\${${keys[i]}}`,
-              this.getDynamicParam(keys[i])
-            );
-          }
-        }
-        req.headers = JSON.parse(headersStr);
-      }
-      if (typeof req.body === 'object') {
-        /*for (let i in req.body) {
-          if (typeof req.body[i] === 'string') {
-            let keys = req.body[i].match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-            if (keys) {
-              req.body[i] = req.body[i].replace(
-                `\${${keys[0]}}`,
-                this.getDynamicParam(keys[0])
-              );
-            }
-          }
-        }*/
-        let bodyStr = JSON.stringify(req.body);
-        let keys = bodyStr.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
-        if (keys?.length) {
-         for(let i=0; i<keys.length; i++){
-            bodyStr = bodyStr.replace(
-              `\${${keys[i]}}`,
-              this.getDynamicParam(keys[i])
-            );
-          }
-        }
-        req.body = JSON.parse(bodyStr);
-      }
-      // 默认每一秒请求一次
-      const res: Response = await fetch(req.url, {
-        headers: req.headers,
-        method: req.method,
-        body: req.method === 'GET' ? undefined : JSON.stringify(req.body),
-      });
-      if (res.ok) {
-        const data = await res.text();
-        this.socketCallback(data, { type: 'http', method: req.method, url: req.url, name: req.name, net});
-      } else {
-        _req.times++;
-        this.store.emitter.emit('error', { type: 'http', error: res });
-      }
-    }
-  }
+  // async requestHttp(_req: Network) {
+  //   let req = deepClone(_req);
+  //   const net: Network = this.store.data.networks?.filter(
+  //     (item) => item.protocol === 'http',
+  //   )[req.index];
+  //   if (net?.preJs) {
+  //     if (!net.preFn) {
+  //       net.preFn = makeSafeAsyncFn(this.store.options, 'network', net.preJs);
+  //     }
+  //     if(net.preFn){
+  //       const preReq = await net.preFn(req);
+  //       if (preReq) {
+  //         req = preReq;
+  //       }
+  //     }
+  //   }
+  //   if (req.url) {
+  //     if(req.url.indexOf('${') > -1){
+  //       let keys = req.url.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //         if (keys) {
+  //           keys.forEach((key) => {
+  //             req.url = req.url.replace(
+  //               `\${${key}}`,this.getDynamicParam(key)
+  //             );
+  //           });
+  //         }
+  //     }
+  //     if (typeof req.headers === 'object') {
+  //       /*for (let i in req.headers) {
+  //         if (typeof req.headers[i] === 'string') {
+  //           let keys = req.headers[i].match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //           if (keys) {
+  //             req.headers[i] = req.headers[i].replace(
+  //               `\${${keys[0]}}`,
+  //               this.getDynamicParam(keys[0])
+  //             );
+  //           }
+  //         }
+  //       }*/
+  //       let headersStr = JSON.stringify(req.headers);
+  //       let keys = headersStr.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //       if (keys?.length) {
+  //        for(let i=0; i<keys.length; i++){
+  //           headersStr = headersStr.replace(
+  //             `\${${keys[i]}}`,
+  //             this.getDynamicParam(keys[i])
+  //           );
+  //         }
+  //       }
+  //       req.headers = JSON.parse(headersStr);
+  //     }
+  //     if (typeof req.body === 'object') {
+  //       /*for (let i in req.body) {
+  //         if (typeof req.body[i] === 'string') {
+  //           let keys = req.body[i].match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //           if (keys) {
+  //             req.body[i] = req.body[i].replace(
+  //               `\${${keys[0]}}`,
+  //               this.getDynamicParam(keys[0])
+  //             );
+  //           }
+  //         }
+  //       }*/
+  //       let bodyStr = JSON.stringify(req.body);
+  //       let keys = bodyStr.match(/\$\{([^}]+)\}/g)?.map(m => m.slice(2, -1));
+  //       if (keys?.length) {
+  //        for(let i=0; i<keys.length; i++){
+  //           bodyStr = bodyStr.replace(
+  //             `\${${keys[i]}}`,
+  //             this.getDynamicParam(keys[i])
+  //           );
+  //         }
+  //       }
+  //       req.body = JSON.parse(bodyStr);
+  //     }
+  //     // 默认每一秒请求一次
+  //     const res: Response = await fetch(req.url, {
+  //       headers: req.headers,
+  //       method: req.method,
+  //       body: req.method === 'GET' ? undefined : JSON.stringify(req.body),
+  //     });
+  //     if (res.ok) {
+  //       const data = await res.text();
+  //       this.socketCallback(data, { type: 'http', method: req.method, url: req.url, name: req.name, net});
+  //     } else {
+  //       _req.times++;
+  //       this.store.emitter.emit('error', { type: 'http', error: res });
+  //     }
+  //   }
+  // }
 
-  closeNetwork() {
-    this.mqttClients &&
-      this.mqttClients.forEach((mqttClient) => {
-        mqttClient.end();
-      });
-    this.websockets &&
-      this.websockets.forEach((websocket) => {
-        if (websocket) {
-          websocket.onclose = undefined;
-          websocket.close();
-          websocket = undefined;
-        }
-      });
-    this.mqttClients = undefined;
-    this.websockets = undefined;
-    // clearInterval(this.updateTimer);
-    // this.updateTimer = undefined;
-    this.updateTimerList &&
-      this.updateTimerList.forEach((_updateTimer) => {
-        clearInterval(_updateTimer);
-        _updateTimer = undefined;
-      });
-    this.sqlTimerList &&
-      this.sqlTimerList.forEach((_sqlTimer) => {
-        clearInterval(_sqlTimer);
-        _sqlTimer = undefined;
-      });
-    this.closeIot();
-    closeJetLinks(this);
-    this.closeSSE();
-  }
+  // closeNetwork() {
+  //   this.mqttClients &&
+  //     this.mqttClients.forEach((mqttClient) => {
+  //       mqttClient.end();
+  //     });
+  //   this.websockets &&
+  //     this.websockets.forEach((websocket) => {
+  //       if (websocket) {
+  //         websocket.onclose = undefined;
+  //         websocket.close();
+  //         websocket = undefined;
+  //       }
+  //     });
+  //   this.mqttClients = undefined;
+  //   this.websockets = undefined;
+  //   // clearInterval(this.updateTimer);
+  //   // this.updateTimer = undefined;
+  //   this.updateTimerList &&
+  //     this.updateTimerList.forEach((_updateTimer) => {
+  //       clearInterval(_updateTimer);
+  //       _updateTimer = undefined;
+  //     });
+  //   this.sqlTimerList &&
+  //     this.sqlTimerList.forEach((_sqlTimer) => {
+  //       clearInterval(_sqlTimer);
+  //       _sqlTimer = undefined;
+  //     });
+  //   this.closeIot();
+  //   closeJetLinks(this);
+  //   this.closeSSE();
+  // }
 
-  socketCallback(
-    message: string,
-    context?: { type?: string; topic?: string; url?: string; method?: string, name?:string, net?:Network }
-  ) {
-    this.store.emitter.emit('socket', { message, context });
-    let _message: any = message;
-    if(context.net?.socketCbJs){
-      if(!context.net?.socketFn){
-        context.net.socketFn = makeSafeFn(this.store.options, 'e', 'context', context.net.socketCbJs) as (
-          e: string,
-          context?: {
-            meta2d?: Meta2d;
-            type?: string;
-            topic?: string;
-            url?: string;
-          }
-        ) => boolean;
-      }
-      if (context.net.socketFn) {
-        _message = context.net.socketFn(message,{
-          meta2d: this,
-          type: context.type,
-          topic: context.topic,
-          url: context.url,
-          method: context.method,
-        });
-        if (!_message) {
-          return;
-        }
-        if (_message&&_message !== true) {
-          message = _message;
-        }
-      }
-    }
-    if (this.socketFn) {
-      _message = this.socketFn(message, {
-        meta2d: this,
-        type: context.type,
-        topic: context.topic,
-        url: context.url,
-        method: context.method,
-        net: context.net
-      });
-      if (!_message) {
-        return;
-      }
-    }
-    if (_message === true) {
-      _message = message;
-    }
-    let data: any;
-    if (_message.constructor === Object || _message.constructor === Array) {
-      data = _message;
-    } else if (typeof _message === 'string') {
-      try {
-        data = JSON.parse(_message);
-      } catch (error) {
-        console.warn('Invalid socket data:', data, error);
-      }
-    } else {
-      return;
-    }
+  // socketCallback(
+  //   message: string,
+  //   context?: { type?: string; topic?: string; url?: string; method?: string, name?:string, net?:Network }
+  // ) {
+  //   this.store.emitter.emit('socket', { message, context });
+  //   let _message: any = message;
+  //   if(context.net?.socketCbJs){
+  //     if(!context.net?.socketFn){
+  //       context.net.socketFn = makeSafeFn(this.store.options, 'e', 'context', context.net.socketCbJs) as (
+  //         e: string,
+  //         context?: {
+  //           meta2d?: Meta2d;
+  //           type?: string;
+  //           topic?: string;
+  //           url?: string;
+  //         }
+  //       ) => boolean;
+  //     }
+  //     if (context.net.socketFn) {
+  //       _message = context.net.socketFn(message,{
+  //         meta2d: this,
+  //         type: context.type,
+  //         topic: context.topic,
+  //         url: context.url,
+  //         method: context.method,
+  //       });
+  //       if (!_message) {
+  //         return;
+  //       }
+  //       if (_message&&_message !== true) {
+  //         message = _message;
+  //       }
+  //     }
+  //   }
+  //   if (this.socketFn) {
+  //     _message = this.socketFn(message, {
+  //       meta2d: this,
+  //       type: context.type,
+  //       topic: context.topic,
+  //       url: context.url,
+  //       method: context.method,
+  //       net: context.net
+  //     });
+  //     if (!_message) {
+  //       return;
+  //     }
+  //   }
+  //   if (_message === true) {
+  //     _message = message;
+  //   }
+  //   let data: any;
+  //   if (_message.constructor === Object || _message.constructor === Array) {
+  //     data = _message;
+  //   } else if (typeof _message === 'string') {
+  //     try {
+  //       data = JSON.parse(_message);
+  //     } catch (error) {
+  //       console.warn('Invalid socket data:', data, error);
+  //     }
+  //   } else {
+  //     return;
+  //   }
 
-    if (!data) {
-      return;
-    }
+  //   if (!data) {
+  //     return;
+  //   }
 
-    // 扁平对象表示数据点集合时，直接进入批量绑定更新，避免
-    // socketCallback -> setValue -> setDatas 的重复分发。
-    if (
-      !Array.isArray(data) &&
-      data.constructor === Object &&
-      !data.id &&
-      !data.dataId &&
-      !data.tag
-    ) {
-      const bindDatas = Object.keys(data).map((key) => ({
-        dataId: key,
-        id: key,
-        value: data[key],
-      }));
-      if (bindDatas.length) {
-        this.setDatas(bindDatas, { render: false });
-        // 使用画布已有的帧率限制，合并同一帧内的多次网络推送。
-        this.render(true);
-      }
-      return;
-    }
-    if (!Array.isArray(data)) {
-      data = [data];
-    }
-    if (!data.length) {
-      return;
-    }
-    if (data[0].dataId) {
-      this.setDatas(data, { render: false });
-    } else {
-      data.forEach((_data: IValue) => {
-        this.setValue(_data, { render: false });
-      });
-    }
-    // 网络消息统一交给 requestAnimationFrame 限流渲染。
-    this.render(true);
-  }
+  //   // 扁平对象表示数据点集合时，直接进入批量绑定更新，避免
+  //   // socketCallback -> setValue -> setDatas 的重复分发。
+  //   if (
+  //     !Array.isArray(data) &&
+  //     data.constructor === Object &&
+  //     !data.id &&
+  //     !data.dataId &&
+  //     !data.tag
+  //   ) {
+  //     const bindDatas = Object.keys(data).map((key) => ({
+  //       dataId: key,
+  //       id: key,
+  //       value: data[key],
+  //     }));
+  //     if (bindDatas.length) {
+  //       this.setDatas(bindDatas, { render: false });
+  //       // 使用画布已有的帧率限制，合并同一帧内的多次网络推送。
+  //       this.render(true);
+  //     }
+  //     return;
+  //   }
+  //   if (!Array.isArray(data)) {
+  //     data = [data];
+  //   }
+  //   if (!data.length) {
+  //     return;
+  //   }
+  //   if (data[0].dataId) {
+  //     this.setDatas(data, { render: false });
+  //   } else {
+  //     data.forEach((_data: IValue) => {
+  //       this.setValue(_data, { render: false });
+  //     });
+  //   }
+  //   // 网络消息统一交给 requestAnimationFrame 限流渲染。
+  //   this.render(true);
+  // }
 
   // 绑定变量方式更新组件数据
   setDatas(

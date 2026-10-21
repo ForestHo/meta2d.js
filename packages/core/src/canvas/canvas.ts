@@ -4530,7 +4530,7 @@ export class Canvas {
       })
     }
     this.loadImage(pen);
-    this.parent.penNetwork(pen);
+    // this.parent.penNetwork(pen);
   }
 
   drawline(mouse?: Point) {

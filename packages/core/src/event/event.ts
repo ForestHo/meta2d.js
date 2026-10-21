@@ -1,6 +1,6 @@
 import { Meta2d } from '../core';
 import { IValue, Pen } from '../pen';
-import { Network } from '../store';
+// import { Network } from '../store';
 
 export type EventValue = string | IValue | undefined | null;
 // 事件行为
@@ -34,7 +34,7 @@ export interface Event {
     context?: { meta2d: Meta2d; eventName: string }
   ) => void;
   targetType?: string;
-  network?: Network;
+  // network?: Network;
   actions?: Event[];
   conditions?: TriggerCondition[];
   conditionType?: string;
