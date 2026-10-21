@@ -3906,7 +3906,7 @@ export function setNodeAnimateProcess(pen: Pen, process: number) {
       //   pen.calculative.canvas.canvasImage.init();
       // }
       if (pen.canvasLayer === CanvasLayer.CanvasImageBottom) {
-        pen.calculative.canvas.canvasImageBottom.init();
+        // pen.calculative.canvas.canvasImageBottom.init();
       } else if (pen.canvasLayer === CanvasLayer.CanvasImage) {
         pen.calculative.canvas.canvasImage.init();
       }

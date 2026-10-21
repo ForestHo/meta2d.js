@@ -62,7 +62,7 @@ const deleteContainerPens = (pen: Pen) => {
 
   meta2d.canvas.canvasTemplate.init();
   meta2d.canvas.canvasImage.init();
-  meta2d.canvas.canvasImageBottom.init();
+  // meta2d.canvas.canvasImageBottom.init();
   meta2d.render();
 };
 

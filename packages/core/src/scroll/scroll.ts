@@ -134,7 +134,7 @@ export class Scroll {
       this.parent.onMovePens();
       this.parent.canvasTemplate.init();
       this.parent.canvasImage.init();
-      this.parent.canvasImageBottom.init();
+      // this.parent.canvasImageBottom.init();
       this.parent.render();
     }
   };
@@ -208,7 +208,7 @@ export class Scroll {
         this.parent.onMovePens();
         this.parent.canvasTemplate.init();
         this.parent.canvasImage.init();
-        this.parent.canvasImageBottom.init();
+        // this.parent.canvasImageBottom.init();
         this.parent.render();
         return true;
       }
@@ -347,7 +347,7 @@ export class Scroll {
     this.parent.onMovePens();
     this.parent.canvasTemplate.init();
     this.parent.canvasImage.init();
-    this.parent.canvasImageBottom.init();
+    // this.parent.canvasImageBottom.init();
     this.parent.render();
   }
 

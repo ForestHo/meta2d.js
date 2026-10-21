@@ -5618,7 +5618,7 @@ export class Meta2d {
     this.canvas.canvasTemplate.fit = true;
     this.canvas.canvasTemplate.init();
     this.canvas.canvasImage.init();
-    this.canvas.canvasImageBottom.init();
+    // this.canvas.canvasImageBottom.init();
     this.render(true);
   }
 
@@ -6422,7 +6422,7 @@ export class Meta2d {
     }
     this.canvas.canvasTemplate.init();
     this.canvas.canvasImage.init();
-    this.canvas.canvasImageBottom.init();
+    // this.canvas.canvasImageBottom.init();
     this.render();
   }
 

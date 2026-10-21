@@ -90,8 +90,8 @@ export class MagnifierCanvas {
     const drawOffscreens = [
       this.parentCanvas.canvasTemplate.bgOffscreen,
       this.parentCanvas.canvasTemplate.offscreen,
-      this.parentCanvas.canvasImageBottom.offscreen,
-      this.parentCanvas.canvasImageBottom.animateOffsScreen,
+      // this.parentCanvas.canvasImageBottom.offscreen,
+      // this.parentCanvas.canvasImageBottom.animateOffsScreen,
       this.parentCanvas.offscreen,
       this.parentCanvas.canvasImage.offscreen,
       this.parentCanvas.canvasImage.animateOffsScreen,
