@@ -319,6 +319,7 @@ export class Canvas {
     this.canvas.style.backgroundRepeat = 'no-repeat';
     this.canvas.style.backgroundSize = '100% 100%';
     this.canvas.style.zIndex = '3';
+    this.canvas.style.left = '0';
 
     this.canvasImage = new CanvasImage(parentElement, store);
     this.canvasImage.canvas.style.zIndex = '4';

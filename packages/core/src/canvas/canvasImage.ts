@@ -7,7 +7,7 @@ import {
   getParent,
   CanvasLayer,
 } from '../pen';
-import { Fit, Meta2dStore } from '../store';
+import { Fit, Meta2dStore, globalStore } from '../store';
 import { rgba } from '../utils';
 import { createOffscreen } from './offscreen';
 
@@ -143,6 +143,10 @@ export class CanvasImage {
     let patchFlags = false;
     let patchFlagsAnimate = false;
     for (const pen of this.store.data.pens) {
+      // 自定义绘制的不重复绘制，即使图元有image的url·
+      if(typeof globalStore.canvasDraws[pen.name] === 'function'){
+        continue;
+      }
       if (this.hasImage(pen)) {
         if (this.store.animates.has(pen)) {
           patchFlagsAnimate = true;
