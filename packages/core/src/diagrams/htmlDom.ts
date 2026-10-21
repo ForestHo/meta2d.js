@@ -40,9 +40,9 @@ export function htmlDom(pen: HtmlPen) {
     div.style.outline = 'none';
     div.style.left = '-9999px';
     div.style.top = '-9999px';
-    if (pen.ignoreEvent) {
-      div.style.pointerEvents = 'none';
-    }
+    // if (pen.ignoreEvent) {
+    //   div.style.pointerEvents = 'none';
+    // }
 
     const context: HTMLElement = pen.html.iframe
       ? document.createElement('iframe')

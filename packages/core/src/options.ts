@@ -13,9 +13,9 @@ export const TRANSPARENT_COLOR = '#FFFFFF00'
 /**
  * debug 调试配置，true 表示开启全部调试项
  */
-export interface DebugOptions {
-  renderTime?: boolean; // 记录每个图元的渲染时间到 pen.calculative.debug.renderTime
-}
+// export interface DebugOptions {
+//   renderTime?: boolean; // 记录每个图元的渲染时间到 pen.calculative.debug.renderTime
+// }
 
 export interface Options {
   alias?: string;
@@ -42,7 +42,7 @@ export interface Options {
   rightCursor?: string; // table 右箭 选中行
   downCursor?: string; // table 下箭 选中列
   hoverCursor?: string;
-  disableInput?: boolean;
+  // disableInput?: boolean;
   disableRotate?: boolean;
   disableSize?: boolean;
   disableAnchor?: boolean;
@@ -84,18 +84,18 @@ export interface Options {
   drawingLineName?: string;
   fromArrow?: string;
   toArrow?: string;
-  dirMarkers?: boolean;
-  dirMarkerInterval?: number;
-  dirMarkerColor?: string;
-  dirMarkerLineWidth?: number;
-  drawDirMarkers?: (
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    angleRad: number,
-    color: string,
-    pen: Pen
-  ) => void;
+  // dirMarkers?: boolean;
+  // dirMarkerInterval?: number;
+  // dirMarkerColor?: string;
+  // dirMarkerLineWidth?: number;
+  // drawDirMarkers?: (
+  //   ctx: CanvasRenderingContext2D,
+  //   x: number,
+  //   y: number,
+  //   angleRad: number,
+  //   color: string,
+  //   pen: Pen
+  // ) => void;
   autoPolyline?: boolean;
   interval?: number;
   minFPSNumber?: number;
@@ -128,11 +128,11 @@ export interface Options {
   textFlip?: boolean; //文字镜像
   textRotate?: boolean; //文字旋转
   cacheLength?: number; //缓存数据长度
-  unavailableKeys?: string[]; //屏蔽的快捷键
+  // unavailableKeys?: string[]; //屏蔽的快捷键
   activeLineDash?: number[];
   activeLineWidth?: number;
   activeGlobalAlpha?: number;
-  diagramOptions?: { [key: string]: any };
+  // diagramOptions?: { [key: string]: any };
   strictScope?: boolean; //大屏严格范围
   padding?: Padding; //大屏padding区域
   resizeMode?: boolean;
@@ -141,7 +141,7 @@ export interface Options {
   disabledBackground?: string;
   scaleOff?: number; //缩放偏移量
   scrollButScale?: boolean; //滚动条滚动，鼠标缩放
-  reconnetTimes?: number; //通信重连次数
+  // reconnetTimes?: number; //通信重连次数
   navigatorNetWork?: {
     url?: string,
     headers?: any,
@@ -154,8 +154,8 @@ export interface Options {
   unFill?: boolean;
   roles?: string[];
   crossOrigin?: string;
-  allowScript?: boolean; //是否允许脚本执行
-  debug?: boolean | DebugOptions; //是否开启调试，可选择性开启具体调试项
+  // allowScript?: boolean; //是否允许脚本执行
+  // debug?: boolean | DebugOptions; //是否开启调试，可选择性开启具体调试项
 }
 
 export const defaultOptions: Options = {
@@ -227,15 +227,15 @@ export const defaultOptions: Options = {
   parentTouch: true,
   cdn: '',
   polylineSpace: 10,
-  dirMarkers: false,
+  // dirMarkers: false,
   domShapes: [],
   containerShapes:['tablePlus'],
   textFlip: true,
   textRotate: true,
-  unavailableKeys: [],
-  diagramOptions: {},
+  // unavailableKeys: [],
+  // diagramOptions: {},
   svgPathStroke:true,
-  reconnetTimes:10,
+  // reconnetTimes:10,
 };
 
 export interface PenPlugin {

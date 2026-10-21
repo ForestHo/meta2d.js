@@ -15,7 +15,7 @@ import {
   createSvgPath,
   getLineLength,
   createLineSvgPath,
-  renderLineDirectionMarkers,
+  // renderLineDirectionMarkers,
 } from '../diagrams';
 import { Direction, inheritanceProps } from '../data';
 import {
@@ -1667,10 +1667,10 @@ export function renderPen(
   download?: boolean
 ) {
   // debug：记录图元渲染耗时
-  const debug = pen.calculative.canvas.store.options.debug;
-  const debugRenderTime =
-    debug === true || (typeof debug === 'object' && !!debug.renderTime);
-  const debugStart = debugRenderTime ? performance.now() : 0;
+  // const debug = pen.calculative.canvas.store.options.debug;
+  // const debugRenderTime =
+  //   debug === true || (typeof debug === 'object' && !!debug.renderTime);
+  // const debugStart = debugRenderTime ? performance.now() : 0;
 
   ctx.save();
   ctx.translate(0.5, 0.5);
@@ -1891,12 +1891,12 @@ export function renderPen(
 
   ctx.restore();
 
-  if (debugRenderTime) {
-    if (!pen.calculative.debug) {
-      pen.calculative.debug = {};
-    }
-    pen.calculative.debug.renderTime = performance.now() - debugStart;
-  }
+  // if (debugRenderTime) {
+  //   if (!pen.calculative.debug) {
+  //     pen.calculative.debug = {};
+  //   }
+  //   pen.calculative.debug.renderTime = performance.now() - debugStart;
+  // }
 }
 export function setLineCap(ctx: CanvasRenderingContext2D, pen: Pen) {
   const lineCap = pen.lineCap || (pen.type ? 'round' : 'square');
@@ -2321,7 +2321,7 @@ export function ctxDrawPath(
 
       pen.fromArrow && renderFromArrow(ctx, pen, store);
       pen.toArrow && renderToArrow(ctx, pen, store);
-      renderLineDirectionMarkers(ctx, pen, store);
+      // renderLineDirectionMarkers(ctx, pen, store);
 
       if (
         pen.calculative.active &&
@@ -2387,7 +2387,7 @@ export function ctxDrawLinePath(
 
       pen.fromArrow && renderFromArrow(ctx, pen, store);
       pen.toArrow && renderToArrow(ctx, pen, store);
-      renderLineDirectionMarkers(ctx, pen, store);
+      // renderLineDirectionMarkers(ctx, pen, store);
       //TODO 锚点处渐进色的过渡
       if (
         pen.calculative.active &&
@@ -4126,7 +4126,8 @@ export function setElemPosition(pen: Pen, elem: HTMLElement) {
     // gif 组合后，作为子节点可通过 lockedOnCombine 来决定自身的 locked 状态
     elem.style.userSelect = 'initial';
     elem.style.pointerEvents = 'initial';
-    if (pen.name === 'gif' || pen.ignoreEvent) {
+    // if (pen.name === 'gif' || pen.ignoreEvent) {
+    if (pen.name === 'gif') {
       elem.style.userSelect = 'none';
       elem.style.pointerEvents = 'none';
     }

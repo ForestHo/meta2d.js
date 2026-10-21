@@ -117,22 +117,22 @@ export function removeDuplicates(list: any[]) {
 }
 
 //沙盒
-export function scopedEval(scope: object, expr: string, options?: Pick<Options, 'allowScript'>) {
-  const scopeKeys = Object.keys(scope);
-  const scopeValues = Object.values(scope);
+// export function scopedEval(scope: object, expr: string, options?: Pick<Options, 'allowScript'>) {
+//   const scopeKeys = Object.keys(scope);
+//   const scopeValues = Object.values(scope);
 
-  // 函数的参数名称与作用域的键相匹配，函数体是表达式
-   let func = makeSafeFn(options, ...scopeKeys/*这是变量名列表*/, `return ${expr};`);
+//   // 函数的参数名称与作用域的键相匹配，函数体是表达式
+//    let func = makeSafeFn(options, ...scopeKeys/*这是变量名列表*/, `return ${expr};`);
 
-  // 将作用域的值作为参数传递
-  try {
-    let re = func(...scopeValues);
-    func = null;
-    return re;
-  } catch (e: any) {
-    error('[ScopedEval] Error: ', e.message);
-  }
-}
+//   // 将作用域的值作为参数传递
+//   try {
+//     let re = func(...scopeValues);
+//     func = null;
+//     return re;
+//   } catch (e: any) {
+//     error('[ScopedEval] Error: ', e.message);
+//   }
+// }
 
 // tslint:disable-next-line:variable-name
 export function escapeRegExp(str: string) {

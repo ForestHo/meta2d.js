@@ -13,17 +13,17 @@ export * from './file';
 export * from './cube';
 export * from './people';
 export * from './line';
-export * from './iframe';
-export * from './video';
-export * from './form';
-export * from './sceneContainer';
+// export * from './iframe';
+// export * from './video';
+// export * from './form';
+// export * from './sceneContainer';
 export * from './htmlDom';
-export * from './sector';
-export * from './chord';
-export * from './polygon';
-export * from './octagon';
-export * from './trapezoid';
-export * from './crosse';
+// export * from './sector';
+// export * from './chord';
+// export * from './polygon';
+// export * from './octagon';
+// export * from './trapezoid';
+// export * from './crosse';
 export * from './rightTriangle';
 export * from './parallelogram';
 export * from './frostedGlass';
@@ -43,20 +43,20 @@ import { file } from './file';
 // import { cube } from './cube';
 import { people } from './people';
 import { line } from './line';
-import { iframe } from './iframe';
-import { video } from './video';
+// import { iframe } from './iframe';
+// import { video } from './video';
 import { gif } from './gif';
-import { mindNode, mindNodeAnchors } from './mindNode';
-import { mindLine, mindLineAnchors } from './mindLine';
-import { form } from './form';
-import { sceneContainer } from './sceneContainer';
+// import { mindNode, mindNodeAnchors } from './mindNode';
+// import { mindLine, mindLineAnchors } from './mindLine';
+// import { form } from './form';
+// import { sceneContainer } from './sceneContainer';
 import { htmlDom } from './htmlDom';
-import { sector } from './sector';
-import { chord } from './chord';
-import { polygon } from './polygon';
-import { octagon } from './octagon';
-import { trapezoid, trapezoidAnchors } from './trapezoid';
-import { crosse } from './crosse';
+// import { sector } from './sector';
+// import { chord } from './chord';
+// import { polygon } from './polygon';
+// import { octagon } from './octagon';
+// import { trapezoid, trapezoidAnchors } from './trapezoid';
+// import { crosse } from './crosse';
 import { rightTriangle, rightTriangleAnchors } from './rightTriangle';
 import { parallelogram, parallelogramAnchors } from './parallelogram';
 import { frostedGlassDom } from './frostedGlass';
@@ -81,21 +81,21 @@ export function commonPens() {
     file,
     people,
     line,
-    iframe,
-    video,
+    // iframe,
+    // video,
     gif,
-    mindNode,
-    mindLine,
-    mindNode2: rectangle,
-    form,
+    // mindNode,
+    // mindLine,
+    // mindNode2: rectangle,
+    // form,
     combine: rectangle,
-    sceneContainer,
-    sector,
-    chord,
-    polygon,
-    octagon,
-    trapezoid,
-    crosse,
+    // sceneContainer,
+    // sector,
+    // chord,
+    // polygon,
+    // octagon,
+    // trapezoid,
+    // crosse,
     rightTriangle,
     parallelogram,
     frostedGlassDom,
@@ -107,10 +107,10 @@ export function commonAnchors() {
     triangle: triangleAnchors,
     pentagon: pentagonAnchors,
     pentagram: pentagramAnchors,
-    mindNode: mindNodeAnchors,
-    mindLine: mindLineAnchors,
+    // mindNode: mindNodeAnchors,
+    // mindLine: mindLineAnchors,
     rightTriangle: rightTriangleAnchors,
-    trapezoid: trapezoidAnchors,
+    // trapezoid: trapezoidAnchors,
     parallelogram: parallelogramAnchors,
   };
 }

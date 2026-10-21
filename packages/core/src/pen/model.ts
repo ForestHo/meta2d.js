@@ -257,12 +257,12 @@ export interface Pen extends Rect {
     | 'center';
   imageRatio?: boolean;
 
-  disableInput?: boolean;
+  // disableInput?: boolean;
   disableRotate?: boolean;
   disableSize?: boolean;
   disableAnchor?: boolean;
 
-  ignoreEvent?: boolean;
+  // ignoreEvent?: boolean;
 
   // 相对值，若小于 1 认为是相对坐标
   paddingTop?: number;
@@ -291,10 +291,10 @@ export interface Pen extends Rect {
   fromArrowColor?: string;
   toArrowColor?: string;
 
-  dirMarkers?: boolean;
-  dirMarkerInterval?: number;
-  dirMarkerColor?: string;
-  dirMarkerLineWidth?: number;
+  // dirMarkers?: boolean;
+  // dirMarkerInterval?: number;
+  // dirMarkerColor?: string;
+  // dirMarkerLineWidth?: number;
 
   autoFrom?: boolean;
   autoTo?: boolean;
@@ -643,7 +643,7 @@ export interface Pen extends Rect {
     animateDotSize?: number; // 线条原点动画，原点大小
     zIndex?: number; //dom节点 z-index;
     // media element
-    onended?: (pen: Pen) => void;
+    // onended?: (pen: Pen) => void;
 
     // 不应该被deepClone多份的数据，例如外部第三方组件库挂载点，
     singleton?: any;
@@ -668,7 +668,7 @@ export interface Pen extends Rect {
     disabledColor?: string;
     disabledBackground?: string;
     disabledTextColor?:string; //禁用文字颜色
-    debug?: PenDebug; //调试数据，options.debug 开启后记录
+    // debug?: PenDebug; //调试数据，options.debug 开启后记录
   };
   lastConnected?:any;
   // 下划线相关配置属性

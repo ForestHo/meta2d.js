@@ -628,9 +628,9 @@ export class Canvas {
       if(data.name === 'closeDialog'){
         this.dialog.hide();
       }
-      this.parent.doMessageEvent(data.name, JSON.stringify(data.data));
+      // this.parent.doMessageEvent(data.name, JSON.stringify(data.data));
     }else{
-      this.parent.doMessageEvent(data);
+      // this.parent.doMessageEvent(data);
     }
   }
 
@@ -796,9 +796,9 @@ export class Canvas {
     ) {
       return;
     }
-    if (this.store.options.unavailableKeys.includes(e.key)) {
-      return;
-    }
+    // if (this.store.options.unavailableKeys.includes(e.key)) {
+    //   return;
+    // }
     if (!this.keyOptions) {
       this.keyOptions = {};
     }
@@ -2656,13 +2656,13 @@ export class Canvas {
       }
     }
 
-    globalThis.debug && console.time('hover');
+    // globalThis.debug && console.time('hover');
     const now = performance.now();
     if (now - this.hoverTimer > 50) {
       this.hoverTimer = now;
       this.getHover(e);
     }
-    globalThis.debug && console.timeEnd('hover');
+    // globalThis.debug && console.timeEnd('hover');
     if (this.hotkeyType === HotkeyType.AddAnchor) {
       this.patchFlags = true;
     }
@@ -3622,8 +3622,8 @@ export class Canvas {
       if(this.store.data.locked && pen.name === 'sceneContainer'){
         continue;
       }
-      const pointerEventsNone =
-        this.store.data.locked && pen.ignoreEvent === true;
+      // const pointerEventsNone =
+      //   this.store.data.locked && pen.ignoreEvent === true;
       const r = getLineR(pen);
       if (
         !pen.calculative.active &&
@@ -3655,7 +3655,7 @@ export class Canvas {
       // }
       // 锚点
       if (
-        !pointerEventsNone &&
+        // !pointerEventsNone &&
         !this.store.data.locked &&
         this.hotkeyType !== HotkeyType.Resize
       ) {
@@ -3674,9 +3674,9 @@ export class Canvas {
       }
       // 图形
       if (pen.type) {
-        if (pointerEventsNone) {
-          continue;
-        }
+        // if (pointerEventsNone) {
+        //   continue;
+        // }
         if (pen.isRuleLine) {
           let ruleH = this.store.options.ruleOptions?.height || 20;
           if (
@@ -3720,9 +3720,9 @@ export class Canvas {
           }
         }
 
-        if (pointerEventsNone) {
-          continue;
-        }
+        // if (pointerEventsNone) {
+        //   continue;
+        // }
 
         let isIn = false;
         if (pen.name === 'line') {
@@ -4492,11 +4492,11 @@ export class Canvas {
       pen.canvasLayer = CanvasLayer.CanvasTemplate;
     }
     pen.calculative = { canvas: this, singleton: pen.calculative?.singleton };
-    if (pen.video || pen.audio) {
-      pen.calculative.onended = (pen: Pen) => {
-        this.nextAnimate(pen);
-      };
-    }
+    // if (pen.video || pen.audio) {
+    //   pen.calculative.onended = (pen: Pen) => {
+    //     this.nextAnimate(pen);
+    //   };
+    // }
     for (const k in pen) {
       if (typeof pen[k] !== 'object' || k === 'lineDash') {
         pen.calculative[k] = pen[k];
@@ -5184,9 +5184,9 @@ export class Canvas {
     offscreenCtx.clearRect(0, 0, this.offscreen.width, this.offscreen.height);
     offscreenCtx.save();
     offscreenCtx.translate(this.store.data.x, this.store.data.y);
-    globalThis.debugRender && console.time('renderPens');
+    // globalThis.debugRender && console.time('renderPens');
     this.renderPens();
-    globalThis.debugRender && console.timeEnd('renderPens');
+    // globalThis.debugRender && console.timeEnd('renderPens');
     this.renderBorder();
     this.renderHoverPoint();
     this.renderPensAnchors();
@@ -7982,8 +7982,8 @@ export class Canvas {
   private ondblclick = (e: MouseEvent) => {
     if (
       this.store.hover &&
-      (!this.store.data.locked || this.store.hover.dbInput) &&
-      !this.store.options.disableInput
+      (!this.store.data.locked || this.store.hover.dbInput)
+      //  && !this.store.options.disableInput
     ) {
       if (this.store.hover.onShowInput) {
         this.store.hover.onShowInput(this.store.hover, e as any);
@@ -8698,12 +8698,12 @@ export class Canvas {
       child.parentId = newId;
     });
     //form表单关系
-    if(pen.formId){
-      pen.followers.forEach((id)=>{
-        const followerPen = this.store.pens[id];
-        followerPen.formId = newId;
-      });
-    }
+    // if(pen.formId){
+    //   pen.followers.forEach((id)=>{
+    //     const followerPen = this.store.pens[id];
+    //     followerPen.formId = newId;
+    //   });
+    // }
     // 连接关系
     if (pen.type === PenType.Line) {
       // TODO: 仍然存在 节点类型的 连线，此处判断需要更改

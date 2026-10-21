@@ -1466,35 +1466,35 @@ export class Meta2d {
     })
   }
 
-  statistics() {
-    const num = this.store.data.pens.length;
-    const imgNum = this.store.data.pens.filter((pen) => pen.image).length;
-    const imgDrawNum = this.store.data.pens.filter((pen) => pen.image&&pen.calculative.inView).length;
-    const domNum = this.store.data.pens.filter(
-      (pen) =>
-        pen.name.endsWith('Dom') ||
-        isDomShapes.includes(pen.name) ||
-        this.store.options.domShapes.includes(pen.name) ||
-        pen.externElement || pen.isDom
-    ).length;
-    const aningNum = this.store.animates.size;
-    let dataPointsNum = 0;
-    Object.keys(this.store.bind).forEach((key) => {
-      dataPointsNum += this.store.bind[key].length;
-    });
-    Object.keys(this.store.bindDatas).forEach((key) => {
-      dataPointsNum += this.store.bindDatas[key].length;
-    });
+  // statistics() {
+  //   const num = this.store.data.pens.length;
+  //   const imgNum = this.store.data.pens.filter((pen) => pen.image).length;
+  //   const imgDrawNum = this.store.data.pens.filter((pen) => pen.image&&pen.calculative.inView).length;
+  //   const domNum = this.store.data.pens.filter(
+  //     (pen) =>
+  //       pen.name.endsWith('Dom') ||
+  //       isDomShapes.includes(pen.name) ||
+  //       this.store.options.domShapes.includes(pen.name) ||
+  //       pen.externElement || pen.isDom
+  //   ).length;
+  //   const aningNum = this.store.animates.size;
+  //   let dataPointsNum = 0;
+  //   Object.keys(this.store.bind).forEach((key) => {
+  //     dataPointsNum += this.store.bind[key].length;
+  //   });
+  //   Object.keys(this.store.bindDatas).forEach((key) => {
+  //     dataPointsNum += this.store.bindDatas[key].length;
+  //   });
 
-    return {
-      "图元总数量": num,
-      "图片图元数量": imgNum,
-      "图片图元绘制数量": imgDrawNum,
-      "dom图元数量": domNum,
-      "正在执行的动画数量": aningNum,
-      "数据点数量": dataPointsNum,
-    };
-  }
+  //   return {
+  //     "图元总数量": num,
+  //     "图片图元数量": imgNum,
+  //     "图片图元绘制数量": imgDrawNum,
+  //     "dom图元数量": domNum,
+  //     "正在执行的动画数量": aningNum,
+  //     "数据点数量": dataPointsNum,
+  //   };
+  // }
 
   // initBindDatas() {
   //   this.store.bindDatas = {};
@@ -2574,10 +2574,10 @@ export class Meta2d {
         }
       }
     }
-    data.dataPoints = [
-      ...Object.keys(this.store.bind),
-      ...Object.keys(this.store.bindDatas),
-    ];
+    // data.dataPoints = [
+    //   ...Object.keys(this.store.bind),
+    //   ...Object.keys(this.store.bindDatas),
+    // ];
     return data;
   }
 
@@ -4118,16 +4118,16 @@ export class Meta2d {
         pens = [pen];
       } else {
         //bind 绑定变量的情况
-        let bindArr = this.store.bind[data.id];
-        if (bindArr && bindArr.length) {
-          pens = [];
-          // this.setDatas([data] as any, {
-          //   render,
-          //   doEvent,
-          //   history,
-          // });
-          return;
-        }
+        // let bindArr = this.store.bind[data.id];
+        // if (bindArr && bindArr.length) {
+        //   pens = [];
+        //   this.setDatas([data] as any, {
+        //     render,
+        //     doEvent,
+        //     history,
+        //   });
+        //   return;
+        // }
       }
     } else if (data.dataId) {
       pens = [];
@@ -4280,15 +4280,15 @@ export class Meta2d {
             e.pen.calculative.radialGradient = undefined;
           }
         }
-        if(e.pen && e.pen.formId){
-          const formPen = this.store.pens[e.pen.formId];
-          if(e.pen.formType === 'submit'){
-            // this.store.data.locked && formPen && !formPen.disabled && this.doEvent(formPen, 'submit');
-          }else if(e.pen.formType ==='reset'){
-            // reset(e.pen);
-            // this.store.data.locked && formPen && !formPen.disabled && this.doEvent(formPen, 'reset');
-          }
-        }
+        // if(e.pen && e.pen.formId){
+        //   const formPen = this.store.pens[e.pen.formId];
+        //   if(e.pen.formType === 'submit'){
+        //     // this.store.data.locked && formPen && !formPen.disabled && this.doEvent(formPen, 'submit');
+        //   }else if(e.pen.formType ==='reset'){
+        //     // reset(e.pen);
+        //     // this.store.data.locked && formPen && !formPen.disabled && this.doEvent(formPen, 'reset');
+        //   }
+        // }
         e.pen &&
           e.pen.onClick &&
           !e.pen.disabled &&

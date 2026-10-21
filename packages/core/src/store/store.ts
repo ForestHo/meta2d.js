@@ -254,7 +254,7 @@ export interface Meta2dStore {
     data: Meta2dData;
   }[];
   patchFlagsLast?: boolean; // 清除上次图片画布层
-  messageEvents?: { [key: string]: { pen: Pen; event: Event }[] };
+  // messageEvents?: { [key: string]: { pen: Pen; event: Event }[] };
   templatePens?: { [key: string]: Pen };
   sameTemplate?: boolean; //标记是否是同一模版
   lastScale?: number; //记录上次模版的scale
@@ -298,13 +298,13 @@ export const createStore = () => {
     options: { ...defaultOptions },
     theme:{ ...defaultTheme },
     emitter: mitt(),
-    bindDatas: {},
-    bind: {},
-    pensNetwork: {},
+    // bindDatas: {},
+    // bind: {},
+    // pensNetwork: {},
     cacheDatas: [],
-    messageEvents: {},
+    // messageEvents: {},
     templatePens: {},
-    globalTriggers:{},
+    // globalTriggers:{},
   } as Meta2dStore;
 };
 
@@ -348,9 +348,9 @@ export const clearStore = (store: Meta2dStore, template?: string) => {
   store.historyIndex = null;
   store.path2dMap = new WeakMap();
   store.animateMap = new WeakMap();
-  store.bindDatas = {};
-  store.bind = {};
-  store.pensNetwork = {};
+  // store.bindDatas = {};
+  // store.bind = {};
+  // store.pensNetwork = {};
   store.active = [];
   store.hover = undefined;
   store.lastHover = undefined;
