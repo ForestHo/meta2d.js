@@ -136,7 +136,7 @@ import { polyline, translatePolylineAnchor } from '../diagrams/line/polyline';
 import { Tooltip } from '../tooltip';
 import { Scroll } from '../scroll';
 import { CanvasImage } from './canvasImage';
-import { MagnifierCanvas } from './magnifierCanvas';
+// import { MagnifierCanvas } from './magnifierCanvas';
 import { lockedError } from '../utils/error';
 import { t } from '../locale';
 import { Meta2d } from '../core';
@@ -295,8 +295,8 @@ export class Canvas {
 
   canvasTemplate: CanvasTemplate;
   canvasImage: CanvasImage;
-  canvasImageBottom: CanvasImage;
-  magnifierCanvas: MagnifierCanvas;
+  // canvasImageBottom: CanvasImage;
+  // magnifierCanvas: MagnifierCanvas;
   dialog: Dialog;
   autoPolylineFlag: boolean = false; //标记open不自动计算
 
@@ -311,8 +311,8 @@ export class Canvas {
   ) {
     this.canvasTemplate = new CanvasTemplate(parentElement, store, this);
     this.canvasTemplate.canvas.style.zIndex = '1';
-    this.canvasImageBottom = new CanvasImage(parentElement, store, true);
-    this.canvasImageBottom.canvas.style.zIndex = '2';
+    // this.canvasImageBottom = new CanvasImage(parentElement, store, true);
+    // this.canvasImageBottom.canvas.style.zIndex = '2';
 
     parentElement.appendChild(this.canvas);
     this.canvas.style.position = 'absolute';
@@ -324,8 +324,8 @@ export class Canvas {
     this.canvasImage = new CanvasImage(parentElement, store);
     this.canvasImage.canvas.style.zIndex = '4';
 
-    this.magnifierCanvas = new MagnifierCanvas(this, parentElement, store);
-    this.magnifierCanvas.canvas.style.zIndex = '5';
+    // this.magnifierCanvas = new MagnifierCanvas(this, parentElement, store);
+    // this.magnifierCanvas.canvas.style.zIndex = '5';
 
     this.externalElements.style.position = 'absolute';
     this.externalElements.style.left = '0';
@@ -1203,10 +1203,10 @@ export class Canvas {
         }
         this.hotkeyType = HotkeyType.None;
         this.movingAnchor = undefined;
-        if (this.magnifierCanvas.magnifier) {
-          this.magnifierCanvas.magnifier = false;
-          this.patchFlags = true;
-        }
+        // if (this.magnifierCanvas.magnifier) {
+        //   this.magnifierCanvas.magnifier = false;
+        //   this.patchFlags = true;
+        // }
         break;
       case 'E':
       case 'e':
@@ -2041,9 +2041,9 @@ export class Canvas {
       return;
     }
 
-    if (this.magnifierCanvas.magnifier) {
-      return;
-    }
+    // if (this.magnifierCanvas.magnifier) {
+    //   return;
+    // }
 
     this.calibrateMouse(e);
     this.mousePos.x = e.x;
@@ -2369,10 +2369,10 @@ export class Canvas {
     this.calibrateMouse(e);
     this.mousePos.x = e.x;
     this.mousePos.y = e.y;
-    if (this.magnifierCanvas.magnifier) {
-      this.render();
-      return;
-    }
+    // if (this.magnifierCanvas.magnifier) {
+    //   this.render();
+    //   return;
+    // }
     if(this.canvasImage.fitFlag){
       if(this.canvasImage.activeFit){
         const now = performance.now();
@@ -3236,8 +3236,8 @@ export class Canvas {
    */
   initImageCanvas(pens: Pen[]) {
     pens.some((pen) => this.hasImage(pen, false)) && this.canvasImage.init();
-    pens.some((pen) => this.hasImage(pen, true)) &&
-      this.canvasImageBottom.init();
+    // pens.some((pen) => this.hasImage(pen, true)) &&
+    //   this.canvasImageBottom.init();
   }
 
   initTemplateCanvas(pens: Pen[]) {
@@ -4012,8 +4012,8 @@ export class Canvas {
 
     this.canvasTemplate.resize(w, h);
     this.canvasImage.resize(w, h);
-    this.canvasImageBottom.resize(w, h);
-    this.magnifierCanvas.resize(w, h);
+    // this.canvasImageBottom.resize(w, h);
+    // this.magnifierCanvas.resize(w, h);
 
     w = (w * this.store.dpiRatio) | 0;
     h = (h * this.store.dpiRatio) | 0;
@@ -4063,7 +4063,7 @@ export class Canvas {
       this.canvasTemplate.clear();
     }
     this.canvasImage.clear();
-    this.canvasImageBottom.clear();
+    // this.canvasImageBottom.clear();
   }
 
   async addPen(pen: Pen, history?: boolean, emit?: boolean, abs?:boolean): Promise<Pen> {
@@ -4972,7 +4972,7 @@ export class Canvas {
     this.imageTimer = setTimeout(() => {
       // 加载完图片，重新渲染一次图片层
       this.canvasImage.init();
-      this.canvasImageBottom.init();
+      // this.canvasImageBottom.init();
       this.render();
     }, 100);
   }
@@ -5191,14 +5191,14 @@ export class Canvas {
     this.renderHoverPoint();
     this.renderPensAnchors();
     offscreenCtx.restore();
-    if(this.magnifierCanvas.magnifier) {
-      this.magnifierCanvas.render();
-    }
+    // if(this.magnifierCanvas.magnifier) {
+    //   this.magnifierCanvas.render();
+    // }
     const ctx = this.canvas.getContext('2d');
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.drawImage(this.offscreen, 0, 0, this.width, this.height);
     this.canvasTemplate.render();
-    this.canvasImageBottom.render();
+    // this.canvasImageBottom.render();
     this.canvasImage.render();
     this.patchFlags = false;
   };
@@ -5763,13 +5763,13 @@ export class Canvas {
       this.transTimeout = setTimeout( ()=> {
         this.canvasTemplate.init();
         this.canvasImage.init();
-        this.canvasImageBottom.init();
+        // this.canvasImageBottom.init();
         this.render();
       }, 300);
     }else{
       this.canvasTemplate.init();
       this.canvasImage.init();
-      this.canvasImageBottom.init();
+      // this.canvasImageBottom.init();
       this.render();
     }
     // });
@@ -5854,7 +5854,7 @@ export class Canvas {
     // setTimeout(() => {
       this.canvasTemplate.init();
       this.canvasImage.init();
-      this.canvasImageBottom.init();
+      // this.canvasImageBottom.init();
       const map = this.parent.map;
       if (map && map.isShow) {
         map.setView();
@@ -6032,7 +6032,7 @@ export class Canvas {
     this.onMovePens();
     this.canvasTemplate.init();
     this.canvasImage.init();
-    this.canvasImageBottom.init();
+    // this.canvasImageBottom.init();
     this.render();
 
     if (progress < 1) {
@@ -6070,7 +6070,7 @@ export class Canvas {
         this.onMovePens();
         this.canvasTemplate.init();
         this.canvasImage.init();
-        this.canvasImageBottom.init();
+        // this.canvasImageBottom.init();
         this.render();
       }
 
@@ -7043,7 +7043,7 @@ export class Canvas {
       this.updateLines(pen);
       if (pen.image && pen.name !== 'gif') {
         this.canvasImage.init();
-        this.canvasImageBottom.init();
+        // this.canvasImageBottom.init();
       }
       if (pen.calculative.text !== pen.text) {
         pen.calculative.text = pen.text;
@@ -8857,7 +8857,7 @@ export class Canvas {
     }
     if (containIsBottom) {
       this.canvasImage.init();
-      this.canvasImageBottom.init();
+      // this.canvasImageBottom.init();
     } else if (willRenderImage) {
       // 存在先有 image 后无 image 的情况
       // if (pen.isBottom) {
@@ -8870,7 +8870,7 @@ export class Canvas {
         pen.calculative.canvasLayer = CanvasLayer.CanvasImageBottom;
       }
       if (pen.canvasLayer === CanvasLayer.CanvasImageBottom) {
-        this.canvasImageBottom.init();
+        // this.canvasImageBottom.init();
       } else if (pen.canvasLayer === CanvasLayer.CanvasImage) {
         this.canvasImage.init();
       }
@@ -9358,25 +9358,25 @@ export class Canvas {
     this.onMovePens();
     this.canvasTemplate.init();
     this.canvasImage.init();
-    this.canvasImageBottom.init();
+    // this.canvasImageBottom.init();
     this.render();
   }
 
   showMagnifier() {
-    this.magnifierCanvas.canvas.style.zIndex = '100';
+    // this.magnifierCanvas.canvas.style.zIndex = '100';
     this.externalElements.style.zIndex = '101';
-    this.magnifierCanvas.magnifier = true;
-    this.magnifierCanvas.updateDomOffscreen();
+    // this.magnifierCanvas.magnifier = true;
+    // this.magnifierCanvas.updateDomOffscreen();
     this.externalElements.style.cursor = 'default';
     this.render();
   }
 
   hideMagnifier() {
-    this.magnifierCanvas.canvas.style.zIndex = '5';
+    // this.magnifierCanvas.canvas.style.zIndex = '5';
     this.externalElements.style.zIndex = '5';
-    this.magnifierCanvas.magnifier = false;
+    // this.magnifierCanvas.magnifier = false;
     this.externalElements.style.cursor = 'default';
-    this.magnifierCanvas.render();
+    // this.magnifierCanvas.render();
     this.render();
   }
 
@@ -9765,12 +9765,12 @@ export class Canvas {
   }
 
   toggleMagnifier() {
-    this.magnifierCanvas.magnifier = !this.magnifierCanvas.magnifier;
-    if (this.magnifierCanvas.magnifier) {
-      this.externalElements.style.cursor = 'default';
-    }
-    this.magnifierCanvas.render();
-    this.render();
+    // this.magnifierCanvas.magnifier = !this.magnifierCanvas.magnifier;
+    // if (this.magnifierCanvas.magnifier) {
+    //   this.externalElements.style.cursor = 'default';
+    // }
+    // this.magnifierCanvas.render();
+    // this.render();
   }
 
   destroy() {
