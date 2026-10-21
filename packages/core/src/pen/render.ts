@@ -1176,8 +1176,8 @@ function drawText(ctx: CanvasRenderingContext2D, pen: Pen) {
   if (
     pen.input &&
     isEmptyText(pen.text) &&
-    !(pen.calculative.canvas.inputDiv.dataset.penId === pen.id) &&
-    !pen.onShowInput
+    !(pen.calculative.canvas.inputDiv.dataset.penId === pen.id) 
+    // && !pen.onShowInput
   ) {
     ctx.save();
     ctx.font = getFont({

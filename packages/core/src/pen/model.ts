@@ -720,9 +720,9 @@ export interface Pen extends Rect {
 }
 
 // 图元调试数据，options.debug 开启对应项后记录
-export interface PenDebug {
-  renderTime?: number; // 图元最近一次渲染耗时（毫秒）
-}
+// export interface PenDebug {
+//   renderTime?: number; // 图元最近一次渲染耗时（毫秒）
+// }
 
 // 属性绑定变量
 // export interface FormItem {
@@ -734,10 +734,10 @@ export interface PenDebug {
 //   dataIds?: BindId | BindId[];
 // }
 
-export type BindId = {
-  dataId: string;
-  name: string; // TODO: 用作图表的归类
-};
+// export type BindId = {
+//   dataId: string;
+//   name: string; // TODO: 用作图表的归类
+// };
 
 /**
  * 图表追加或替换数据，只关注数据

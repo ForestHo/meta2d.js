@@ -1853,9 +1853,9 @@ export class Meta2d {
    * @param render 是否重绘
    */
   clear(render = true, template?: string) {
-    for (const pen of this.store.data.pens) {
-      pen.onDestroy?.(pen);
-    }
+    // for (const pen of this.store.data.pens) {
+    //   pen.onDestroy?.(pen);
+    // }
     clearStore(this.store, template);
     // this.hideInput();
     this.canvas.tooltip.hide();
@@ -2146,7 +2146,7 @@ export class Meta2d {
     }
     pens.forEach((pen) => {
       pen.calculative.media?.play();
-      pen.onStartVideo?.(pen);
+      // pen.onStartVideo?.(pen);
     });
   }
 
@@ -2164,7 +2164,7 @@ export class Meta2d {
     }
     pens.forEach((pen) => {
       pen.calculative.media?.pause();
-      pen.onPauseVideo?.(pen);
+      // pen.onPauseVideo?.(pen);
     });
   }
 
@@ -2185,7 +2185,7 @@ export class Meta2d {
         pen.calculative.media.currentTime = 0;
         pen.calculative.media.pause();
       }
-      pen.onStopVideo?.(pen);
+      // pen.onStopVideo?.(pen);
     });
   }
 
@@ -4196,13 +4196,14 @@ export class Meta2d {
    * setDatas 直接调用该方法，避免批量数据重复进入 setValue 的目标查找和分发逻辑。
    */
   private updatePenValue(pen: Pen, data: IValue) {
-    if(pen.name === 'echarts' && !pen.onBeforeValue){
-      const hasEchartsStartKey = Object.keys(data).some(key=>echartReg.test(key));
-      if(hasEchartsStartKey) return;
-    }
-    const afterData: IValue = pen.onBeforeValue
-      ? pen.onBeforeValue(pen, data as ChartData)
-      : data;
+    // if(pen.name === 'echarts' && !pen.onBeforeValue){
+    //   const hasEchartsStartKey = Object.keys(data).some(key=>echartReg.test(key));
+    //   if(hasEchartsStartKey) return;
+    // }
+    // const afterData: IValue = pen.onBeforeValue
+    //   ? pen.onBeforeValue(pen, data as ChartData)
+    //   : data;
+    const afterData: IValue = data;
     if (data.frames) {
       this.stopAnimate([pen]);
       if (!data.showDuration) {
@@ -4214,7 +4215,7 @@ export class Meta2d {
 
     setChildValue(pen, afterData);
     this.canvas.updateValue(pen, afterData);
-    pen.onValue?.(pen);
+    // pen.onValue?.(pen);
   }
 
   /**
@@ -4289,40 +4290,40 @@ export class Meta2d {
         //     // this.store.data.locked && formPen && !formPen.disabled && this.doEvent(formPen, 'reset');
         //   }
         // }
-        e.pen &&
-          e.pen.onClick &&
-          !e.pen.disabled &&
-          e.pen.onClick(e.pen, this.canvas.mousePos);
+        // e.pen &&
+        //   e.pen.onClick &&
+        //   !e.pen.disabled &&
+        //   e.pen.onClick(e.pen, this.canvas.mousePos);
         // this.store.data.locked &&
         //   e.pen &&
         //   !e.pen.disabled &&
         //   this.doEvent(e.pen, eventName);
         break;
       case 'contextmenu':
-        e.pen &&
-          e.pen.onContextmenu &&
-          !e.pen.disabled &&
-          e.pen.onContextmenu(e.pen, this.canvas.mousePos);
+        // e.pen &&
+        //   e.pen.onContextmenu &&
+        //   !e.pen.disabled &&
+        //   e.pen.onContextmenu(e.pen, this.canvas.mousePos);
         // this.store.data.locked &&
         //   e.pen &&
         //   !e.pen.disabled &&
         //   this.doEvent(e.pen, eventName);
         break;
       case 'mousedown':
-        e.pen &&
-          e.pen.onMouseDown &&
-          !e.pen.disabled &&
-          e.pen.onMouseDown(e.pen, this.canvas.mousePos);
+        // e.pen &&
+        //   e.pen.onMouseDown &&
+        //   !e.pen.disabled &&
+        //   e.pen.onMouseDown(e.pen, this.canvas.mousePos);
         // this.store.data.locked &&
         //   e.pen &&
         //   !e.pen.disabled &&
         //   this.doEvent(e.pen, eventName);
         break;
       case 'mouseup':
-        e.pen &&
-          e.pen.onMouseUp &&
-          !e.pen.disabled &&
-          e.pen.onMouseUp(e.pen, this.canvas.mousePos);
+        // e.pen &&
+        //   e.pen.onMouseUp &&
+        //   !e.pen.disabled &&
+        //   e.pen.onMouseUp(e.pen, this.canvas.mousePos);
         // this.store.data.locked &&
         //   e.pen &&
         //   !e.pen.disabled &&
@@ -4989,12 +4990,12 @@ export class Meta2d {
    * @param padding 上右下左的内边距
    */
   downloadPng(name?: string, padding?: Padding, maxWidth?: number) {
-    for (const pen of this.store.data.pens) {
-      if (pen.calculative.img || ['iframe'].includes(pen.name)) {
-        //重新生成绘制图片
-        pen.onRenderPenRaw?.(pen);
-      }
-    }
+    // for (const pen of this.store.data.pens) {
+    //   if (pen.calculative.img || ['iframe'].includes(pen.name)) {
+    //     //重新生成绘制图片
+    //     pen.onRenderPenRaw?.(pen);
+    //   }
+    // }
     setTimeout(() => {
       const a = document.createElement('a');
       a.setAttribute(
@@ -5350,21 +5351,21 @@ export class Meta2d {
           snap.operationalRect
         ) {
           pen.operationalRect = deepClone(snap.operationalRect);
-          pen.onBeforeValue?.(pen, {
-            operationalRect: pen.operationalRect,
-          } as any);
+          // pen.onBeforeValue?.(pen, {
+          //   operationalRect: pen.operationalRect,
+          // } as any);
         }
         this.canvas.updatePenRect(pen, { worldRectIsReady: false });
-        if (pen.externElement) {
-          pen.onResize?.(pen);
-        }
-        if (pen.children?.length) {
-          getAllChildren(pen, this.store).forEach((cPen) => {
-            if (cPen.externElement) {
-              cPen.onResize?.(cPen);
-            }
-          });
-        }
+        // if (pen.externElement) {
+        //   pen.onResize?.(pen);
+        // }
+        // if (pen.children?.length) {
+        //   getAllChildren(pen, this.store).forEach((cPen) => {
+        //     if (cPen.externElement) {
+        //       cPen.onResize?.(cPen);
+        //     }
+        //   });
+        // }
       });
     }
 
@@ -5429,17 +5430,17 @@ export class Meta2d {
             pen.textWidth *= ratio
             pen.calculative.textWidth *= ratio;
             this.canvas.updatePenRect(pen, { worldRectIsReady: false });
-            if (pen.externElement) {
-              pen.onResize?.(pen);
-            }
-            if(pen.children?.length){
-              const cPens = getAllChildren(pen,this.store);
-              cPens.forEach((cPen) => {
-                if (cPen.externElement) {
-                    cPen.onResize?.(cPen);
-                }
-              });
-            }
+            // if (pen.externElement) {
+            //   pen.onResize?.(pen);
+            // }
+            // if(pen.children?.length){
+            //   const cPens = getAllChildren(pen,this.store);
+            //   cPens.forEach((cPen) => {
+            //     if (cPen.externElement) {
+            //         cPen.onResize?.(cPen);
+            //     }
+            //   });
+            // }
           });
         } else if (fit.left) {
           //左移
@@ -5480,11 +5481,11 @@ export class Meta2d {
               (pen.calculative.worldRect.width -
                 (1 - pen.operationalRect.width) * bfW) /
               pen.calculative.worldRect.width;
-            pen.onBeforeValue?.(pen, {
-              operationalRect: pen.operationalRect,
-            } as any);
+            // pen.onBeforeValue?.(pen, {
+            //   operationalRect: pen.operationalRect,
+            // } as any);
           }
-          pen.onResize?.(pen);
+          // pen.onResize?.(pen);
         }
       });
 
@@ -5498,7 +5499,7 @@ export class Meta2d {
           pen.calculative.worldRect.x = worldRect.x - wGap / 2;
           pen.calculative.worldRect.width = worldRect.width + wGap;
           pen.calculative.worldRect.ex = worldRect.ex + wGap;
-          pen.onResize?.(pen);
+          // pen.onResize?.(pen);
         }
       });
     }
@@ -5550,17 +5551,17 @@ export class Meta2d {
             pen.height = pen.calculative.worldRect.height;
             pen.y = pen.calculative.worldRect.y;
             this.canvas.updatePenRect(pen, { worldRectIsReady: false });
-            if (pen.externElement) {
-              pen.onResize?.(pen);
-            }
-            if(pen.children?.length){
-              const cPens = getAllChildren(pen,this.store);
-              cPens.forEach((cPen) => {
-                if (cPen.externElement) {
-                    cPen.onResize?.(cPen);
-                }
-              });
-            }
+            // if (pen.externElement) {
+            //   pen.onResize?.(pen);
+            // }
+            // if(pen.children?.length){
+            //   const cPens = getAllChildren(pen,this.store);
+            //   cPens.forEach((cPen) => {
+            //     if (cPen.externElement) {
+            //         cPen.onResize?.(cPen);
+            //     }
+            //   });
+            // }
           });
         } else if (fit.top) {
           r = -r;
@@ -5599,11 +5600,11 @@ export class Meta2d {
               (pen.calculative.worldRect.height -
                 (1 - pen.operationalRect.height) * bfH) /
               pen.calculative.worldRect.height;
-            pen.onBeforeValue?.(pen, {
-              operationalRect: pen.operationalRect,
-            } as any);
+            // pen.onBeforeValue?.(pen, {
+            //   operationalRect: pen.operationalRect,
+            // } as any);
           }
-          pen.onResize?.(pen);
+          // pen.onResize?.(pen);
         }
       });
       const videoPens = this.store.data.pens.filter(
@@ -5616,7 +5617,7 @@ export class Meta2d {
           pen.calculative.worldRect.y = worldRect.y - hGap / 2;
           pen.calculative.worldRect.height = worldRect.height + hGap;
           pen.calculative.worldRect.ey = worldRect.ey + hGap;
-          pen.onResize?.(pen);
+          // pen.onResize?.(pen);
         }
       });
     }

@@ -647,12 +647,12 @@ export class Canvas {
     if (this.pencil) {
       return;
     }
-    if (this.store.hover) {
-      if (this.store.hover.onWheel) {
-        this.store.hover.onWheel(this.store.hover, e);
-        return;
-      }
-    }
+    // if (this.store.hover) {
+    //   if (this.store.hover.onWheel) {
+    //     this.store.hover.onWheel(this.store.hover, e);
+    //     return;
+    //   }
+    // }
     if (this.store.data.disableScale || this.store.options.disableScale) {
       return;
     }
@@ -778,16 +778,16 @@ export class Canvas {
   }
 
   onkeydown = (e: KeyboardEvent) => {
-    if (
-      this.store.data.locked >= LockState.DisableEdit &&
-      (e.target as HTMLElement).tagName !== 'INPUT' &&
-      (e.target as HTMLElement).tagName !== 'TEXTAREA' &&
-      !(e.target as HTMLElement).dataset.meta2dIgnore
-    ) {
-      this.store.active.forEach((pen) => {
-        pen.onKeyDown?.(pen, e.key);
-      });
-    }
+    // if (
+    //   this.store.data.locked >= LockState.DisableEdit &&
+    //   (e.target as HTMLElement).tagName !== 'INPUT' &&
+    //   (e.target as HTMLElement).tagName !== 'TEXTAREA' &&
+    //   !(e.target as HTMLElement).dataset.meta2dIgnore
+    // ) {
+    //   this.store.active.forEach((pen) => {
+    //     pen.onKeyDown?.(pen, e.key);
+    //   });
+    // }
     if (
       this.store.data.locked >= LockState.DisableEdit ||
       (e.target as HTMLElement).tagName === 'INPUT' ||
@@ -1816,11 +1816,11 @@ export class Canvas {
         const pos: Point = { x, y };
         this.calibrateMouse(pos);
         this.getHover(pos);
-        if (this.store.hover?.onWheel) {
-          this.onwheel(this.touchToWheelEvent(event, diff));
-          this.lastTouchY = event.touches[0].clientY;
-          return;
-        }
+        // if (this.store.hover?.onWheel) {
+        //   this.onwheel(this.touchToWheelEvent(event, diff));
+        //   this.lastTouchY = event.touches[0].clientY;
+        //   return;
+        // }
       }
       if (this.store.options.scroll && this.scroll && !this.store.options.scrollButScale) {
         if (!diff) {
@@ -2402,7 +2402,7 @@ export class Canvas {
           activePen.locked < LockState.DisableMove)
       ) {
         // 图元鼠标按下后移动交互
-        activePen?.onMouseMove?.(activePen, this.mousePos);
+        // activePen?.onMouseMove?.(activePen, this.mousePos);
         return;
       }
       // Translate
@@ -2550,9 +2550,9 @@ export class Canvas {
           }
           if (this.store.active.length === 1) {
             const activePen = this.store.active[0];
-            if (activePen.locked === undefined || activePen.locked < LockState.DisableMove) {
-              activePen?.onMouseMove?.(activePen, this.mousePos);
-            }
+            // if (activePen.locked === undefined || activePen.locked < LockState.DisableMove) {
+            //   activePen?.onMouseMove?.(activePen, this.mousePos);
+            // }
             if(activePen.calculative.focus){
               //执行图元的操作
               return;
@@ -2906,7 +2906,7 @@ export class Canvas {
       if (distance(this.mouseDown, e) < 2) {
         if (this.store.hover && this.store.hover.input) {
           if (this.store.hover.onShowInput) {
-            this.store.hover.onShowInput(this.store.hover, e as any);
+            // this.store.hover.onShowInput(this.store.hover, e as any);
           } else {
             if(this.store.hover.parentId){
               this.active([this.store.hover])
@@ -3068,7 +3068,7 @@ export class Canvas {
       obj.x = origin.x + x1 * scale;
       obj.y = origin.y + y1 * scale;
       Object.assign(pen, obj);
-      pen.onMove?.(pen);
+      // pen.onMove?.(pen);
       this.updatePenRect(pen);
       this.calcActiveRect();
       this.getSizeCPs();
@@ -3107,7 +3107,7 @@ export class Canvas {
         obj.y = origin.y + y1 * scale;
       }
       Object.assign(pen, obj);
-      pen.onMove?.(pen);
+      // pen.onMove?.(pen);
       this.updatePenRect(pen);
       this.updateLines(pen);
       this.store.emitter.emit('updateLines', pen);
@@ -3451,7 +3451,7 @@ export class Canvas {
           pointInRect(pt, pen.calculative.worldRect)
         ) {
           this.store.hoverContainer = pen;
-          pen?.onMouseMove?.(pen, pt);
+          // pen?.onMouseMove?.(pen, pt);
           if (this.store.lastHoverContainer !== this.store.hoverContainer) {
             this.patchFlags = true;
             if (this.store.lastHoverContainer) {
@@ -3605,7 +3605,7 @@ export class Canvas {
     }
     this.lastHoverType = hoverType;
 
-    this.store.hover?.onMouseMove?.(this.store.hover, this.mousePos);
+    // this.store.hover?.onMouseMove?.(this.store.hover, this.mousePos);
   };
 
   private inPens = (pt: Point, pens: Pen[]) => {
@@ -4240,7 +4240,7 @@ export class Canvas {
             (item) => item.id === pen.id
           );
           if (i > -1) {
-            pen.onDestroy?.(this.store.pens[pen.id]);
+            // pen.onDestroy?.(this.store.pens[pen.id]);
             const parent = pen.parentId
               ? this.store.pens[pen.parentId]
               : undefined;
@@ -4371,7 +4371,7 @@ export class Canvas {
             (item) => item.id === pen.id
           );
           if (i > -1) {
-            pen.onDestroy?.(this.store.data.pens.find(i=>i.id === pen.id));
+            // pen.onDestroy?.(this.store.data.pens.find(i=>i.id === pen.id));
             const i = this.store.data.pens.findIndex(
               (item) => item.id === pen.id
             );
@@ -5792,7 +5792,7 @@ export class Canvas {
     // 有移动操作的 画笔 需要执行移动
     for (const pen of this.store.data.pens) {
       calcInView(pen);
-      pen.onMove?.(pen);
+      // pen.onMove?.(pen);
       if (pen.isRuleLine) {
         if (!pen.width) {
           // 垂直线，移动 y 即可
@@ -5828,7 +5828,7 @@ export class Canvas {
     }
     scalePoint(this.store.data.origin, s, center);
     this.store.data.pens.forEach((pen) => {
-      pen.onScale && pen.onScale(pen);
+      // pen.onScale && pen.onScale(pen);
       if (pen.parentId) {
         return;
       }
@@ -5975,7 +5975,7 @@ export class Canvas {
       scalePoint(this.store.data.origin, s, center);
 
       this.store.data.pens.forEach((p) => {
-        p.onScale && p.onScale(p);
+        // p.onScale && p.onScale(p);
         if (p.parentId) {
           return;
         }
@@ -6049,7 +6049,7 @@ export class Canvas {
         this.store.data.center = center;
         scalePoint(this.store.data.origin, finalS, center);
         this.store.data.pens.forEach((p) => {
-          p.onScale && p.onScale(p);
+          // p.onScale && p.onScale(p);
           if (p.parentId) {
             return;
           }
@@ -6098,7 +6098,7 @@ export class Canvas {
         return;
       }
       scalePen(pen, s, center);
-      pen.onScale && pen.onScale(pen);
+      // pen.onScale && pen.onScale(pen);
       if (pen.isRuleLine) {
         // 扩大线的比例，若是放大，即不缩小，若是缩小，会放大
         const lineScale = s > 1 ? 1 : 1 / s / s;
@@ -6139,7 +6139,7 @@ export class Canvas {
         return;
       }
       this.rotatePen(pen, angle, this.activeRect);
-      pen.onRotate && pen.onRotate(pen);
+      // pen.onRotate && pen.onRotate(pen);
       this.updateLines(pen);
     }
     this.lastRotate = this.activeRect.rotate;
@@ -6484,7 +6484,7 @@ export class Canvas {
       ) {
         // 修改名称会执行 onDestroy ，清空它
         value.name = 'rectangle';
-        value.onDestroy = undefined;
+        // value.onDestroy = undefined;
       }
       this.updateValue(pen, value);
       pen.calculative.image = undefined;
@@ -6894,7 +6894,7 @@ export class Canvas {
         }
       }
       this.updateLines(pen);
-      pen.onMove?.(pen);
+      // pen.onMove?.(pen);
     });
     this.activeRect && this.getSizeCPs();
     this.render();
@@ -6948,7 +6948,7 @@ export class Canvas {
             pen.calculative.y + pen.calculative.height;
         }
       }
-      pen.onMove?.(pen);
+      // pen.onMove?.(pen);
     });
   }
 
@@ -7935,7 +7935,7 @@ export class Canvas {
       });
     }
 
-    pen.onDestroy?.(pen);
+    // pen.onDestroy?.(pen);
   }
 
   private delConnectedLines(pen: Pen) {
@@ -7986,7 +7986,7 @@ export class Canvas {
       //  && !this.store.options.disableInput
     ) {
       if (this.store.hover.onShowInput) {
-        this.store.hover.onShowInput(this.store.hover, e as any);
+        // this.store.hover.onShowInput(this.store.hover, e as any);
       } else {
         if(this.store.hover && this.store.hover.parentId){
           if(this.store.active?.length===1 && this.store.active[0].id === this.store.hover.id){
@@ -8685,7 +8685,7 @@ export class Canvas {
     pen.id = newId;
     this.store.pens[newId] = this.store.pens[oldId];
     // dom 节点，需要更改 id
-    pen.onChangeId?.(pen, oldId, newId);
+    // pen.onChangeId?.(pen, oldId, newId);
     delete this.store.pens[oldId];
     // 父子
     if (pen.parentId) {
@@ -8897,7 +8897,7 @@ export class Canvas {
    * 执行 pen ，以及 pen 的子孙节点的 onResize 生命周期函数
    */
   private execPenResize(pen: Pen,raw?: boolean) {
-    pen.onResize?.(pen, raw);
+    // pen.onResize?.(pen, raw);
     pen.children?.forEach((chlidId) => {
       const child = this.store.pens[chlidId];
       child && this.execPenResize(child, raw);
@@ -9132,7 +9132,7 @@ export class Canvas {
       // if (pen.name === 'combine' && !pen.draw){
       //   continue;
       // }
-      pen.onRenderPenRaw?.(pen)
+      // pen.onRenderPenRaw?.(pen)
       // TODO: hover 待考虑，若出现再补上
       const { active } = pen.calculative;
       pen.calculative.active = false;
