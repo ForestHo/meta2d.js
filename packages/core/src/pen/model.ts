@@ -327,31 +327,31 @@ export interface Pen extends Rect {
   // 结束动画后，是否保持动画状态
   keepAnimateState?: boolean;
 
-  lineAnimateElement?: string; // 动画自定义元素
-  lineAnimateIcon?: string; // 动画图标元素
-  lineAnimateImages?:string[]; // 动画图片元素
-  lineAnimatePens?: string; // 动画目标 pen id
+  // lineAnimateElement?: string; // 动画自定义元素
+  // lineAnimateIcon?: string; // 动画图标元素
+  // lineAnimateImages?:string[]; // 动画图片元素
+  // lineAnimatePens?: string; // 动画目标 pen id
 
-  lineAnimateDash?: number[] | string; // 动画元素间隔
-  lineAnimateDashOffset?: number; // 动画元素偏移量
-  lineAnimateElementCount?: number ; // 动画元素数量
+  // lineAnimateDash?: number[] | string; // 动画元素间隔
+  // lineAnimateDashOffset?: number; // 动画元素偏移量
+  // lineAnimateElementCount?: number ; // 动画元素数量
   lineAnimateType?: LineAnimateType | LineAnimateType[];
-  lineAnimateTargetType?: lineAnimateTargetType; // 动画目标元素类型
-  lineAnimateElementWidth?: number; // 动画元素宽度
-  lineAnimateElementHeight?: number; // 动画元素高度
-  lineAnimateLoopMode?: boolean; //是否开启循环模式
+  // lineAnimateTargetType?: lineAnimateTargetType; // 动画目标元素类型
+  // lineAnimateElementWidth?: number; // 动画元素宽度
+  // lineAnimateElementHeight?: number; // 动画元素高度
+  // lineAnimateLoopMode?: boolean; //是否开启循环模式
 
   animateName?: string; // 当前执行的动画名称
   frames?: Pen[];
   // 提前预置的不同效果的动画组
-  animateList?: Pen[][];
-  animateInterval?: number;//动画间隔 （箭头）
+  // animateList?: Pen[][];
+  // animateInterval?: number;//动画间隔 （箭头）
   animateShadow?: boolean;//发光效果
   animateShadowColor?: string;
   animateShadowBlur?: number;
   // input?: boolean;
   // readonly?: boolean;
-  autofocus?: boolean;
+  // autofocus?: boolean;
   // dropdownList?: Dropdown[];
   // dropdownBackground?: string;
   // dropdownColor?: string;
@@ -398,7 +398,7 @@ export interface Pen extends Rect {
   animateLineWidth?: number; //连线动画线宽
   lineSmooth?:number; //连线平滑度
   gradientSmooth?: number; //渐进色平滑度
-  scrolling?: string; //iframe scrolling属性
+  // scrolling?: string; //iframe scrolling属性
   animations?: any[]; //动画数组
   currentAnimation?: number; //当前动画索引
   // realTimes?: RealTime[];
@@ -434,10 +434,10 @@ export interface Pen extends Rect {
   // productId?:string; //产品id
   // deviceId?:string;//关联的设备id
   pivot?:Point; //旋转中心
-  noOnBinds?:boolean; //是否禁用绑定事件
-  interaction?:boolean; //是否开启交互 组合时将不会被锁定
-  childHover?:boolean; //子元素hover和active是否生效
-  childActive?:boolean;
+  // noOnBinds?:boolean; //是否禁用绑定事件
+  // interaction?:boolean; //是否开启交互 组合时将不会被锁定
+  // childHover?:boolean; //子元素hover和active是否生效
+  // childActive?:boolean;
   draw?:boolean; //是否绘制 针对combine
   copyIndex?:number; //复制的索引 临时属性
   // formId?:string; //表单id
@@ -447,9 +447,9 @@ export interface Pen extends Rect {
   // formType?:string; //表单类型 reset or submit
   className?:string;//dom样式
   styles?:any;
-  isDom?:boolean; //是否是dom元素
+  // isDom?:boolean; //是否是dom元素
 
-  hoverCursor?: string; //hover鼠标样式
+  // hoverCursor?: string; //hover鼠标样式
 
   //业务
   // roles?: string[];
@@ -578,7 +578,7 @@ export interface Pen extends Rect {
     focus?: boolean; //聚焦图元
     hover?: boolean;
     // mouseDown?: boolean; //是否鼠标按下
-    containerHover?: boolean; //容器组件hover
+    // containerHover?: boolean; //容器组件hover
     isDock?: boolean; // 是否是对齐参考画笔
     pencil?: boolean;
     activeAnchor?: Point;
@@ -842,7 +842,7 @@ export const formatAttrs: Set<string> = new Set([
   'borderWidth',
   'borderColor',
   'animateLineWidth',
-  'lineAnimateType',
+  // 'lineAnimateType',
   'frames',
   'animateColor',
   'animateType',

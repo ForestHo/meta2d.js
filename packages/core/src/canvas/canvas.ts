@@ -3455,11 +3455,11 @@ export class Canvas {
           if (this.store.lastHoverContainer !== this.store.hoverContainer) {
             this.patchFlags = true;
             if (this.store.lastHoverContainer) {
-              this.store.lastHoverContainer.calculative.containerHover = false;
+              // this.store.lastHoverContainer.calculative.containerHover = false;
               this.store.emitter.emit('leave', this.store.lastHoverContainer);
             }
             if (this.store.hoverContainer) {
-              this.store.hoverContainer.calculative.containerHover = true;
+              // this.store.hoverContainer.calculative.containerHover = true;
               this.store.emitter.emit('enter', this.store.hoverContainer);
             }
             this.store.lastHoverContainer = this.store.hoverContainer;
@@ -3472,7 +3472,7 @@ export class Canvas {
               const movingPen =
               this.store.lastHoverContainer.calculative.canvas.store.pens[this.store.lastHoverContainer.id + movingSuffix];
               if (this.store.lastHoverContainer && !movingPen) {
-                this.store.lastHoverContainer.calculative.containerHover = false;
+                // this.store.lastHoverContainer.calculative.containerHover = false;
                 this.store.emitter.emit('leave', this.store.lastHoverContainer);
               }
               this.store.lastHoverContainer = this.store.hoverContainer;
@@ -3695,7 +3695,8 @@ export class Canvas {
               this.externalElements.style.cursor = 'move';
             }
           } else {
-            this.externalElements.style.cursor = pen.hoverCursor || this.store.options.hoverCursor;
+            // this.externalElements.style.cursor = pen.hoverCursor || this.store.options.hoverCursor;
+            this.externalElements.style.cursor = this.store.options.hoverCursor;
           }
           if(pen.calculative.disabled){
             this.externalElements.style.cursor = 'not-allowed';
@@ -3748,7 +3749,8 @@ export class Canvas {
               this.externalElements.style.cursor = 'move';
             }
           } else {
-            this.externalElements.style.cursor = pen.hoverCursor || this.store.options.hoverCursor;
+            // this.externalElements.style.cursor = pen.hoverCursor || this.store.options.hoverCursor;
+            this.externalElements.style.cursor = this.store.options.hoverCursor;
           }
           if(pen.calculative.disabled){
             this.externalElements.style.cursor = 'not-allowed';
@@ -6487,7 +6489,8 @@ export class Canvas {
         pen.name.endsWith('Dom') ||
         isDomShapes.includes(pen.name) ||
         this.store.options.domShapes.includes(pen.name) ||
-        pen.image || pen.isDom
+        pen.image
+        // pen.image || pen.isDom
       ) {
         // 修改名称会执行 onDestroy ，清空它
         value.name = 'rectangle';

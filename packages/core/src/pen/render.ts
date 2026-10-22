@@ -2513,36 +2513,36 @@ function renderLineAnimate(
       ctx.fillStyle = pen.animateColor || store.styles.animateColor;
       ctx.lineWidth = 1;
       break;
-    case LineAnimateType.Custom:
-      switch (pen.lineAnimateTargetType) {
-        case lineAnimateTargetType.Image:
-          pen.lineAnimateImages ??= []
-          if(pen.lineAnimateImages.length > 0){
-            const animateImgs:any = pen.lineAnimateImages.map((src,index) => {
-              const image = globalStore.htmlElements[src]
-              if (!image){
-                pen.calculative.canvas.__loadImage(src)
-              }else {
-                return image
-              }
-            })
-            setElementAnimateOnLine(ctx,pen,'image',animateImgs)
-          }
-          break
-        case lineAnimateTargetType.Icon:
-          const icon = pen.lineAnimateIcon
-          setElementAnimateOnLine(ctx,pen,'icon',icon)
-          break
-        case lineAnimateTargetType.Pen:
-          if(pen.lineAnimatePens){
-            setElementAnimateOnLine(ctx,pen,'pen',pen.lineAnimatePens)
-          }
-          break
-        case lineAnimateTargetType.Element:
-          const animateEle = pen.lineAnimateElement
-          setElementAnimateOnLine(ctx,pen,'element',animateEle)
-      }
-      break
+    // case LineAnimateType.Custom:
+    //   switch (pen.lineAnimateTargetType) {
+    //     case lineAnimateTargetType.Image:
+    //       pen.lineAnimateImages ??= []
+    //       if(pen.lineAnimateImages.length > 0){
+    //         const animateImgs:any = pen.lineAnimateImages.map((src,index) => {
+    //           const image = globalStore.htmlElements[src]
+    //           if (!image){
+    //             pen.calculative.canvas.__loadImage(src)
+    //           }else {
+    //             return image
+    //           }
+    //         })
+    //         setElementAnimateOnLine(ctx,pen,'image',animateImgs)
+    //       }
+    //       break
+    //     case lineAnimateTargetType.Icon:
+    //       const icon = pen.lineAnimateIcon
+    //       setElementAnimateOnLine(ctx,pen,'icon',icon)
+    //       break
+    //     case lineAnimateTargetType.Pen:
+    //       if(pen.lineAnimatePens){
+    //         setElementAnimateOnLine(ctx,pen,'pen',pen.lineAnimatePens)
+    //       }
+    //       break
+    //     case lineAnimateTargetType.Element:
+    //       const animateEle = pen.lineAnimateElement
+    //       setElementAnimateOnLine(ctx,pen,'element',animateEle)
+    //   }
+    //   break
     default:
       if (pen.animateReverse) {
         ctx.lineDashOffset = Number.EPSILON; //防止在执行动画时会绘制多余的远点
@@ -2561,28 +2561,28 @@ function renderLineAnimate(
   }
 }
 
-function setElementAnimateOnLine(ctx:CanvasRenderingContext2D,line:Pen,type:string,element:any) {
-  let draw:Function = null
-  switch (type){
-    case 'image':
-      draw = lineAnimateImageRender(element)
-      break
-    case 'icon':
-      // draw = lineAnimateIconRender(element)
-      break
-    case 'pen':
-      let targetPens = line.calculative.canvas.find(element);
-      line.lineAnimateElementCount = targetPens.length;
-      draw = lineAnimatePenRender(targetPens)
-      break
-    case 'element':
-      draw = globalStore.lineAnimateDraws[element]
-      if(!draw)return;
-      draw = lineAnimateElementRender(draw)
-      break
-  }
-  renderElementOnLine(ctx,line,draw)
-}
+// function setElementAnimateOnLine(ctx:CanvasRenderingContext2D,line:Pen,type:string,element:any) {
+//   let draw:Function = null
+//   switch (type){
+//     case 'image':
+//       draw = lineAnimateImageRender(element)
+//       break
+//     case 'icon':
+//       // draw = lineAnimateIconRender(element)
+//       break
+//     case 'pen':
+//       let targetPens = line.calculative.canvas.find(element);
+//       line.lineAnimateElementCount = targetPens.length;
+//       draw = lineAnimatePenRender(targetPens)
+//       break
+//     case 'element':
+//       draw = globalStore.lineAnimateDraws[element]
+//       if(!draw)return;
+//       draw = lineAnimateElementRender(draw)
+//       break
+//   }
+//   renderElementOnLine(ctx,line,draw)
+// }
 
 /**
  * 自定义元素动画：与 image/icon 分支保持一致，
@@ -4059,7 +4059,8 @@ export function setLineAnimate(pen: Pen, now: number) {
 }
 
 export function setChildrenActive(pen: Pen, active = true) {
-  if (!pen.children || pen.childActive === false) {
+  // if (!pen.children || pen.childActive === false) {
+  if (!pen.children) {
     return;
   }
   const store = pen.calculative.canvas.store;
@@ -4079,9 +4080,9 @@ export function setHover(pen: Pen, hover = true) {
   }
   const store = pen.calculative.canvas.store;
   pen.calculative.hover = hover;
-  if (pen.childHover === false) {
-    return;
-  }
+  // if (pen.childHover === false) {
+  //   return;
+  // }
   if (pen.children) {
     pen.children.forEach((id) => {
       // 子节点没有自己的独立hover，继承父节点hover

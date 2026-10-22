@@ -1326,12 +1326,12 @@ export class Meta2d {
     // this.startDataMock();
     this.canvas.initGlobalStyle();
     this.render();
-    setTimeout(() => {
-      const pen = this.store.data.pens.find((pen) => pen.autofocus);
-      if (pen) {
-        this.focus(pen.id);
-      }
-    }, 100);
+    // setTimeout(() => {
+    //   const pen = this.store.data.pens.find((pen) => pen.autofocus);
+    //   if (pen) {
+    //     this.focus(pen.id);
+    //   }
+    // }, 100);
     // if (this.store.data.iconUrls) {
     //   for (const item of this.store.data.iconUrls) {
     //     loadCss(item, () => {
@@ -2262,8 +2262,10 @@ export class Meta2d {
       const childRect = calcRelativeRect(pen.calculative.worldRect, rect);
       Object.assign(pen, childRect);
       pen.locked = pen.lockedOnCombine ?? LockState.None;
+      // pen.locked =
+      //   pen.interaction || isInteraction.includes(pen.name) ? 0 : pen.locked;
       pen.locked =
-        pen.interaction || isInteraction.includes(pen.name) ? 0 : pen.locked;
+        isInteraction.includes(pen.name) ? 0 : pen.locked;
     });
     //将组合后的父节点置底
     this.store.data.pens.splice(minIndex, 0, parent);
@@ -2419,8 +2421,12 @@ export class Meta2d {
           const childRect = calcRelativeRect(pen.calculative.worldRect, rect);
           Object.assign(pen, childRect);
           pen.locked = pen.lockedOnCombine ?? LockState.DisableMove;
+          // pen.locked =
+          //   pen.interaction || isInteraction.includes(pen.name)
+          //     ? 0
+          //     : pen.locked;
           pen.locked =
-            pen.interaction || isInteraction.includes(pen.name)
+            isInteraction.includes(pen.name)
               ? 0
               : pen.locked;
           calcInView(pen, true);
@@ -4934,8 +4940,10 @@ export class Meta2d {
       );
       Object.assign(pen, childRect);
       pen.locked = pen.lockedOnCombine ?? LockState.DisableMove;
+      // pen.locked =
+      //   pen.interaction || isInteraction.includes(pen.name) ? 0 : pen.locked;
       pen.locked =
-        pen.interaction || isInteraction.includes(pen.name) ? 0 : pen.locked;
+        isInteraction.includes(pen.name) ? 0 : pen.locked;
       if (!oldPen) {
         addPens.push(deepClone(pen, true));
       } else {
