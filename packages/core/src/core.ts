@@ -246,11 +246,11 @@ export class Meta2d {
     }
     this.store.options = Object.assign(this.store.options, opts);
 
-    if(opts.roles && this.store.data.pens?.length){
-      for (const pen of this.store.data.pens) {
-        calcInView(pen);
-      }
-    }
+    // if(opts.roles && this.store.data.pens?.length){
+    //   for (const pen of this.store.data.pens) {
+    //     calcInView(pen);
+    //   }
+    // }
     if (this.canvas && opts.scroll !== undefined) {
       if (opts.scroll) {
         !this.canvas.scroll && (this.canvas.scroll = new Scroll(this.canvas));
@@ -1858,7 +1858,7 @@ export class Meta2d {
     // }
     clearStore(this.store, template);
     // this.hideInput();
-    this.canvas.tooltip.hide();
+    // this.canvas.tooltip.hide();
     if (this.map && this.map.isShow) {
       this.map.show();
       this.map.setView();
@@ -4273,14 +4273,14 @@ export class Meta2d {
         // }
         break;
       case 'click':
-        if (this.store.data.locked && e.pen && !e.pen.disabled) {
-          if (e.pen.switch) {
-            e.pen.checked = !e.pen.checked;
-            e.pen.calculative.checked = e.pen.checked;
-            e.pen.calculative.gradient = undefined;
-            e.pen.calculative.radialGradient = undefined;
-          }
-        }
+        // if (this.store.data.locked && e.pen && !e.pen.disabled) {
+        //   if (e.pen.switch) {
+        //     e.pen.checked = !e.pen.checked;
+        //     e.pen.calculative.checked = e.pen.checked;
+        //     e.pen.calculative.gradient = undefined;
+        //     e.pen.calculative.radialGradient = undefined;
+        //   }
+        // }
         // if(e.pen && e.pen.formId){
         //   const formPen = this.store.pens[e.pen.formId];
         //   if(e.pen.formType === 'submit'){
@@ -4338,7 +4338,7 @@ export class Meta2d {
       case 'valueUpdate':
         // e && updateFormData(e,e.formValue);
         // this.store.data.locked && this.doEvent(e, eventName);
-        this.canvas.tooltip.updateText(e as Pen);
+        // this.canvas.tooltip.updateText(e as Pen);
         break;
       case 'update':
       case 'delete':
@@ -5284,12 +5284,12 @@ export class Meta2d {
               : undefined,
           imageRatio: onlyTablePlus ? undefined : pen.imageRatio,
           ratio: onlyTablePlus ? undefined : pen.ratio,
-          operationalRect:
-            !onlyTablePlus &&
-            (pen.name === 'iframe' || pen.name === 'htmlDom') &&
-            pen.operationalRect
-              ? deepClone(pen.operationalRect)
-              : undefined,
+          // operationalRect:
+          //   !onlyTablePlus &&
+          //   (pen.name === 'iframe' || pen.name === 'htmlDom') &&
+          //   pen.operationalRect
+          //     ? deepClone(pen.operationalRect)
+          //     : undefined,
         });
       };
       this.store.data.fits?.forEach((fit) => {
@@ -5346,15 +5346,15 @@ export class Meta2d {
         if (snap.ratio !== undefined) {
           pen.ratio = snap.ratio;
         }
-        if (
-          (pen.name === 'iframe' || pen.name === 'htmlDom') &&
-          snap.operationalRect
-        ) {
-          pen.operationalRect = deepClone(snap.operationalRect);
-          // pen.onBeforeValue?.(pen, {
-          //   operationalRect: pen.operationalRect,
-          // } as any);
-        }
+        // if (
+        //   (pen.name === 'iframe' || pen.name === 'htmlDom') &&
+        //   snap.operationalRect
+        // ) {
+        //   pen.operationalRect = deepClone(snap.operationalRect);
+        //   pen.onBeforeValue?.(pen, {
+        //     operationalRect: pen.operationalRect,
+        //   } as any);
+        // }
         this.canvas.updatePenRect(pen, { worldRectIsReady: false });
         // if (pen.externElement) {
         //   pen.onResize?.(pen);
@@ -5474,17 +5474,17 @@ export class Meta2d {
           pen.calculative.worldRect.x = worldRect.x - wGap / 2;
           pen.calculative.worldRect.width = worldRect.width + wGap;
           pen.calculative.worldRect.ex = worldRect.ex + wGap;
-          if(pen.operationalRect){
-              pen.operationalRect.x =
-              (pen.operationalRect.x * bfW) / pen.calculative.worldRect.width;
-            pen.operationalRect.width =
-              (pen.calculative.worldRect.width -
-                (1 - pen.operationalRect.width) * bfW) /
-              pen.calculative.worldRect.width;
-            // pen.onBeforeValue?.(pen, {
-            //   operationalRect: pen.operationalRect,
-            // } as any);
-          }
+          // if(pen.operationalRect){
+          //     pen.operationalRect.x =
+          //     (pen.operationalRect.x * bfW) / pen.calculative.worldRect.width;
+          //   pen.operationalRect.width =
+          //     (pen.calculative.worldRect.width -
+          //       (1 - pen.operationalRect.width) * bfW) /
+          //     pen.calculative.worldRect.width;
+          //   // pen.onBeforeValue?.(pen, {
+          //   //   operationalRect: pen.operationalRect,
+          //   // } as any);
+          // }
           // pen.onResize?.(pen);
         }
       });
@@ -5593,17 +5593,17 @@ export class Meta2d {
           pen.calculative.worldRect.y = worldRect.y - hGap / 2;
           pen.calculative.worldRect.height = worldRect.height + hGap;
           pen.calculative.worldRect.ey = worldRect.ey + hGap;
-          if(pen.operationalRect){
-            pen.operationalRect.y =
-              (pen.operationalRect.y * bfH) / pen.calculative.worldRect.width;
-            pen.operationalRect.height =
-              (pen.calculative.worldRect.height -
-                (1 - pen.operationalRect.height) * bfH) /
-              pen.calculative.worldRect.height;
-            // pen.onBeforeValue?.(pen, {
-            //   operationalRect: pen.operationalRect,
-            // } as any);
-          }
+          // if(pen.operationalRect){
+          //   pen.operationalRect.y =
+          //     (pen.operationalRect.y * bfH) / pen.calculative.worldRect.width;
+          //   pen.operationalRect.height =
+          //     (pen.calculative.worldRect.height -
+          //       (1 - pen.operationalRect.height) * bfH) /
+          //     pen.calculative.worldRect.height;
+          //   // pen.onBeforeValue?.(pen, {
+          //   //   operationalRect: pen.operationalRect,
+          //   // } as any);
+          // }
           // pen.onResize?.(pen);
         }
       });

@@ -139,10 +139,10 @@ export interface Pen extends Rect {
   // 连线长度
   length?: number;
 
-  title?: string;
+  // title?: string;
   // 优先级高于 title
-  titleFnJs?: string;
-  titleFn?: (pen: Pen) => string;
+  // titleFnJs?: string;
+  // titleFn?: (pen: Pen) => string;
   // titleUnUpdate?: boolean; //点位刷新 title内容是否更新
 
   lineWidth?: number;
@@ -159,9 +159,9 @@ export interface Pen extends Rect {
   hoverBackground?: string;
   activeColor?: string;
   activeBackground?: string;
-  mouseDownValid?: boolean; // 是否鼠标按下是否有样式效果
-  mouseDownColor?: string;
-  mouseDownBackground?: string;
+  // mouseDownValid?: boolean; // 是否鼠标按下是否有样式效果
+  // mouseDownColor?: string;
+  // mouseDownBackground?: string;
   bkType?: Gradient;
   /**
    * @deprecated 改用 gradientColors
@@ -193,10 +193,10 @@ export interface Pen extends Rect {
   // lineGradientAngle?: number;
 
   gradientColors?: string;
-  switch?: boolean; // 图元是否有开关状态
-  checked?: boolean; // 是否选中
-  onBackground?: string;
-  onGradientColors?: string;
+  // switch?: boolean; // 图元是否有开关状态
+  // checked?: boolean; // 是否选中
+  // onBackground?: string;
+  // onGradientColors?: string;
   lineGradientColors?: string;
   lineCap?: CanvasLineCap;
   fromLineCap?: CanvasLineCap;
@@ -206,7 +206,7 @@ export interface Pen extends Rect {
   shadowBlur?: number;
   shadowOffsetX?: number;
   shadowOffsetY?: number;
-  textHasShadow?: boolean; // 文字是否需要阴影
+  // textHasShadow?: boolean; // 文字是否需要阴影
 
   // canvas 滤镜
   filter?: string;
@@ -349,8 +349,8 @@ export interface Pen extends Rect {
   animateShadow?: boolean;//发光效果
   animateShadowColor?: string;
   animateShadowBlur?: number;
-  input?: boolean;
-  readonly?: boolean;
+  // input?: boolean;
+  // readonly?: boolean;
   autofocus?: boolean;
   // dropdownList?: Dropdown[];
   // dropdownBackground?: string;
@@ -410,10 +410,10 @@ export interface Pen extends Rect {
   rotateByRoot?: boolean;
   // calculative 对象中的值是为了动画存在，表明了渐变过程中，画布上绘制的当前值
   textAutoAdjust?: boolean; //text图元宽高根据文本自动调整
-  dbInput?: boolean; //锁定状态下，双击能否输入
-  operationalRect?: Rect; //iframe可操作区域 x,y,width,height 均取值0-1
+  // dbInput?: boolean; //锁定状态下，双击能否输入
+  // operationalRect?: Rect; //iframe可操作区域 x,y,width,height 均取值0-1
   blur?: number;
-  blurBackground?: string;
+  // blurBackground?: string;
   /**
    * @deprecated 改用 canvasLayer
    */
@@ -430,7 +430,7 @@ export interface Pen extends Rect {
   disabledColor?:string; //禁用颜色
   disabledBackground?:string; //禁用背景色
   disabledTextColor?:string; //禁用文字颜色
-  inputType?:string; //输入框类型
+  // inputType?:string; //输入框类型
   // productId?:string; //产品id
   // deviceId?:string;//关联的设备id
   pivot?:Point; //旋转中心
@@ -452,7 +452,7 @@ export interface Pen extends Rect {
   hoverCursor?: string; //hover鼠标样式
 
   //业务
-  roles?: string[];
+  // roles?: string[];
   calculative?: {
     x?: number;
     y?: number;
@@ -460,8 +460,8 @@ export interface Pen extends Rect {
     height?: number;
     borderRadius?: number;
 
-    max?: number;
-    min?: number;
+    // max?: number;
+    // min?: number;
     // progress?: number;
     // progressColor?: string;
     // progressGradientColors?: string;
@@ -471,7 +471,7 @@ export interface Pen extends Rect {
     worldIconRect?: Rect;
     worldTextRect?: Rect;
     textDrawRect?: Rect;
-    svgRect?: Rect;
+    // svgRect?: Rect;
 
     // 执行动画前的初始位置
     initRect?: Rect;
@@ -525,9 +525,9 @@ export interface Pen extends Rect {
     shadowBlur?: number;
     shadowOffsetX?: number;
     shadowOffsetY?: number;
-    textHasShadow?: boolean;
+    // textHasShadow?: boolean;
 
-    tempText?: string;
+    // tempText?: string;
     text?: string;
     textWidth?: number;
     textHeight?: number;
@@ -577,7 +577,7 @@ export interface Pen extends Rect {
     active?: boolean;
     focus?: boolean; //聚焦图元
     hover?: boolean;
-    mouseDown?: boolean; //是否鼠标按下
+    // mouseDown?: boolean; //是否鼠标按下
     containerHover?: boolean; //容器组件hover
     isDock?: boolean; // 是否是对齐参考画笔
     pencil?: boolean;
@@ -649,9 +649,9 @@ export interface Pen extends Rect {
     // 不应该被deepClone多份的数据，例如外部第三方组件库挂载点，
     singleton?: any;
     gradientColors?: string;
-    onBackground?: string;
-    onGradientColors?: string;
-    checked?: boolean;
+    // onBackground?: string;
+    // onGradientColors?: string;
+    // checked?: boolean;
     lineGradientColors?: string;
     gradient?: CanvasGradient; //临时渐进色 防止每次都计算
     lineGradient?: CanvasGradient;
@@ -792,7 +792,7 @@ export const formatAttrs: Set<string> = new Set([
   // 'flip',
   'flipX',
   'flipY',
-  'input',
+  // 'input',
   'lineDash',
   'lineCap',
   'lineJoin',
@@ -819,7 +819,7 @@ export const formatAttrs: Set<string> = new Set([
   'shadowBlur',
   'shadowOffsetX',
   'shadowOffsetY',
-  'textHasShadow',
+  // 'textHasShadow',
   'fontFamily',
   'fontSize',
   'textColor',

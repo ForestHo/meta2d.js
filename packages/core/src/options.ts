@@ -152,7 +152,7 @@ export interface Options {
   linePresetStyle?:Pen;
   textPresetStyle?:Pen;
   unFill?: boolean;
-  roles?: string[];
+  // roles?: string[];
   crossOrigin?: string;
   // allowScript?: boolean; //是否允许脚本执行
   // debug?: boolean | DebugOptions; //是否开启调试，可选择性开启具体调试项

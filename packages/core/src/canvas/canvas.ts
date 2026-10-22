@@ -133,20 +133,20 @@ import {
   lineInRect,
 } from '../diagrams';
 import { polyline, translatePolylineAnchor } from '../diagrams/line/polyline';
-import { Tooltip } from '../tooltip';
+// import { Tooltip } from '../tooltip';
 import { Scroll } from '../scroll';
 import { CanvasImage } from './canvasImage';
 // import { MagnifierCanvas } from './magnifierCanvas';
 import { lockedError } from '../utils/error';
 import { t } from '../locale';
 import { Meta2d } from '../core';
-import { Dialog } from '../dialog';
+// import { Dialog } from '../dialog';
 import { setter } from '../utils/object';
 import { isNumber } from '../utils/tool';
-import { Title } from '../title';
+// import { Title } from '../title';
 import { CanvasTemplate } from './canvasTemplate';
 import { getLinePoints } from '../diagrams/line';
-import { Popconfirm } from '../popconfirm';
+// import { Popconfirm } from '../popconfirm';
 import { le5leTheme, themeKeys } from '../theme';
 import { getFont } from '../pen/render';
 import { getEasingFunction } from '../utils/easing';
@@ -285,9 +285,9 @@ export class Canvas {
   // inputRight = document.createElement('div');
   // dropdown = document.createElement('ul');
 
-  tooltip: Tooltip;
-  popconfirm: Popconfirm;
-  title: Title;
+  // tooltip: Tooltip;
+  // popconfirm: Popconfirm;
+  // title: Title;
   mousePos: Point = { x: 0, y: 0 };
 
   scroll: Scroll;
@@ -297,7 +297,7 @@ export class Canvas {
   canvasImage: CanvasImage;
   // canvasImageBottom: CanvasImage;
   // magnifierCanvas: MagnifierCanvas;
-  dialog: Dialog;
+  // dialog: Dialog;
   autoPolylineFlag: boolean = false; //标记open不自动计算
 
   stopPropagation = (e: MouseEvent) => {
@@ -338,19 +338,19 @@ export class Canvas {
     parentElement.appendChild(this.externalElements);
     // this.createInput();
 
-    this.tooltip = new Tooltip(parentElement, store);
-    this.tooltip.box.onmouseleave = (e) => {
-      this.patchFlags = true;
-      this.store.lastHover && (this.store.lastHover.calculative.hover = false);
-      let hover = this.store.data.pens.find(
-        (item) => item.calculative.hover === true
-      );
-      setHover(hover, false);
-    };
-    this.popconfirm = new Popconfirm(parentElement, store);
+    // this.tooltip = new Tooltip(parentElement, store);
+    // this.tooltip.box.onmouseleave = (e) => {
+    //   this.patchFlags = true;
+    //   this.store.lastHover && (this.store.lastHover.calculative.hover = false);
+    //   let hover = this.store.data.pens.find(
+    //     (item) => item.calculative.hover === true
+    //   );
+    //   setHover(hover, false);
+    // };
+    // this.popconfirm = new Popconfirm(parentElement, store);
 
-    this.dialog = new Dialog(parentElement, store);
-    this.title = new Title(parentElement);
+    // this.dialog = new Dialog(parentElement, store);
+    // this.title = new Title(parentElement);
 
     if (this.store.options.scroll) {
       this.scroll = new Scroll(this);
@@ -461,14 +461,14 @@ export class Canvas {
         this.store.hover = undefined;
       }
       this.render();
-      if (
-        (e as any).toElement !== this.tooltip.box &&
-        (e as any).toElement !== this.tooltip.arrowUp &&
-        (e as any).toElement !== this.tooltip.arrowDown
-      ) {
-        this.tooltip.hide();
-        this.store.lastHover = undefined;
-      }
+      // if (
+      //   (e as any).toElement !== this.tooltip.box &&
+      //   (e as any).toElement !== this.tooltip.arrowUp &&
+      //   (e as any).toElement !== this.tooltip.arrowDown
+      // ) {
+      //   this.tooltip.hide();
+      //   this.store.lastHover = undefined;
+      // }
     };
 
     this.externalElements.ondblclick = (e)=>{
@@ -615,23 +615,23 @@ export class Canvas {
       return;
     }
 
-    let data = typeof e.data === 'string' ? JSON.parse(e.data): e.data;
-    if (typeof data === 'object') {
-      if(data.name === 'onload'){
-        this.dialog.iframe.contentWindow.postMessage(
-          JSON.stringify({
-            name:'dialog',
-            data:this.dialog.data
-          }),
-        '*');
-      }
-      if(data.name === 'closeDialog'){
-        this.dialog.hide();
-      }
-      // this.parent.doMessageEvent(data.name, JSON.stringify(data.data));
-    }else{
-      // this.parent.doMessageEvent(data);
-    }
+    // let data = typeof e.data === 'string' ? JSON.parse(e.data): e.data;
+    // if (typeof data === 'object') {
+    //   if(data.name === 'onload'){
+    //     this.dialog.iframe.contentWindow.postMessage(
+    //       JSON.stringify({
+    //         name:'dialog',
+    //         data:this.dialog.data
+    //       }),
+    //     '*');
+    //   }
+    //   if(data.name === 'closeDialog'){
+    //     this.dialog.hide();
+    //   }
+    //   // this.parent.doMessageEvent(data.name, JSON.stringify(data.data));
+    // }else{
+    //   // this.parent.doMessageEvent(data);
+    // }
   }
 
   onwheel = (e: WheelEvent) => {
@@ -2032,7 +2032,7 @@ export class Canvas {
       this.mouseRight = MouseRight.Down;
     }
     // this.hideInput();
-    this.popconfirm.hide();
+    // this.popconfirm.hide();
     if (
       this.store.data.locked === LockState.Disable ||
       (e.buttons !== 1 && e.buttons !== 2)
@@ -2904,16 +2904,16 @@ export class Canvas {
 
     if (e.button !== 2) {
       if (distance(this.mouseDown, e) < 2) {
-        if (this.store.hover && this.store.hover.input) {
-          if (this.store.hover.onShowInput) {
-            // this.store.hover.onShowInput(this.store.hover, e as any);
-          } else {
-            if(this.store.hover.parentId){
-              this.active([this.store.hover])
-            }
-            // this.showInput(this.store.hover);
-          }
-        }
+        // if (this.store.hover && this.store.hover.input) {
+        //   if (this.store.hover.onShowInput) {
+        //     // this.store.hover.onShowInput(this.store.hover, e as any);
+        //   } else {
+        //     if(this.store.hover.parentId){
+        //       this.active([this.store.hover])
+        //     }
+        //     // this.showInput(this.store.hover);
+        //   }
+        // }
         this.store.emitter.emit('click', {
           x: e.x,
           y: e.y,
@@ -3495,7 +3495,7 @@ export class Canvas {
     let hoverType = HoverType.None;
     this.store.hover = undefined;
     this.store.hoverAnchor = undefined;
-    this.title.hide();
+    // this.title.hide();
     this.store.pointAt = undefined;
     this.store.pointAtIndex = undefined;
     const activeLine =
@@ -3584,13 +3584,13 @@ export class Canvas {
         if(this.store.pens[this.store.lastHover.id]){
           this.store.emitter.emit('leave', this.store.lastHover);
         }
-        this.tooltip.hide();
+        // this.tooltip.hide();
       }
       if (this.store.hover) {
         this.store.hover.calculative.hover = true;
         setHover(getParent(this.store.hover, true) || this.store.hover);
         this.store.emitter.emit('enter', this.store.hover);
-        this.tooltip.show(this.store.hover, pt);
+        // this.tooltip.show(this.store.hover, pt);
       }
       this.store.lastHover = this.store.hover;
     }
@@ -3666,7 +3666,7 @@ export class Canvas {
               //title显示
               let _anchor = deepClone(anchor);
               Object.assign(_anchor, pt);
-              this.title.show(_anchor, pen);
+              // this.title.show(_anchor, pen);
               break outer;
             }
           }
@@ -3851,11 +3851,11 @@ export class Canvas {
             ) {
               continue;
             }
-            this.title.hide();
+            // this.title.hide();
             if (this.inAnchor(pt, pen, anchor)) {
               let _anchor = deepClone(anchor);
               Object.assign(_anchor, pt);
-              this.title.show(_anchor, pen);
+              // this.title.show(_anchor, pen);
               return true;
             }
           }
@@ -5784,7 +5784,7 @@ export class Canvas {
       x: this.store.data.x,
       y: this.store.data.y,
     });
-    this.tooltip.translate(x, y);
+    // this.tooltip.translate(x, y);
     if (this.scroll && this.scroll.isShow) {
       this.scroll.translate(x, y);
     }
@@ -6905,7 +6905,7 @@ export class Canvas {
     });
     this.activeRect && this.getSizeCPs();
     this.render();
-    this.tooltip.translate(x, y);
+    // this.tooltip.translate(x, y);
 
     if (!doing) {
       // 单次的移动需要记历史记录
@@ -7989,7 +7989,8 @@ export class Canvas {
   private ondblclick = (e: MouseEvent) => {
     if (
       this.store.hover &&
-      (!this.store.data.locked || this.store.hover.dbInput)
+      !this.store.data.locked
+      // (!this.store.data.locked || this.store.hover.dbInput)
       //  && !this.store.options.disableInput
     ) {
       if (this.store.hover.onShowInput) {
@@ -9783,10 +9784,10 @@ export class Canvas {
 
   destroy() {
     this.scroll && this.scroll.destroy();
-    this.tooltip?.destroy();
-    this.dialog?.destroy();
-    this.title?.destroy();
-    this.popconfirm?.destroy();
+    // this.tooltip?.destroy();
+    // this.dialog?.destroy();
+    // this.title?.destroy();
+    // this.popconfirm?.destroy();
 
     // ios
     this.externalElements.removeEventListener(

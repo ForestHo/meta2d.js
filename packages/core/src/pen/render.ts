@@ -185,9 +185,9 @@ function getLinearGradientPoints(
 function getBkRadialGradient(ctx: CanvasRenderingContext2D, pen: Pen, gradientColors?: string) {
   const { worldRect, gradientRadius } = pen.calculative;
   let color = gradientColors || pen.calculative.gradientColors;
-  if(pen.calculative.checked){
-    color = pen.calculative.onGradientColors;
-  }
+  // if(pen.calculative.checked){
+  //   color = pen.calculative.onGradientColors;
+  // }
   if (!color) {
     return;
   }
@@ -221,9 +221,9 @@ function getBkGradient(ctx: CanvasRenderingContext2D, pen: Pen, gradientColors?:
     { x: x, y: y + height / 2 },
   ];
   let color = gradientColors || pen.calculative.gradientColors;
-  if(pen.calculative.checked){
-    color = pen.calculative.onGradientColors;
-  }
+  // if(pen.calculative.checked){
+  //   color = pen.calculative.onGradientColors;
+  // }
   const { angle, colors } = formatGradient(color);
   let r = getGradientR(angle, width, height);
   points.forEach((point) => {
@@ -1168,67 +1168,67 @@ function drawText(ctx: CanvasRenderingContext2D, pen: Pen) {
     text,
     hiddenText,
     canvas,
-    textHasShadow,
+    // textHasShadow,
     textBackground,
     textType,
   } = pen.calculative;
 
-  if (
-    pen.input &&
-    isEmptyText(pen.text) &&
-    !(pen.calculative.canvas.inputDiv.dataset.penId === pen.id) 
-    // && !pen.onShowInput
-  ) {
-    ctx.save();
-    ctx.font = getFont({
-      fontStyle,
-      fontWeight,
-      fontFamily: fontFamily,
-      fontSize,
-      lineHeight,
-    });
-    ctx.textBaseline = 'top';
-    // ctx.fillStyle = pen.placeholderColor || '#c0c0c0';
-    // const textLineWidth = ctx.measureText(pen.placeholder || t('请输入')).width;
-    ctx.fillStyle = '#c0c0c0';
-    const textLineWidth = ctx.measureText(t('请输入')).width;
-    const rect = pen.calculative.worldTextRect;
-    let x = 0;
-    const oneRowHeight = fontSize * lineHeight;
-    let y = (rect.height - oneRowHeight) / 2;
-    if (pen.textAlign === 'center') {
-      x = (rect.width - textLineWidth) / 2;
-    } else if (pen.textAlign === 'right') {
-      x = rect.width - textLineWidth;
-    }
-    if (pen.textBaseline === 'top') {
-      y = 0;
-    } else if (pen.textBaseline === 'bottom') {
-      y = rect.height - oneRowHeight;
-    }
-    // ctx.fillText(
-    //   pen.placeholder || t('请输入'),
-    //   rect.x + x,
-    //   rect.y + y + getTextBaselineOffset(ctx, pen.placeholder || t('请输入'), oneRowHeight)
-    // );
-    ctx.fillText(
-      t('请输入'),
-      rect.x + x,
-      rect.y + y + getTextBaselineOffset(ctx, t('请输入'), oneRowHeight)
-    );
-    ctx.restore();
-  }
+  // if (
+  //   pen.input &&
+  //   isEmptyText(pen.text) &&
+  //   !(pen.calculative.canvas.inputDiv.dataset.penId === pen.id) 
+  //   && !pen.onShowInput
+  // ) {
+  //   ctx.save();
+  //   ctx.font = getFont({
+  //     fontStyle,
+  //     fontWeight,
+  //     fontFamily: fontFamily,
+  //     fontSize,
+  //     lineHeight,
+  //   });
+  //   ctx.textBaseline = 'top';
+  //   // ctx.fillStyle = pen.placeholderColor || '#c0c0c0';
+  //   // const textLineWidth = ctx.measureText(pen.placeholder || t('请输入')).width;
+  //   ctx.fillStyle = '#c0c0c0';
+  //   const textLineWidth = ctx.measureText(t('请输入')).width;
+  //   const rect = pen.calculative.worldTextRect;
+  //   let x = 0;
+  //   const oneRowHeight = fontSize * lineHeight;
+  //   let y = (rect.height - oneRowHeight) / 2;
+  //   if (pen.textAlign === 'center') {
+  //     x = (rect.width - textLineWidth) / 2;
+  //   } else if (pen.textAlign === 'right') {
+  //     x = rect.width - textLineWidth;
+  //   }
+  //   if (pen.textBaseline === 'top') {
+  //     y = 0;
+  //   } else if (pen.textBaseline === 'bottom') {
+  //     y = rect.height - oneRowHeight;
+  //   }
+  //   // ctx.fillText(
+  //   //   pen.placeholder || t('请输入'),
+  //   //   rect.x + x,
+  //   //   rect.y + y + getTextBaselineOffset(ctx, pen.placeholder || t('请输入'), oneRowHeight)
+  //   // );
+  //   ctx.fillText(
+  //     t('请输入'),
+  //     rect.x + x,
+  //     rect.y + y + getTextBaselineOffset(ctx, t('请输入'), oneRowHeight)
+  //   );
+  //   ctx.restore();
+  // }
 
   if (isEmptyText(text) || hiddenText || pen.hiddenText) {
     return;
   }
   const store = canvas.store;
   ctx.save();
-  if (!textHasShadow) {
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-  }
+  // if (!textHasShadow) {
+  //   ctx.shadowBlur = 0;
+  //   ctx.shadowOffsetX = 0;
+  //   ctx.shadowOffsetY = 0;
+  // }
   let fill: string = undefined;
   if (pen.calculative.disabled) {
     fill =
@@ -1723,17 +1723,17 @@ export function renderPen(
       pen.disabledBackground ||
       store.styles.disabledBackground ||
       pSBC(0.4, pen.calculative.background || store.styles.penBackground);
-  } else if (pen.mouseDownValid && pen.calculative.mouseDown) {
-    _stroke =
-      pen.mouseDownColor ||
-      pSBC(-0.4, pen.calculative.color || store.styles.color);
-    fill =
-      pen.mouseDownBackground ||
-      pSBC(-0.4, pen.calculative.background || store.styles.penBackground);
-  } else if (pen.switch && pen.calculative.checked) {
-    if(!pen.calculative.bkType){
-      fill = pen.onBackground;
-    }
+  // } else if (pen.mouseDownValid && pen.calculative.mouseDown) {
+  //   _stroke =
+  //     pen.mouseDownColor ||
+  //     pSBC(-0.4, pen.calculative.color || store.styles.color);
+  //   fill =
+  //     pen.mouseDownBackground ||
+  //     pSBC(-0.4, pen.calculative.background || store.styles.penBackground);
+  // } else if (pen.switch && pen.calculative.checked) {
+  //   if(!pen.calculative.bkType){
+  //     fill = pen.onBackground;
+  //   }
   } else if (pen.calculative.hover) {
     _stroke = pen.hoverColor || store.styles.hoverColor;
     fill = pen.hoverBackground || store.styles.hoverBackground;
@@ -4362,7 +4362,8 @@ export function calcInView(pen: Pen, calcChild = false) {
     }
   }
   if (store.data.locked && pen.calculative.inView) {
-    pen.calculative.inView = hasPermission(pen, store.options.roles);
+    pen.calculative.inView = hasPermission(pen);
+    // pen.calculative.inView = hasPermission(pen, store.options.roles);
   }
   // TODO: 语义化上，用 onValue 更合适，但 onValue 会触发 echarts 图形的重绘，没有必要
   // 更改 view 后，修改 dom 节点的显示隐藏
@@ -4389,9 +4390,9 @@ function hasPermission(
     }
     visited.add(current);
 
-    if (current.roles?.length) {
-      return !!roles?.some((role) => current.roles.includes(role));
-    }
+    // if (current.roles?.length) {
+    //   return !!roles?.some((role) => current.roles.includes(role));
+    // }
 
     if (!current.parentId) {
       return true;

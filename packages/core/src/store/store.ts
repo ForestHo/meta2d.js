@@ -33,7 +33,7 @@ export interface Meta2dData {
   background?: string;
   globalAlpha?: number;
   socketCbJs?: string;
-  initJs?: string;
+  // initJs?: string;
   grid?: boolean;
   gridColor?: string;
   gridSize?: number;
