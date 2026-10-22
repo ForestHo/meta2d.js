@@ -82,5 +82,5 @@ export const inheritanceProps = [
   'flipY',
   'lineDash',
   'visible',
-  'iconColor'
+  // 'iconColor'
 ];

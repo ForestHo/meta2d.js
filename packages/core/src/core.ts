@@ -4237,9 +4237,9 @@ export class Meta2d {
   //   this.canvas.hideInput();
   // }
 
-  clearDropdownList() {
-    this.canvas.clearDropdownList();
-  }
+  // clearDropdownList() {
+  //   this.canvas.clearDropdownList();
+  // }
 
   clearRuleLines() {
     this.canvas.clearRuleLines();

@@ -121,9 +121,9 @@ export class Tooltip {
       return;
     }
     
-    if(pen.titleUnUpdate){
-      return;
-    }
+    // if(pen.titleUnUpdate){
+    //   return;
+    // }
 
     const title = Tooltip.getTitle(pen);
     if (!title) {

@@ -1,7 +1,7 @@
 import { KeydownType } from '../options';
 import {
   addLineAnchor,
-  calcIconRect,
+  // calcIconRect,
   calcTextRect,
   calcWorldAnchors,
   calcWorldRects,
@@ -37,7 +37,7 @@ import {
   needCalcTextRectProps,
   calcResizeDock,
   needPatchFlagsPenRectProps,
-  needCalcIconRectProps,
+  // needCalcIconRectProps,
   isDomShapes,
   renderPenRaw,
   needSetPenProps,
@@ -48,7 +48,7 @@ import {
   IValue,
   getTextColor,
   getGlobalColor,
-  clearLifeCycle,
+  // clearLifeCycle,
   rotatePen,
   calcTextAutoWidth,
   getGradientAnimatePath,
@@ -283,7 +283,7 @@ export class Canvas {
   // input = document.createElement('textarea');
   inputDiv = document.createElement('div');
   // inputRight = document.createElement('div');
-  dropdown = document.createElement('ul');
+  // dropdown = document.createElement('ul');
 
   tooltip: Tooltip;
   popconfirm: Popconfirm;
@@ -4771,8 +4771,10 @@ export class Canvas {
       // do your canvas work
       img.onload = () => {
         pen.calculative.img = img;
-        pen.calculative.imgNaturalWidth = img.naturalWidth || pen.iconWidth;
-        pen.calculative.imgNaturalHeight = img.naturalHeight || pen.iconHeight;
+        // pen.calculative.imgNaturalWidth = img.naturalWidth || pen.iconWidth;
+        // pen.calculative.imgNaturalHeight = img.naturalHeight || pen.iconHeight;
+         pen.calculative.imgNaturalWidth = img.naturalWidth;
+        pen.calculative.imgNaturalHeight = img.naturalHeight;
         globalStore.htmlElements[pen.image] = img;
         this.imageLoaded();
         // if (pen.template) {
@@ -4792,9 +4794,10 @@ export class Canvas {
         if (globalStore.htmlElements[pen.image]) {
           const img = globalStore.htmlElements[pen.image];
           pen.calculative.img = img;
-          pen.calculative.imgNaturalWidth = img.naturalWidth || pen.iconWidth;
-          pen.calculative.imgNaturalHeight =
-            img.naturalHeight || pen.iconHeight;
+          // pen.calculative.imgNaturalWidth = img.naturalWidth || pen.iconWidth;
+          // pen.calculative.imgNaturalHeight = img.naturalHeight || pen.iconHeight;
+          pen.calculative.imgNaturalWidth = img.naturalWidth;
+          pen.calculative.imgNaturalHeight = img.naturalHeight;
           this.imageLoaded(); // TODO: 重绘图片层 有延时器，可能卡顿
           // if (pen.template) {
           if (pen.canvasLayer === CanvasLayer.CanvasTemplate) {
@@ -4827,10 +4830,14 @@ export class Canvas {
             img.onload = () => {
               // TODO: 连续的加载两张图片，若后开始加载 的图片先加载完成，可能会导致展示的是 先开始加载的图片
               pen.calculative.img = img;
+              // pen.calculative.imgNaturalWidth =
+              //   img.naturalWidth || pen.iconWidth;
+              // pen.calculative.imgNaturalHeight =
+              //   img.naturalHeight || pen.iconHeight;
               pen.calculative.imgNaturalWidth =
-                img.naturalWidth || pen.iconWidth;
+                img.naturalWidth;
               pen.calculative.imgNaturalHeight =
-                img.naturalHeight || pen.iconHeight;
+                img.naturalHeight;
               globalStore.htmlElements[pen.image] = img;
               this.imageLoaded();
               // if (pen.template) {
@@ -4997,25 +5004,25 @@ export class Canvas {
       pen.calculative.fontSize =
         pen.fontSize * pen.calculative.worldRect.height;
     }
-    if(isNumber(pen.iconSize)){
-      pen.calculative.iconSize = pen.iconSize * scale;
-    }
-    if(isNumber(pen.iconWidth)){
-      pen.calculative.iconWidth = pen.iconWidth * scale;
-    }
-    if(isNumber(pen.iconHeight)){
-      pen.calculative.iconHeight = pen.iconHeight * scale;
-    }
-    if(isNumber(pen.iconLeft)){
-      pen.calculative.iconLeft =
-        pen.iconLeft < 1 && pen.iconLeft > -1
-          ? pen.iconLeft
-          : pen.iconLeft * scale;
-    }
-    if(isNumber(pen.iconTop)){
-      pen.calculative.iconTop =
-         pen.iconTop < 1 && pen.iconTop > -1 ? pen.iconTop : pen.iconTop * scale;
-    }
+    // if(isNumber(pen.iconSize)){
+    //   pen.calculative.iconSize = pen.iconSize * scale;
+    // }
+    // if(isNumber(pen.iconWidth)){
+    //   pen.calculative.iconWidth = pen.iconWidth * scale;
+    // }
+    // if(isNumber(pen.iconHeight)){
+    //   pen.calculative.iconHeight = pen.iconHeight * scale;
+    // }
+    // if(isNumber(pen.iconLeft)){
+    //   pen.calculative.iconLeft =
+    //     pen.iconLeft < 1 && pen.iconLeft > -1
+    //       ? pen.iconLeft
+    //       : pen.iconLeft * scale;
+    // }
+    // if(isNumber(pen.iconTop)){
+    //   pen.calculative.iconTop =
+    //      pen.iconTop < 1 && pen.iconTop > -1 ? pen.iconTop : pen.iconTop * scale;
+    // }
     if(isNumber(pen.textWidth)){
       pen.calculative.textWidth =
         pen.textWidth < 1 && pen.textWidth > -1
@@ -5066,7 +5073,7 @@ export class Canvas {
       this.setCalculativeByScale(pen);
     }
     calcWorldAnchors(pen);
-    calcIconRect(this.store.pens, pen);
+    // calcIconRect(this.store.pens, pen);
     calcTextRect(pen);
     calcInView(pen);
     globalStore.path2dDraws[pen.name] &&
@@ -6278,9 +6285,9 @@ export class Canvas {
       pen.calculative.worldRect.y =
         this.activeInitPos[i].y * this.activeRect.height + this.activeRect.y;
       pen.calculative.worldRect.width *= scaleX;
-      pen.calculative.iconWidth && (pen.calculative.iconWidth *= scaleX);
+      // pen.calculative.iconWidth && (pen.calculative.iconWidth *= scaleX);
       pen.calculative.worldRect.height *= scaleY;
-      pen.calculative.iconHeight && (pen.calculative.iconHeight *= scaleY);
+      // pen.calculative.iconHeight && (pen.calculative.iconHeight *= scaleY);
       calcRightBottom(pen.calculative.worldRect);
       calcCenter(pen.calculative.worldRect);
       this.updatePenRect(pen, { worldRectIsReady: true });
@@ -8530,133 +8537,133 @@ export class Canvas {
   //   };
   // }
 
-  clearDropdownList() {
-    if (this.dropdown.hasChildNodes()) {
-      for (let i = 0; i < this.dropdown.childNodes.length; i++) {
-        this.dropdown.childNodes[i].remove();
-        --i;
-      }
-    }
-  }
+  // clearDropdownList() {
+  //   if (this.dropdown.hasChildNodes()) {
+  //     for (let i = 0; i < this.dropdown.childNodes.length; i++) {
+  //       this.dropdown.childNodes[i].remove();
+  //       --i;
+  //     }
+  //   }
+  // }
 
-  private setDropdownList = (search?: boolean) => {
-    this.clearDropdownList();
-    const pen = this.store.pens[this.inputDiv.dataset.penId];
-    if (!this.store.data.locked&&!['tablePlus'].includes(pen.name)) {
-      return;
-    }
-    this.dropdown.style.display = 'block';
-    // this.inputRight.style.display = 'block';
-    // setTimeout(() => {
-    //   this.inputRight.style.transform = 'rotate(315deg)';
-    //   (this.inputRight.style as any).zoom = this.store.data.scale;
-    // });
-    if (!pen || !pen.dropdownList) {
-      this.dropdown.style.display = 'none';
-      // this.inputRight.style.display = 'none';
-      // this.inputRight.style.transform = 'rotate(135deg)';
-      return;
-    }
-    if (!pen.dropdownList.length) {
-      const none = document.createElement('div');
-      none.innerText = t('无');
-      none.style.padding = '5px 12px';
-      none.style.color = '#ddd';
-      this.dropdown.appendChild(none);
-      return;
-    }
-    const text = this.inputDiv.innerHTML
-      .replace(/\<div\>/g, '\n')
-      .replace(/\<\/div\>/g, '')
-      .replace(/\<br\>/g, '');
-    let i = 0;
-    for (const item of pen.dropdownList) {
-      const itemText = typeof item === 'string' ? item : item.text;
-      if (search && text) {
-        if (itemText.includes(text)) {
-          // 过滤
-          this.dropdownAppendOption(t(itemText), i);
-        }
-      } else {
-        this.dropdownAppendOption(t(itemText), i);
-      }
-      ++i;
-    }
+  // private setDropdownList = (search?: boolean) => {
+  //   this.clearDropdownList();
+  //   const pen = this.store.pens[this.inputDiv.dataset.penId];
+  //   if (!this.store.data.locked&&!['tablePlus'].includes(pen.name)) {
+  //     return;
+  //   }
+  //   this.dropdown.style.display = 'block';
+  //   // this.inputRight.style.display = 'block';
+  //   // setTimeout(() => {
+  //   //   this.inputRight.style.transform = 'rotate(315deg)';
+  //   //   (this.inputRight.style as any).zoom = this.store.data.scale;
+  //   // });
+  //   if (!pen || !pen.dropdownList) {
+  //     this.dropdown.style.display = 'none';
+  //     // this.inputRight.style.display = 'none';
+  //     // this.inputRight.style.transform = 'rotate(135deg)';
+  //     return;
+  //   }
+  //   if (!pen.dropdownList.length) {
+  //     const none = document.createElement('div');
+  //     none.innerText = t('无');
+  //     none.style.padding = '5px 12px';
+  //     none.style.color = '#ddd';
+  //     this.dropdown.appendChild(none);
+  //     return;
+  //   }
+  //   const text = this.inputDiv.innerHTML
+  //     .replace(/\<div\>/g, '\n')
+  //     .replace(/\<\/div\>/g, '')
+  //     .replace(/\<br\>/g, '');
+  //   let i = 0;
+  //   for (const item of pen.dropdownList) {
+  //     const itemText = typeof item === 'string' ? item : item.text;
+  //     if (search && text) {
+  //       if (itemText.includes(text)) {
+  //         // 过滤
+  //         this.dropdownAppendOption(t(itemText), i);
+  //       }
+  //     } else {
+  //       this.dropdownAppendOption(t(itemText), i);
+  //     }
+  //     ++i;
+  //   }
 
-    if (!this.dropdown.hasChildNodes()) {
-      const none = document.createElement('div');
-      none.innerText = t('无');
-      none.style.padding = '5px 12px';
-      none.style.color = '#ddd';
-      this.dropdown.appendChild(none);
-    }
-  };
+  //   if (!this.dropdown.hasChildNodes()) {
+  //     const none = document.createElement('div');
+  //     none.innerText = t('无');
+  //     none.style.padding = '5px 12px';
+  //     none.style.color = '#ddd';
+  //     this.dropdown.appendChild(none);
+  //   }
+  // };
 
   /**
    * 添加一个选项到 dropdown dom 中
    * @param text 选项文字
    * @param index 选项索引
    */
-  private dropdownAppendOption(text: string, index: number) {
-    const li = document.createElement('li');
-    li.onwheel = this.stopPropagation;
-    li.innerText = text;
-    li.style.overflow = 'hidden';
-    li.style.textOverflow = 'ellipsis';
-    li.title = text;
-    (li.style as any).zoom = this.store.data.scale;
-    li.onmousedown = this.stopPropagation;
-    li.dataset.i = index + '';
-    li.onclick = this.selectDropdown;
-    li.ontouchstart = this.selectDropdown;
-    const pen = this.store.pens[this.inputDiv.dataset.penId];
-    li.onmouseenter = () => {
-      li.style.background = pen.dropdownHoverBackground||this.store.styles["activeBg"] || '#eee';
-      li.style.color = pen.dropdownHoverColor || '#bdc7db';
-    };
-    li.onmouseleave = () => {
-      li.style.background = pen.dropdownBackground||this.store.styles["popContentBg"]  || '#fff';
-      li.style.color = pen.dropdownColor || '#bdc7db';
-    };
-    this.dropdown.appendChild(li);
-  }
+  // private dropdownAppendOption(text: string, index: number) {
+  //   const li = document.createElement('li');
+  //   li.onwheel = this.stopPropagation;
+  //   li.innerText = text;
+  //   li.style.overflow = 'hidden';
+  //   li.style.textOverflow = 'ellipsis';
+  //   li.title = text;
+  //   (li.style as any).zoom = this.store.data.scale;
+  //   li.onmousedown = this.stopPropagation;
+  //   li.dataset.i = index + '';
+  //   li.onclick = this.selectDropdown;
+  //   li.ontouchstart = this.selectDropdown;
+  //   const pen = this.store.pens[this.inputDiv.dataset.penId];
+  //   li.onmouseenter = () => {
+  //     li.style.background = pen.dropdownHoverBackground||this.store.styles["activeBg"] || '#eee';
+  //     li.style.color = pen.dropdownHoverColor || '#bdc7db';
+  //   };
+  //   li.onmouseleave = () => {
+  //     li.style.background = pen.dropdownBackground||this.store.styles["popContentBg"]  || '#fff';
+  //     li.style.color = pen.dropdownColor || '#bdc7db';
+  //   };
+  //   this.dropdown.appendChild(li);
+  // }
 
-  private selectDropdown = (e: MouseEvent | TouchEvent) => {
-    e.stopPropagation();
-    const li = e.target as HTMLElement;
-    const pen = this.store.pens[this.inputDiv.dataset.penId];
-    if (!li || !pen || !pen.dropdownList) {
-      return;
-    }
+  // private selectDropdown = (e: MouseEvent | TouchEvent) => {
+  //   e.stopPropagation();
+  //   const li = e.target as HTMLElement;
+  //   const pen = this.store.pens[this.inputDiv.dataset.penId];
+  //   if (!li || !pen || !pen.dropdownList) {
+  //     return;
+  //   }
 
-    const index = +li.dataset.i;
-    const dropdown = pen.dropdownList[index];
-    if (!dropdown) {
-      return;
-    }
+  //   const index = +li.dataset.i;
+  //   const dropdown = pen.dropdownList[index];
+  //   if (!dropdown) {
+  //     return;
+  //   }
 
-    const initPens = [deepClone(pen, true)];
+  //   const initPens = [deepClone(pen, true)];
 
-    if (typeof dropdown === 'object') {
-      this.updateValue(pen, { ...dropdown });
-      pen.calculative.text = undefined;
-      this.calcActiveRect();
-    } else {
-      pen.text = dropdown + '';
-    }
-    this.inputDiv.innerText = pen.text;
-    // this.dropdown.style.display = 'none';
-    // this.inputRight.style.transform = 'rotate(135deg)';
-    // this.hideInput();
-    this.pushHistory({
-      type: EditType.Update,
-      pens: [deepClone(pen, true)],
-      initPens,
-    });
-    this.render();
-    this.store.emitter.emit('change', pen);
-    this.store.emitter.emit('valueUpdate', pen);
-  };
+  //   if (typeof dropdown === 'object') {
+  //     this.updateValue(pen, { ...dropdown });
+  //     pen.calculative.text = undefined;
+  //     this.calcActiveRect();
+  //   } else {
+  //     pen.text = dropdown + '';
+  //   }
+  //   this.inputDiv.innerText = pen.text;
+  //   // this.dropdown.style.display = 'none';
+  //   // this.inputRight.style.transform = 'rotate(135deg)';
+  //   // this.hideInput();
+  //   this.pushHistory({
+  //     type: EditType.Update,
+  //     pens: [deepClone(pen, true)],
+  //     initPens,
+  //   });
+  //   this.render();
+  //   this.store.emitter.emit('change', pen);
+  //   this.store.emitter.emit('valueUpdate', pen);
+  // };
 
   find(idOrTag: string) {
     return this.store.data.pens.filter((pen) => {
@@ -8766,9 +8773,9 @@ export class Canvas {
         if (needPatchFlagsPenRectProps.includes(k)) {
           willPatchFlagsPenRect = true;
         }
-        if (needCalcIconRectProps.includes(k)) {
-          willCalcIconRect = true;
-        }
+        // if (needCalcIconRectProps.includes(k)) {
+        //   willCalcIconRect = true;
+        // }
         if(pen.image && pen.name !== 'gif' && needImgCanvasPatchFlagsProps.includes(k)){
           willRenderImage = true;
         }
@@ -8808,7 +8815,7 @@ export class Canvas {
       this.updatePenRect(pen);
     } else {
       !pen.hiddenText && willCalcTextRect && calcTextRect(pen);
-      willCalcIconRect && calcIconRect(this.store.pens, pen);
+      // willCalcIconRect && calcIconRect(this.store.pens, pen);
       if (willUpdatePath) {
         globalStore.path2dDraws[pen.name] &&
           this.store.path2dMap.set(pen, globalStore.path2dDraws[pen.name](pen));

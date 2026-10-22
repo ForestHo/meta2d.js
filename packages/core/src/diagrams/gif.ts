@@ -40,8 +40,10 @@ export function gif(pen: Pen): Path2D {
         return;
       }
       pen.calculative.img = img;
-      pen.calculative.imgNaturalWidth = img.naturalWidth || pen.iconWidth;
-      pen.calculative.imgNaturalHeight = img.naturalHeight || pen.iconHeight;
+      // pen.calculative.imgNaturalWidth = img.naturalWidth || pen.iconWidth;
+      // pen.calculative.imgNaturalHeight = img.naturalHeight || pen.iconHeight;
+      pen.calculative.imgNaturalWidth = img.naturalWidth;
+      pen.calculative.imgNaturalHeight = img.naturalHeight;
       // pen.calculative.canvas.externalElements?.appendChild(img);
       pen.calculative.canvas.externalElements?.parentElement.appendChild(img);
       setImagePosition(pen, img);

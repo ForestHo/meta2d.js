@@ -78,9 +78,10 @@ export const needPatchFlagsPenRectProps = [
   'showChild',
 ];
 
-export const needCalcIconRectProps = ['iconLeft', 'iconTop', 'iconRotate','icon'];
+// export const needCalcIconRectProps = ['iconLeft', 'iconTop', 'iconRotate','icon'];
 
-export const needImgCanvasPatchFlagsProps =  ['globalAlpha', 'flipY', 'flipX', 'x', 'y', 'width', 'height','iconWidth', 'iconHeight', 'imageRatio', 'iconLeft','iconTop', 'iconAlign', 'rotate', 'visible'];
+export const needImgCanvasPatchFlagsProps =  ['globalAlpha', 'flipY', 'flipX', 'x', 'y', 'width', 'height',  'imageRatio',   'rotate', 'visible'];
+// export const needImgCanvasPatchFlagsProps =  ['globalAlpha', 'flipY', 'flipX', 'x', 'y', 'width', 'height','iconWidth', 'iconHeight', 'imageRatio', 'iconLeft','iconTop', 'iconAlign', 'rotate', 'visible'];
 
 export interface ConnectLine {
   lineId: string;
@@ -98,7 +99,7 @@ export type IValue = Pen &
 
 // obj 类型数组 text 字段显示文字，其它属性选中后合并到画笔上
 // string 类型，只展示文字
-export type Dropdown = string | IValue;
+// export type Dropdown = string | IValue;
 
 export enum LineAnimateType {
   Normal, // 水流
@@ -142,7 +143,7 @@ export interface Pen extends Rect {
   // 优先级高于 title
   titleFnJs?: string;
   titleFn?: (pen: Pen) => string;
-  titleUnUpdate?: boolean; //点位刷新 title内容是否更新
+  // titleUnUpdate?: boolean; //点位刷新 title内容是否更新
 
   lineWidth?: number;
   borderWidth?: number;
@@ -209,8 +210,8 @@ export interface Pen extends Rect {
 
   // canvas 滤镜
   filter?: string;
-  placeholder?: string;  //占位符
-  placeholderColor?: string;
+  // placeholder?: string;  //占位符
+  // placeholderColor?: string;
   text?: string;
   textWidth?: number;
   textHeight?: number;
@@ -232,29 +233,29 @@ export interface Pen extends Rect {
   letterSpacing?: number;
 
   image?: string;
-  icon?: string;
-  iconRotate?: number;
-  iconWidth?: number;
-  iconHeight?: number;
-  iconTop?: number;
-  iconLeft?: number;
-  iconType?: Gradient;
-  iconColor?: string;
-  iconGradientColors?: string;
-  iconGradientRadius?: number;
-  iconFamily?: string;
-  iconWeight?: string;
-  iconSize?: number;
-  iconAlign?:
-    | 'top'
-    | 'bottom'
-    | 'left'
-    | 'right'
-    | 'left-top'
-    | 'right-top'
-    | 'left-bottom'
-    | 'right-bottom'
-    | 'center';
+  // icon?: string;
+  // iconRotate?: number;
+  // iconWidth?: number;
+  // iconHeight?: number;
+  // iconTop?: number;
+  // iconLeft?: number;
+  // iconType?: Gradient;
+  // iconColor?: string;
+  // iconGradientColors?: string;
+  // iconGradientRadius?: number;
+  // iconFamily?: string;
+  // iconWeight?: string;
+  // iconSize?: number;
+  // iconAlign?:
+  //   | 'top'
+  //   | 'bottom'
+  //   | 'left'
+  //   | 'right'
+  //   | 'left-top'
+  //   | 'right-top'
+  //   | 'left-bottom'
+  //   | 'right-bottom'
+  //   | 'center';
   imageRatio?: boolean;
 
   // disableInput?: boolean;
@@ -351,11 +352,11 @@ export interface Pen extends Rect {
   input?: boolean;
   readonly?: boolean;
   autofocus?: boolean;
-  dropdownList?: Dropdown[];
-  dropdownBackground?: string;
-  dropdownColor?: string;
-  dropdownHoverColor?: string;
-  dropdownHoverBackground?: string;
+  // dropdownList?: Dropdown[];
+  // dropdownBackground?: string;
+  // dropdownColor?: string;
+  // dropdownHoverColor?: string;
+  // dropdownHoverBackground?: string;
   // events?: Event[];
 
   // iframe?: string;
@@ -417,7 +418,7 @@ export interface Pen extends Rect {
    * @deprecated 改用 canvasLayer
    */
   template?: boolean; //是否作为模版图元
-  thumbImg?: string; //iframe嵌入场景缩略图
+  // thumbImg?: string; //iframe嵌入场景缩略图
   // apiUrl?: string;
   // apiMethod?: string;
   // apiHeaders?: any;
@@ -542,19 +543,19 @@ export interface Pen extends Rect {
     fontWeight?: string;
     letterSpacing?: number;
     textBackground?: string;
-    iconSize?: number;
-    icon?: string;
-    iconRotate?: number;
-    iconWidth?: number;
-    iconHeight?: number;
-    iconTop?: number;
-    iconLeft?: number;
-    iconType?: Gradient;
-    iconColor?: string;
-    iconGradientColors?: string;
-    iconGradientRadius?: number;
-    iconFamily?: string;
-    iconWeight?: string;
+    // iconSize?: number;
+    // icon?: string;
+    // iconRotate?: number;
+    // iconWidth?: number;
+    // iconHeight?: number;
+    // iconTop?: number;
+    // iconLeft?: number;
+    // iconType?: Gradient;
+    // iconColor?: string;
+    // iconGradientColors?: string;
+    // iconGradientRadius?: number;
+    // iconFamily?: string;
+    // iconWeight?: string;
     fontsChecked?: boolean; // 处理字体加载慢于文字宽度计算
 
     // 绝对值，计算后的结果
