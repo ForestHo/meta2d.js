@@ -927,21 +927,21 @@ function threeBezier(t: number, p1: Point, cp1: Point, cp2: Point, p2: Point) {
   return { x, y };
 }
 
-function strokeLinearGradient(ctx: CanvasRenderingContext2D, pen: Pen) {
-  const {
-    worldRect,
-    lineGradientFromColor,
-    lineGradientToColor,
-    lineGradientAngle,
-  } = pen.calculative;
-  return linearGradient(
-    ctx,
-    worldRect,
-    lineGradientFromColor,
-    lineGradientToColor,
-    lineGradientAngle
-  );
-}
+// function strokeLinearGradient(ctx: CanvasRenderingContext2D, pen: Pen) {
+//   const {
+//     worldRect,
+//     lineGradientFromColor,
+//     lineGradientToColor,
+//     lineGradientAngle,
+//   } = pen.calculative;
+//   return linearGradient(
+//     ctx,
+//     worldRect,
+//     lineGradientFromColor,
+//     lineGradientToColor,
+//     lineGradientAngle
+//   );
+// }
 
 /**
  * 避免副作用，把创建好后的线性渐变对象返回出来
@@ -1290,31 +1290,31 @@ function drawText(ctx: CanvasRenderingContext2D, pen: Pen) {
       ctx.fillText(text ? t(text) : text, drawRectX + x, y);
     }
     // 下划线
-    const { textDecorationColor, textDecorationDash, textDecoration } = pen;
-    if (textDecoration) {
-      drawUnderLine(
-        ctx,
-        {
-          x: drawRectX + x,
-          y,
-          width: textLineWidth,
-        },
-        { textDecorationColor, textDecorationDash, fontSize }
-      );
-    }
+    // const { textDecorationColor, textDecorationDash, textDecoration } = pen;
+    // if (textDecoration) {
+    //   drawUnderLine(
+    //     ctx,
+    //     {
+    //       x: drawRectX + x,
+    //       y,
+    //       width: textLineWidth,
+    //     },
+    //     { textDecorationColor, textDecorationDash, fontSize }
+    //   );
+    // }
     // 删除线
-    const { textStrickoutColor, textStrickoutDash, textStrickout } = pen;
-    if (textStrickout) {
-      drawStrickout(
-        ctx,
-        {
-          x: drawRectX + x,
-          y,
-          width: textLineWidth,
-        },
-        { textStrickoutColor, textStrickoutDash, fontSize }
-      );
-    }
+    // const { textStrickoutColor, textStrickoutDash, textStrickout } = pen;
+    // if (textStrickout) {
+    //   drawStrickout(
+    //     ctx,
+    //     {
+    //       x: drawRectX + x,
+    //       y,
+    //       width: textLineWidth,
+    //     },
+    //     { textStrickoutColor, textStrickoutDash, fontSize }
+    //   );
+    // }
   });
   ctx.restore();
 }
@@ -1355,7 +1355,8 @@ function drawUnderLine(
   location: any,
   config: any
 ) {
-  const { textDecorationColor, textDecorationDash, fontSize } = config;
+  // const { textDecorationColor, textDecorationDash, fontSize } = config;
+  const { fontSize } = config;
   let { x, y, width } = location;
   switch (ctx.textBaseline) {
     case 'top':
@@ -1367,10 +1368,12 @@ function drawUnderLine(
   }
   ctx.save();
   ctx.beginPath();
-  ctx.strokeStyle = textDecorationColor ? textDecorationColor : ctx.fillStyle;
+  // ctx.strokeStyle = textDecorationColor ? textDecorationColor : ctx.fillStyle;
+  ctx.strokeStyle = ctx.fillStyle;
   ctx.lineWidth = 1;
   ctx.moveTo(x, y);
-  ctx.setLineDash(textDecorationDash || []);
+  // ctx.setLineDash(textDecorationDash || []);
+  ctx.setLineDash([]);
   ctx.lineTo(x + width, y);
   ctx.stroke();
   ctx.restore();
@@ -1380,7 +1383,8 @@ function drawStrickout(
   location: any,
   config: any
 ) {
-  const { textStrickoutColor, textStrickoutDash, fontSize } = config;
+  // const { textStrickoutColor, textStrickoutDash, fontSize } = config;
+  const {  fontSize } = config;
   let { x, y, width } = location;
   switch (ctx.textBaseline) {
     case 'top':
@@ -1392,10 +1396,12 @@ function drawStrickout(
   }
   ctx.save();
   ctx.beginPath();
-  ctx.strokeStyle = textStrickoutColor ? textStrickoutColor : ctx.fillStyle;
+  // ctx.strokeStyle = textStrickoutColor ? textStrickoutColor : ctx.fillStyle;
+  ctx.strokeStyle = ctx.fillStyle;
   ctx.lineWidth = 1;
   ctx.moveTo(x, y);
-  ctx.setLineDash(textStrickoutDash || []);
+  // ctx.setLineDash(textStrickoutDash || []);
+  ctx.setLineDash([]);
   ctx.lineTo(x + width, y);
   ctx.stroke();
   ctx.restore();
@@ -1593,20 +1599,21 @@ function drawFillText(ctx: CanvasRenderingContext2D, pen: Pen, text: string) {
  */
 export function getFont({
   fontStyle = 'normal',
-  textDecoration = 'normal',
+  // textDecoration = 'normal',
   fontWeight = 'normal',
   fontSize = 12,
   fontFamily = 'Arial',
   lineHeight = 1, // TODO: lineHeight 默认值待测试
 }: {
   fontStyle?: string;
-  textDecoration?: string;
+  // textDecoration?: string;
   fontWeight?: string;
   fontSize?: number;
   fontFamily?: string;
   lineHeight?: number;
 } = {}) {
-  return `${fontStyle} ${textDecoration} ${fontWeight} ${fontSize}px/${lineHeight} ${fontFamily}`;
+  return `${fontStyle} ${fontWeight} ${fontSize}px/${lineHeight} ${fontFamily}`;
+  // return `${fontStyle} ${textDecoration} ${fontWeight} ${fontSize}px/${lineHeight} ${fontFamily}`;
 }
 
 export function ctxFlip(
@@ -1747,11 +1754,11 @@ export function renderPen(
     }
   }
   // else {
-  const strokeImg = pen.calculative.strokeImg;
-  if (pen.calculative.strokeImage && strokeImg) {
-    ctx.strokeStyle = _stroke || ctx.createPattern(strokeImg, REPEAT);
-    // fill = true;
-  } else {
+  // const strokeImg = pen.calculative.strokeImg;
+  // if (pen.calculative.strokeImage && strokeImg) {
+  //   ctx.strokeStyle = _stroke || ctx.createPattern(strokeImg, REPEAT);
+  //   // fill = true;
+  // } else {
     let stroke: string | CanvasGradient | CanvasPattern;
     // TODO: 线只有线性渐变
     if (pen.calculative.strokeType) {
@@ -1767,13 +1774,13 @@ export function renderPen(
           }
         }
       } else {
-        stroke = strokeLinearGradient(ctx, pen);
+        // stroke = strokeLinearGradient(ctx, pen);
       }
     } else {
       stroke = pen.calculative.color || (pen.type ? store.data.lineColor : '') || store.styles.color;
     }
     ctx.strokeStyle = _stroke || stroke;
-  }
+  // }
   // }
   //if (setBack) {
   const backgroundImg = pen.calculative.backgroundImg;
@@ -1999,15 +2006,15 @@ export function renderPenRaw(
     ctx.fillStyle = pen.activeBackground || store.styles.activeBackground;
     fill = pen.activeBackground || store.styles.activeBackground;
   } else {
-    if (pen.strokeImage) {
-      if (pen.calculative.strokeImg) {
-        ctx.strokeStyle = ctx.createPattern(
-          pen.calculative.strokeImg,
-          REPEAT
-        );
-        fill = true;
-      }
-    } else {
+    // if (pen.strokeImage) {
+    //   if (pen.calculative.strokeImg) {
+    //     ctx.strokeStyle = ctx.createPattern(
+    //       pen.calculative.strokeImg,
+    //       REPEAT
+    //     );
+    //     fill = true;
+    //   }
+    // } else {
       let stroke: string | CanvasGradient | CanvasPattern;
       if (
         pen.calculative.strokeType &&
@@ -2019,7 +2026,7 @@ export function renderPenRaw(
         stroke = pen.calculative.color || store.styles.color; //getGlobalColor(store);
       }
       ctx.strokeStyle = stroke;
-    }
+    // }
 
     if (pen.backgroundImage) {
       if (pen.calculative.backgroundImg) {
@@ -2221,54 +2228,54 @@ export function ctxDrawPath(
       ctx.restore();
     }
 
-    const progress =
-      (pen.calculative.progress - (pen.calculative.min || 0)) /
-      ((pen.calculative.max || 1) - (pen.calculative.min || 0));
-    if (progress != null && !isNaN(progress)) {
-      // 从左往右 x, y, x + width * progress, y
-      // 从右往左 ex, y, x + width * (1-progress), y
-      // 从下往上 x, y, x, y + height * progress
-      // 从上往下 x, ey, x, y + height * (1 - progress)
-      ctx.save();
-      const { ex, x, y, width, height, ey } = pen.calculative.worldRect;
-      let grd = null;
-      if (!pen.calculative.verticalProgress) {
-        grd = !pen.reverseProgress
-          ? ctx.createLinearGradient(x, y, x + width * progress, y)
-          : ctx.createLinearGradient(ex, y, x + width * (1 - progress), y);
-      } else {
-        grd = !pen.reverseProgress
-          ? ctx.createLinearGradient(x, ey, x, y + height * (1 - progress))
-          : ctx.createLinearGradient(x, y, x, y + height * progress);
-      }
+    // const progress =
+    //   (pen.calculative.progress - (pen.calculative.min || 0)) /
+    //   ((pen.calculative.max || 1) - (pen.calculative.min || 0));
+    // if (progress != null && !isNaN(progress)) {
+    //   // 从左往右 x, y, x + width * progress, y
+    //   // 从右往左 ex, y, x + width * (1-progress), y
+    //   // 从下往上 x, y, x, y + height * progress
+    //   // 从上往下 x, ey, x, y + height * (1 - progress)
+    //   ctx.save();
+    //   const { ex, x, y, width, height, ey } = pen.calculative.worldRect;
+    //   let grd = null;
+    //   if (!pen.calculative.verticalProgress) {
+    //     grd = !pen.reverseProgress
+    //       ? ctx.createLinearGradient(x, y, x + width * progress, y)
+    //       : ctx.createLinearGradient(ex, y, x + width * (1 - progress), y);
+    //   } else {
+    //     grd = !pen.reverseProgress
+    //       ? ctx.createLinearGradient(x, ey, x, y + height * (1 - progress))
+    //       : ctx.createLinearGradient(x, y, x, y + height * progress);
+    //   }
 
-      if (pen.calculative.progressGradientColors) {
-        const { colors } = formatGradient(
-          pen.calculative.progressGradientColors
-        );
-        colors.forEach((stop) => {
-          grd.addColorStop(stop.i, stop.color);
-        });
-      } else {
-        const color =
-          pen.calculative.progressColor ||
-          pen.calculative.color ||
-          store.options.activeColor ||
-          store.data.color;
-        grd.addColorStop(0, color);
-        grd.addColorStop(1, color);
-      }
-      grd.addColorStop(1, 'transparent');
+    //   if (pen.calculative.progressGradientColors) {
+    //     const { colors } = formatGradient(
+    //       pen.calculative.progressGradientColors
+    //     );
+    //     colors.forEach((stop) => {
+    //       grd.addColorStop(stop.i, stop.color);
+    //     });
+    //   } else {
+    //     const color =
+    //       pen.calculative.progressColor ||
+    //       pen.calculative.color ||
+    //       store.options.activeColor ||
+    //       store.data.color;
+    //     grd.addColorStop(0, color);
+    //     grd.addColorStop(1, color);
+    //   }
+    //   grd.addColorStop(1, 'transparent');
 
-      ctx.fillStyle = grd;
-      if (path instanceof Path2D) {
-        ctx.fill(path);
-      } else {
-        path(pen, ctx);
-        ctx.fill();
-      }
-      ctx.restore();
-    }
+    //   ctx.fillStyle = grd;
+    //   if (path instanceof Path2D) {
+    //     ctx.fill(path);
+    //   } else {
+    //     path(pen, ctx);
+    //     ctx.fill();
+    //   }
+    //   ctx.restore();
+    // }
 
     if (pen.calculative.lineWidth) {
       if (path instanceof Path2D) {

@@ -4354,7 +4354,7 @@ export class Canvas {
           this.setPenRect(pen, rect, false);
           pen.calculative.image = undefined;
           pen.calculative.backgroundImage = undefined;
-          pen.calculative.strokeImage = undefined;
+          // pen.calculative.strokeImage = undefined;
           this.loadImage(pen);
         });
         action.type = EditType.Add;
@@ -4414,7 +4414,7 @@ export class Canvas {
           this.setPenRect(pen, rect, false);
           pen.calculative.image = undefined;
           pen.calculative.backgroundImage = undefined;
-          pen.calculative.strokeImage = undefined;
+          // pen.calculative.strokeImage = undefined;
           this.loadImage(pen);
         });
         action.type = EditType.Replace;
@@ -4504,7 +4504,7 @@ export class Canvas {
     }
     pen.calculative.image = undefined;
     pen.calculative.backgroundImage = undefined;
-    pen.calculative.strokeImage = undefined;
+    // pen.calculative.strokeImage = undefined;
     if (!pen.anchors && globalStore.anchors[pen.name]) {
       if (!pen.anchors) {
         pen.anchors = [];
@@ -4885,42 +4885,42 @@ export class Canvas {
       pen.calculative.backgroundImage = pen.backgroundImage;
     }
 
-    if (pen.strokeImage !== pen.calculative.strokeImage) {
-      pen.calculative.strokeImg = undefined;
-      if (pen.strokeImage) {
-        if (globalStore.htmlElements[pen.strokeImage]) {
-          const img = globalStore.htmlElements[pen.strokeImage];
-          pen.calculative.strokeImg = img;
-        } else {
-          const img = new Image();
-          img.crossOrigin = pen.crossOrigin || this.store.options.crossOrigin || 'anonymous';
-          img.src = pen.strokeImage;
-          if (
-            this.store.options.cdn &&
-            !(
-              pen.strokeImage.startsWith('http') ||
-              pen.strokeImage.startsWith('//') ||
-              pen.strokeImage.startsWith('data:image')
-            )
-          ) {
-            img.src = this.store.options.cdn + pen.strokeImage;
-          }
-          img.onload = () => {
-            pen.calculative.strokeImg = img;
-            globalStore.htmlElements[pen.strokeImage] = img;
-            this.imageLoaded();
-            if (
-              // pen.template
-              pen.canvasLayer === CanvasLayer.CanvasTemplate &&
-              pen.name !== 'gif'
-            ) {
-              this.templateImageLoaded();
-            }
-          };
-        }
-      }
-      pen.calculative.strokeImage = pen.strokeImage;
-    }
+    // if (pen.strokeImage !== pen.calculative.strokeImage) {
+    //   pen.calculative.strokeImg = undefined;
+    //   if (pen.strokeImage) {
+    //     if (globalStore.htmlElements[pen.strokeImage]) {
+    //       const img = globalStore.htmlElements[pen.strokeImage];
+    //       pen.calculative.strokeImg = img;
+    //     } else {
+    //       const img = new Image();
+    //       img.crossOrigin = pen.crossOrigin || this.store.options.crossOrigin || 'anonymous';
+    //       img.src = pen.strokeImage;
+    //       if (
+    //         this.store.options.cdn &&
+    //         !(
+    //           pen.strokeImage.startsWith('http') ||
+    //           pen.strokeImage.startsWith('//') ||
+    //           pen.strokeImage.startsWith('data:image')
+    //         )
+    //       ) {
+    //         img.src = this.store.options.cdn + pen.strokeImage;
+    //       }
+    //       img.onload = () => {
+    //         pen.calculative.strokeImg = img;
+    //         globalStore.htmlElements[pen.strokeImage] = img;
+    //         this.imageLoaded();
+    //         if (
+    //           // pen.template
+    //           pen.canvasLayer === CanvasLayer.CanvasTemplate &&
+    //           pen.name !== 'gif'
+    //         ) {
+    //           this.templateImageLoaded();
+    //         }
+    //       };
+    //     }
+    //   }
+    //   pen.calculative.strokeImage = pen.strokeImage;
+    // }
   }
 
   __loadMap = new Map()
@@ -8828,10 +8828,11 @@ export class Canvas {
       // TODO: rotatePen 会执行 updatePenRect ，上面已经执行 updatePenRect
       this.rotatePen(pen, currentRotate - oldRotate, pen.calculative.worldRect);
     }
-    if (data.image || data.backgroundImage || data.strokeImage) {
+    // if (data.image || data.backgroundImage || data.strokeImage) {
+    if (data.image || data.backgroundImage) {
       pen.calculative.image = undefined;
       pen.calculative.backgroundImage = undefined;
-      pen.calculative.strokeImage = undefined;
+      // pen.calculative.strokeImage = undefined;
       this.loadImage(pen);
     }
     if (data.lineGradientColors) {

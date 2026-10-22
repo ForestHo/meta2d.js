@@ -182,15 +182,15 @@ export interface Pen extends Rect {
   /**
    * @deprecated 改用 lineGradientColors
    */
-  lineGradientFromColor?: string;
+  // lineGradientFromColor?: string;
   /**
    * @deprecated 改用 lineGradientColors
    */
-  lineGradientToColor?: string;
+  // lineGradientToColor?: string;
   /**
    * @deprecated 改用 lineGradientColors
    */
-  lineGradientAngle?: number;
+  // lineGradientAngle?: number;
 
   gradientColors?: string;
   switch?: boolean; // 图元是否有开关状态
@@ -272,7 +272,7 @@ export interface Pen extends Rect {
   paddingRight?: number;
 
   backgroundImage?: string;
-  strokeImage?: string;
+  // strokeImage?: string;
 
   children?: string[];
   followers?: string[];
@@ -363,13 +363,13 @@ export interface Pen extends Rect {
   // video?: string;
   // audio?: string;
 
-  max?: number; // progress最大值
-  min?: number; // progress最小值
-  progress?: number;
-  progressColor?: string;
-  verticalProgress?: boolean;
-  reverseProgress?: boolean;
-  progressGradientColors?: string;
+  // max?: number; // progress最大值
+  // min?: number; // progress最小值
+  // progress?: number;
+  // progressColor?: string;
+  // verticalProgress?: boolean;
+  // reverseProgress?: boolean;
+  // progressGradientColors?: string;
   externElement?: boolean;
   disableTransform?: boolean; // 是否禁用setElemPosition transform
 
@@ -462,10 +462,10 @@ export interface Pen extends Rect {
 
     max?: number;
     min?: number;
-    progress?: number;
-    progressColor?: string;
-    progressGradientColors?: string;
-    verticalProgress?: boolean;
+    // progress?: number;
+    // progressColor?: string;
+    // progressGradientColors?: string;
+    // verticalProgress?: boolean;
     worldRect?: Rect;
     worldAnchors?: Point[];
     worldIconRect?: Rect;
@@ -512,15 +512,15 @@ export interface Pen extends Rect {
     /**
      * @deprecated 改用 lineGradientColors
      */
-    lineGradientFromColor?: string;
+    // lineGradientFromColor?: string;
     /**
      * @deprecated 改用 lineGradientColors
      */
-    lineGradientToColor?: string;
+    // lineGradientToColor?: string;
     /**
      * @deprecated 改用 lineGradientColors
      */
-    lineGradientAngle?: number;
+    // lineGradientAngle?: number;
     shadowColor?: string;
     shadowBlur?: number;
     shadowOffsetX?: number;
@@ -571,9 +571,9 @@ export interface Pen extends Rect {
     imgNaturalWidth?: number;
     imgNaturalHeight?: number;
     backgroundImage?: string;
-    strokeImage?: string;
+    // strokeImage?: string;
     backgroundImg?: HTMLImageElement;
-    strokeImg?: HTMLImageElement;
+    // strokeImg?: HTMLImageElement;
     active?: boolean;
     focus?: boolean; //聚焦图元
     hover?: boolean;
@@ -673,13 +673,13 @@ export interface Pen extends Rect {
   };
   lastConnected?:any;
   // 下划线相关配置属性
-  textDecoration?: string;
-  textDecorationDash?: number[];
-  textDecorationColor?: string;
+  // textDecoration?: string;
+  // textDecorationDash?: number[];
+  // textDecorationColor?: string;
   // 删除线相关配置
-  textStrickoutColor?: string;
-  textStrickoutDash?: number[];
-  textStrickout?: boolean;
+  // textStrickoutColor?: string;
+  // textStrickoutDash?: number[];
+  // textStrickout?: boolean;
   // 前一个动画帧状态数据
   prevFrame?: Pen;
 
@@ -785,10 +785,10 @@ export const formatAttrs: Set<string> = new Set([
   'paddingRight',
   'paddingTop',
   'paddingBottom',
-  'progress',
-  'progressColor',
-  'verticalProgress',
-  'reverseProgress',
+  // 'progress',
+  // 'progressColor',
+  // 'verticalProgress',
+  // 'reverseProgress',
   // 'flip',
   'flipX',
   'flipY',
@@ -797,9 +797,9 @@ export const formatAttrs: Set<string> = new Set([
   'lineCap',
   'lineJoin',
   'strokeType',
-  'lineGradientFromColor',
-  'lineGradientToColor',
-  'lineGradientAngle',
+  // 'lineGradientFromColor',
+  // 'lineGradientToColor',
+  // 'lineGradientAngle',
   'color',
   'hoverColor',
   'activeColor',
