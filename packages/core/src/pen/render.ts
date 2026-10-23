@@ -1236,9 +1236,11 @@ function drawText(ctx: CanvasRenderingContext2D, pen: Pen) {
       pen.disabledColor ||
       pSBC(0.4, getTextColor(pen, store));
   } else if (pen.calculative.hover) {
-    fill = pen.hoverTextColor || pen.hoverColor || store.styles.hoverColor;
+    // fill = pen.hoverTextColor || pen.hoverColor || store.styles.hoverColor;
+    fill = pen.hoverColor || store.styles.hoverColor;
   } else if (pen.calculative.active) {
-    fill = pen.activeTextColor || pen.activeColor || store.styles.activeColor;
+    // fill = pen.activeTextColor || pen.activeColor || store.styles.activeColor;
+    fill = pen.activeColor || store.styles.activeColor;
   }
   let gradient = undefined;
   if (textType === Gradient.Linear) {
@@ -1419,9 +1421,11 @@ function drawFillText(ctx: CanvasRenderingContext2D, pen: Pen, text: string) {
 
   let fill: string = undefined;
   if (pen.calculative.hover) {
-    fill = pen.hoverTextColor || pen.hoverColor || store.styles.hoverColor;
+    // fill = pen.hoverTextColor || pen.hoverColor || store.styles.hoverColor;
+    fill = pen.hoverColor || store.styles.hoverColor;
   } else if (pen.calculative.active) {
-    fill = pen.activeTextColor || pen.activeColor || store.styles.activeColor;
+    // fill = pen.activeTextColor || pen.activeColor || store.styles.activeColor;
+    fill = pen.activeColor || store.styles.activeColor;
   }
   ctx.fillStyle = fill || getTextColor(pen, store);
 
@@ -2341,7 +2345,7 @@ export function ctxDrawPath(
 
       if (
         pen.calculative.active &&
-        !pen.calculative.pencil &&
+        // !pen.calculative.pencil &&
         !store.options.disableAnchor &&
         !store.data.locked
       ) {
@@ -2407,7 +2411,7 @@ export function ctxDrawLinePath(
       //TODO 锚点处渐进色的过渡
       if (
         pen.calculative.active &&
-        !pen.calculative.pencil &&
+        // !pen.calculative.pencil &&
         !store.options.disableAnchor &&
         !store.data.locked
       ) {
@@ -3671,13 +3675,13 @@ export function setNodeAnimate(pen: Pen, now: number) {
         height: pen.height,
       };
     }
-    if (pen.children?.length) {
-      const store = pen.calculative.canvas.store;
-      pen.calculative.childrenVisible = {};
-      pen.children.forEach((id) => {
-        pen.calculative.childrenVisible[id] = store.pens[id].visible;
-      });
-    }
+    // if (pen.children?.length) {
+    //   const store = pen.calculative.canvas.store;
+    //   pen.calculative.childrenVisible = {};
+    //   pen.children.forEach((id) => {
+    //     pen.calculative.childrenVisible[id] = store.pens[id].visible;
+    //   });
+    // }
     pen.calculative.initRect.rotate = pen.calculative.rotate || 0;
 
     initPrevFrame(pen);
@@ -4113,9 +4117,13 @@ export function setElemPosition(pen: Pen, elem: HTMLElement) {
     elem.style.opacity =
       pen.calculative.inView ? '1' : '0'; // 是否隐藏元素
   } else {
+    // elem.style.display =
+    //   pen.calculative.inView != false
+    //   ? pen.calculative.cssDisplay || 'inline'
+    //   : 'none'; // 是否隐藏元素
     elem.style.display =
       pen.calculative.inView != false
-      ? pen.calculative.cssDisplay || 'inline'
+      ? 'inline'
       : 'none'; // 是否隐藏元素
   }
 
@@ -4960,11 +4968,11 @@ export function setChildValue(pen: Pen, data: IValue) {
     const children = pen.children;
     children?.forEach((childId) => {
       let _data = deepClone(data);
-      if (pen.calculative.childrenVisible) {
-        if (pen.calculative.childrenVisible[childId] === false) {
-          delete _data.visible;
-        }
-      }
+      // if (pen.calculative.childrenVisible) {
+      //   if (pen.calculative.childrenVisible[childId] === false) {
+      //     delete _data.visible;
+      //   }
+      // }
       const child = pen.calculative.canvas.store.pens[childId];
       child && setChildValue(child, _data);
     });

@@ -96,9 +96,9 @@ export function renderLineDirectionMarkers(
     return;
   }
 
-  if (pen.calculative.pencil) {
-    return;
-  }
+  // if (pen.calculative.pencil) {
+  //   return;
+  // }
 
   const anchors = pen.calculative.worldAnchors;
   if (!anchors || anchors.length < 2) {

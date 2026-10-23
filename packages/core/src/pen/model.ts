@@ -218,8 +218,8 @@ export interface Pen extends Rect {
   textLeft?: number;
   textTop?: number;
   textColor?: string;
-    hoverTextColor?: string;
-  activeTextColor?: string;
+    // hoverTextColor?: string;
+  // activeTextColor?: string;
   fontFamily?: string;
   fontSize?: number;
   lineHeight?: number;
@@ -480,7 +480,7 @@ export interface Pen extends Rect {
     // 执行动画前的初始相对位置
     initRelativeRect?: Rect;
     // 执行动画前存储子图元的显示隐藏情况
-    childrenVisible?: any;
+    // childrenVisible?: any;
     rotate?: number;
     lineWidth?: number;
     borderWidth?: number;
@@ -580,7 +580,7 @@ export interface Pen extends Rect {
     // mouseDown?: boolean; //是否鼠标按下
     // containerHover?: boolean; //容器组件hover
     isDock?: boolean; // 是否是对齐参考画笔
-    pencil?: boolean;
+    // pencil?: boolean;
     activeAnchor?: Point;
     patchFlags?: boolean;
     visible?: boolean; // TODO: visible 是否参与动画呢？
@@ -657,12 +657,12 @@ export interface Pen extends Rect {
     lineGradient?: CanvasGradient;
     radialGradient?: CanvasGradient;
     gradientColorStop?: ColorStop[]; //临时 连线ColorStop
-    gradientTimer?: any;
+    // gradientTimer?: any;
     animateLineWidth?: number;
     lineSmooth?:number; //连线平滑度
     gradientSmooth?: number; //渐进色平滑度
     gradientAnimatePath?: Path2D;
-    cssDisplay?: string; //css display
+    // cssDisplay?: string; //css display
     animations?: any[];
     imageRadius?: number;
     disabled?: boolean; //是否禁用
@@ -823,8 +823,8 @@ export const formatAttrs: Set<string> = new Set([
   'fontFamily',
   'fontSize',
   'textColor',
-  'hoverTextColor',
-  'activeTextColor',
+  // 'hoverTextColor',
+  // 'activeTextColor',
   'textBackground',
   'fontStyle',
   'fontWeight',

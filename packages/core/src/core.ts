@@ -2580,6 +2580,21 @@ export class Meta2d {
         }
       }
     }
+    if(data.hasOwnProperty('mqttUrl')){
+      delete data["mqttUrl"]
+    }
+    if(data.hasOwnProperty('dataPoints')){
+      delete data["dataPoints"]
+    }
+    if(data.hasOwnProperty('iot')){
+      delete data["iot"]
+    }
+    if(data.hasOwnProperty('websocket')){
+      delete data["websocket"]
+    }
+    if(!data["bkImage"] && data.hasOwnProperty('bkImage')){
+      delete data["bkImage"]
+    }
     // data.dataPoints = [
     //   ...Object.keys(this.store.bind),
     //   ...Object.keys(this.store.bindDatas),
