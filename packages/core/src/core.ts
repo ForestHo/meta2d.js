@@ -1847,7 +1847,10 @@ export class Meta2d {
   toggleMagnifier() {
     this.canvas.toggleMagnifier();
   }
-
+  clearOnlyStore(render = true){
+    clearStore(this.store, "");
+    render && this.render();
+  }
   /**
    * 擦除画布，释放 store 上的 pens
    * @param render 是否重绘
